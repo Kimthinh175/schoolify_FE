@@ -1,5 +1,12 @@
-<!-- BEGIN:nextjs-agent-rules -->
-# This is NOT the Next.js you know
+# AGENTS.md - Guidelines for AI Coding Assistants
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-<!-- END:nextjs-agent-rules -->
+Refer to `.cursorrules` for full project guidelines, tech stack details, and coding conventions.
+
+## Tech Stack Quick Summary
+- **Framework**: Next.js App Router (TypeScript)
+- **Styling & UI**: Tailwind CSS, `shadcn/ui` pattern (`src/components/ui/`), `lucide-react`
+- **Animation**: `framer-motion`
+- **Forms**: `react-hook-form` + `zod`
+- **Class Merger**: `cn()` in `@/lib/utils`
+
+Please follow these conventions when writing code for Schoolify FE.

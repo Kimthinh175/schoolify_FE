@@ -1,0 +1,30 @@
+# Project Context & AI Guidelines - Schoolify FE
+
+## Tech Stack
+- **Framework**: Next.js (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: `shadcn/ui` pattern (located in `@/components/ui`)
+- **Icons**: `lucide-react`
+- **Animations**: `framer-motion`
+- **Form Management**: `react-hook-form` + `zod`
+- **Class Utilities**: `clsx`, `tailwind-merge`, `class-variance-authority` (Use `@/lib/utils` `cn()` for class merging)
+
+## Project Structure Conventions
+- `@/components/ui/` - Base reusable UI components (Button, Input, Modal, etc.)
+- `@/components/layout/` - Structural layout components (Header, Sidebar, Footer)
+- `@/components/features/` - Feature-specific / business logic components (LoginForm, CourseList, etc.)
+- `@/hooks/` - Custom React hooks
+- `@/lib/` - Utility functions (`utils.ts`) and third-party library configs
+- `@/services/` - API fetching & backend integration functions
+- `@/types/` - TypeScript type definitions and interfaces
+- `@/store/` - Global state management
+- `@/constants/` - Static configurations and constants
+- `@/assets/` - Static assets and media
+
+## Coding Standards for AI Assistant
+1. **Styling**: Always use Tailwind CSS. Tùy chỉnh UI hoặc gộp class bằng hàm `cn()` từ `@/lib/utils`.
+2. **Icons**: Sử dụng icon từ `lucide-react`. Ví dụ: `import { User, LogOut } from "lucide-react";`
+3. **Animations**: Sử dụng `framer-motion` cho hiệu ứng chuyển động.
+4. **Forms**: Sử dụng `react-hook-form` kết hợp với `zod` schema validation cho các form dữ liệu.
+5. **Components**: Ưu tiên tạo các components tái sử dụng trong `src/components/ui/` hoặc `src/components/features/`. Tránh viết logic cồng kềnh trực tiếp trong các file route `src/app/`.
