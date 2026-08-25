@@ -28,3 +28,7 @@
 3. **Animations**: Sử dụng `framer-motion` cho hiệu ứng chuyển động.
 4. **Forms**: Sử dụng `react-hook-form` kết hợp với `zod` schema validation cho các form dữ liệu.
 5. **Components**: Ưu tiên tạo các components tái sử dụng trong `src/components/ui/` hoặc `src/components/features/`. Tránh viết logic cồng kềnh trực tiếp trong các file route `src/app/`.
+
+## UI/UX Guidelines
+- **Brand Identity**: Always follow the brand guidelines and maintain consistent brand identity across all UI components (colors, typography, spacing, and styling).
+- **Responsive Design**: All UI components and layouts MUST be fully responsive. Always implement and test styles for mobile, tablet, and desktop views using Tailwind's responsive modifiers (`sm:`, `md:`, `lg:`, `xl:`). Mobile-first approach is highly recommended.
