@@ -40,6 +40,19 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# server, tunnel & local configs
+.cloudflared/
+cloudflared*
+*.tunnel*
+config.yml
+config.yaml
+*.log
+*.key
+*.crt
+*.cert
+.server*
+docker-compose.override.yml
+
 # docs & markdown files (never ignore)
 !*.md
 !**/*.md
