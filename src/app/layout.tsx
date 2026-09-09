@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { Lexend } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-const lexend = Lexend({
-  variable: "--font-lexend",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin", "vietnamese"],
   display: "swap",
 });
@@ -31,7 +31,7 @@ export default function RootLayout({
   return (
     <html
       lang="vi"
-      className={`${lexend.variable} font-sans h-full antialiased`}
+      className={`${inter.variable} font-sans h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
