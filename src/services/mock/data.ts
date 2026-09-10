@@ -11,6 +11,7 @@ import {
   Class,
   TeacherProfile,
   Transaction,
+  QuestionBank,
 } from '@/types';
 
 export const MOCK_SCHOOLS: School[] = [
@@ -347,43 +348,44 @@ export const MOCK_EXAMS: Exam[] = [
     questions: [
       {
         id: 'q-01',
+        bank_id: 'bank-toan12-luong-giac',
         type: 'MULTIPLE_CHOICE',
         content: 'Giá trị của sin(π/6) bằng bao nhiêu?',
         points: 2.5,
-        options: [
-          { id: 'opt-1', text: '1/2', is_correct: true },
-          { id: 'opt-2', text: '√3/2', is_correct: false },
-          { id: 'opt-3', text: '√2/2', is_correct: false },
-          { id: 'opt-4', text: '1', is_correct: false },
+        answers: [
+          { id: 'opt-1', question_id: 'q-01', content: '1/2', is_answer: true, explain: 'Theo bảng giá trị lượng giác chuẩn, sin(π/6) = sin(30°) = 1/2.' },
+          { id: 'opt-2', question_id: 'q-01', content: '√3/2', is_answer: false },
+          { id: 'opt-3', question_id: 'q-01', content: '√2/2', is_answer: false },
+          { id: 'opt-4', question_id: 'q-01', content: '1', is_answer: false },
         ],
-        correct_answer_explanation: 'Theo bảng giá trị lượng giác chuẩn, sin(π/6) = sin(30°) = 1/2.',
       },
       {
         id: 'q-02',
+        bank_id: 'bank-toan12-luong-giac',
         type: 'TRUE_FALSE',
         content: 'Khẳng định sau đúng hay sai: sin²(x) + cos²(x) = 1 với mọi x ∈ R.',
         points: 2.5,
-        options: [
-          { id: 'opt-5', text: 'Đúng', is_correct: true },
-          { id: 'opt-6', text: 'Sai', is_correct: false },
+        answers: [
+          { id: 'opt-5', question_id: 'q-02', content: 'Đúng', is_answer: true, explain: 'Đây là hệ thức lượng giác cơ bản đúng với mọi số thực x.' },
+          { id: 'opt-6', question_id: 'q-02', content: 'Sai', is_answer: false },
         ],
-        correct_answer_explanation: 'Đây là hệ thức lượng giác cơ bản đúng với mọi số thực x.',
       },
       {
         id: 'q-03',
+        bank_id: 'bank-toan12-luong-giac',
         type: 'SINGLE_CHOICE',
         content: 'Chu kỳ tuần hoàn của hàm số y = tan(x) là:',
         points: 2.5,
-        options: [
-          { id: 'opt-7', text: 'T = π', is_correct: true },
-          { id: 'opt-8', text: 'T = 2π', is_correct: false },
-          { id: 'opt-9', text: 'T = π/2', is_correct: false },
-          { id: 'opt-10', text: 'T = 4π', is_correct: false },
+        answers: [
+          { id: 'opt-7', question_id: 'q-03', content: 'T = π', is_answer: true, explain: 'Hàm số tan(x) và cot(x) có chu kỳ tuần hoàn là T = π.' },
+          { id: 'opt-8', question_id: 'q-03', content: 'T = 2π', is_answer: false },
+          { id: 'opt-9', question_id: 'q-03', content: 'T = π/2', is_answer: false },
+          { id: 'opt-10', question_id: 'q-03', content: 'T = 4π', is_answer: false },
         ],
-        correct_answer_explanation: 'Hàm số tan(x) và cot(x) có chu kỳ tuần hoàn là T = π.',
       },
       {
         id: 'q-04',
+        bank_id: 'bank-toan12-luong-giac',
         type: 'ESSAY',
         content: 'Hãy trình bày các bước tìm tập nghiệm của phương trình: sin(2x) = 1/2.',
         points: 2.5,
@@ -411,21 +413,21 @@ export const MOCK_SUBMISSIONS: ExamSubmission[] = [
     answers: [
       {
         question_id: 'q-01',
-        selected_option_ids: ['opt-1'],
+        selected_answer_id: 'opt-1',
         is_correct: true,
         points_earned: 2.5,
         teacher_feedback: 'Chính xác.',
       },
       {
         question_id: 'q-02',
-        selected_option_ids: ['opt-5'],
+        selected_answer_id: 'opt-5',
         is_correct: true,
         points_earned: 2.5,
         teacher_feedback: 'Chính xác.',
       },
       {
         question_id: 'q-03',
-        selected_option_ids: ['opt-7'],
+        selected_answer_id: 'opt-7',
         is_correct: true,
         points_earned: 2.5,
         teacher_feedback: 'Chính xác.',
@@ -927,5 +929,109 @@ export const MOCK_TEACHER_TRANSACTIONS: Transaction[] = [
     type: 'TEACHER_INCOME',
     description: 'Thu nhập thực nhận từ lượt mua khóa học trong tháng 6/2026.',
     created_at: '2026-06-29T15:10:00Z',
+  },
+];
+
+// ============================================================
+// QUESTION BANK DATA (ERD: QuestionBank → Question → Answer)
+// ============================================================
+
+export const MOCK_QUESTION_BANKS: QuestionBank[] = [
+  {
+    id: 'bank-toan12-luong-giac',
+    title: 'Ngân hàng Toán 12 – Lượng giác',
+    owner_id: 'tchr-01',
+    school_id: 'sch-01',
+    is_premium: true,
+    subject: 'Toán học',
+    description: 'Kho câu hỏi chuyên đề lượng giác & công thức biến đổi, dùng cho kiểm tra 15 phút và giữa kỳ.',
+    questions_count: 3,
+    count_used: 128,
+    created_at: '2026-07-01T08:00:00Z',
+    updated_at: '2026-08-20T10:00:00Z',
+    questions: [
+      {
+        id: 'qk-01',
+        bank_id: 'bank-toan12-luong-giac',
+        type: 'MULTIPLE_CHOICE',
+        title: 'Giá trị lượng giác cơ bản',
+        content: 'Giá trị của sin(π/6) bằng bao nhiêu?',
+        points: 2.5,
+        created_at: '2026-07-01T08:05:00Z',
+        answers: [
+          { id: 'qk-01-a1', question_id: 'qk-01', content: '1/2', is_answer: true, explain: 'sin(π/6) = sin(30°) = 1/2.' },
+          { id: 'qk-01-a2', question_id: 'qk-01', content: '√3/2', is_answer: false },
+          { id: 'qk-01-a3', question_id: 'qk-01', content: '√2/2', is_answer: false },
+          { id: 'qk-01-a4', question_id: 'qk-01', content: '1', is_answer: false },
+        ],
+      },
+      {
+        id: 'qk-02',
+        bank_id: 'bank-toan12-luong-giac',
+        type: 'SINGLE_CHOICE',
+        title: 'Chu kỳ hàm số',
+        content: 'Chu kỳ tuần hoàn của hàm số y = tan(x) là:',
+        points: 2.5,
+        created_at: '2026-07-02T09:00:00Z',
+        answers: [
+          { id: 'qk-02-a1', question_id: 'qk-02', content: 'T = π', is_answer: true, explain: 'tan(x) và cot(x) có chu kỳ T = π.' },
+          { id: 'qk-02-a2', question_id: 'qk-02', content: 'T = 2π', is_answer: false },
+          { id: 'qk-02-a3', question_id: 'qk-02', content: 'T = π/2', is_answer: false },
+        ],
+      },
+      {
+        id: 'qk-03',
+        bank_id: 'bank-toan12-luong-giac',
+        type: 'TRUE_FALSE',
+        title: 'Hệ thức lượng giác',
+        content: 'Khẳng định sau đúng hay sai: sin²(x) + cos²(x) = 1 với mọi x ∈ R.',
+        points: 2,
+        created_at: '2026-07-03T09:00:00Z',
+        answers: [
+          { id: 'qk-03-a1', question_id: 'qk-03', content: 'Đúng', is_answer: true, explain: 'Đây là hệ thức lượng giác cơ bản.' },
+          { id: 'qk-03-a2', question_id: 'qk-03', content: 'Sai', is_answer: false },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'bank-toan12-tich-phan',
+    title: 'Ngân hàng Toán 12 – Nguyên hàm & Tích phân',
+    owner_id: 'tchr-01',
+    school_id: 'sch-01',
+    is_premium: false,
+    subject: 'Toán học',
+    description: 'Kho câu hỏi nguyên hàm, tích phân và ứng dụng thực tế.',
+    questions_count: 2,
+    count_used: 36,
+    created_at: '2026-07-10T08:00:00Z',
+    updated_at: '2026-08-18T10:00:00Z',
+    questions: [
+      {
+        id: 'qk-04',
+        bank_id: 'bank-toan12-tich-phan',
+        type: 'ESSAY',
+        title: 'Tính tích phân',
+        content: 'Tính tích phân I = ∫₀¹ (2x + 1) dx và trình bày các bước giải.',
+        points: 3,
+        sample_essay_answer: 'I = [x² + x]₀¹ = (1 + 1) − 0 = 2.',
+        created_at: '2026-07-10T08:10:00Z',
+        answers: [],
+      },
+      {
+        id: 'qk-05',
+        bank_id: 'bank-toan12-tich-phan',
+        type: 'MULTIPLE_CHOICE',
+        title: 'Nguyên hàm cơ bản',
+        content: 'Nguyên hàm của hàm số f(x) = cos(x) là:',
+        points: 2.5,
+        created_at: '2026-07-11T08:10:00Z',
+        answers: [
+          { id: 'qk-05-a1', question_id: 'qk-05', content: 'sin(x) + C', is_answer: true, explain: 'Đạo hàm của sin(x) là cos(x).' },
+          { id: 'qk-05-a2', question_id: 'qk-05', content: '-sin(x) + C', is_answer: false },
+          { id: 'qk-05-a3', question_id: 'qk-05', content: '-cos(x) + C', is_answer: false },
+        ],
+      },
+    ],
   },
 ];
