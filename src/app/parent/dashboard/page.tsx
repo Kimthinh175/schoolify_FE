@@ -3,24 +3,26 @@
 import Link from 'next/link';
 import {
   Baby,
-  BookCheck,
+  // BookCheck,
   Calendar,
   CreditCard,
-  CheckCircle2,
-  ArrowRight,
-  Sparkles,
-  AlertCircle,
+  // CheckCircle2,
+  // ArrowRight,
+  // Sparkles,
+  // AlertCircle,
   MessageSquare,
+  Bell,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Tabs } from '@/components/ui/tabs';
 import { useParentStore } from '@/store/parent.store';
 import { MOCK_SUBMISSIONS, MOCK_TIMETABLE, MOCK_ORDERS } from '@/services/mock/data';
 
 export default function ParentDashboardPage() {
-  const { children, activeChildId } = useParentStore();
+  const { children, activeChildId, setActiveChild } = useParentStore();
   const activeChild = children.find((c) => c.id === activeChildId) || children[0];
   const submission = MOCK_SUBMISSIONS[0];
   const pendingTuition = MOCK_ORDERS[0];
@@ -28,9 +30,36 @@ export default function ParentDashboardPage() {
   const formatMoney = (amount: number) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 
+  const childTabs = children.map(c => ({
+    id: c.id,
+    label: c.name,
+    icon: <Baby className="w-4 h-4" />
+  }));
+
+  const averageScore = activeChild.id === 'child-01' ? 8.9 : 7.5;
+  const attendanceRate = activeChild.id === 'child-01' ? 9.5 : 8.8;
+
+  const mockNotifications = [
+    { id: 1, title: 'Thông báo nghỉ học ngày Giỗ tổ Hùng Vương', date: '10/04/2026' },
+    { id: 2, title: 'Nhắc nhở: Hạn chót đóng học phí học kỳ I', date: '05/04/2026' },
+    { id: 3, title: 'Kết quả thi giữa kỳ môn Toán', date: '01/04/2026' },
+  ];
+
   return (
     <div className="space-y-8">
-      {/* Header with Child Profile Highlight */}
+      {/* Tabs Chuyển Đổi Hồ Sơ Con Cái */}
+      {children.length > 1 && (
+        <div className="flex justify-center sm:justify-start">
+          <Tabs
+            tabs={childTabs}
+            activeTab={activeChildId}
+            onChange={setActiveChild}
+            variant="pill"
+          />
+        </div>
+      )}
+
+      {/* Header Nổi Bật Thông Tin Con */}
       <div className="p-6 rounded-3xl bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <img
@@ -63,21 +92,21 @@ export default function ParentDashboardPage() {
         </div>
       </div>
 
-      {/* KPI Cards */}
+      {/* Các Thẻ Thống Kê (KPI Cards) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <Card className="p-5">
-          <span className="text-xs font-semibold text-slate-500">Điểm Kiểm Tra Gần Nhất</span>
+          <span className="text-xs font-semibold text-slate-500">Điểm Số Trung Bình</span>
           <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-2">
-            {submission.score} / 10
+            {averageScore} / 10
           </p>
-          <p className="text-xs text-emerald-600 font-semibold mt-1">Toán Học 11 (Xếp loại Giỏi)</p>
+          <p className="text-xs text-emerald-600 font-semibold mt-1">Xếp loại {averageScore >= 8 ? 'Giỏi' : 'Khá'}</p>
         </Card>
 
         <Card className="p-5">
-          <span className="text-xs font-semibold text-slate-500">Tiến Độ Khóa Học</span>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white mt-2">65% Hoàn thành</p>
+          <span className="text-xs font-semibold text-slate-500">Tổng Quan Chuyên Cần</span>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white mt-2">{attendanceRate}%</p>
           <div className="mt-2">
-            <Progress value={65} showLabel={false} />
+            <Progress value={attendanceRate} showLabel={false} />
           </div>
         </Card>
 
@@ -98,17 +127,17 @@ export default function ParentDashboardPage() {
         </Card>
       </div>
 
-      {/* Two columns: Teacher Feedback on Recent Exam & Timetable */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Latest Teacher Feedback on Exam */}
+      {/* Ba cột: Lời phê của giáo viên, Lịch học, Thông báo */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Lời Phê Mới Nhất Từ Giáo Viên */}
         <Card className="p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <MessageSquare className="w-5 h-5 text-indigo-600" />
-              Lời Phê Mới Nhất Từ Thầy Cô
+              Lời Phê Từ Thầy Cô
             </h3>
             <Link href="/parent/academic">
-              <Button size="sm" variant="ghost">Xem sổ điểm chi tiết</Button>
+              <Button size="sm" variant="ghost">Chi tiết</Button>
             </Link>
           </div>
 
@@ -128,15 +157,15 @@ export default function ParentDashboardPage() {
           </div>
         </Card>
 
-        {/* Timetable widget */}
+        {/* Widget Lịch Học */}
         <Card className="p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Calendar className="w-5 h-5 text-indigo-600" />
-              Thời Khóa Biểu Của Con
+              Lịch Học Tuần Này
             </h3>
             <Link href="/parent/timetable">
-              <Button size="sm" variant="ghost">Xem lịch tuần</Button>
+              <Button size="sm" variant="ghost">Xem lịch</Button>
             </Link>
           </div>
 
@@ -144,12 +173,30 @@ export default function ParentDashboardPage() {
             {MOCK_TIMETABLE.map((item) => (
               <div key={item.id} className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-bold text-slate-900 dark:text-white">{item.title}</p>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white line-clamp-1">{item.title}</p>
                   <p className="text-xs text-slate-500">{item.teacher_name} • {item.room || 'Học Online'}</p>
                 </div>
-                <Badge variant="default" className="text-[10px]">
-                  08:00 - 09:45
+                <Badge variant="default" className="text-[10px] ml-2 shrink-0">
+                  08:00
                 </Badge>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* Widget Thông Báo */}
+        <Card className="p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Bell className="w-5 h-5 text-indigo-600" />
+              Thông Báo Từ Trường
+            </h3>
+          </div>
+          <div className="space-y-3">
+            {mockNotifications.map((note) => (
+              <div key={note.id} className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/50 flex flex-col justify-center">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-2">{note.title}</p>
+                <p className="text-xs text-slate-500 mt-1">{note.date}</p>
               </div>
             ))}
           </div>
