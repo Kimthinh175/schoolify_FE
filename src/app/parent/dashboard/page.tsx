@@ -60,24 +60,24 @@ export default function ParentDashboardPage() {
       )}
 
       {/* Header Nổi Bật Thông Tin Con */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+      <div className="p-6 rounded-3xl bg-[#00B8DD] text-white shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <img
             src={activeChild.avatar}
             alt={activeChild.name}
-            className="h-16 w-16 rounded-full object-cover border-2 border-indigo-400/50 shadow-md"
+            className="h-16 w-16 rounded-full object-cover border-2 border-white/50 shadow-md"
           />
           <div>
             <div className="flex items-center gap-2">
-              <Badge variant="primary" className="bg-indigo-500/40 text-indigo-200 font-bold backdrop-blur-xs">
+              <Badge variant="primary" className="bg-white/20 text-white font-bold backdrop-blur-xs border-none">
                 {activeChild.grade}
               </Badge>
-              <span className="text-xs text-slate-300">{activeChild.schoolName}</span>
+              <span className="text-xs text-cyan-50">{activeChild.schoolName}</span>
             </div>
             <h1 className="text-2xl font-black mt-1">
               Sổ Liên Lạc Của Con: {activeChild.name}
             </h1>
-            <p className="text-xs text-slate-300">
+            <p className="text-xs text-cyan-100">
               Lớp: {activeChild.className} • Giáo viên chủ nhiệm: ThS. Nguyễn Văn Hùng
             </p>
           </div>
@@ -85,7 +85,7 @@ export default function ParentDashboardPage() {
 
         <div className="flex items-center gap-3">
           <Link href="/parent/tuition">
-            <Button className="shadow-md shadow-indigo-500/20" leftIcon={<CreditCard className="w-4 h-4" />}>
+            <Button variant="secondary" className="bg-white text-[#00B8DD] hover:bg-slate-50 shadow-md" leftIcon={<CreditCard className="w-4 h-4" />}>
               Đóng Học Phí Trực Tuyến
             </Button>
           </Link>
