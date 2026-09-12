@@ -215,9 +215,9 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['PARENT'],
   },
   {
-    label: 'Sổ Liên Lạc & Lời Phê',
-    href: '/parent/academic',
-    icon: <BookCheck className="w-5 h-5" />,
+    label: 'Sổ Liên Lạc (Kết Quả)',
+    href: '/parent/report',
+    icon: <GraduationCap className="w-5 h-5" />,
     badge: 'Điểm mới',
     roles: ['PARENT'],
   },

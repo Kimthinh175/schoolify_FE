@@ -3,13 +3,13 @@
 import Link from 'next/link';
 import {
   Baby,
-  // BookCheck,
+  BookCheck,
   Calendar,
   CreditCard,
-  // CheckCircle2,
-  // ArrowRight,
-  // Sparkles,
-  // AlertCircle,
+  CheckCircle2,
+  ArrowRight,
+  Sparkles,
+  AlertCircle,
   MessageSquare,
   Bell,
 } from 'lucide-react';
@@ -24,7 +24,11 @@ import { MOCK_SUBMISSIONS, MOCK_TIMETABLE, MOCK_ORDERS } from '@/services/mock/d
 export default function ParentDashboardPage() {
   const { children, activeChildId, setActiveChild } = useParentStore();
   const activeChild = children.find((c) => c.id === activeChildId) || children[0];
-  const submission = MOCK_SUBMISSIONS[0];
+
+  const childSubmissions = MOCK_SUBMISSIONS.filter(sub => sub.student_id === activeChild.id);
+  const submission = childSubmissions.length > 0 ? childSubmissions[0] : null;
+
+  const childTimetable = MOCK_TIMETABLE.filter(session => session.class_id === activeChild.classId);
   const pendingTuition = MOCK_ORDERS[0];
 
   const formatMoney = (amount: number) =>
@@ -36,7 +40,10 @@ export default function ParentDashboardPage() {
     icon: <Baby className="w-4 h-4" />
   }));
 
-  const averageScore = activeChild.id === 'child-01' ? 8.9 : 7.5;
+  const averageScore = childSubmissions.length > 0
+    ? (childSubmissions.reduce((acc, sub) => acc + (sub.score || 0), 0) / childSubmissions.length).toFixed(1)
+    : (activeChild.id === 'child-01' ? 8.9 : 7.5);
+
   const attendanceRate = activeChild.id === 'child-01' ? 9.5 : 8.8;
 
   const mockNotifications = [
@@ -99,7 +106,7 @@ export default function ParentDashboardPage() {
           <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-2">
             {averageScore} / 10
           </p>
-          <p className="text-xs text-emerald-600 font-semibold mt-1">Xếp loại {averageScore >= 8 ? 'Giỏi' : 'Khá'}</p>
+          <p className="text-xs text-emerald-600 font-semibold mt-1">Xếp loại {Number(averageScore) >= 8 ? 'Giỏi' : 'Khá'}</p>
         </Card>
 
         <Card className="p-5">
@@ -136,25 +143,31 @@ export default function ParentDashboardPage() {
               <MessageSquare className="w-5 h-5 text-indigo-600" />
               Lời Phê Từ Thầy Cô
             </h3>
-            <Link href="/parent/academic">
+            <Link href="/parent/report">
               <Button size="sm" variant="ghost">Chi tiết</Button>
             </Link>
           </div>
 
-          <div className="p-4 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-800/60 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">
-                Môn: {submission.course_title}
-              </span>
-              <span className="text-xs font-bold text-emerald-600">Điểm: {submission.score}/10</span>
+          {submission ? (
+            <div className="p-4 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-800/60 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">
+                  Môn: {submission.course_title}
+                </span>
+                <span className="text-xs font-bold text-emerald-600">Điểm: {submission.score}/10</span>
+              </div>
+              <p className="text-xs text-slate-700 dark:text-slate-200 italic leading-relaxed">
+                "{submission.teacher_notes}"
+              </p>
+              <p className="text-[11px] text-slate-500 pt-1 border-t border-indigo-100 dark:border-indigo-900">
+                Chấm ngày: {submission.graded_at ? new Date(submission.graded_at).toLocaleDateString('vi-VN') : 'N/A'}
+              </p>
             </div>
-            <p className="text-xs text-slate-700 dark:text-slate-200 italic leading-relaxed">
-              "{submission.teacher_notes}"
-            </p>
-            <p className="text-[11px] text-slate-500 pt-1 border-t border-indigo-100 dark:border-indigo-900">
-              Chấm bởi: ThS. Nguyễn Văn Hùng • {new Date(submission.graded_at || '').toLocaleDateString('vi-VN')}
-            </p>
-          </div>
+          ) : (
+            <div className="p-4 text-center text-slate-500 bg-slate-50 rounded-2xl">
+              Chưa có nhận xét nào mới.
+            </div>
+          )}
         </Card>
 
         {/* Widget Lịch Học */}
@@ -170,7 +183,7 @@ export default function ParentDashboardPage() {
           </div>
 
           <div className="space-y-3">
-            {MOCK_TIMETABLE.map((item) => (
+            {childTimetable.length > 0 ? childTimetable.slice(0, 3).map((item) => (
               <div key={item.id} className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 flex items-center justify-between">
                 <div>
                   <p className="text-sm font-bold text-slate-900 dark:text-white line-clamp-1">{item.title}</p>
@@ -180,7 +193,11 @@ export default function ParentDashboardPage() {
                   08:00
                 </Badge>
               </div>
-            ))}
+            )) : (
+              <div className="p-4 text-center text-slate-500 bg-slate-50 rounded-2xl text-sm">
+                Không có lịch học.
+              </div>
+            )}
           </div>
         </Card>
 
