@@ -441,6 +441,30 @@ export const MOCK_SUBMISSIONS: ExamSubmission[] = [
       },
     ],
   },
+  {
+    id: 'sub-02',
+    exam_id: 'ex-02',
+    student_id: 'child-02',
+    student_name: 'Nguyễn Ngọc Linh',
+    student_avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
+    exam_title: 'Kiểm tra giữa kỳ môn Tiếng Anh',
+    course_title: 'Tiếng Anh 8: Global Success',
+    started_at: '2026-09-10T14:00:00Z',
+    submitted_at: '2026-09-10T14:45:00Z',
+    score: 8.5,
+    status: 'GRADED',
+    teacher_notes: 'Linh có tiến bộ rất rõ rệt ở kỹ năng đọc hiểu và từ vựng. Tuy nhiên phần viết luận cần luyện tập thêm cách triển khai ý logic hơn.',
+    graded_at: '2026-09-11T09:30:00Z',
+    answers: [
+      {
+        question_id: 'q-eng-01',
+        text_answer: 'I believe that studying abroad offers students a great opportunity to learn about new cultures and improve their language skills. However, it can also be challenging due to homesickness and financial issues.',
+        is_correct: true,
+        points_earned: 8.5,
+        teacher_feedback: 'Cách sử dụng từ nối (However) rất tự nhiên. Cần mở rộng thêm ý về cách vượt qua những khó khăn (homesickness).',
+      },
+    ],
+  },
 ];
 
 export const MOCK_TIMETABLE: ClassSession[] = [
@@ -475,6 +499,37 @@ export const MOCK_TIMETABLE: ClassSession[] = [
     end_time: '2026-08-26T16:00:00Z',
     teacher_name: 'Thầy Trần Minh Hoàng',
     class_name: '11A1 - Chuyên Toán Tin',
+  },
+  {
+    id: 'ses-04',
+    class_id: 'cls-8b',
+    title: 'Tiếng Anh 8: Unit 3 - Teenagers',
+    room: 'Phòng 201 (Tòa nhà B)',
+    meeting_url: 'https://meet.google.com/eng-schoolify-8b',
+    start_time: '2026-09-12T07:30:00Z',
+    end_time: '2026-09-12T09:00:00Z',
+    teacher_name: 'Cô Mai Lan',
+    class_name: '8B - Song Ngữ Quốc Tế',
+  },
+  {
+    id: 'ses-05',
+    class_id: 'cls-8b',
+    title: 'Ngữ Văn 8: Lão Hạc',
+    room: 'Phòng 202 (Tòa nhà B)',
+    start_time: '2026-09-13T13:30:00Z',
+    end_time: '2026-09-13T15:00:00Z',
+    teacher_name: 'Thầy Đức Huy',
+    class_name: '8B - Song Ngữ Quốc Tế',
+  },
+  {
+    id: 'ses-06',
+    class_id: 'cls-8b',
+    title: 'Toán 8: Phân Tích Đa Thức Thành Nhân Tử',
+    room: 'Phòng 203 (Tòa nhà B)',
+    start_time: '2026-09-14T08:00:00Z',
+    end_time: '2026-09-14T09:30:00Z',
+    teacher_name: 'Cô Bích Trâm',
+    class_name: '8B - Song Ngữ Quốc Tế',
   },
 ];
 
