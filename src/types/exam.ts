@@ -1,5 +1,6 @@
 export type QuestionType = 'MULTIPLE_CHOICE' | 'SINGLE_CHOICE' | 'ESSAY' | 'TRUE_FALSE';
 export type SubmissionStatus = 'IN_PROGRESS' | 'SUBMITTED' | 'GRADED' | 'RETURNED';
+export type QuestionBankReviewStatus = 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED';
 
 /** ERD: Answer — một đáp án của câu hỏi */
 export interface Answer {
@@ -31,7 +32,15 @@ export interface QuestionBank {
   title: string;
   owner_id?: string | null;
   school_id?: string | null;
+  teacher_name?: string | null;
+  department_name?: string | null;
+  grade_level?: string | null;
+  chapter_name?: string | null;
   is_premium: boolean;
+  status?: QuestionBankReviewStatus;
+  review_note?: string | null;
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
   description?: string | null;
   subject?: string | null;
   questions_count?: number;

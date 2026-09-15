@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowUpDown, BookCheck, CalendarDays, Check, CheckCircle2, ChevronDown, Clock, Eye, FileText, FileSpreadsheet, Filter, Image as ImageIcon, Layers3, MessageSquare, Paperclip, PlayCircle, RotateCcw, Search, Store, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/input';
 import { Dialog } from '@/components/ui/dialog';
 import { Tabs } from '@/components/ui/tabs';
+import { QuestionBankReviewPanel } from '@/components/features/school/QuestionBankReviewPanel';
 import { MOCK_COURSES, MOCK_DEPARTMENTS } from '@/services/mock/data';
 import { Course, CourseStatus } from '@/types';
 
@@ -104,6 +106,14 @@ function getStatusMeta(status: CourseStatus) {
 }
 
 export default function CurriculumApprovalPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeWorkspaceTab = searchParams.get('tab') === 'exams' ? 'exams' : 'courses';
+
+  const changeWorkspaceTab = (tab: 'courses' | 'exams') => {
+    router.replace(tab === 'exams' ? '/school/curriculum-approval?tab=exams' : '/school/curriculum-approval');
+  };
+
   const [courses, setCourses] = React.useState<Course[]>([
     ...MOCK_COURSES,
     {
@@ -254,6 +264,17 @@ export default function CurriculumApprovalPage() {
         <p className="mt-0.5 text-xs text-slate-500">Chọn tổ chuyên môn để theo dõi, kiểm duyệt và phản hồi các khóa học của giáo viên.</p>
       </div>
 
+      <Tabs
+        variant="underline"
+        activeTab={activeWorkspaceTab}
+        onChange={(tabId) => changeWorkspaceTab(tabId as 'courses' | 'exams')}
+        tabs={[
+          { id: 'courses', label: 'Giáo án & Khóa học', icon: <BookCheck className="h-4 w-4" /> },
+          { id: 'exams', label: 'Ngân hàng đề', icon: <FileText className="h-4 w-4" /> },
+        ]}
+      />
+
+      {activeWorkspaceTab === 'exams' ? <QuestionBankReviewPanel /> : <>
       <div className="grid gap-3 sm:grid-cols-3">
         <Card className="p-4">
           <div className="flex items-center justify-between">
@@ -521,6 +542,7 @@ export default function CurriculumApprovalPage() {
           </div>
         </div>}
       </Dialog>
+      </>}
     </div>
   );
 }
