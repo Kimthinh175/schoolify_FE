@@ -162,7 +162,7 @@ export default function LandingPage() {
             {...fadeUp(0.08)}
             className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.15]"
           >
-            Trường Học Hiện Đại{' '}
+            Trường Học Hiện Đại <br />
             <span className="bg-gradient-to-r from-[#00B8DD] via-cyan-500 to-[#009BBD] bg-clip-text text-transparent">
               Chạy Trên Một Nền Tảng.
             </span>

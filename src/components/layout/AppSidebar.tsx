@@ -151,6 +151,12 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['TEACHER'],
   },
   {
+    label: 'Ngân Hàng Đề (Studio)',
+    href: '/teacher/questions',
+    icon: <HelpCircle className="w-5 h-5" />,
+    roles: ['TEACHER'],
+  },
+  {
     label: 'Doanh Thu Khóa Học',
     href: '/teacher/revenue',
     icon: <DollarSign className="w-5 h-5" />,

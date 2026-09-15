@@ -1,33 +1,44 @@
 export type QuestionType = 'MULTIPLE_CHOICE' | 'SINGLE_CHOICE' | 'ESSAY' | 'TRUE_FALSE';
 export type SubmissionStatus = 'IN_PROGRESS' | 'SUBMITTED' | 'GRADED' | 'RETURNED';
 
-export interface QuestionOption {
+/** ERD: Answer — một đáp án của câu hỏi */
+export interface Answer {
   id: string;
-  text: string;
-  is_correct?: boolean;
+  question_id: string;
+  content: string;
+  explain?: string | null;
+  img_url?: string | null;
+  is_answer: boolean;
 }
 
+/** ERD: Question (+ một số field mở rộng FE cần cho Exam Runner) */
 export interface Question {
   id: string;
   bank_id?: string | null;
+  lesson_id?: string | null;
   type: QuestionType;
+  title?: string | null;
   content: string;
   points: number;
-  options?: QuestionOption[];
-  correct_answer_explanation?: string;
-  sample_essay_answer?: string;
+  answers?: Answer[];
+  sample_essay_answer?: string | null;
+  created_at?: string;
 }
 
+/** ERD: QuestionBank */
 export interface QuestionBank {
   id: string;
-  school_id?: string | null;
-  creator_id: string;
   title: string;
+  owner_id?: string | null;
+  school_id?: string | null;
+  is_premium: boolean;
   description?: string | null;
-  subject: string;
+  subject?: string | null;
   questions_count?: number;
   created_at: string;
+  updated_at?: string;
   questions?: Question[];
+  count_used?: number;
 }
 
 export interface Exam {
@@ -48,7 +59,7 @@ export interface Exam {
 
 export interface SubmissionAnswer {
   question_id: string;
-  selected_option_ids?: string[];
+  selected_answer_id?: string | null;
   text_answer?: string;
   is_correct?: boolean;
   points_earned?: number;

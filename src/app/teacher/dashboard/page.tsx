@@ -1,25 +1,45 @@
 'use client';
 
+import * as React from 'react';
 import Link from 'next/link';
-import {
-  BookOpen,
-  Calendar,
-  FileCheck2,
-  DollarSign,
-  Plus,
-  ArrowRight,
-  Clock,
-  CheckCircle2,
-  Users,
-} from 'lucide-react';
+import { Plus, Wallet, UserX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MOCK_COURSES, MOCK_TIMETABLE, MOCK_SUBMISSIONS } from '@/services/mock/data';
+import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { TeacherKpiStats } from '@/components/features/teacher/TeacherKpiStats';
+import { TeacherCourseManager } from '@/components/features/teacher/TeacherCourseManager';
+import { teacherService, resolveTeacherId, TeacherDashboardStats } from '@/services/teacher.service';
+import { useAuthStore } from '@/store/auth.store';
+import { Course } from '@/types';
 
 export default function TeacherDashboardPage() {
-  const formatMoney = (amount: number) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  const { user } = useAuthStore();
+  // teacher_id suy trực tiếp từ user đang đăng nhập (ERD: User.teacher_profile)
+  const teacherId = React.useMemo(() => resolveTeacherId(user), [user]);
+  const [stats, setStats] = React.useState<TeacherDashboardStats | null>(null);
+  const [courses, setCourses] = React.useState<Course[]>([]);
+  const [loadedTeacherId, setLoadedTeacherId] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!teacherId) return;
+    let isMounted = true;
+    (async () => {
+      const [statsData, coursesData] = await Promise.all([
+        teacherService.getDashboardStats(teacherId),
+        teacherService.getMyCourses(teacherId),
+      ]);
+      if (!isMounted) return;
+      setStats(statsData);
+      setCourses(coursesData);
+      setLoadedTeacherId(teacherId);
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, [teacherId]);
+
+  const isReady = !!teacherId && loadedTeacherId === teacherId;
 
   return (
     <div className="space-y-8">
@@ -28,100 +48,59 @@ export default function TeacherDashboardPage() {
         <div>
           <Badge variant="purple" className="mb-2">Phân Hệ Giáo Viên & Creator</Badge>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
-            Bàn Làm Việc Giảng Dạy
+            Dashboard Giáo Viên & Kinh Doanh Khóa Học
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Quản lý bài giảng, lịch đứng lớp, chấm bài kiểm tra và theo dõi thu nhập bán khóa học.
+            Theo dõi thu nhập bán khóa học, số học viên, lớp giảng dạy và quản lý trạng thái mở bán khóa học trên Marketplace.
           </p>
         </div>
-        <Link href="/teacher/courses">
-          <Button leftIcon={<Plus className="w-4 h-4" />}>Tạo Khóa Học Mới</Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/teacher/revenue">
+            <Button variant="outline" leftIcon={<Wallet className="w-4 h-4" />}>
+              Doanh Thu
+            </Button>
+          </Link>
+          <Link href="/teacher/courses">
+            <Button leftIcon={<Plus className="w-4 h-4" />}>Tạo Khóa Học Mới</Button>
+          </Link>
+        </div>
       </div>
 
-      {/* KPI Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <Card className="p-5">
-          <span className="text-xs font-semibold text-slate-500">Khóa Học Đang Dạy</span>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white mt-2">6 Khóa</p>
-          <p className="text-xs text-indigo-600 font-semibold mt-1">2 khóa trên Marketplace</p>
-        </Card>
-
-        <Card className="p-5">
-          <span className="text-xs font-semibold text-slate-500">Tổng Học Viên Theo Học</span>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white mt-2">1,240 em</p>
-          <p className="text-xs text-emerald-600 font-semibold mt-1">+85 học viên tháng này</p>
-        </Card>
-
-        <Card className="p-5">
-          <span className="text-xs font-semibold text-slate-500">Bài Tập Chờ Chấm</span>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white mt-2">5 Bài</p>
-          <Link href="/teacher/grading" className="text-xs text-rose-500 font-semibold mt-1 hover:underline">
-            Chấm ngay →
-          </Link>
-        </Card>
-
-        <Card className="p-5">
-          <span className="text-xs font-semibold text-slate-500">Thu Nhập Bán Khóa Học</span>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white mt-2">{formatMoney(24500000)}</p>
-          <Link href="/teacher/revenue" className="text-xs text-indigo-600 font-semibold mt-1 hover:underline">
-            Yêu cầu rút tiền →
-          </Link>
-        </Card>
-      </div>
-
-      {/* Two cols: Teaching Schedule & Courses */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Schedule */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-indigo-600" />
-              Lịch Dạy Sắp Tới
-            </h3>
-            <Badge variant="outline">Hôm nay & Ngày mai</Badge>
-          </div>
-          <div className="space-y-3">
-            {MOCK_TIMETABLE.map((item) => (
-              <div key={item.id} className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-bold text-slate-900 dark:text-white">{item.title}</p>
-                  <p className="text-xs text-slate-500">{item.class_name} • {item.room || 'Phòng Học Online'}</p>
-                </div>
-                <Button size="sm" variant="outline">Vào Lớp</Button>
-              </div>
+      {!user || (!!teacherId && !isReady) ? (
+        <>
+          {/* Đang tải hồ sơ giáo viên / dữ liệu */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Skeleton key={index} className="h-28" />
             ))}
           </div>
+          <Skeleton className="h-96" />
+        </>
+      ) : !teacherId || !stats ? (
+        /* Không có hồ sơ giáo viên -> chặn rò dữ liệu của giáo viên khác */
+        <Card className="p-10 flex flex-col items-center text-center space-y-3">
+          <div className="h-14 w-14 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center">
+            <UserX className="w-7 h-7" />
+          </div>
+          <h3 className="text-base font-bold text-slate-900 dark:text-white">
+            Chưa Tìm Thấy Hồ Sơ Giáo Viên
+          </h3>
+          <p className="text-xs sm:text-sm text-slate-500 max-w-md">
+            Tài khoản hiện tại chưa được liên kết với hồ sơ giáo viên (TeacherProfile). Vui lòng đăng nhập bằng cổng Giáo viên để xem dữ liệu.
+          </p>
+          <Link href="/login/teacher">
+            <Button className="mt-2">Đăng Nhập Cổng Giáo Viên</Button>
+          </Link>
         </Card>
+      ) : (
+        <>
+          {/* KPI Stats: Thu nhập (TEACHER_INCOME), Học viên, Lớp, Khóa học */}
+          <TeacherKpiStats stats={stats} />
 
-        {/* Pending Submissions */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <FileCheck2 className="w-5 h-5 text-indigo-600" />
-              Bài Kiểm Tra Cần Chấm Điểm
-            </h3>
-            <Link href="/teacher/grading">
-              <Button size="sm" variant="ghost">Xem tất cả</Button>
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {MOCK_SUBMISSIONS.map((sub) => (
-              <div key={sub.id} className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-bold text-slate-900 dark:text-white">{sub.student_name}</p>
-                  <p className="text-xs text-slate-500">{sub.exam_title}</p>
-                </div>
-                <Link href={`/teacher/grading/${sub.id}`}>
-                  <Button size="sm" variant="primary">
-                    Mở Chấm Bài
-                  </Button>
-                </Link>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
+          {/* Course Management: Bộ lọc CourseStatus + Switch Marketplace + Giá */}
+          <TeacherCourseManager teacherId={teacherId} initialCourses={courses} />
+        </>
+      )}
     </div>
   );
 }

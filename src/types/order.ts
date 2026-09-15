@@ -25,6 +25,8 @@ export interface Order {
 export interface Transaction {
   id: string;
   order_id: string;
+  /** Giáo viên thụ hưởng giao dịch (ERD: TEACHER_INCOME / COMMISSION_FEE thuộc về 1 TeacherProfile) */
+  teacher_id?: string | null;
   amount: number;
   type: TransactionType;
   description: string;
