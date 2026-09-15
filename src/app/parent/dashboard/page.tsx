@@ -126,7 +126,7 @@ export default function ParentDashboardPage() {
         <Card className="p-5">
           <span className="text-xs font-semibold text-slate-500">Học Phí Học Kỳ I</span>
           <p className="text-2xl font-bold text-slate-900 dark:text-white mt-2">
-            {formatMoney(pendingTuition.total_amount)}
+            {formatMoney(pendingTuition.item_price_snapshot)}
           </p>
           <Badge variant="success" className="text-[10px] mt-1">
             Đã thanh toán (VietQR)

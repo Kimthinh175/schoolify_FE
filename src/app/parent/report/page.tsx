@@ -11,7 +11,7 @@ import {
   Clock,
   XCircle,
   GraduationCap,
-  Mail
+  // Mail
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -47,7 +47,7 @@ export default function ParentAcademicPage() {
     const date = new Date(isoString);
     return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
   };
-  
+
   const formatDate = (isoString: string) => {
     const date = new Date(isoString);
     return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });

@@ -90,7 +90,7 @@ export function Dialog({
             </div>
 
             {/* Body */}
-            <div className="overflow-y-auto py-2 flex-1 pr-1">{children}</div>
+            <div className="overflow-y-auto py-2 flex-1 pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">{children}</div>
 
             {/* Footer */}
             {footer && <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">{footer}</div>}
