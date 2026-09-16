@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowUpDown, BookCheck, CalendarDays, Check, CheckCircle2, ChevronDown, Clock, Eye, FileText, FileSpreadsheet, Filter, Image as ImageIcon, Layers3, MessageSquare, Paperclip, PlayCircle, RotateCcw, Search, Store, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/input';
 import { Dialog } from '@/components/ui/dialog';
 import { Tabs } from '@/components/ui/tabs';
+import { QuestionBankReviewPanel } from '@/components/features/school/QuestionBankReviewPanel';
 import { MOCK_COURSES, MOCK_DEPARTMENTS } from '@/services/mock/data';
 import { Course, CourseStatus } from '@/types';
 
@@ -104,6 +106,14 @@ function getStatusMeta(status: CourseStatus) {
 }
 
 export default function CurriculumApprovalPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeWorkspaceTab = searchParams.get('tab') === 'exams' ? 'exams' : 'courses';
+
+  const changeWorkspaceTab = (tab: 'courses' | 'exams') => {
+    router.replace(tab === 'exams' ? '/school/curriculum-approval?tab=exams' : '/school/curriculum-approval');
+  };
+
   const [courses, setCourses] = React.useState<Course[]>([
     ...MOCK_COURSES,
     {
@@ -254,6 +264,17 @@ export default function CurriculumApprovalPage() {
         <p className="mt-0.5 text-xs text-slate-500">Chọn tổ chuyên môn để theo dõi, kiểm duyệt và phản hồi các khóa học của giáo viên.</p>
       </div>
 
+      <Tabs
+        variant="underline"
+        activeTab={activeWorkspaceTab}
+        onChange={(tabId) => changeWorkspaceTab(tabId as 'courses' | 'exams')}
+        tabs={[
+          { id: 'courses', label: 'Giáo án & Khóa học', icon: <BookCheck className="h-4 w-4" /> },
+          { id: 'exams', label: 'Ngân hàng đề', icon: <FileText className="h-4 w-4" /> },
+        ]}
+      />
+
+      {activeWorkspaceTab === 'exams' ? <QuestionBankReviewPanel /> : <>
       <div className="grid gap-3 sm:grid-cols-3">
         <Card className="p-4">
           <div className="flex items-center justify-between">
@@ -427,7 +448,8 @@ export default function CurriculumApprovalPage() {
         onClose={closeDialog}
         title={actionType === 'APPROVE' ? 'Xác Nhận Duyệt Giáo Án' : actionType === 'REJECT' ? 'Yêu Cầu Chỉnh Sửa Chuyên Môn' : 'Chi Tiết Hồ Sơ Giáo Án'}
         description={`Khóa học: ${selectedCourse?.title}`}
-        maxWidth="lg"
+        maxWidth={actionType ? 'lg' : '4xl'}
+        className={!actionType ? 'sm:my-0 sm:ml-auto sm:mr-[-1rem] sm:h-[calc(100vh+2rem)] sm:max-h-none sm:max-w-2xl sm:rounded-l-3xl sm:rounded-r-none' : undefined}
       >
         {actionType ? <div className="space-y-4 py-2">
           <Textarea
@@ -483,6 +505,13 @@ export default function CurriculumApprovalPage() {
                         <span className="min-w-0 flex-1 truncate text-sm">{lesson.title}</span>
                         <span className="shrink-0 text-xs text-slate-500">{lesson.duration_mins || 0} phút</span>
                       </div>
+                      {lesson.video_url && <video
+                        controls
+                        preload="metadata"
+                        className="aspect-video w-full rounded-lg bg-slate-950 object-contain"
+                        src={lesson.video_url}
+                        aria-label={`Video bài học: ${lesson.title}`}
+                      />}
                       {lesson.materials && lesson.materials.length > 0 && <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-2 dark:border-slate-800">
                         {lesson.materials.map((material) => <a key={material.id} href={material.file_url || '#'} target="_blank" rel="noreferrer" className="inline-flex max-w-full items-center gap-1.5 rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-600 hover:bg-cyan-50 hover:text-cyan-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-cyan-950/40 dark:hover:text-cyan-300">
                           <Paperclip className="h-3 w-3 shrink-0" />
@@ -513,6 +542,7 @@ export default function CurriculumApprovalPage() {
           </div>
         </div>}
       </Dialog>
+      </>}
     </div>
   );
 }
