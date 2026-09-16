@@ -136,11 +136,11 @@ export default function AdminDashboardPage() {
             {MOCK_ORDERS.map((order) => (
               <div key={order.id} className="py-3 flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-bold text-slate-900 dark:text-white">{order.item_title}</p>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">{order.item_name_snapshot}</p>
                   <p className="text-xs text-slate-500">{order.buyer_name} • {order.payment_method}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400">{formatMoney(order.total_amount)}</p>
+                  <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400">{formatMoney(order.item_price_snapshot)}</p>
                   <Badge variant="success" className="text-[10px]">Đã Thanh Toán</Badge>
                 </div>
               </div>
