@@ -37,7 +37,7 @@ export function FilterDropdown({
           )}
         >
           <Filter className="w-3.5 h-3.5 text-[#00B8DD] shrink-0" />
-          <span className="truncate max-w-[140px]">{current?.label}</span>
+          <span className="truncate max-w-[150px]">{current?.label}</span>
           <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
         </div>
       }

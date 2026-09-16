@@ -235,14 +235,15 @@ export function CourseBuilderView() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Cây bài học */}
-        <div className="lg:col-span-5">
-          <Card className="p-4">
-            <div className="flex items-center gap-2 mb-3">
+      {/* Bố cục 3 Cột Tối Ưu (Cây bài học 4 - Soạn bài 5 - Cài đặt 3) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6">
+        {/* Cây bài học (4 cột: Vừa đủ gọn gàng cho danh sách chương bài) */}
+        <div className="lg:col-span-4">
+          <Card className="p-4 sm:p-5 h-full">
+            <div className="flex items-center gap-2 mb-3 pb-2.5 border-b border-slate-100 dark:border-slate-800">
               <Layers className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">Cây Bài Học</h2>
-              <span className="text-[10px] text-slate-400 ml-auto">Kéo thả để đổi thứ tự</span>
+              <span className="text-[10px] text-slate-400 ml-auto font-medium">Kéo thả thứ tự</span>
             </div>
             <CurriculumTree
               chapters={course.chapters || []}
@@ -253,16 +254,16 @@ export function CourseBuilderView() {
           </Card>
         </div>
 
-        {/* Soạn bài học */}
-        <div className="lg:col-span-4">
-          <Card className="p-4">
+        {/* Soạn bài học (5 cột: Mở rộng tối đa không gian soạn thảo, video & upload tài liệu) */}
+        <div className="lg:col-span-5">
+          <Card className="p-4 sm:p-5 h-full">
             <LessonEditorPanel lesson={selectedLesson} onChange={patchLesson} onDelete={deleteLesson} />
           </Card>
         </div>
 
-        {/* Cài đặt khóa học */}
+        {/* Cài đặt khóa học (3 cột: Góc bên phải cấu hình tổng quan & giá bán) */}
         <div className="lg:col-span-3">
-          <Card className="p-4">
+          <Card className="p-4 sm:p-5 h-full">
             <CourseSettingsPanel course={course} onChange={patchCourse} />
           </Card>
         </div>

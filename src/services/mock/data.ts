@@ -9,6 +9,7 @@ import {
   ClassSession,
   Department,
   Class,
+  ClassCourse,
   TeacherProfile,
   Transaction,
   QuestionBank,
@@ -443,38 +444,102 @@ export const MOCK_SUBMISSIONS: ExamSubmission[] = [
   },
 ];
 
+/** Mốc Thứ 2 của tuần hiện tại — để lịch dạy trong mock luôn có dữ liệu demo */
+const _weekMonday = (() => {
+  const now = new Date();
+  const day = now.getDay(); // 0 = Chủ nhật
+  const diff = day === 0 ? -6 : 1 - day;
+  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff);
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+})();
+
+const _dayAt = (offset: number, hours: number, minutes = 0) => {
+  const d = new Date(_weekMonday);
+  d.setDate(d.getDate() + offset);
+  d.setHours(hours, minutes, 0, 0);
+  return d.toISOString();
+};
+
 export const MOCK_TIMETABLE: ClassSession[] = [
   {
     id: 'ses-01',
-    class_id: 'cls-11a1',
-    title: 'Toán Hình Không Gian: Góc giữa đường thẳng và mặt phẳng',
+    class_id: 'cls-t01',
+    teacher_id: 'tchr-01',
+    title: 'Toán 12: Chuyên Đề Hàm Số & Đồ Thị',
     room: 'Phòng A302 (Tầng 3)',
     meeting_url: 'https://meet.google.com/abc-schoolify-math',
-    start_time: '2026-08-25T08:00:00Z',
-    end_time: '2026-08-25T09:45:00Z',
+    start_time: _dayAt(0, 8, 0),
+    end_time: _dayAt(0, 9, 45),
     teacher_name: 'ThS. Nguyễn Văn Hùng',
-    class_name: '11A1 - Chuyên Toán Tin',
+    class_name: '12A1 - Luyện Thi Đại Học',
   },
   {
     id: 'ses-02',
-    class_id: 'cls-11a1',
-    title: 'Tiếng Anh Học Thuật: Luyện Nói Task 2 Chủ Đề Environment',
-    room: 'Phòng Lab Ngoại Ngữ B101',
-    meeting_url: 'https://meet.google.com/xyz-schoolify-eng',
-    start_time: '2026-08-25T10:00:00Z',
-    end_time: '2026-08-25T11:30:00Z',
-    teacher_name: 'Cô Sarah Trần',
-    class_name: '11A1 - Chuyên Toán Tin',
+    class_id: 'cls-t02',
+    teacher_id: 'tchr-01',
+    title: 'Toán 10: Đại Số Căn Thức & Bất Phương Trình',
+    room: 'Phòng A205 (Tầng 2)',
+    start_time: _dayAt(0, 10, 0),
+    end_time: _dayAt(0, 11, 30),
+    teacher_name: 'ThS. Nguyễn Văn Hùng',
+    class_name: '11A2 - Toán Cơ Bản',
   },
   {
     id: 'ses-03',
-    class_id: 'cls-11a1',
-    title: 'Vật Lý 11: Dao Động Điều Hòa & Con Lắc Đơn',
-    room: 'Phòng Thực Hành Lý C205',
-    start_time: '2026-08-26T14:00:00Z',
-    end_time: '2026-08-26T16:00:00Z',
-    teacher_name: 'Thầy Trần Minh Hoàng',
-    class_name: '11A1 - Chuyên Toán Tin',
+    class_id: 'cls-t03',
+    teacher_id: 'tchr-01',
+    title: 'Toán 11: Hình Học Không Gian (Trực tuyến)',
+    meeting_url: 'https://meet.google.com/xyz-schoolify-geo',
+    start_time: _dayAt(1, 14, 0),
+    end_time: _dayAt(1, 15, 30),
+    teacher_name: 'ThS. Nguyễn Văn Hùng',
+    class_name: '10A3 - Toán Nâng Cao',
+  },
+  {
+    id: 'ses-04',
+    class_id: 'cls-t04',
+    teacher_id: 'tchr-01',
+    title: 'Bồi Dưỡng HSG: Số Học & Tổ Hợp',
+    room: 'Phòng B101 (Tầng 1)',
+    start_time: _dayAt(2, 8, 0),
+    end_time: _dayAt(2, 9, 30),
+    teacher_name: 'ThS. Nguyễn Văn Hùng',
+    class_name: '12A4 - Bồi Dưỡng HSG',
+  },
+  {
+    id: 'ses-05',
+    class_id: 'cls-t03',
+    teacher_id: 'tchr-01',
+    title: 'Toán 11: Luyện Tập Tích Phân (Zoom)',
+    meeting_url: 'https://zoom.us/j/schoolify-tich-phan',
+    start_time: _dayAt(3, 19, 0),
+    end_time: _dayAt(3, 20, 30),
+    teacher_name: 'ThS. Nguyễn Văn Hùng',
+    class_name: '10A3 - Toán Nâng Cao',
+  },
+  {
+    id: 'ses-06',
+    class_id: 'cls-t01',
+    teacher_id: 'tchr-01',
+    title: 'Toán 12: Nguyên Hàm - Tích Phân & Ứng Dụng',
+    room: 'Phòng A302 (Tầng 3)',
+    meeting_url: 'https://meet.google.com/abc-schoolify-math',
+    start_time: _dayAt(4, 8, 0),
+    end_time: _dayAt(4, 9, 45),
+    teacher_name: 'ThS. Nguyễn Văn Hùng',
+    class_name: '12A1 - Luyện Thi Đại Học',
+  },
+  {
+    id: 'ses-07',
+    class_id: 'cls-t02',
+    teacher_id: 'tchr-01',
+    title: 'Toán 10: Ôn Tập Chương Căn Thức',
+    room: 'Phòng A205 (Tầng 2)',
+    start_time: _dayAt(5, 9, 0),
+    end_time: _dayAt(5, 11, 0),
+    teacher_name: 'ThS. Nguyễn Văn Hùng',
+    class_name: '11A2 - Toán Cơ Bản',
   },
 ];
 
@@ -807,7 +872,9 @@ export const MOCK_TEACHER_CLASSES: Class[] = [
     id: 'cls-t01',
     school_id: 'sch-01',
     teacher_id: 'tchr-01',
-    name: '12A1 - Luyện Thi Đại Học',
+    course_id: 'crs-t01',
+    class_name: '12A1 - Luyện Thi Đại Học',
+    status: 'ACTIVE',
     code: 'TK-12A1',
     room: 'Phòng A302 (Tầng 3)',
     start_date: '2026-08-05T00:00:00Z',
@@ -815,12 +882,15 @@ export const MOCK_TEACHER_CLASSES: Class[] = [
     student_count: 38,
     teacher_name: 'ThS. Nguyễn Văn Hùng',
     created_at: '2026-07-28T00:00:00Z',
+    updated_at: '2026-08-30T00:00:00Z',
   },
   {
     id: 'cls-t02',
     school_id: 'sch-01',
     teacher_id: 'tchr-01',
-    name: '11A2 - Toán Cơ Bản',
+    course_id: 'crs-t02',
+    class_name: '11A2 - Toán Cơ Bản',
+    status: 'ACTIVE',
     code: 'TK-11A2',
     room: 'Phòng A205 (Tầng 2)',
     start_date: '2026-08-05T00:00:00Z',
@@ -828,12 +898,15 @@ export const MOCK_TEACHER_CLASSES: Class[] = [
     student_count: 34,
     teacher_name: 'ThS. Nguyễn Văn Hùng',
     created_at: '2026-07-28T00:00:00Z',
+    updated_at: '2026-08-30T00:00:00Z',
   },
   {
     id: 'cls-t03',
     school_id: 'sch-01',
     teacher_id: 'tchr-01',
-    name: '10A3 - Toán Nâng Cao',
+    course_id: 'crs-t03',
+    class_name: '10A3 - Toán Nâng Cao',
+    status: 'UPCOMING',
     code: 'TK-10A3',
     room: 'Lớp Học Online',
     start_date: '2026-08-05T00:00:00Z',
@@ -841,12 +914,15 @@ export const MOCK_TEACHER_CLASSES: Class[] = [
     student_count: 30,
     teacher_name: 'ThS. Nguyễn Văn Hùng',
     created_at: '2026-07-29T00:00:00Z',
+    updated_at: '2026-08-30T00:00:00Z',
   },
   {
     id: 'cls-t04',
     school_id: 'sch-01',
     teacher_id: 'tchr-01',
-    name: '12A4 - Bồi Dưỡng HSG',
+    course_id: 'crs-t04',
+    class_name: '12A4 - Bồi Dưỡng HSG',
+    status: 'ACTIVE',
     code: 'TK-12A4',
     room: 'Phòng B101 (Tầng 1)',
     start_date: '2026-08-05T00:00:00Z',
@@ -854,7 +930,16 @@ export const MOCK_TEACHER_CLASSES: Class[] = [
     student_count: 22,
     teacher_name: 'ThS. Nguyễn Văn Hùng',
     created_at: '2026-07-30T00:00:00Z',
+    updated_at: '2026-08-30T00:00:00Z',
   },
+];
+
+export const MOCK_CLASS_COURSES: ClassCourse[] = [
+  { id: 'cc-01', teacher_id: 'tchr-01', class_id: 'cls-t01', course_id: 'crs-t01' },
+  { id: 'cc-02', teacher_id: 'tchr-01', class_id: 'cls-t01', course_id: 'crs-t05' },
+  { id: 'cc-03', teacher_id: 'tchr-01', class_id: 'cls-t02', course_id: 'crs-t02' },
+  { id: 'cc-04', teacher_id: 'tchr-01', class_id: 'cls-t03', course_id: 'crs-t03' },
+  { id: 'cc-05', teacher_id: 'tchr-01', class_id: 'cls-t04', course_id: 'crs-t04' },
 ];
 
 export const MOCK_TEACHER_TRANSACTIONS: Transaction[] = [
