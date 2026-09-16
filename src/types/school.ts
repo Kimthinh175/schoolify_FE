@@ -7,6 +7,7 @@ export type SubscriptionStatus = 'TRIALING' | 'ACTIVE' | 'EXPIRED' | 'CANCELED' 
 export interface School {
   id: string;
   owner_id?: string | null;
+  owner?: User | null;
   name: string;
   code: string;
   address?: string | null;
