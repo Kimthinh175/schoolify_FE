@@ -191,7 +191,7 @@ export default function MyCoursesPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card variant="stat" className="p-4 flex items-center gap-4 border-slate-200/80 dark:border-slate-800">
+        <Card className="p-4 flex items-center gap-4 border-slate-200/80 dark:border-slate-800">
           <div className="p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
             <BookOpen className="w-6 h-6" />
           </div>
@@ -201,7 +201,7 @@ export default function MyCoursesPage() {
           </div>
         </Card>
 
-        <Card variant="stat" className="p-4 flex items-center gap-4 border-slate-200/80 dark:border-slate-800">
+        <Card className="p-4 flex items-center gap-4 border-slate-200/80 dark:border-slate-800">
           <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400">
             <Clock className="w-6 h-6" />
           </div>
@@ -211,7 +211,7 @@ export default function MyCoursesPage() {
           </div>
         </Card>
 
-        <Card variant="stat" className="p-4 flex items-center gap-4 border-slate-200/80 dark:border-slate-800">
+        <Card className="p-4 flex items-center gap-4 border-slate-200/80 dark:border-slate-800">
           <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 className="w-6 h-6" />
           </div>
@@ -221,7 +221,7 @@ export default function MyCoursesPage() {
           </div>
         </Card>
 
-        <Card variant="stat" className="p-4 flex items-center gap-4 border-slate-200/80 dark:border-slate-800">
+        <Card className="p-4 flex items-center gap-4 border-slate-200/80 dark:border-slate-800">
           <div className="p-3 rounded-2xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400">
             <BarChart3 className="w-6 h-6" />
           </div>
@@ -294,7 +294,7 @@ export default function MyCoursesPage() {
                   {/* Progress / Status Badge */}
                   <div className="absolute top-3 right-3">
                     {isCompleted ? (
-                      <Badge variant="emerald" className="shadow-md font-bold gap-1 px-2.5 py-1">
+                      <Badge variant="success" className="shadow-md font-bold gap-1 px-2.5 py-1">
                         <CheckCircle2 className="w-3.5 h-3.5" /> Hoàn thành
                       </Badge>
                     ) : (
@@ -352,7 +352,7 @@ export default function MyCoursesPage() {
                       </div>
                       <Progress
                         value={course.progress}
-                        color={isCompleted ? 'emerald' : 'indigo'}
+                        showLabel={false}
                         className="h-2"
                       />
                     </div>
@@ -365,7 +365,7 @@ export default function MyCoursesPage() {
                           </Button>
                         </Link>
                         <Button
-                          variant="emerald"
+                          variant="success"
                           size="sm"
                           className="w-full text-xs gap-1"
                           leftIcon={<Award className="w-3.5 h-3.5" />}
