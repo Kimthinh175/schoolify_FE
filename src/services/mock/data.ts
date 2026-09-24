@@ -1,4 +1,4 @@
-﻿import {
+import {
   School,
   SubscriptionPackage,
   Course,
@@ -391,6 +391,16 @@ export const MOCK_EXAMS: Exam[] = [
         content: 'Hãy trình bày các bước tìm tập nghiệm của phương trình: sin(2x) = 1/2.',
         points: 2.5,
         sample_essay_answer: 'Ta có sin(2x) = sin(π/6). Suy ra 2x = π/6 + k2π hoặc 2x = 5π/6 + k2π (k ∈ Z). Vậy x = π/12 + kπ hoặc x = 5π/12 + kπ (k ∈ Z).',
+      },
+      {
+        id: 'q-05',
+        bank_id: 'bank-toan12-luong-giac',
+        type: 'FILL_BLANK',
+        content: 'Giá trị của cos(0) bằng _____.',
+        points: 1,
+        answers: [
+          { id: 'q05-a1', question_id: 'q-05', content: '1', is_answer: true },
+        ],
       },
     ],
   },
