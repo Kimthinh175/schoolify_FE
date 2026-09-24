@@ -115,6 +115,32 @@ const MOCK_ENROLLED_COURSES: EnrolledCourse[] = [
     total_lessons: 20,
     last_accessed: '01/09/2026',
   },
+  {
+    id: 'crs-07',
+    title: 'Trí Tuệ Nhân Tạo (AI) & Python Khoa Học Dữ Liệu Cho Học Sinh',
+    department_name: 'Tổ Toán & Tin Học',
+    category_id: 'math-it',
+    teacher_name: 'ThS. Nguyễn Văn Hùng',
+    teacher_avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    thumbnail_url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80',
+    progress: 50,
+    completed_lessons: 10,
+    total_lessons: 20,
+    last_accessed: 'Hôm nay, 16:10',
+  },
+  {
+    id: 'crs-08',
+    title: 'Ngữ Văn 11: Phân Tích Tác Phẩm Văn Học Hiện Đại & Kỹ Năng Nghị Luận Văn Học',
+    department_name: 'Tổ Ngữ Văn',
+    category_id: 'social-sci',
+    teacher_name: 'Cô Hoàng Mai Lan',
+    teacher_avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+    thumbnail_url: 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=600&auto=format&fit=crop&q=80',
+    progress: 80,
+    completed_lessons: 16,
+    total_lessons: 20,
+    last_accessed: 'Hôm qua, 09:15',
+  },
 ];
 
 export default function MyCoursesPage() {
@@ -182,7 +208,7 @@ export default function MyCoursesPage() {
             Theo dõi tiến độ, tiếp tục bài học còn dang dở và xem lại các chứng chỉ đã đạt được.
           </p>
         </div>
-        <Link href="/student/marketplace">
+        <Link href="/courses">
           <Button variant="outline" leftIcon={<Sparkles className="w-4 h-4 text-amber-500" />}>
             Khám phá thêm khóa học
           </Button>

@@ -8,6 +8,7 @@ import {
   Search,
   ChevronDown,
   UserCheck,
+  User,
   Building2,
   Users2,
   LogOut,
@@ -179,6 +180,12 @@ export function AppHeader({ onOpenMobileSidebar }: { onOpenMobileSidebar: () => 
             <p className="text-xs font-bold text-slate-900 dark:text-white">{user?.fullname}</p>
             <p className="text-[11px] text-slate-500 truncate">{user?.email}</p>
           </div>
+          <DropdownMenuItem
+            icon={<User className="w-4 h-4 text-[#00B8DD]" />}
+            onClick={() => router.push('/profile')}
+          >
+            Chỉnh sửa hồ sơ
+          </DropdownMenuItem>
           <DropdownMenuItem icon={<LogOut className="w-4 h-4 text-rose-500" />} destructive onClick={logout}>
             Đăng xuất
           </DropdownMenuItem>
