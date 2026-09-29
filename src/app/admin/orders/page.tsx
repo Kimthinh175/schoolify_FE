@@ -53,10 +53,10 @@ export default function AdminOrdersPage() {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-sm font-semibold">{order.buyer_name}</TableCell>
-                <TableCell className="text-xs text-slate-600 dark:text-slate-300 max-w-xs truncate">{order.item_title}</TableCell>
-                <TableCell className="font-bold text-sm text-indigo-600 dark:text-indigo-400">{formatMoney(order.total_amount)}</TableCell>
+                <TableCell className="text-xs text-slate-600 dark:text-slate-300 max-w-xs truncate">{order.item_name_snapshot}</TableCell>
+                <TableCell className="font-bold text-sm text-indigo-600 dark:text-indigo-400">{formatMoney(order.item_price_snapshot)}</TableCell>
                 <TableCell className="text-xs font-semibold text-emerald-600">
-                  {order.reference_type === 'COURSE' ? formatMoney(order.total_amount * 0.15) : '100% Thu Admin'}
+                  {order.reference_type === 'COURSE' ? formatMoney(order.item_price_snapshot * 0.15) : '100% Thu Admin'}
                 </TableCell>
                 <TableCell className="text-right">
                   <Badge variant="success" className="text-[10px]">ĐÃ THU TIỀN</Badge>

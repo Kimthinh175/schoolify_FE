@@ -1,4 +1,4 @@
-import { QuestionBank, Question, ParsedQuestionItem, ParseImportResult } from '@/types';
+import { QuestionBank, Question } from '@/types';
 import { MOCK_QUESTION_BANKS } from './mock/data';
 import mammoth from 'mammoth';
 import JSZip from 'jszip';
@@ -311,8 +311,8 @@ export function parseExamTextToQuestions(text: string): ParsedQuestionItem[] {
         !cleanContent.trim()
           ? ['Nội dung câu hỏi không được để trống']
           : qType !== 'ESSAY' && !hasCorrect
-          ? ['Vui lòng chọn ít nhất 1 đáp án đúng']
-          : [],
+            ? ['Vui lòng chọn ít nhất 1 đáp án đúng']
+            : [],
       answers: answers,
     });
     currentQuestion = null;
@@ -491,6 +491,25 @@ export const questionBankService = {
     if (!bank) return undefined;
     bank.is_premium = value;
     bank.updated_at = new Date().toISOString();
+    return bank;
+  },
+
+  async updateReviewStatus(
+    bankId: string,
+    status: QuestionBankReviewStatus,
+    reviewNote = '',
+    reviewedBy = 'HOD hiện tại'
+  ): Promise<QuestionBank | undefined> {
+    await delay();
+    const bank = MOCK_QUESTION_BANKS.find((item) => item.id === bankId);
+    if (!bank) return undefined;
+    Object.assign(bank, {
+      status,
+      review_note: reviewNote,
+      reviewed_by: reviewedBy,
+      reviewed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
     return bank;
   },
 

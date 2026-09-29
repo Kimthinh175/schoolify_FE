@@ -10,8 +10,8 @@ export interface Order {
   seller_id?: string | null;
   reference_type: OrderReferenceType;
   reference_id: string;
-  item_title: string;
-  total_amount: number;
+  item_name_snapshot: string;
+  item_price_snapshot: number;
   payment_method: PaymentMethod;
   status: OrderStatus;
   qr_code_url?: string;
