@@ -1,4 +1,4 @@
-﻿import {
+import {
   School,
   SubscriptionPackage,
   Course,

@@ -24,8 +24,8 @@ export default function OnlineExamRunnerPage() {
   const router = useRouter();
   const exam = MOCK_EXAMS.find((e) => e.id === params.examId) || MOCK_EXAMS[0];
 
-  // Timer state (15 minutes in seconds)
-  const [secondsLeft, setSecondsLeft] = React.useState(15 * 60);
+  // Trạng thái đồng hồ đếm ngược (30 phút đổi ra giây)
+  const [secondsLeft, setSecondsLeft] = React.useState(30 * 60);
   const [selectedAnswers, setSelectedAnswers] = React.useState<Record<string, string>>({
     'q-01': 'opt-1',
     'q-02': 'opt-5',
@@ -66,11 +66,15 @@ export default function OnlineExamRunnerPage() {
             <CheckCircle2 className="w-10 h-10" />
           </div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Nộp Bài Thành Công!</h2>
+          <div className="py-2">
+            <span className="text-4xl font-black text-indigo-600 dark:text-indigo-400">8.5</span>
+            <span className="text-xl font-bold text-slate-500"> / 10</span>
+          </div>
           <p className="text-xs text-slate-500">
-            Bài làm của bạn đã được ghi nhận. Giáo viên sẽ chấm điểm phần tự luận và gửi lời phê sớm nhất qua Sổ liên lạc.
+            Hệ thống đã chấm điểm tự động. Bạn đã đạt tiêu chuẩn 7.0+ của bài kiểm tra này!
           </p>
-          <div className="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold text-sm">
-            🎉 Bạn nhận được +50 Điểm thưởng chuyên cần!
+          <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 font-bold text-sm border border-amber-200 dark:border-amber-800/60">
+            💎 Chúc mừng! Bạn đã tích lũy thành công +30 Kim Cương!
           </div>
           <Link href="/student/dashboard" className="block">
             <Button className="w-full justify-center">Về Góc Học Tập</Button>
@@ -82,7 +86,7 @@ export default function OnlineExamRunnerPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-20">
-      {/* Sticky Exam Top Header with Timer */}
+      {/* Thanh Header Bài Thi dính chặt phía trên cùng với Đồng Hồ */}
       <div className="sticky top-16 z-20 p-4 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md backdrop-blur-md flex items-center justify-between">
         <div>
           <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white truncate max-w-xs sm:max-w-md">
@@ -103,7 +107,7 @@ export default function OnlineExamRunnerPage() {
         </div>
       </div>
 
-      {/* Questions List */}
+      {/* Danh Sách Câu Hỏi */}
       <div className="space-y-6">
         {exam.questions?.map((q, qIdx) => (
           <Card key={q.id} className="p-6 space-y-4">
@@ -120,7 +124,7 @@ export default function OnlineExamRunnerPage() {
               {q.content}
             </p>
 
-            {/* Options */}
+            {/* Các Tùy Chọn Đáp Án */}
             {q.type === 'ESSAY' ? (
               <div className="pt-2">
                 <Textarea
@@ -164,16 +168,16 @@ export default function OnlineExamRunnerPage() {
         ))}
       </div>
 
-      {/* Confirmation Modal */}
+      {/* Modal Xác Nhận Nộp Bài */}
       <Dialog
         isOpen={isSubmitModalOpen}
         onClose={() => setIsSubmitModalOpen(false)}
         title="Xác Nhận Nộp Bài Thi"
-        description="Bạn đã hoàn thành đủ 4/4 câu hỏi. Bạn có chắc chắn muốn nộp bài ngay bây giờ?"
+        description="Bạn đã hoàn thành đủ 15/15 câu hỏi. Bạn có chắc chắn muốn nộp bài ngay bây giờ?"
       >
         <div className="space-y-4 py-2">
           <p className="text-xs text-slate-500">
-            Sau khi nộp bài, hệ thống sẽ tự động chấm điểm phần trắc nghiệm và gửi bài tự luận tới thầy cô bộ môn.
+            Sau khi nộp bài, hệ thống sẽ tự động chấm điểm toàn bộ bài làm và hiển thị kết quả ngay lập tức.
           </p>
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="ghost" onClick={() => setIsSubmitModalOpen(false)}>

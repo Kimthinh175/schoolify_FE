@@ -20,34 +20,37 @@ export default function StudentExamsPage() {
         </p>
       </div>
 
-      {/* Upcoming Exams */}
+      {/* Danh Sách Bài Thi Cần Làm */}
       <div className="space-y-4">
         <h3 className="text-base font-bold text-slate-900 dark:text-white">Bài Thi Cần Hoàn Thành</h3>
         {MOCK_EXAMS.map((exam) => (
           <Card key={exam.id} className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="space-y-1.5">
-              <Badge variant="warning" className="text-[10px]">Hạn chót: 01/09/2026</Badge>
-              <h4 className="text-base font-bold text-slate-900 dark:text-white">{exam.title}</h4>
-              <p className="text-xs text-slate-500">{exam.description}</p>
-              <div className="flex items-center gap-3 text-xs text-slate-500 pt-1">
-                <span>{exam.duration_minutes} phút</span>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Badge variant="warning" className="text-[10px]">Hạn chót: 01/09/2026</Badge>
+                <Badge variant="primary" className="bg-amber-500/20 text-amber-500 border-amber-500/30 text-[10px] font-bold">Thưởng +30 💎</Badge>
+              </div>
+              <h4 className="text-base font-bold text-slate-900 dark:text-white">Bài Thi Cuối Bài: Đánh Giá Năng Lực</h4>
+              <p className="text-xs text-slate-500">Hoàn thành bài thi để nhận kim cương và mở khóa bài học tiếp theo.</p>
+              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-400 font-medium pt-1">
+                <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> 30 phút</span>
                 <span>•</span>
-                <span>{exam.total_questions} câu hỏi</span>
+                <span>15 câu hỏi</span>
                 <span>•</span>
-                <span>Điểm tối đa: {exam.max_score}đ</span>
+                <span className="text-indigo-600 dark:text-indigo-400">Điểm đạt: 7.0+</span>
               </div>
             </div>
 
             <Link href={`/student/exam/${exam.id}`}>
-              <Button variant="primary" rightIcon={<ArrowRight className="w-4 h-4" />}>
-                Bắt Đầu Làm Bài
+              <Button variant="primary" className="bg-cyan-500 hover:bg-cyan-600 shadow-md shadow-cyan-500/20 border-0" rightIcon={<ArrowRight className="w-4 h-4" />}>
+                Bắt Đầu Làm Bài Thi Tính Giờ
               </Button>
             </Link>
           </Card>
         ))}
       </div>
 
-      {/* Graded Submissions */}
+      {/* Bài Thi Đã Chấm Điểm */}
       <div className="space-y-4 pt-4">
         <h3 className="text-base font-bold text-slate-900 dark:text-white">Kết Quả Bài Đã Chấm</h3>
         {MOCK_SUBMISSIONS.map((sub) => (

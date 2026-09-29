@@ -143,7 +143,7 @@ export default function ParentDashboardPage() {
               <MessageSquare className="w-5 h-5 text-indigo-600" />
               Lời Phê Từ Thầy Cô
             </h3>
-            <Link href="/parent/report">
+            <Link href="/parent/report?tab=FEEDBACK">
               <Button size="sm" variant="ghost">Chi tiết</Button>
             </Link>
           </div>
@@ -208,6 +208,9 @@ export default function ParentDashboardPage() {
               <Bell className="w-5 h-5 text-indigo-600" />
               Thông Báo Từ Trường
             </h3>
+            <Link href="/parent/report?tab=NOTIFICATIONS">
+              <Button size="sm" variant="ghost">Xem thêm</Button>
+            </Link>
           </div>
           <div className="space-y-3">
             {mockNotifications.map((note) => (

@@ -61,7 +61,7 @@ export default function ParentTuitionPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Tiêu Đề */}
       <div>
         <Badge variant="purple" className="mb-2">Cổng Thanh Toán Học Phí Trực Tuyến</Badge>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -72,7 +72,7 @@ export default function ParentTuitionPage() {
         </p>
       </div>
 
-      {/* Tuition Bills List */}
+      {/* Danh Sách Hóa Đơn Học Phí */}
       <div className="space-y-4">
         {tuitionOrders.map((order) => (
           <Card
@@ -126,7 +126,7 @@ export default function ParentTuitionPage() {
         ))}
       </div>
 
-      {/* VietQR Payment Modal */}
+      {/* Modal Thanh Toán VietQR */}
       <Dialog
         isOpen={!!payingOrder}
         onClose={() => setPayingOrder(null)}
@@ -182,7 +182,7 @@ export default function ParentTuitionPage() {
         )}
       </Dialog>
 
-      {/* Custom Mockup Receipt Modal */}
+      {/* Modal Biên Lai Tùy Chỉnh */}
       <Dialog
         isOpen={!!receiptOrder}
         onClose={() => setReceiptOrder(null)}
@@ -190,12 +190,12 @@ export default function ParentTuitionPage() {
       >
         {receiptOrder && (
           <div className="relative bg-[#f4f7fb] dark:bg-slate-900 rounded-3xl overflow-hidden p-4 sm:p-8 space-y-6 sm:space-y-8 font-sans border border-slate-100 dark:border-slate-800 w-full max-w-[500px] mx-auto">
-            {/* Background Decorations */}
+            {/* Trang Trí Nền */}
             <div className="absolute top-0 left-0 w-64 h-64 bg-blue-100/50 rounded-full mix-blend-multiply filter blur-3xl opacity-60 dark:opacity-10 -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
             <div className="absolute bottom-0 right-0 w-80 h-80 bg-blue-100/50 rounded-full mix-blend-multiply filter blur-3xl opacity-60 dark:opacity-10 translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
 
             <div className="relative z-10 flex flex-col items-center w-full">
-              {/* Header */}
+              {/* Tiêu Đề */}
               <div className="flex flex-col items-center mb-8">
                 <div className="flex items-center gap-3 mb-1">
                   <div className="w-12 h-12 rounded-[14px] bg-[#5c59e6] flex items-center justify-center shadow-sm shrink-0">
@@ -220,9 +220,9 @@ export default function ParentTuitionPage() {
               </div>
             </div>
 
-            {/* Top Cards Info */}
+            {/* Thông Tin Các Thẻ Phía Trên */}
             <div className="relative z-10 flex flex-row w-full mb-2">
-              {/* Left Col */}
+              {/* Cột Trái */}
               <div className="flex-1 py-4 pr-2">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-6 h-6 rounded-full bg-blue-100/50 dark:bg-slate-700 flex items-center justify-center text-blue-500 shrink-0">
@@ -234,7 +234,7 @@ export default function ParentTuitionPage() {
                 <p className="text-[12px] sm:text-[13px] text-slate-500 font-medium">Phương thức: VietQR</p>
               </div>
 
-              {/* Right Col */}
+              {/* Cột Phải */}
               <div className="flex-1 py-4 pl-4 sm:pl-5 border-l border-slate-200 dark:border-slate-700">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-6 h-6 rounded-full bg-blue-100/50 dark:bg-slate-700 flex items-center justify-center text-blue-500 shrink-0">
@@ -259,7 +259,7 @@ export default function ParentTuitionPage() {
               </div>
             </div>
 
-            {/* Details Table Card */}
+            {/* Thẻ Bảng Chi Tiết */}
             <div className="relative z-10 w-full">
               <div className="py-3.5 flex justify-between items-center border-t border-b border-slate-200 dark:border-slate-700">
                 <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nội dung khoản thu</span>
@@ -300,7 +300,7 @@ export default function ParentTuitionPage() {
               </div>
             </div>
 
-            {/* Footer */}
+            {/* Chân Trang */}
             <div className="relative z-10 pt-4 pb-2 space-y-8 w-full">
               <div className="flex flex-col sm:flex-row justify-center gap-4">
                 <Button variant="outline" className="w-full sm:w-36 h-12 border-slate-300 dark:border-slate-600 font-bold rounded-xl bg-white dark:bg-slate-800 text-[#1e1b4b] dark:text-slate-200" leftIcon={<Download className="w-4 h-4" />}>

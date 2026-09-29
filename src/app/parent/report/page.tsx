@@ -11,6 +11,8 @@ import {
   Clock,
   XCircle,
   GraduationCap,
+  Bell,
+  ChevronRight,
   // Mail
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -21,16 +23,61 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useParentStore } from '@/store/parent.store';
 import { MOCK_SUBMISSIONS, MOCK_COURSES, MOCK_TIMETABLE } from '@/services/mock/data';
 
+const MOCK_NOTIFICATIONS = [
+  {
+    id: 1,
+    title: 'Thông báo nghỉ học ngày Giỗ tổ Hùng Vương',
+    date: '10/04/2026',
+    content: 'Kính gửi Quý phụ huynh, nhà trường xin thông báo lịch nghỉ Giỗ tổ Hùng Vương (10/3 âm lịch) vào thứ Sáu ngày 10/04/2026. Học sinh sẽ đi học lại bình thường vào thứ Hai tuần sau.',
+    type: 'holiday',
+    // isRead: false
+    isRead: true
+  },
+  {
+    id: 2,
+    title: 'Nhắc nhở: Hạn chót đóng học phí học kỳ I',
+    date: '05/04/2026',
+    content: 'Quý phụ huynh vui lòng hoàn thành việc đóng học phí học kỳ I trước ngày 15/04/2026. Nếu có bất kỳ thắc mắc nào, xin vui lòng liên hệ phòng tài vụ.',
+    type: 'fee',
+    isRead: true
+  },
+  {
+    id: 3,
+    title: 'Kết quả thi giữa kỳ môn Toán',
+    date: '01/04/2026',
+    content: 'Kết quả bài thi giữa kỳ môn Toán đã được cập nhật. Phụ huynh có thể vào mục Sổ Liên Lạc Điện Tử để xem chi tiết điểm số và nhận xét của giáo viên.',
+    type: 'academic',
+    isRead: true
+  },
+  {
+    id: 4,
+    title: 'Mời họp phụ huynh đầu năm học',
+    date: '25/03/2026',
+    content: 'Nhà trường trân trọng kính mời Quý phụ huynh tham dự buổi họp phụ huynh đầu năm học 2026-2027 vào lúc 08:00 sáng Chủ Nhật, ngày 30/03/2026.',
+    type: 'meeting',
+    isRead: true
+  },
+];
+
 export default function ParentAcademicPage() {
   const { children, activeChildId } = useParentStore();
   const activeChild = children.find((c) => c.id === activeChildId) || children[0];
   const [activeTab, setActiveTab] = React.useState('SCORES');
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, []);
 
   const tabs = [
     { id: 'SCORES', label: 'Bảng Điểm Chi Tiết', icon: <Award className="w-4 h-4" /> },
     { id: 'FEEDBACK', label: 'Lời Phê & Bài Làm', icon: <MessageSquare className="w-4 h-4" /> },
     { id: 'ATTENDANCE', label: 'Lịch Học & Chuyên Cần', icon: <CalendarDays className="w-4 h-4" /> },
     { id: 'COURSES', label: 'Tiến Độ Khóa Học', icon: <BookOpen className="w-4 h-4" /> },
+    { id: 'NOTIFICATIONS', label: 'Thông Báo Từ Trường', icon: <Bell className="w-4 h-4" /> },
   ];
 
   const childSubmissions = MOCK_SUBMISSIONS.filter(sub => sub.student_id === activeChild.id);
@@ -55,7 +102,7 @@ export default function ParentAcademicPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Tiêu Đề */}
       <div>
         <Badge variant="purple" className="mb-2">Sổ Liên Lạc Điện Tử</Badge>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -66,10 +113,10 @@ export default function ParentAcademicPage() {
         </p>
       </div>
 
-      {/* Tabs */}
+      {/* Các Tab */}
       <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
 
-      {/* Tab 1: Bảng Điểm Chi Tiết (Scoreboard) */}
+      {/* Tab 1: Bảng Điểm Chi Tiết */}
       {activeTab === 'SCORES' && (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
@@ -120,7 +167,7 @@ export default function ParentAcademicPage() {
         </div>
       )}
 
-      {/* Tab 2: Lời Phê & Bài Làm (Restored Original Detailed Layout) */}
+      {/* Tab 2: Lời Phê & Bài Làm */}
       {activeTab === 'FEEDBACK' && (
         <div className="space-y-6">
           {childSubmissions.map((sub) => (
@@ -138,7 +185,7 @@ export default function ParentAcademicPage() {
                 </div>
               </div>
 
-              {/* General Teacher Notes (Hộp Thư Lời Phê) */}
+              {/* Hộp Thư Lời Phê */}
               <div className="p-4 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-800/60 space-y-1">
                 <span className="text-xs font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
                   <MessageSquare className="w-4 h-4 text-indigo-600" />
@@ -149,7 +196,7 @@ export default function ParentAcademicPage() {
                 </p>
               </div>
 
-              {/* Essay breakdown with teacher comments */}
+              {/* Phân tích bài tự luận kèm nhận xét của giáo viên */}
               <div className="space-y-3 pt-2">
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                   Chi Tiết Câu Tự Luận & Lời Nhận Xét:
@@ -251,7 +298,7 @@ export default function ParentAcademicPage() {
         </div>
       )}
 
-      {/* Tab 4: Course Progress */}
+      {/* Tab 4: Tiến Độ Khóa Học */}
       {activeTab === 'COURSES' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {MOCK_COURSES.map((course) => (
@@ -272,6 +319,47 @@ export default function ParentAcademicPage() {
                   <span className="text-indigo-600">65%</span>
                 </div>
                 <Progress value={65} showLabel={false} />
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Tab 5: Thông Báo Từ Trường */}
+      {activeTab === 'NOTIFICATIONS' && (
+        <div className="space-y-4">
+          {MOCK_NOTIFICATIONS.map((note) => (
+            <Card
+              key={note.id}
+              className={`p-5 transition-all hover:shadow-md cursor-pointer border-l-4 ${!note.isRead
+                  ? 'border-l-indigo-500 bg-indigo-50/30 dark:bg-indigo-950/20'
+                  : 'border-l-transparent bg-white dark:bg-slate-900'
+                }`}
+            >
+              <div className="flex flex-col sm:flex-row gap-4 justify-between sm:items-start overflow-hidden">
+                <div className="space-y-2 min-w-0 flex-1">
+                  <div className="flex items-center gap-3">
+                    {!note.isRead && (
+                      <span className="flex shrink-0 h-2 w-2 rounded-full bg-indigo-600" />
+                    )}
+                    <h3 className={`text-base font-bold truncate ${!note.isRead ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>
+                      {note.title}
+                    </h3>
+                  </div>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed break-words">
+                    {note.content}
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-slate-500 pt-2">
+                    <CalendarDays className="w-3.5 h-3.5 shrink-0" />
+                    <span>{note.date}</span>
+                  </div>
+                </div>
+
+                <div className="hidden sm:flex shrink-0">
+                  <div className="h-8 w-8 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                    <ChevronRight className="w-4 h-4" />
+                  </div>
+                </div>
               </div>
             </Card>
           ))}
