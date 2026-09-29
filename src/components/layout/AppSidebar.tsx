@@ -171,6 +171,13 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['STUDENT'],
   },
   {
+    label: 'Lộ Trình Luyện Tập',
+    href: '/student/practice',
+    icon: <CheckSquare className="w-5 h-5" />,
+    badge: 'Mới',
+    roles: ['STUDENT'],
+  },
+  {
     label: 'Khóa Học Của Tôi',
     href: '/student/my-courses',
     icon: <BookOpen className="w-5 h-5" />,
