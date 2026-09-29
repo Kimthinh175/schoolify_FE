@@ -19,6 +19,7 @@ export interface Question {
   type: QuestionType;
   title?: string | null;
   content: string;
+  img_urls?: string[];
   points: number;
   answers?: Answer[];
   sample_essay_answer?: string | null;

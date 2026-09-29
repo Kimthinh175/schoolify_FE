@@ -4,3 +4,6 @@ export * from './course';
 export * from './exam';
 export * from './order';
 export * from './store';
+export * from './question';
+export * from './lesson-content';
+
