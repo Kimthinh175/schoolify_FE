@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Question, QuestionType } from '@/types';
-import { SearchField } from './SearchField';
-import { FilterDropdown, FilterOption } from './FilterDropdown';
+import { SearchField } from '@/components/ui/search-field';
+import { FilterDropdown, FilterOption } from '@/components/ui/filter-dropdown';
 
 type FilterType = 'ALL' | QuestionType;
 

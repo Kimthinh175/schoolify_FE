@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
-/** Ô tìm kiếm có icon + nút xoá nhanh (dùng chung cho Ngân hàng đề & Danh sách câu hỏi) */
+/** Ô tìm kiếm có icon + nút xoá nhanh (dùng chung toàn dự án) */
 export function SearchField({
   value,
   onChange,

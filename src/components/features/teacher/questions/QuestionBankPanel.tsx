@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { QuestionBank } from '@/types';
-import { SearchField } from './SearchField';
-import { FilterDropdown, FilterOption } from './FilterDropdown';
+import { SearchField } from '@/components/ui/search-field';
+import { FilterDropdown, FilterOption } from '@/components/ui/filter-dropdown';
 
 type PremiumFilter = 'ALL' | 'PREMIUM' | 'FREE';
 

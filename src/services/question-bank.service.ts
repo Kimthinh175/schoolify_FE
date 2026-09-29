@@ -1,4 +1,4 @@
-import { QuestionBank, Question } from '@/types';
+import { QuestionBank, Question, QuestionBankReviewStatus } from '@/types';
 import { MOCK_QUESTION_BANKS } from './mock/data';
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
@@ -68,6 +68,25 @@ export const questionBankService = {
     if (!bank) return undefined;
     bank.is_premium = value;
     bank.updated_at = new Date().toISOString();
+    return bank;
+  },
+
+  async updateReviewStatus(
+    bankId: string,
+    status: QuestionBankReviewStatus,
+    reviewNote = '',
+    reviewedBy = 'HOD hiện tại'
+  ): Promise<QuestionBank | undefined> {
+    await delay();
+    const bank = MOCK_QUESTION_BANKS.find((item) => item.id === bankId);
+    if (!bank) return undefined;
+    Object.assign(bank, {
+      status,
+      review_note: reviewNote,
+      reviewed_by: reviewedBy,
+      reviewed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
     return bank;
   },
 
