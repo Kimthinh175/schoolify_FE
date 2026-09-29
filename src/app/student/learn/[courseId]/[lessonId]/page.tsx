@@ -15,23 +15,31 @@ import {
   ArrowLeft,
   BrainCircuit,
   Clapperboard,
+  PenTool,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { MOCK_COURSES, MOCK_QUESTION_BANKS } from '@/services/mock/data';
 import { QuizPracticePanel } from '@/components/features/student/QuizPracticePanel';
+import { EssayPracticePanel } from '@/components/features/student/EssayPracticePanel';
 
 export default function FocusLearningPlayerPage() {
   const params = useParams();
   const router = useRouter();
   const course = MOCK_COURSES.find((c) => c.id === params.courseId) || MOCK_COURSES[0];
+  const currentLesson = course.chapters?.[0]?.lessons.find(l => l.id === params.lessonId) || course.chapters?.[0]?.lessons?.[0];
   const [completedLessons, setCompletedLessons] = React.useState<string[]>(['ls-01']);
-  const [activeTab, setActiveTab] = React.useState<'video' | 'quiz'>('video');
+  const [activeTab, setActiveTab] = React.useState<'video' | 'quiz' | 'essay'>('video');
 
-  // Use first approved bank's questions as the lesson's practice set
+  // Sử dụng ngân hàng đề đầu tiên có chứa câu hỏi TỰ LUẬN để dễ test
   const quizQuestions = React.useMemo(
-    () => MOCK_QUESTION_BANKS.find((bank) => bank.questions && bank.questions.length > 0)?.questions ?? [],
+    () => {
+      const bankWithEssay = MOCK_QUESTION_BANKS.find((bank) => 
+        bank.questions && bank.questions.some(q => q.type === 'ESSAY')
+      );
+      return bankWithEssay?.questions ?? MOCK_QUESTION_BANKS[0]?.questions ?? [];
+    },
     []
   );
 
@@ -108,6 +116,27 @@ export default function FocusLearningPlayerPage() {
                   </span>
                 )}
               </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('essay')}
+                className={`flex items-center gap-2 border-b-2 px-4 py-3.5 text-sm font-semibold transition-colors ${
+                  activeTab === 'essay'
+                    ? 'border-[#00B8DD] text-[#00B8DD]'
+                    : 'border-transparent text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                <PenTool className="h-4 w-4" />
+                Tự Luận
+                {quizQuestions.filter(q => q.type === 'ESSAY').length > 0 && (
+                  <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                    activeTab === 'essay'
+                      ? 'bg-[#00B8DD]/20 text-[#00B8DD]'
+                      : 'bg-slate-700 text-slate-400'
+                  }`}>
+                    {quizQuestions.filter(q => q.type === 'ESSAY').length}
+                  </span>
+                )}
+              </button>
             </div>
           </div>
 
@@ -128,17 +157,17 @@ export default function FocusLearningPlayerPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
                   <div>
                     <h1 className="text-xl sm:text-2xl font-bold">
-                      Bài 1: Giá trị lượng giác của góc lượng giác & Công thức cốt lõi
+                      {currentLesson?.title || 'Chưa có tên bài học'}
                     </h1>
                     <p className="text-xs text-slate-400 mt-1">Giảng dạy bởi: {course.teacher_name}</p>
                   </div>
 
                   <Button
-                    onClick={() => toggleComplete('ls-01')}
-                    variant={completedLessons.includes('ls-01') ? 'success' : 'outline'}
+                    onClick={() => toggleComplete(currentLesson?.id || '')}
+                    variant={completedLessons.includes(currentLesson?.id || '') ? 'success' : 'outline'}
                     leftIcon={<CheckCircle2 className="w-4 h-4" />}
                   >
-                    {completedLessons.includes('ls-01') ? 'Đã Hoàn Thành' : 'Đánh Dấu Đã Học'}
+                    {completedLessons.includes(currentLesson?.id || '') ? 'Đã Hoàn Thành' : 'Đánh Dấu Đã Học'}
                   </Button>
                 </div>
 
@@ -171,6 +200,16 @@ export default function FocusLearningPlayerPage() {
               />
             </div>
           )}
+
+          {/* ── Tab 3: Tự Luận ── */}
+          {activeTab === 'essay' && (
+            <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6">
+              <EssayPracticePanel
+                questions={quizQuestions}
+                title="Tự Luận Chuyên Sâu: Hàm Số Lượng Giác"
+              />
+            </div>
+          )}
         </div>
 
         {/* Right Sidebar: Playlist / Curriculum */}
@@ -180,25 +219,28 @@ export default function FocusLearningPlayerPage() {
           </div>
 
           <div className="divide-y divide-slate-800/80">
-            {course.chapters?.[0]?.lessons.map((lesson, idx) => (
-              <div
+            {course.chapters?.[0]?.lessons.map((lesson, idx) => {
+              const isActive = lesson.id === params.lessonId || (!params.lessonId && idx === 0);
+              return (
+              <Link
+                href={`/student/learn/${course.id}/${lesson.id}`}
                 key={lesson.id}
-                className={`p-4 flex items-center justify-between cursor-pointer transition-colors ${
-                  idx === 0 ? 'bg-indigo-950/40 border-l-4 border-indigo-500' : 'hover:bg-slate-900/50'
+                className={`p-4 flex items-center justify-between cursor-pointer transition-colors block ${
+                  isActive ? 'bg-indigo-950/40 border-l-4 border-indigo-500' : 'hover:bg-slate-900/50'
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  <span className="text-xs font-bold text-slate-500 mt-0.5">{idx + 1}.</span>
+                  <span className={`text-xs font-bold mt-0.5 ${isActive ? 'text-indigo-400' : 'text-slate-500'}`}>{idx + 1}.</span>
                   <div>
-                    <p className="text-xs font-semibold text-slate-200 line-clamp-2">{lesson.title}</p>
+                    <p className={`text-xs font-semibold line-clamp-2 ${isActive ? 'text-indigo-100' : 'text-slate-200'}`}>{lesson.title}</p>
                     <span className="text-[10px] text-slate-500">{lesson.duration_mins} phút</span>
                   </div>
                 </div>
                 {completedLessons.includes(lesson.id) && (
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                 )}
-              </div>
-            ))}
+              </Link>
+            )})}
           </div>
         </div>
       </div>

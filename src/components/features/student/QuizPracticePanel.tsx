@@ -225,7 +225,10 @@ function AnswerOption({ answer, index, isSelected, isMulti, phase, onSelect }: A
 // Main component
 // ─────────────────────────────────────────────────────────────
 
-export function QuizPracticePanel({ questions, title }: QuizPracticePanelProps) {
+export function QuizPracticePanel({ questions: allQuestions, title }: QuizPracticePanelProps) {
+  // Loại bỏ câu tự luận ra khỏi Quiz, vì Tự luận đã có Tab riêng (EssayPracticePanel)
+  const questions = React.useMemo(() => allQuestions.filter(q => q.type !== 'ESSAY'), [allQuestions]);
+
   const [state, dispatch] = React.useReducer(quizReducer, {
     phase: 'ANSWERING',
     answers: {},

@@ -12,6 +12,11 @@ export interface Answer {
   is_answer: boolean;
 }
 
+export interface RubricItem {
+  criterion: string;
+  points: number;
+}
+
 /** ERD: Question (+ một số field mở rộng FE cần cho Exam Runner) */
 export interface Question {
   id: string;
@@ -23,6 +28,8 @@ export interface Question {
   points: number;
   answers?: Answer[];
   sample_essay_answer?: string | null;
+  hints?: string[];
+  rubric?: RubricItem[];
   created_at?: string;
 }
 
