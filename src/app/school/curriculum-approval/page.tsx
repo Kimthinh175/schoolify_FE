@@ -312,8 +312,8 @@ export default function CurriculumApprovalPage() {
             Đặt lại
           </Button>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-          <label className="space-y-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 xl:col-span-2">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[2.2fr_1.2fr_1fr_1fr_1fr]">
+          <label className="space-y-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
             Tìm kiếm hồ sơ
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -325,7 +325,7 @@ export default function CurriculumApprovalPage() {
               />
             </div>
           </label>
-          <label className="space-y-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 xl:col-span-1">
+          <label className="space-y-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
             Tổ chuyên môn
             <select
               value={selectedDepartment}
@@ -339,7 +339,7 @@ export default function CurriculumApprovalPage() {
               {MOCK_DEPARTMENTS.map((department) => <option key={department.id} value={department.id}>{department.name}</option>)}
             </select>
           </label>
-          <label className="space-y-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 xl:col-span-1">
+          <label className="space-y-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
             Giáo viên phụ trách
             <select
               value={selectedTeacher}
@@ -350,7 +350,7 @@ export default function CurriculumApprovalPage() {
               {teachers.map((teacher) => <option key={teacher.id} value={teacher.id}>{teacher.name}</option>)}
             </select>
           </label>
-          <label className="space-y-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 xl:col-span-1">
+          <label className="space-y-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
             Marketplace
             <select
               value={marketplaceFilter}
@@ -362,7 +362,7 @@ export default function CurriculumApprovalPage() {
               <option value="NO">Không mở bán</option>
             </select>
           </label>
-          <label className="space-y-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 xl:col-span-1">
+          <label className="space-y-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
             Sắp xếp
             <div className="relative">
               <ArrowUpDown className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -424,11 +424,11 @@ export default function CurriculumApprovalPage() {
                   </div>
 
                   <div className="flex w-full flex-col items-stretch gap-2 border-t border-slate-100 pt-3 dark:border-slate-800 lg:w-48 lg:shrink-0 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0">
-                    <Button className="w-full justify-start text-slate-700 hover:text-slate-700 dark:text-slate-100 dark:hover:text-slate-100" size="sm" variant="outline" onClick={() => openDetails(course)} leftIcon={<Eye className="h-4 w-4" />}>
+                    <Button className="group w-full justify-start text-slate-700 transition-all duration-200 hover:border-[#00B8DD]/40 hover:bg-[#00B8DD]/5 hover:text-[#00B8DD] dark:text-slate-300 dark:hover:border-[#00B8DD]/40 dark:hover:bg-[#00B8DD]/10 dark:hover:text-[#00B8DD]" size="sm" variant="outline" onClick={() => openDetails(course)} leftIcon={<Eye className="h-4 w-4 text-slate-500 transition-colors group-hover:text-[#00B8DD] dark:text-slate-400" />}>
                       Xem chi tiết
                     </Button>
                     {course.status === 'PENDING' && <>
-                      <Button className="w-full justify-start text-slate-700 hover:text-slate-700 dark:text-slate-100 dark:hover:text-slate-100" size="sm" variant="outline" onClick={() => openAction(course, 'REJECT')} leftIcon={<X className="h-4 w-4 text-rose-500" />}>
+                      <Button className="group w-full justify-start text-slate-700 transition-all duration-200 hover:border-rose-500/40 hover:bg-rose-50 hover:text-rose-600 dark:text-slate-300 dark:hover:border-rose-500/40 dark:hover:bg-rose-500/10 dark:hover:text-rose-400" size="sm" variant="outline" onClick={() => openAction(course, 'REJECT')} leftIcon={<X className="h-4 w-4 text-rose-500 transition-colors" />}>
                         Yêu cầu chỉnh sửa
                       </Button>
                       <Button className="w-full justify-start" size="sm" variant="primary" onClick={() => openAction(course, 'APPROVE')} leftIcon={<Check className="h-4 w-4" />}>
@@ -449,7 +449,6 @@ export default function CurriculumApprovalPage() {
         title={actionType === 'APPROVE' ? 'Xác Nhận Duyệt Giáo Án' : actionType === 'REJECT' ? 'Yêu Cầu Chỉnh Sửa Chuyên Môn' : 'Chi Tiết Hồ Sơ Giáo Án'}
         description={`Khóa học: ${selectedCourse?.title}`}
         maxWidth={actionType ? 'lg' : '4xl'}
-        className={!actionType ? 'sm:my-0 sm:ml-auto sm:mr-[-1rem] sm:h-[calc(100vh+2rem)] sm:max-h-none sm:max-w-2xl sm:rounded-l-3xl sm:rounded-r-none' : undefined}
       >
         {actionType ? <div className="space-y-4 py-2">
           <Textarea
