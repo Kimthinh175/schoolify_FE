@@ -15,6 +15,8 @@ import {
   QuestionBank,
 } from '@/types';
 
+export * from './subject-data';
+
 export const MOCK_SCHOOLS: School[] = [
   {
     id: 'sch-01',
@@ -979,7 +981,7 @@ export const MOCK_TIMETABLE: ClassSession[] = [
     class_name: '11A2 - Toán Cơ Bản',
   },
   {
-    id: 'ses-04',
+    id: 'ses-08',
     class_id: 'cls-8b',
     title: 'Tiếng Anh 8: Unit 3 - Teenagers',
     room: 'Phòng 201 (Tòa nhà B)',
@@ -990,7 +992,7 @@ export const MOCK_TIMETABLE: ClassSession[] = [
     class_name: '8B - Song Ngữ Quốc Tế',
   },
   {
-    id: 'ses-05',
+    id: 'ses-09',
     class_id: 'cls-8b',
     title: 'Ngữ Văn 8: Lão Hạc',
     room: 'Phòng 202 (Tòa nhà B)',
@@ -1000,7 +1002,7 @@ export const MOCK_TIMETABLE: ClassSession[] = [
     class_name: '8B - Song Ngữ Quốc Tế',
   },
   {
-    id: 'ses-06',
+    id: 'ses-10',
     class_id: 'cls-8b',
     title: 'Toán 8: Phân Tích Đa Thức Thành Nhân Tử',
     room: 'Phòng 203 (Tòa nhà B)',

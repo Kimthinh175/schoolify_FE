@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { RequireLoginModal } from '@/components/features/auth/RequireLoginModal';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -50,9 +51,14 @@ export const MOCK_SUBJECTS = [
 ];
 
 export const MOCK_LEVELS = [
-  { slug: 'lop-10', name: 'Lớp 10' },
-  { slug: 'lop-11', name: 'Lớp 11' },
-  { slug: 'lop-12', name: 'Lớp 12' },
+  { slug: 'basic', name: '1. Cơ Bản', isFree: true },
+  { slug: 'medium', name: '2. Trung Bình', isFree: true },
+  { slug: 'advanced', name: '3. Nâng Cao', isFree: false },
+  { slug: 'provincial_excellent', name: '4. HSG Tỉnh', isFree: false },
+  { slug: 'national_excellent', name: '5. HSG Quốc Gia', isFree: false },
+  { slug: 'lop-10', name: 'Lớp 10', isFree: true },
+  { slug: 'lop-11', name: 'Lớp 11', isFree: true },
+  { slug: 'lop-12', name: 'Lớp 12', isFree: true },
 ];
 
 export const MOCK_ROADMAP_LESSONS: LessonRoadmapItem[] = [
@@ -145,6 +151,8 @@ export function PracticeRoadmapList({
   const router = useRouter();
   const [selectedSubject, setSelectedSubject] = React.useState(currentSubjectSlug);
   const [selectedLevel, setSelectedLevel] = React.useState(currentLevelSlug);
+  const [requireLoginOpen, setRequireLoginOpen] = React.useState(false);
+  const [gatedLevelName, setGatedLevelName] = React.useState('');
 
   const subjectInfo =
     MOCK_SUBJECTS.find((s) => s.slug === selectedSubject) || MOCK_SUBJECTS[0];
@@ -157,6 +165,12 @@ export function PracticeRoadmapList({
   };
 
   const handleLevelChange = (slug: string) => {
+    const targetLvl = MOCK_LEVELS.find((l) => l.slug === slug);
+    if (targetLvl && !targetLvl.isFree) {
+      setGatedLevelName(targetLvl.name);
+      setRequireLoginOpen(true);
+      return;
+    }
     setSelectedLevel(slug);
     router.push(`/student/practice/${selectedSubject}/${slug}`);
   };
@@ -173,6 +187,30 @@ export function PracticeRoadmapList({
 
   return (
     <div className="space-y-8">
+      {/* GUEST TRIAL BANNER */}
+      {selectedLevel === 'basic' && (
+        <div className="rounded-2xl bg-gradient-to-r from-emerald-950/70 via-slate-900 to-slate-900 border border-emerald-500/40 p-4 text-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold text-lg shrink-0">
+              🎯
+            </div>
+            <div>
+              <span className="text-xs font-bold text-white block">
+                Chế Độ Khách: Đang Luyện Thử Cấp Độ Cơ Bản Miễn Phí
+              </span>
+              <span className="text-[11px] text-emerald-300/80">
+                Làm trắc nghiệm và đọc lý thuyết tự do. Đăng nhập để lưu tiến độ và ghi tên vào Bảng xếp hạng thi đua.
+              </span>
+            </div>
+          </div>
+          <Link href="/login/student" className="shrink-0">
+            <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-xl shadow-md">
+              Đăng Nhập Ngay
+            </Button>
+          </Link>
+        </div>
+      )}
+
       {/* 1. FILTER & HEADER SECTION */}
       <section className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-800">
@@ -433,6 +471,12 @@ export function PracticeRoadmapList({
           })}
         </div>
       </section>
+      <RequireLoginModal
+        isOpen={requireLoginOpen}
+        onClose={() => setRequireLoginOpen(false)}
+        reason="ADVANCED_LEVEL"
+        targetLevelName={gatedLevelName}
+      />
     </div>
   );
 }

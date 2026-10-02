@@ -1,8 +1,10 @@
 'use client';
 
+import * as React from 'react';
 import Link from 'next/link';
 import {
   BookOpen,
+  Sparkles,
   Calendar,
   Award,
   Play,
@@ -12,22 +14,73 @@ import {
   Trophy,
   CheckCircle2,
   FileText,
-  Pin,
-  Flame,
   User,
   ExternalLink,
-  Sparkles,
+  ChevronRight,
+  Filter,
+  TrendingUp,
+  Calculator,
+  Atom,
+  FlaskConical,
+  Dna,
+  Landmark,
+  Globe,
+  Scale,
+  Cpu,
+  Wrench,
+  Languages,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Avatar } from '@/components/ui/avatar';
-import { MOCK_COURSES, MOCK_TIMETABLE, MOCK_EXAMS } from '@/services/mock/data';
+import { Tabs } from '@/components/ui/tabs';
+import { MOCK_COURSES, MOCK_TIMETABLE, MOCK_EXAMS, K12_SUBJECTS } from '@/services/mock/data';
+import { K12Subject } from '@/types/subject';
+import { LevelSelectionModal } from '@/components/features/student/practice/LevelSelectionModal';
+import { cn } from '@/lib/utils';
+
+// Helper icon mapping for subjects
+const SUBJECT_ICON_MAP: Record<string, React.ReactNode> = {
+  Calculator: <Calculator className="w-6 h-6" />,
+  BookOpen: <BookOpen className="w-6 h-6" />,
+  Languages: <Languages className="w-6 h-6" />,
+  Atom: <Atom className="w-6 h-6" />,
+  FlaskConical: <FlaskConical className="w-6 h-6" />,
+  Dna: <Dna className="w-6 h-6" />,
+  Landmark: <Landmark className="w-6 h-6" />,
+  Globe: <Globe className="w-6 h-6" />,
+  Scale: <Scale className="w-6 h-6" />,
+  Cpu: <Cpu className="w-6 h-6" />,
+  Wrench: <Wrench className="w-6 h-6" />,
+};
 
 export default function StudentDashboardPage() {
+  const [activeCategory, setActiveCategory] = React.useState('ALL');
+  const [selectedSubject, setSelectedSubject] = React.useState<K12Subject | null>(null);
+  const [isLevelModalOpen, setIsLevelModalOpen] = React.useState(false);
+
   const ongoingCourse = MOCK_COURSES[0];
   const nextSession = MOCK_TIMETABLE[0];
+
+  const categoryTabs = [
+    { id: 'ALL', label: 'Tất Cả Môn (11 Môn)', icon: <Sparkles className="w-3.5 h-3.5 text-amber-500" /> },
+    { id: 'NATURAL', label: 'Khoa Học Tự Nhiên', icon: <Atom className="w-3.5 h-3.5 text-emerald-500" /> },
+    { id: 'SOCIAL', label: 'Khoa Học Xã Hội', icon: <BookOpen className="w-3.5 h-3.5 text-rose-500" /> },
+    { id: 'LANGUAGE', label: 'Ngoại Ngữ', icon: <Languages className="w-3.5 h-3.5 text-sky-500" /> },
+    { id: 'TECH', label: 'Tin Học & Kỹ Thuật', icon: <Cpu className="w-3.5 h-3.5 text-indigo-500" /> },
+  ];
+
+  const filteredSubjects = React.useMemo(() => {
+    if (activeCategory === 'ALL') return K12_SUBJECTS;
+    return K12_SUBJECTS.filter((s) => s.category === activeCategory);
+  }, [activeCategory]);
+
+  const handleOpenSubjectLevels = (subject: K12Subject) => {
+    setSelectedSubject(subject);
+    setIsLevelModalOpen(true);
+  };
 
   const teacherAnnouncements = [
     {
@@ -52,33 +105,33 @@ export default function StudentDashboardPage() {
 
   const classLeaderboard = [
     { rank: 1, name: 'Trần Hoàng Nam', points: 1250, avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80', badge: '🥇 Top 1' },
-    { rank: 2, name: 'Võ Ngọc Minh (Bạn)', points: 850, avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&auto=format&fit=crop&q=80', isSelf: true, badge: '🥈 Top 2' },
+    { rank: 2, name: 'Nguyễn Hoàng Minh (Bạn)', points: 850, avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&auto=format&fit=crop&q=80', isSelf: true, badge: '🥈 Top 2' },
     { rank: 3, name: 'Lê Thu Thảo', points: 810, avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80', badge: '🥉 Top 3' },
   ];
 
   return (
-    <div className="space-y-8 pb-10">
-      {/* ── Welcome Banner (Style Chuẩn Schoolify Cyan & Deep Ocean) ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0A1E38] via-[#007D99] to-[#00B8DD] p-6 sm:p-8 text-white shadow-lg border border-cyan-500/20">
+    <div className="space-y-8 pb-12">
+      {/* ── 1. Gamification Welcome Banner ── */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0A1E38] via-[#007D99] to-[#00B8DD] p-6 sm:p-8 text-white shadow-xl shadow-[#00B8DD]/15 border border-cyan-500/20">
         <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-64 h-64 bg-cyan-400/20 rounded-full blur-3xl pointer-events-none" />
-        
+
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Badge variant="primary" className="bg-[#00B8DD] text-slate-950 font-bold hover:bg-[#009BBD]">
-                Lớp 11A1 • Niên Khóa 2025-2026
+                Khối 11 - Lớp 11A1
               </Badge>
               <span className="text-xs text-cyan-100 font-medium">THPT Chuyên Công Nghệ Schoolify</span>
             </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
-              Chào Minh, Chúc Bạn Học Tốt Hôm Nay! 🎓
+              Chào Minh, Chúc Bạn Học Tập Hiệu Quả! 👋
             </h1>
             <p className="text-xs sm:text-sm text-cyan-100 mt-2 max-w-xl leading-relaxed">
-              Bạn đang đứng thứ <strong className="text-amber-300">#2 Bảng Xếp Hạng Lớp 11A1</strong>. Hôm nay bạn có 1 buổi học online lúc 08:00 và 1 bài tập về nhà cần nộp.
+              Bạn đang đứng thứ <strong className="text-amber-300">#2 Bảng Xếp Hạng Lớp 11A1</strong>. Chọn môn học bên dưới để làm bài tập phân tầng từ Cơ bản đến HSG Quốc gia nhé!
             </p>
           </div>
 
-          {/* Gamification Wallet Card */}
+          {/* Gamification Points Card */}
           <div className="rounded-2xl bg-white/10 backdrop-blur-md p-4 border border-white/20 flex items-center gap-4 shrink-0 shadow-md">
             <div className="h-12 w-12 rounded-xl bg-amber-400 text-amber-950 flex items-center justify-center font-bold text-2xl shadow-inner">
               💎
@@ -87,7 +140,7 @@ export default function StudentDashboardPage() {
               <span className="text-[11px] text-cyan-100 uppercase font-bold tracking-wider">Điểm Rèn Luyện</span>
               <p className="text-2xl font-black text-white">850 Điểm</p>
               <Link href="/student/store" className="text-xs text-amber-300 hover:text-amber-200 font-semibold inline-flex items-center gap-1">
-                <span>Đổi vật phẩm store</span>
+                <span>Đổi quà tại Store</span>
                 <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
@@ -95,12 +148,100 @@ export default function StudentDashboardPage() {
         </div>
       </div>
 
-      {/* ── Main Dashboard Layout ── */}
+      {/* ── 2. CORE FEATURE: Tất Cả Các Môn Học K-12 (Grid View) ── */}
+      <div className="space-y-5">
+        <div className="space-y-2 max-w-3xl">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-[#00B8DD]" />
+            <span className="text-xs font-bold uppercase tracking-wider text-[#00B8DD]">
+              Kho Luyện Thi Phân Tầng
+            </span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+            Tất Cả Môn Học K-12
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            Nhấn vào môn học để chọn cấp độ: <strong>Cơ bản</strong>, <strong>Trung bình</strong>, <strong>Nâng cao</strong>, <strong>HSG Tỉnh</strong> hoặc <strong>HSG Quốc gia</strong>.
+          </p>
+        </div>
+
+        {/* Filter tabs moved below title */}
+        <div className="overflow-x-auto no-scrollbar pt-1 pb-1">
+          <Tabs
+            tabs={categoryTabs}
+            activeTab={activeCategory}
+            onChange={setActiveCategory}
+            className="bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs"
+          />
+        </div>
+
+        {/* Subjects Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+          {filteredSubjects.map((subject) => {
+            const icon = SUBJECT_ICON_MAP[subject.iconName] || <BookOpen className="w-6 h-6" />;
+            return (
+              <Card
+                key={subject.id}
+                onClick={() => handleOpenSubjectLevels(subject)}
+                className="group p-5 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/70 cursor-pointer flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={cn('p-3 rounded-2xl transition-transform group-hover:scale-110 duration-300', subject.bgLight, subject.themeColor)}>
+                      {icon}
+                    </div>
+                    <Badge variant="outline" className="text-[11px] font-bold border-slate-200 dark:border-slate-700">
+                      K-12
+                    </Badge>
+                  </div>
+
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-[#00B8DD] transition-colors line-clamp-1">
+                    {subject.name}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                    {subject.description}
+                  </p>
+                </div>
+
+                <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800/80">
+                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
+                    <span className="flex items-center gap-1">
+                      <BookOpen className="w-3.5 h-3.5 text-[#00B8DD]" />
+                      <strong>5</strong> cấp độ
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <TrendingUp className="w-3.5 h-3.5 text-amber-500" />
+                      <strong>{subject.totalExams.toLocaleString()}</strong> đề thi
+                    </span>
+                  </div>
+
+                  {/* Cấp độ available tags */}
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {['Cơ bản', 'Trung bình', 'Nâng cao'].map((lvl) => (
+                      <span key={lvl} className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium">
+                        {lvl}
+                      </span>
+                    ))}
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#E6F8FC] dark:bg-[#00B8DD]/20 text-[#007D99] dark:text-[#00B8DD] font-bold">
+                      +2 HSG
+                    </span>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-end text-xs font-bold text-[#007D99] dark:text-[#00B8DD] group-hover:translate-x-1 transition-transform">
+                    <span>Luyện ngay</span>
+                    <ChevronRight className="w-4 h-4 ml-0.5" />
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── 3. Main Dashboard Layout (Learning Tasks, Timetable, Exams & Feedback) ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
         {/* Left Column (2 Cols): Learning Tasks & Teacher Feedback */}
         <div className="lg:col-span-2 space-y-6">
-
           {/* Widget 1: Tiếp tục học tập */}
           <Card className="p-6 border-slate-200 dark:border-slate-800 shadow-xs">
             <div className="flex items-center justify-between mb-4">
@@ -108,7 +249,7 @@ export default function StudentDashboardPage() {
                 <div className="p-1.5 rounded-lg bg-[#E6F8FC] dark:bg-[#00B8DD]/20 text-[#007D99] dark:text-[#00B8DD]">
                   <BookOpen className="w-4 h-4" />
                 </div>
-                <span>Tiếp Tục Tiến Độ Học Tập</span>
+                <span>Tiếp Tục Khóa Học</span>
               </h3>
               <Link href="/student/my-courses">
                 <Button size="sm" variant="ghost" className="text-xs text-[#007D99] dark:text-[#00B8DD]">
@@ -117,81 +258,76 @@ export default function StudentDashboardPage() {
               </Link>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="h-16 w-24 rounded-xl overflow-hidden bg-slate-200 shrink-0 border border-slate-300 dark:border-slate-700">
-                  <img src={ongoingCourse.thumbnail_url || ''} alt="" className="h-full w-full object-cover" />
-                </div>
-                <div>
-                  <Badge variant="secondary" className="text-[10px] mb-1 font-semibold text-[#007D99]">
-                    {ongoingCourse.department_name}
-                  </Badge>
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">{ongoingCourse.title}</h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Bài 02 - Phương Trình Lượng Giác Bậc Hai
-                  </p>
-                  <div className="mt-2.5 w-48 sm:w-56">
-                    <div className="flex justify-between text-[11px] font-semibold text-slate-500 mb-1">
-                      <span>Tiến độ bài học</span>
-                      <span className="text-[#00B8DD]">65%</span>
+            {ongoingCourse && (
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-[10px] bg-white dark:bg-slate-800">
+                      {ongoingCourse.department_name}
+                    </Badge>
+                    <span className="text-xs text-slate-500">Giảng viên: {ongoingCourse.teacher_name}</span>
+                  </div>
+                  <h4 className="text-base font-bold text-slate-900 dark:text-white">
+                    {ongoingCourse.title}
+                  </h4>
+                  <div className="flex items-center gap-3 pt-1">
+                    <div className="w-36 sm:w-48">
+                      <Progress value={45} className="h-2" />
                     </div>
-                    <Progress value={65} showLabel={false} className="h-2" />
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-400">45% hoàn thành</span>
                   </div>
                 </div>
-              </div>
 
-              <Link href="/student/practice/toan-hoc/lop-11/lesson-02">
-                <Button size="sm" variant="primary" leftIcon={<Play className="w-4 h-4" />}>
-                  Vào Học Tiếp
-                </Button>
-              </Link>
-            </div>
+                <Link href={`/student/learn/${ongoingCourse.id}/ls-01`} className="shrink-0">
+                  <Button size="sm" className="bg-[#00B8DD] hover:bg-[#009BBD] text-slate-950 font-bold" leftIcon={<Play className="w-3.5 h-3.5 fill-current" />}>
+                    Học Tiếp
+                  </Button>
+                </Link>
+              </div>
+            )}
           </Card>
 
-          {/* Widget 2: Thông Báo & Lời Nhắc Từ Thầy Cô */}
+          {/* Widget 2: Thông Báo & Nhận Xét Từ Giáo Viên */}
           <Card className="p-6 border-slate-200 dark:border-slate-800 shadow-xs">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600">
-                  <Pin className="w-4 h-4" />
+                <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600">
+                  <MessageSquare className="w-4 h-4" />
                 </div>
-                <span>Lời Nhắn & Nhắc Nhở Từ Thầy Cô</span>
+                <span>Thông Báo & Nhận Xét Từ Thầy Cô</span>
               </h3>
-              <Badge variant="warning" className="text-[10px] font-bold">2 Lời nhắn mới</Badge>
+              <Badge variant="success" className="text-[10px]">2 tin mới</Badge>
             </div>
 
             <div className="space-y-3">
               {teacherAnnouncements.map((ann) => (
-                <div key={ann.id} className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-[#00B8DD]/40 transition-all">
-                  <div className="flex items-start gap-3">
-                    <Avatar src={ann.avatar} alt={ann.teacher} size="md" className="shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <h5 className="text-xs font-bold text-slate-900 dark:text-white">{ann.teacher}</h5>
-                          <span className="text-[11px] text-[#007D99] dark:text-[#00B8DD] font-semibold">• {ann.subject}</span>
-                        </div>
-                        <span className="text-[10px] text-slate-400">{ann.time}</span>
+                <div key={ann.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Avatar src={ann.avatar} alt={ann.teacher} size="sm" />
+                      <div>
+                        <h5 className="text-xs font-bold text-slate-900 dark:text-white">{ann.teacher}</h5>
+                        <span className="text-[10px] text-slate-400">{ann.subject} • {ann.time}</span>
                       </div>
-                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1">{ann.title}</h4>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/80">
-                        "{ann.content}"
-                      </p>
                     </div>
                   </div>
+                  <h6 className="text-xs font-bold text-slate-800 dark:text-slate-200">{ann.title}</h6>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                    "{ann.content}"
+                  </p>
                 </div>
               ))}
             </div>
           </Card>
 
-          {/* Widget 3: Bài kiểm tra & Hạn nộp bài tập */}
+          {/* Widget 3: Bài Thi & Khảo Thí */}
           <Card className="p-6 border-slate-200 dark:border-slate-800 shadow-xs">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600">
-                  <Clock className="w-4 h-4" />
+                <div className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600">
+                  <Award className="w-4 h-4" />
                 </div>
-                <span>Bài Kiểm Tra & Hạn Nộp Sắp Tới</span>
+                <span>Bài Tập & Khảo Thí Cần Làm</span>
               </h3>
               <Link href="/student/exams">
                 <Button size="sm" variant="ghost" className="text-xs text-slate-500">Xem tất cả</Button>
@@ -220,41 +356,41 @@ export default function StudentDashboardPage() {
               ))}
             </div>
           </Card>
-
         </div>
 
         {/* Right Column (1 Col): Timetable & Class Leaderboard */}
         <div className="space-y-6">
-
           {/* Widget 4: Lịch Học Trực Tiếp Hôm Nay */}
-          <Card className="p-6 border-slate-200 dark:border-slate-800 shadow-xs">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
-              <div className="p-1.5 rounded-lg bg-[#E6F8FC] dark:bg-[#00B8DD]/20 text-[#007D99] dark:text-[#00B8DD]">
-                <Calendar className="w-4 h-4" />
-              </div>
-              <span>Lịch Học Trực Tiếp Hôm Nay</span>
-            </h3>
+          {nextSession && (
+            <Card className="p-6 border-slate-200 dark:border-slate-800 shadow-xs">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
+                <div className="p-1.5 rounded-lg bg-[#E6F8FC] dark:bg-[#00B8DD]/20 text-[#007D99] dark:text-[#00B8DD]">
+                  <Calendar className="w-4 h-4" />
+                </div>
+                <span>Lịch Học Hôm Nay</span>
+              </h3>
 
-            <div className="p-4 rounded-2xl bg-[#E6F8FC]/50 dark:bg-[#00B8DD]/10 border border-[#00B8DD]/30 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#007D99] dark:text-[#00B8DD] flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  08:00 - 09:45 (Sắp diễn ra)
-                </span>
-                <Badge variant="outline" className="text-[10px] border-[#00B8DD] text-[#007D99]">Zoom Online</Badge>
+              <div className="p-4 rounded-2xl bg-[#E6F8FC]/50 dark:bg-[#00B8DD]/10 border border-[#00B8DD]/30 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#007D99] dark:text-[#00B8DD] flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    08:00 - 09:45
+                  </span>
+                  <Badge variant="outline" className="text-[10px] border-[#00B8DD] text-[#007D99]">Zoom Online</Badge>
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">{nextSession.title}</h4>
+                  <p className="text-xs text-slate-500 mt-1">Giảng viên: {nextSession.teacher_name}</p>
+                  <p className="text-xs text-slate-500">Phòng học: {nextSession.room}</p>
+                </div>
+                <a href={nextSession.meeting_url || '#'} target="_blank" rel="noreferrer" className="block pt-1">
+                  <Button size="sm" className="w-full justify-center bg-[#00B8DD] hover:bg-[#009BBD] text-slate-950 font-bold" leftIcon={<ExternalLink className="w-4 h-4" />}>
+                    Vào Phòng Học Online
+                  </Button>
+                </a>
               </div>
-              <div>
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white">{nextSession.title}</h4>
-                <p className="text-xs text-slate-500 mt-1">Giảng viên: {nextSession.teacher_name}</p>
-                <p className="text-xs text-slate-500">Phòng học: {nextSession.room}</p>
-              </div>
-              <a href={nextSession.meeting_url || '#'} target="_blank" rel="noreferrer" className="block pt-1">
-                <Button size="sm" className="w-full justify-center bg-[#00B8DD] hover:bg-[#009BBD] text-slate-950 font-bold" leftIcon={<ExternalLink className="w-4 h-4" />}>
-                  Vào Phòng Học Online
-                </Button>
-              </a>
-            </div>
-          </Card>
+            </Card>
+          )}
 
           {/* Widget 5: Bảng Xếp Hạng Thi Đua Lớp 11A1 */}
           <Card className="p-6 border-slate-200 dark:border-slate-800 shadow-xs">
@@ -272,11 +408,12 @@ export default function StudentDashboardPage() {
               {classLeaderboard.map((item) => (
                 <div
                   key={item.rank}
-                  className={`p-3 rounded-2xl flex items-center justify-between transition-all ${
+                  className={cn(
+                    'p-3 rounded-2xl flex items-center justify-between transition-all',
                     item.isSelf
                       ? 'bg-[#E6F8FC] dark:bg-[#00B8DD]/20 border-2 border-[#00B8DD]'
                       : 'bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800'
-                  }`}
+                  )}
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-xs font-black text-slate-500 w-5 text-center">#{item.rank}</span>
@@ -299,11 +436,15 @@ export default function StudentDashboardPage() {
               </Link>
             </div>
           </Card>
-
         </div>
-
       </div>
+
+      {/* ── 4. Level Selection Modal (Opens on subject click) ── */}
+      <LevelSelectionModal
+        isOpen={isLevelModalOpen}
+        onClose={() => setIsLevelModalOpen(false)}
+        subject={selectedSubject}
+      />
     </div>
   );
 }
-

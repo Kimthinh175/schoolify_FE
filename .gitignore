@@ -53,9 +53,10 @@ config.yaml
 .server*
 docker-compose.override.yml
 
-# docs & markdown files (never ignore)
-!*.md
-!**/*.md
-!docs/**
-!.agents/**
+# markdown files
+*.md
+**/*.md
+docs/*.md
+docs/**/*.md
+
 
