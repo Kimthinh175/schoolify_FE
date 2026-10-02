@@ -132,13 +132,13 @@ export default function OnlineExamRunnerPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                {q.options?.map((opt) => {
-                  const isSelected = selectedAnswers[q.id] === opt.id;
+                {q.answers?.map((ans) => {
+                  const isSelected = selectedAnswers[q.id] === ans.id;
                   return (
                     <button
-                      key={opt.id}
+                      key={ans.id}
                       type="button"
-                      onClick={() => handleSelectOption(q.id, opt.id)}
+                      onClick={() => handleSelectOption(q.id, ans.id)}
                       className={`p-3.5 rounded-xl border text-left text-sm font-medium transition-all flex items-center gap-3 cursor-pointer ${
                         isSelected
                           ? 'border-indigo-600 bg-indigo-50/80 text-indigo-950 dark:bg-indigo-950/60 dark:text-indigo-200 font-bold shadow-xs'
@@ -154,7 +154,7 @@ export default function OnlineExamRunnerPage() {
                       >
                         {isSelected && <div className="h-2 w-2 rounded-full bg-white" />}
                       </div>
-                      <span>{opt.text}</span>
+                      <span>{ans.content}</span>
                     </button>
                   );
                 })}

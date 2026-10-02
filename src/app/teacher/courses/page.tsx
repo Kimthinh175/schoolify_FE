@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   BookOpen,
   Plus,
@@ -20,9 +21,11 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Dialog } from '@/components/ui/dialog';
 import { MOCK_COURSES } from '@/services/mock/data';
+import { courseService } from '@/services/course.service';
 import { Course } from '@/types';
 
 export default function TeacherCoursesPage() {
+  const router = useRouter();
   const [courses, setCourses] = React.useState<Course[]>(MOCK_COURSES);
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
   const [newTitle, setNewTitle] = React.useState('');
@@ -32,7 +35,7 @@ export default function TeacherCoursesPage() {
   const formatMoney = (amount: number) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 
-  const handleCreateCourse = (e: React.FormEvent) => {
+  const handleCreateCourse = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle) return;
     const newCourse: Course = {
@@ -52,10 +55,12 @@ export default function TeacherCoursesPage() {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
+    await courseService.saveCourseDraft(newCourse);
     setCourses([newCourse, ...courses]);
     setIsCreateModalOpen(false);
     setNewTitle('');
     setNewDesc('');
+    router.push(`/teacher/courses/builder?courseId=${newCourse.id}`);
   };
 
   return (
@@ -109,9 +114,11 @@ export default function TeacherCoursesPage() {
                       <Eye className="w-4 h-4" />
                     </Button>
                   </Link>
-                  <Button size="sm" variant="outline" className="h-8 px-2.5 text-xs">
-                    Chỉnh Sửa
-                  </Button>
+                  <Link href={`/teacher/courses/builder?courseId=${course.id}`}>
+                    <Button size="sm" variant="outline" className="h-8 px-2.5 text-xs">
+                      Chỉnh Sửa
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </div>

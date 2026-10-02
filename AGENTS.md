@@ -15,6 +15,8 @@ Please follow these conventions when writing code for Schoolify FE.
 - **Brand Consistency**: Always adhere strictly to the project's brand identity.
 - **Responsive by Default**: UI must support mobile and tablet out of the box (Mobile-first Tailwind approach).
 
-## Git & Repository Rules
-- **Push Target Restriction**: ONLY push code to `https://github.com/Kimthinh175/schoolify_FE` (branch `thinh`). NEVER push to any other repository.
+## Git & Repository Rules (Luật Thép)
+- **Chỉ tác động vào GitHub khi có lệnh:** TUYỆT ĐỐI KHÔNG tự ý push code, merge Pull Request, hoặc gọi GitHub API nếu không có yêu cầu trực tiếp từ User.
+- **Push Target Restriction:** Khi User yêu cầu push, CHỈ push vào `https://github.com/Kimthinh175/schoolify_FE` (nhánh `thinh`). KHÔNG push vào bất kỳ repo nào khác.
+
 

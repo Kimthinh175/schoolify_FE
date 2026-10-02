@@ -74,9 +74,13 @@ export function Navbar() {
   }, []);
 
   // Close menus on route change
+  const prevPathnameRef = React.useRef(pathname);
   React.useEffect(() => {
-    setLoginDrawerOpen(false);
-    setMobileMenuOpen(false);
+    if (prevPathnameRef.current !== pathname) {
+      prevPathnameRef.current = pathname;
+      setLoginDrawerOpen(false);
+      setMobileMenuOpen(false);
+    }
   }, [pathname]);
 
   // ESC key closes drawer
@@ -149,16 +153,6 @@ export function Navbar() {
               <LogIn className="w-4 h-4 text-[#00B8DD]" />
               <span>Đăng Nhập</span>
             </button>
-
-            {/* Primary CTA */}
-            <Link href="/register">
-              <Button
-                className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold text-sm shadow-md shadow-[#00B8DD]/20 px-5"
-                rightIcon={<ArrowRight className="w-4 h-4" />}
-              >
-                Dùng Thử Miễn Phí
-              </Button>
-            </Link>
           </div>
 
           {/* ── Mobile Hamburger ── */}
@@ -224,14 +218,6 @@ export function Navbar() {
                     <LogIn className="w-4 h-4 text-[#00B8DD]" />
                     <span>Đăng Nhập</span>
                   </button>
-                  <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
-                    <Button
-                      className="w-full justify-center bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold text-sm py-2.5"
-                      rightIcon={<ArrowRight className="w-4 h-4" />}
-                    >
-                      Dùng Thử Miễn Phí
-                    </Button>
-                  </Link>
                 </div>
               </div>
             </motion.div>
@@ -319,7 +305,6 @@ export function Navbar() {
                             </p>
                           </div>
                         </div>
-                        <ArrowRight className="w-4 h-4 text-slate-600 group-hover:text-white group-hover:translate-x-0.5 transition-all shrink-0" />
                       </Link>
                     );
                   })}

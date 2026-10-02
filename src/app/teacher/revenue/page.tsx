@@ -78,10 +78,10 @@ export default function TeacherRevenuePage() {
               <TableRow key={order.id}>
                 <TableCell className="font-mono text-xs font-bold">{order.code}</TableCell>
                 <TableCell className="font-semibold text-sm">{order.buyer_name}</TableCell>
-                <TableCell className="text-xs text-slate-600 dark:text-slate-300">{order.item_title}</TableCell>
-                <TableCell className="text-xs">{formatMoney(order.total_amount)}</TableCell>
+                <TableCell className="text-xs text-slate-600 dark:text-slate-300">{order.item_name_snapshot}</TableCell>
+                <TableCell className="text-xs">{formatMoney(order.item_price_snapshot)}</TableCell>
                 <TableCell className="font-bold text-sm text-indigo-600 dark:text-indigo-400">
-                  {formatMoney(order.total_amount * 0.85)}
+                  {formatMoney(order.item_price_snapshot * 0.85)}
                 </TableCell>
                 <TableCell className="text-right">
                   <Badge variant="success" className="text-[10px]">ĐÃ THANH TOÁN</Badge>

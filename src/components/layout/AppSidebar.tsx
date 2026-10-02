@@ -151,6 +151,12 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['TEACHER'],
   },
   {
+    label: 'Ngân Hàng Đề (Studio)',
+    href: '/teacher/questions',
+    icon: <HelpCircle className="w-5 h-5" />,
+    roles: ['TEACHER'],
+  },
+  {
     label: 'Doanh Thu Khóa Học',
     href: '/teacher/revenue',
     icon: <DollarSign className="w-5 h-5" />,
@@ -168,6 +174,13 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Góc Học Tập',
     href: '/student/dashboard',
     icon: <LayoutDashboard className="w-5 h-5" />,
+    roles: ['STUDENT'],
+  },
+  {
+    label: 'Lộ Trình Luyện Tập',
+    href: '/student/practice',
+    icon: <CheckSquare className="w-5 h-5" />,
+    badge: 'Mới',
     roles: ['STUDENT'],
   },
   {
@@ -209,9 +222,9 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['PARENT'],
   },
   {
-    label: 'Sổ Liên Lạc & Lời Phê',
-    href: '/parent/academic',
-    icon: <BookCheck className="w-5 h-5" />,
+    label: 'Sổ Liên Lạc (Kết Quả)',
+    href: '/parent/report',
+    icon: <GraduationCap className="w-5 h-5" />,
     badge: 'Điểm mới',
     roles: ['PARENT'],
   },

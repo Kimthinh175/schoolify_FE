@@ -60,7 +60,7 @@ export function Footer() {
             </Link>
 
             <p className="text-sm text-slate-400 leading-relaxed max-w-sm">
-              <strong className="text-slate-200">"Nền tảng vận hành & kinh doanh giáo dục toàn diện."</strong> Biến mọi không gian giảng dạy truyền thống thành một nền tảng số hóa tối ưu, trao quyền cho giáo viên và nâng cao chất lượng học tập K-12.
+              <strong className="text-slate-200">&ldquo;Nền tảng vận hành &amp; kinh doanh giáo dục toàn diện.&rdquo;</strong> Biến mọi không gian giảng dạy truyền thống thành một nền tảng số hóa tối ưu, trao quyền cho giáo viên và nâng cao chất lượng học tập K-12.
             </p>
 
             {/* Contact Details */}
