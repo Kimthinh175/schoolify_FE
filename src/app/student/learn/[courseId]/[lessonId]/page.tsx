@@ -23,6 +23,7 @@ import { Card } from '@/components/ui/card';
 import { MOCK_COURSES, MOCK_QUESTION_BANKS } from '@/services/mock/data';
 import { QuizPracticePanel } from '@/components/features/student/QuizPracticePanel';
 import { EssayPracticePanel } from '@/components/features/student/EssayPracticePanel';
+import { Navbar } from '@/components/layout/Navbar';
 
 export default function FocusLearningPlayerPage() {
   const params = useParams();
@@ -51,37 +52,40 @@ export default function FocusLearningPlayerPage() {
 
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex flex-col">
-      {/* Top Focus Bar */}
-      <header className="h-14 px-4 sm:px-6 bg-slate-950 border-b border-slate-800 flex items-center justify-between z-20">
-        <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-slate-900 text-white flex flex-col pt-20">
+      {/* ── HEADER GIỐNG TRANG CHỦ ── */}
+      <Navbar />
+
+      {/* Top Focus Sub-bar */}
+      <div className="sticky top-20 z-20 px-4 sm:px-6 py-2.5 bg-slate-950/95 border-b border-slate-800 flex items-center justify-between backdrop-blur-md">
+        <div className="flex items-center gap-3 min-w-0">
           <Link
             href="/student/dashboard"
-            className="flex items-center gap-1 text-xs text-slate-400 hover:text-white transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 hover:text-white transition-colors shrink-0"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Rời Không Gian Học</span>
           </Link>
           <div className="h-4 w-px bg-slate-800" />
-          <span className="text-xs sm:text-sm font-bold truncate max-w-md">
+          <span className="text-xs sm:text-sm font-bold truncate max-w-md text-slate-200">
             {course.title}
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Badge variant="primary" className="text-[10px]">
+        <div className="flex items-center gap-2 shrink-0">
+          <Badge variant="primary" className="text-[10px] bg-[#00B8DD] text-slate-950 font-bold">
             {completedLessons.length}/{course.total_lessons} bài hoàn thành
           </Badge>
         </div>
-      </header>
+      </div>
 
-      {/* Main Focus Area: Video & Sidebar */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+      {/* Main Focus Area (Không sidebar) */}
+      <div className="flex-1 flex flex-col bg-slate-900 overflow-y-auto">
         {/* Left: Main Content Panel */}
-        <div className="flex-1 flex flex-col overflow-y-auto bg-slate-900">
+        <div className="flex-1 flex flex-col bg-slate-900">
 
           {/* ── Tab Switcher ── */}
-          <div className="sticky top-0 z-10 border-b border-slate-800 bg-slate-900/95 px-4 backdrop-blur-sm sm:px-6">
+          <div className="sticky top-[125px] z-10 border-b border-slate-800 bg-slate-900/95 px-4 backdrop-blur-sm sm:px-6">
             <div className="flex gap-0">
               <button
                 type="button"
@@ -210,38 +214,6 @@ export default function FocusLearningPlayerPage() {
               />
             </div>
           )}
-        </div>
-
-        {/* Right Sidebar: Playlist / Curriculum */}
-        <div className="w-full lg:w-80 bg-slate-950 border-t lg:border-t-0 lg:border-l border-slate-800 flex flex-col h-auto lg:h-[calc(100vh-3.5rem)] overflow-y-auto">
-          <div className="p-4 border-b border-slate-800 font-bold text-sm">
-            Nội Dung Khóa Học ({course.total_lessons} Bài)
-          </div>
-
-          <div className="divide-y divide-slate-800/80">
-            {course.chapters?.[0]?.lessons.map((lesson, idx) => {
-              const isActive = lesson.id === params.lessonId || (!params.lessonId && idx === 0);
-              return (
-              <Link
-                href={`/student/learn/${course.id}/${lesson.id}`}
-                key={lesson.id}
-                className={`p-4 flex items-center justify-between cursor-pointer transition-colors block ${
-                  isActive ? 'bg-indigo-950/40 border-l-4 border-indigo-500' : 'hover:bg-slate-900/50'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <span className={`text-xs font-bold mt-0.5 ${isActive ? 'text-indigo-400' : 'text-slate-500'}`}>{idx + 1}.</span>
-                  <div>
-                    <p className={`text-xs font-semibold line-clamp-2 ${isActive ? 'text-indigo-100' : 'text-slate-200'}`}>{lesson.title}</p>
-                    <span className="text-[10px] text-slate-500">{lesson.duration_mins} phút</span>
-                  </div>
-                </div>
-                {completedLessons.includes(lesson.id) && (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                )}
-              </Link>
-            )})}
-          </div>
         </div>
       </div>
     </div>
