@@ -74,9 +74,13 @@ export function Navbar() {
   }, []);
 
   // Close menus on route change
+  const prevPathnameRef = React.useRef(pathname);
   React.useEffect(() => {
-    setLoginDrawerOpen(false);
-    setMobileMenuOpen(false);
+    if (prevPathnameRef.current !== pathname) {
+      prevPathnameRef.current = pathname;
+      setLoginDrawerOpen(false);
+      setMobileMenuOpen(false);
+    }
   }, [pathname]);
 
   // ESC key closes drawer

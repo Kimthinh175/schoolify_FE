@@ -28,7 +28,9 @@ export interface TeacherDashboardStats {
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
 
 /** Danh sách hồ sơ giáo viên (mock) dùng để phân giải teacher_id theo user_id */
-const TEACHER_PROFILES: TeacherProfile[] = [MOCK_TEACHER_PROFILE];
+function getTeacherProfiles(): TeacherProfile[] {
+  return [MOCK_TEACHER_PROFILE].filter(Boolean);
+}
 
 /**
  * Phân giải teacher_id của giáo viên đang đăng nhập theo ERD:
@@ -37,14 +39,14 @@ const TEACHER_PROFILES: TeacherProfile[] = [MOCK_TEACHER_PROFILE];
 export function resolveTeacherId(user: User | null): string | null {
   if (!user) return null;
   if (user.teacher_profile?.id) return user.teacher_profile.id;
-  return TEACHER_PROFILES.find((p) => p.user_id === user.id)?.id ?? null;
+  return getTeacherProfiles().find((p) => p?.user_id === user.id)?.id ?? null;
 }
 
 export const teacherService = {
   /** Hồ sơ giáo viên theo teacher_id (Bảng ERD: TeacherProfile) */
   async getProfile(teacherId: string): Promise<TeacherProfile | undefined> {
     await delay();
-    return TEACHER_PROFILES.find((p) => p.id === teacherId);
+    return getTeacherProfiles().find((p) => p?.id === teacherId);
   },
 
   /** Danh sách khóa học của giáo viên (Bảng ERD: Course), lọc theo teacher_id + CourseStatus */

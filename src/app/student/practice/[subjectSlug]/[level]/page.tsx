@@ -7,7 +7,7 @@ import { PracticeRoadmapList } from '@/components/features/student/PracticeRoadm
 export default function StudentSubjectLevelPracticeRoadmapPage() {
   const params = useParams();
   const subjectSlug = (params.subjectSlug as string) || 'toan-hoc';
-  const level = (params.level as string) || 'lop-11';
+  const level = (params.level as string) || 'basic';
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-6 lg:p-8">
