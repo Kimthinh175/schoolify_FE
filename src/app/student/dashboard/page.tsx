@@ -73,8 +73,9 @@ export default function StudentDashboardPage() {
   ];
 
   const filteredSubjects = React.useMemo(() => {
-    if (activeCategory === 'ALL') return K12_SUBJECTS;
-    return K12_SUBJECTS.filter((s) => s.category === activeCategory);
+    const availableSubjects = K12_SUBJECTS.filter((s) => s.slug !== 'ngu-van');
+    if (activeCategory === 'ALL') return availableSubjects;
+    return availableSubjects.filter((s) => s.category === activeCategory);
   }, [activeCategory]);
 
   const handleOpenSubjectLevels = (subject: K12Subject) => {
