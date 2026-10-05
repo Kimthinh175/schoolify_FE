@@ -941,7 +941,7 @@ export function QuestionImportModal({
                                     <Button
                                       type="button"
                                       variant="outline"
-                                      size="xs"
+                                      size="sm"
                                       onClick={handleEditAddAnswer}
                                       leftIcon={<Plus className="w-3 h-3" />}
                                       className="h-7 text-[11px]"
@@ -1006,17 +1006,17 @@ export function QuestionImportModal({
                                 />
                               </div>
 
-                              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-purple-200/60 dark:border-purple-900/40">
+                              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-purple-200/60 dark:purple-900/40">
                                 <Button
                                   variant="outline"
-                                  size="xs"
+                                  size="sm"
                                   onClick={handleCancelEdit}
                                   className="min-w-[80px] h-8 px-3.5 font-semibold text-xs border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
                                 >
                                   Hủy
                                 </Button>
                                 <Button
-                                  size="xs"
+                                  size="sm"
                                   onClick={() => handleSaveEdit(q.temp_id)}
                                   className="min-w-[110px] h-8 px-4 font-bold text-xs bg-purple-600 hover:bg-purple-700 text-white shadow-sm"
                                 >
@@ -1209,7 +1209,7 @@ export function QuestionImportModal({
                                 <Button
                                   type="button"
                                   variant="outline"
-                                  size="xs"
+                                  size="sm"
                                   onClick={handleEditAddAnswer}
                                   leftIcon={<Plus className="w-3 h-3" />}
                                   className="h-7 text-[11px]"
@@ -1277,14 +1277,14 @@ export function QuestionImportModal({
                               <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-purple-200/60 dark:border-purple-900/40">
                                 <Button
                                   variant="outline"
-                                  size="xs"
+                                  size="sm"
                                   onClick={handleCancelEdit}
                                   className="min-w-[80px] h-8 px-3.5 font-semibold text-xs border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
                                 >
                                   Hủy
                                 </Button>
                                 <Button
-                                  size="xs"
+                                  size="sm"
                                   onClick={() => handleSaveEdit(q.temp_id)}
                                   className="min-w-[110px] h-8 px-4 font-bold text-xs bg-purple-600 hover:bg-purple-700 text-white shadow-sm"
                                 >

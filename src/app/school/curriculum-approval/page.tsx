@@ -104,7 +104,7 @@ function getStatusMeta(status: CourseStatus) {
   return { label: 'Chờ duyệt', variant: 'warning' as const };
 }
 
-export default function CurriculumApprovalPage() {
+function CurriculumApprovalContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeWorkspaceTab = searchParams.get('tab') === 'exams' ? 'exams' : 'courses';
@@ -522,7 +522,14 @@ export default function CurriculumApprovalPage() {
           </div>
         </div>}
       </Dialog>
-      </>}
     </div>
+  );
+}
+
+export default function CurriculumApprovalPage() {
+  return (
+    <React.Suspense fallback={<div className="p-8 text-center text-sm text-slate-500">Đang tải dữ liệu kiểm duyệt...</div>}>
+      <CurriculumApprovalContent />
+    </React.Suspense>
   );
 }

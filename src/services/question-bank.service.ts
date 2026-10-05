@@ -1,4 +1,4 @@
-import { QuestionBank, Question } from '@/types';
+import { QuestionBank, Question, ParsedQuestionItem, ParseImportResult, QuestionBankReviewStatus } from '@/types';
 import { MOCK_QUESTION_BANKS } from './mock/data';
 import mammoth from 'mammoth';
 import JSZip from 'jszip';
