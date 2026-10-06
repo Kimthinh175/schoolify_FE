@@ -24,10 +24,16 @@ import {
   BarChart3,
   Calendar,
   Share2,
+  Store,
+  Crown,
+  Gift,
+  TrendingUp,
+  GraduationCap,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { MOCK_COURSES } from '@/services/mock/data';
 
-interface MockExamItem {
+export interface MockExamItem {
   id: string;
   title: string;
   subject: string;
@@ -38,6 +44,11 @@ interface MockExamItem {
   variant_count: number;
   is_published: boolean;
   created_at: string;
+  // Bổ sung cho mô hình Luyện thi & Sàn khóa học EduTech:
+  access_tier: 'FREE_TRIAL' | 'PRO'; // FREE_TRIAL: Miễn phí 3 lượt/ngày; PRO: Gói Rèn Luyện
+  total_attempts?: number; // Số lượt học sinh đã làm bài
+  avg_score?: number; // Điểm trung bình
+  upsell_course_id?: string; // Khóa học gợi ý sau khi nộp bài (thu hoa hồng 25%)
 }
 
 const INITIAL_EXAMS: MockExamItem[] = [
@@ -52,6 +63,10 @@ const INITIAL_EXAMS: MockExamItem[] = [
     variant_count: 4,
     is_published: true,
     created_at: '2026-03-01',
+    access_tier: 'FREE_TRIAL',
+    total_attempts: 1420,
+    avg_score: 6.8,
+    upsell_course_id: 'crs-01',
   },
   {
     id: 'exam_2',
@@ -64,6 +79,10 @@ const INITIAL_EXAMS: MockExamItem[] = [
     variant_count: 4,
     is_published: true,
     created_at: '2026-03-05',
+    access_tier: 'PRO',
+    total_attempts: 890,
+    avg_score: 7.2,
+    upsell_course_id: 'crs-03',
   },
   {
     id: 'exam_3',
@@ -76,6 +95,10 @@ const INITIAL_EXAMS: MockExamItem[] = [
     variant_count: 2,
     is_published: false,
     created_at: '2026-03-10',
+    access_tier: 'PRO',
+    total_attempts: 310,
+    avg_score: 5.9,
+    upsell_course_id: 'crs-01',
   },
   {
     id: 'exam_4',
@@ -88,6 +111,10 @@ const INITIAL_EXAMS: MockExamItem[] = [
     variant_count: 4,
     is_published: true,
     created_at: '2026-03-12',
+    access_tier: 'FREE_TRIAL',
+    total_attempts: 2150,
+    avg_score: 6.4,
+    upsell_course_id: 'crs-02',
   },
   {
     id: 'exam_5',
@@ -100,6 +127,10 @@ const INITIAL_EXAMS: MockExamItem[] = [
     variant_count: 4,
     is_published: true,
     created_at: '2026-03-14',
+    access_tier: 'PRO',
+    total_attempts: 640,
+    avg_score: 7.0,
+    upsell_course_id: 'crs-pending-01',
   },
   {
     id: 'exam_6',
@@ -112,6 +143,9 @@ const INITIAL_EXAMS: MockExamItem[] = [
     variant_count: 2,
     is_published: true,
     created_at: '2026-03-15',
+    access_tier: 'FREE_TRIAL',
+    total_attempts: 430,
+    avg_score: 6.7,
   },
   {
     id: 'exam_7',
@@ -124,6 +158,9 @@ const INITIAL_EXAMS: MockExamItem[] = [
     variant_count: 4,
     is_published: false,
     created_at: '2026-03-18',
+    access_tier: 'PRO',
+    total_attempts: 180,
+    avg_score: 6.2,
   },
   {
     id: 'exam_8',
@@ -136,6 +173,9 @@ const INITIAL_EXAMS: MockExamItem[] = [
     variant_count: 2,
     is_published: true,
     created_at: '2026-03-20',
+    access_tier: 'FREE_TRIAL',
+    total_attempts: 720,
+    avg_score: 7.5,
   },
   {
     id: 'exam_9',
@@ -148,6 +188,10 @@ const INITIAL_EXAMS: MockExamItem[] = [
     variant_count: 8,
     is_published: true,
     created_at: '2026-03-22',
+    access_tier: 'PRO',
+    total_attempts: 3200,
+    avg_score: 6.9,
+    upsell_course_id: 'crs-01',
   },
   {
     id: 'exam_10',
@@ -160,6 +204,10 @@ const INITIAL_EXAMS: MockExamItem[] = [
     variant_count: 2,
     is_published: true,
     created_at: '2026-03-25',
+    access_tier: 'FREE_TRIAL',
+    total_attempts: 1890,
+    avg_score: 7.1,
+    upsell_course_id: 'crs-02',
   },
   {
     id: 'exam_11',
@@ -172,6 +220,9 @@ const INITIAL_EXAMS: MockExamItem[] = [
     variant_count: 4,
     is_published: false,
     created_at: '2026-03-27',
+    access_tier: 'PRO',
+    total_attempts: 290,
+    avg_score: 6.5,
   },
   {
     id: 'exam_12',
@@ -184,6 +235,9 @@ const INITIAL_EXAMS: MockExamItem[] = [
     variant_count: 4,
     is_published: true,
     created_at: '2026-03-29',
+    access_tier: 'FREE_TRIAL',
+    total_attempts: 1120,
+    avg_score: 6.8,
   },
 ];
 
@@ -207,6 +261,7 @@ export default function AdminExamsPage() {
   const [search, setSearch] = React.useState('');
   const [selectedSubject, setSelectedSubject] = React.useState('ALL');
   const [selectedGrade, setSelectedGrade] = React.useState('ALL');
+  const [selectedTier, setSelectedTier] = React.useState('ALL');
   const [selectedStatus, setSelectedStatus] = React.useState('ALL');
   const [selectedVariant, setSelectedVariant] = React.useState('ALL');
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -231,6 +286,11 @@ export default function AdminExamsPage() {
     setCurrentPage(1);
   };
 
+  const handleTierChange = (val: string) => {
+    setSelectedTier(val);
+    setCurrentPage(1);
+  };
+
   const handleStatusChange = (val: string) => {
     setSelectedStatus(val);
     setCurrentPage(1);
@@ -245,6 +305,7 @@ export default function AdminExamsPage() {
     setSearch('');
     setSelectedSubject('ALL');
     setSelectedGrade('ALL');
+    setSelectedTier('ALL');
     setSelectedStatus('ALL');
     setSelectedVariant('ALL');
     setCurrentPage(1);
@@ -264,10 +325,46 @@ export default function AdminExamsPage() {
     toast.success('Đã cập nhật trạng thái công bố đề thi!');
   };
 
+  // Chuyển đổi nhanh phân hạng: Khách thi thử (Free Trial) vs Gói Rèn Luyện (Pro)
+  const handleToggleTier = (examId: string) => {
+    let nextTierText = '';
+    setExams((prev) =>
+      prev.map((e) => {
+        if (e.id === examId) {
+          const nextTier: 'FREE_TRIAL' | 'PRO' = e.access_tier === 'FREE_TRIAL' ? 'PRO' : 'FREE_TRIAL';
+          nextTierText = nextTier === 'FREE_TRIAL' ? 'Khách thi thử (Free 3 lần/ngày)' : 'Gói Rèn Luyện (Pro)';
+          return { ...e, access_tier: nextTier };
+        }
+        return e;
+      })
+    );
+    if (selectedExamDetail && selectedExamDetail.id === examId) {
+      setSelectedExamDetail((prev) => {
+        if (!prev) return null;
+        const nextTier: 'FREE_TRIAL' | 'PRO' = prev.access_tier === 'FREE_TRIAL' ? 'PRO' : 'FREE_TRIAL';
+        return { ...prev, access_tier: nextTier };
+      });
+    }
+    toast.success(`Đã chuyển đề thi sang: ${nextTierText}!`);
+  };
+
+  // Cập nhật khóa học gợi ý sau thi (Upsell)
+  const handleUpdateUpsellCourse = (examId: string, courseId: string) => {
+    const val = courseId === 'NONE' ? undefined : courseId;
+    setExams((prev) =>
+      prev.map((e) => (e.id === examId ? { ...e, upsell_course_id: val } : e))
+    );
+    if (selectedExamDetail && selectedExamDetail.id === examId) {
+      setSelectedExamDetail((prev) => (prev ? { ...prev, upsell_course_id: val } : null));
+    }
+    toast.success('Đã cập nhật khóa học gợi ý sau thi!');
+  };
+
   const isFiltered =
     search !== '' ||
     selectedSubject !== 'ALL' ||
     selectedGrade !== 'ALL' ||
+    selectedTier !== 'ALL' ||
     selectedStatus !== 'ALL' ||
     selectedVariant !== 'ALL';
 
@@ -282,6 +379,9 @@ export default function AdminExamsPage() {
     const matchGrade =
       selectedGrade === 'ALL' || e.grade_level === selectedGrade;
 
+    const matchTier =
+      selectedTier === 'ALL' || e.access_tier === selectedTier;
+
     const matchStatus =
       selectedStatus === 'ALL' ||
       (selectedStatus === 'PUBLISHED' && e.is_published) ||
@@ -290,7 +390,7 @@ export default function AdminExamsPage() {
     const matchVariant =
       selectedVariant === 'ALL' || String(e.variant_count) === selectedVariant;
 
-    return matchSearch && matchSubject && matchGrade && matchStatus && matchVariant;
+    return matchSearch && matchSubject && matchGrade && matchTier && matchStatus && matchVariant;
   });
 
   // Phân trang 10 đề mỗi trang
@@ -319,7 +419,7 @@ export default function AdminExamsPage() {
             System Exams
           </Badge>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-            Kho Đề Thi Chuẩn Hóa Cấp Hệ Thống
+            Kho Đề Thi
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
             Các bộ đề thi thử khảo sát năng lực dùng chung cho toàn nền tảng và khách luyện thi.
@@ -336,22 +436,37 @@ export default function AdminExamsPage() {
         </div>
       </div>
 
-      {/* Thẻ Thống Kê */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* Thẻ Thống Kê Tổng Quan */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         <Card className="p-4 bg-white border border-slate-200/80 shadow-xs">
-          <div className="text-xs font-semibold text-slate-500">Tổng số đề thi hệ thống</div>
+          <div className="text-xs font-semibold text-slate-500">Tổng số đề hệ thống</div>
           <div className="text-2xl font-bold text-slate-900 mt-1">{exams.length}</div>
         </Card>
         <Card className="p-4 bg-white border border-slate-200/80 shadow-xs">
-          <div className="text-xs font-semibold text-emerald-600">Đã công bố (Khách thi thử)</div>
+          <div className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
+            <Gift className="w-3.5 h-3.5" />
+            <span>Khách thi thử (Free 3 lần/ngày)</span>
+          </div>
           <div className="text-2xl font-bold text-slate-900 mt-1">
-            {exams.filter((e) => e.is_published).length}
+            {exams.filter((e) => e.access_tier === 'FREE_TRIAL').length}
           </div>
         </Card>
         <Card className="p-4 bg-white border border-slate-200/80 shadow-xs">
-          <div className="text-xs font-semibold text-sky-600">Đang dự thảo</div>
+          <div className="text-xs font-semibold text-indigo-600 flex items-center gap-1">
+            <Crown className="w-3.5 h-3.5" />
+            <span>Gói Rèn Luyện (Pro Member)</span>
+          </div>
           <div className="text-2xl font-bold text-slate-900 mt-1">
-            {exams.filter((e) => !e.is_published).length}
+            {exams.filter((e) => e.access_tier === 'PRO').length}
+          </div>
+        </Card>
+        <Card className="p-4 bg-white border border-slate-200/80 shadow-xs">
+          <div className="text-xs font-semibold text-amber-600 flex items-center gap-1">
+            <TrendingUp className="w-3.5 h-3.5" />
+            <span>Tổng lượt thi toàn sàn</span>
+          </div>
+          <div className="text-2xl font-bold text-slate-900 mt-1">
+            {exams.reduce((sum, e) => sum + (e.total_attempts || 0), 0).toLocaleString('vi-VN')}
           </div>
         </Card>
       </div>
@@ -371,7 +486,7 @@ export default function AdminExamsPage() {
           </div>
 
           {/* Nhóm các dropdown lọc - grid trên mobile/tablet, flex ngang trên desktop */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:flex lg:items-center gap-2 shrink-0">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:items-center gap-2 shrink-0">
             {/* Lọc Môn học */}
             <select
               value={selectedSubject}
@@ -388,17 +503,43 @@ export default function AdminExamsPage() {
               <option value="Địa lí">Địa lí</option>
             </select>
 
-            {/* Lọc Khối lớp */}
+            {/* Lọc Khối lớp (1 - 12) */}
             <select
               value={selectedGrade}
               onChange={(e) => handleGradeChange(e.target.value)}
               className="h-9 bg-slate-50 border border-slate-200 text-xs rounded-xl px-2.5 py-1.5 text-slate-700 focus:outline-none focus:border-primary focus:bg-white font-medium lg:w-32"
             >
               <option value="ALL">Tất cả khối lớp</option>
-              <option value="10">Lớp 10</option>
-              <option value="11">Lớp 11</option>
-              <option value="12">Lớp 12</option>
-              <option value="ĐGNL">ĐGNL</option>
+              <optgroup label="THPT">
+                <option value="12">Lớp 12</option>
+                <option value="11">Lớp 11</option>
+                <option value="10">Lớp 10</option>
+                <option value="ĐGNL">ĐGNL / ĐH</option>
+              </optgroup>
+              <optgroup label="THCS">
+                <option value="9">Lớp 9</option>
+                <option value="8">Lớp 8</option>
+                <option value="7">Lớp 7</option>
+                <option value="6">Lớp 6</option>
+              </optgroup>
+              <optgroup label="Tiểu học">
+                <option value="5">Lớp 5</option>
+                <option value="4">Lớp 4</option>
+                <option value="3">Lớp 3</option>
+                <option value="2">Lớp 2</option>
+                <option value="1">Lớp 1</option>
+              </optgroup>
+            </select>
+
+            {/* Lọc Phân Hạng Gói */}
+            <select
+              value={selectedTier}
+              onChange={(e) => handleTierChange(e.target.value)}
+              className="h-9 bg-slate-50 border border-slate-200 text-xs rounded-xl px-2.5 py-1.5 text-slate-700 focus:outline-none focus:border-primary focus:bg-white font-medium lg:w-40"
+            >
+              <option value="ALL">Tất cả phân hạng</option>
+              <option value="FREE_TRIAL">🎁 Khách thi thử (Free)</option>
+              <option value="PRO">⭐ Gói Rèn Luyện (Pro)</option>
             </select>
 
             {/* Lọc Trạng thái */}
@@ -430,7 +571,7 @@ export default function AdminExamsPage() {
                 size="sm"
                 variant="ghost"
                 onClick={handleResetFilters}
-                className="col-span-2 sm:col-span-4 lg:col-span-1 text-xs text-slate-500 hover:text-slate-900 gap-1.5 h-9 px-2.5 shrink-0 whitespace-nowrap"
+                className="col-span-2 sm:col-span-3 lg:col-span-1 text-xs text-slate-500 hover:text-slate-900 gap-1.5 h-9 px-2.5 shrink-0 whitespace-nowrap"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Đặt lại</span>
@@ -447,71 +588,102 @@ export default function AdminExamsPage() {
             Không tìm thấy đề thi nào phù hợp với bộ lọc hiện tại.
           </div>
         ) : (
-          paginatedExams.map((exam) => (
-            <Card
-              key={exam.id}
-              className="p-5 bg-white border border-slate-200/80 hover:border-primary/40 hover:shadow-xs transition-all flex flex-col justify-between space-y-4"
-            >
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5">
-                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[10px] font-semibold">
-                      {exam.subject}
-                    </Badge>
-                    <Badge variant="outline" className="text-[10px] bg-slate-100 text-slate-700 border-slate-200">
-                      Khối {exam.grade_level}
-                    </Badge>
+          paginatedExams.map((exam) => {
+            const upsellCourse = exam.upsell_course_id
+              ? MOCK_COURSES.find((c) => c.id === exam.upsell_course_id)
+              : undefined;
+
+            return (
+              <Card
+                key={exam.id}
+                className="p-5 bg-white border border-slate-200/80 hover:border-primary/40 hover:shadow-xs transition-all flex flex-col justify-between space-y-4"
+              >
+                <div className="space-y-2.5">
+                  <div className="flex flex-wrap items-center justify-between gap-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[10px] font-semibold">
+                        {exam.subject}
+                      </Badge>
+                      <Badge variant="outline" className="text-[10px] bg-slate-100 text-slate-700 border-slate-200">
+                        Khối {exam.grade_level}
+                      </Badge>
+                      {exam.access_tier === 'FREE_TRIAL' ? (
+                        <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-bold">
+                          🎁 Khách thi thử (Free)
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-indigo-50 text-indigo-700 border-indigo-200 text-[10px] font-bold">
+                          ⭐ Gói Pro
+                        </Badge>
+                      )}
+                    </div>
+
+                    {exam.is_published ? (
+                      <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-[10px] font-semibold">
+                        Đã công bố
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-slate-100 text-slate-600 border-slate-200 text-[10px] font-medium">
+                        Bản nháp
+                      </Badge>
+                    )}
                   </div>
 
-                  {exam.is_published ? (
-                    <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-[10px] font-semibold">
-                      Đã công bố
-                    </Badge>
-                  ) : (
-                    <Badge className="bg-slate-100 text-slate-600 border-slate-200 text-[10px] font-medium">
-                      Bản nháp
-                    </Badge>
-                  )}
+                  <h3 className="font-bold text-sm text-slate-900 line-clamp-2">
+                    {exam.title}
+                  </h3>
                 </div>
 
-                <h3 className="font-bold text-sm text-slate-900 line-clamp-2">
-                  {exam.title}
-                </h3>
-              </div>
+                <div className="grid grid-cols-2 gap-2 text-xs text-slate-500 border-t border-slate-100 pt-3">
+                  <div>
+                    Số câu: <strong className="text-slate-800">{exam.total_questions}</strong>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 text-slate-400" />
+                    <span>{exam.duration_minutes} phút</span>
+                  </div>
+                  <div>
+                    Lượt thi: <strong className="text-slate-800 font-semibold">{exam.total_attempts ? exam.total_attempts.toLocaleString('vi-VN') : 0}</strong>
+                  </div>
+                  <div>
+                    Điểm TB: <strong className="text-emerald-600 font-semibold">{exam.avg_score ? exam.avg_score + 'đ' : 'Chưa có'}</strong>
+                  </div>
+                </div>
 
-              <div className="grid grid-cols-2 gap-2 text-xs text-slate-500 border-t border-slate-100 pt-3">
-                <div>
-                  Số câu: <strong className="text-slate-800">{exam.total_questions}</strong>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 text-slate-400" />
-                  <span>{exam.duration_minutes} phút</span>
-                </div>
-                <div>
-                  Mã đề: <strong className="text-primary font-bold">{exam.variant_count} mã đề</strong>
-                </div>
-                <div>
-                  Điểm qua: <strong className="text-slate-800">{exam.pass_score}đ</strong>
-                </div>
-              </div>
+                {/* Banner Khóa học gợi ý liên quan nếu có */}
+                {upsellCourse && (
+                  <div className="p-2 rounded-xl bg-amber-50/70 border border-amber-200/80 flex items-center justify-between text-[11px] gap-2">
+                    <div className="flex items-center gap-1.5 truncate">
+                      <Store className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      <span className="text-slate-500 shrink-0">Khóa học gợi ý:</span>
+                      <span className="font-semibold text-slate-800 truncate" title={upsellCourse.title}>
+                        {upsellCourse.title}
+                      </span>
+                    </div>
+                    <span className="font-semibold text-amber-800 shrink-0 text-[10px] bg-amber-100/90 px-2 py-0.5 rounded-full">
+                      Ôn tập thêm
+                    </span>
+                  </div>
+                )}
 
-              {/* Nút Xem Chi Tiết & Bảng Đáp Án */}
-              <div className="pt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedExamDetail(exam);
-                    setActiveVariantCode('101');
-                  }}
-                  className="w-full border-slate-200 hover:border-primary hover:text-primary hover:bg-primary/5 text-xs text-slate-700 font-semibold gap-1.5 transition-all shadow-2xs"
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>Chi tiết & Bảng đáp án</span>
-                </Button>
-              </div>
-            </Card>
-          ))
+                {/* Nút Xem Chi Tiết & Bảng Đáp Án */}
+                <div className="pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedExamDetail(exam);
+                      setActiveVariantCode('101');
+                    }}
+                    className="w-full border-slate-200 hover:border-primary hover:text-primary hover:bg-primary/5 text-xs text-slate-700 font-semibold gap-1.5 transition-all shadow-2xs"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>Chi tiết & Bảng đáp án</span>
+                  </Button>
+                </div>
+              </Card>
+            );
+          })
         )}
       </div>
 
@@ -543,12 +715,33 @@ export default function AdminExamsPage() {
                 <Button
                   size="sm"
                   variant="outline"
+                  onClick={() => handleToggleTier(selectedExamDetail.id)}
+                  className={`text-xs gap-1.5 font-semibold ${selectedExamDetail.access_tier === 'FREE_TRIAL'
+                    ? 'border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100'
+                    : 'border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
+                    }`}
+                >
+                  {selectedExamDetail.access_tier === 'FREE_TRIAL' ? (
+                    <>
+                      <Crown className="w-3.5 h-3.5" />
+                      <span>Nâng lên Gói Pro</span>
+                    </>
+                  ) : (
+                    <>
+                      <Gift className="w-3.5 h-3.5" />
+                      <span>Mở Miễn Phí (Free 3 lần/ngày)</span>
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="outline"
                   onClick={() => handleTogglePublish(selectedExamDetail.id)}
-                  className={`text-xs gap-1.5 font-semibold ${
-                    selectedExamDetail.is_published
-                      ? 'border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100'
-                      : 'border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
-                  }`}
+                  className={`text-xs gap-1.5 font-semibold ${selectedExamDetail.is_published
+                    ? 'border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100'
+                    : 'border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
+                    }`}
                 >
                   {selectedExamDetail.is_published ? 'Thu hồi (Chuyển về Nháp)' : 'Công bố (Cho khách thi thử)'}
                 </Button>
@@ -592,6 +785,17 @@ export default function AdminExamsPage() {
                   <Badge variant="outline" className="bg-white border-slate-200 text-slate-700 text-xs">
                     Khối {selectedExamDetail.grade_level}
                   </Badge>
+                  {selectedExamDetail.access_tier === 'FREE_TRIAL' ? (
+                    <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-xs font-bold flex items-center gap-1">
+                      <Gift className="w-3 h-3" />
+                      Khách thi thử (Free 3 lần/ngày)
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-indigo-100 text-indigo-800 border-indigo-200 text-xs font-bold flex items-center gap-1">
+                      <Crown className="w-3 h-3" />
+                      Gói Rèn Luyện (Pro Member)
+                    </Badge>
+                  )}
                   {selectedExamDetail.is_published ? (
                     <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-xs">
                       Đang công bố công khai
@@ -613,7 +817,7 @@ export default function AdminExamsPage() {
                 {selectedExamDetail.title}
               </h2>
 
-              {/* 4 Thống số cơ bản */}
+              {/* 4 Thông số cơ bản */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
                 <div className="p-2.5 bg-white rounded-xl border border-slate-200/80">
                   <div className="text-[11px] font-semibold text-slate-500">Thời gian làm bài</div>
@@ -624,12 +828,74 @@ export default function AdminExamsPage() {
                   <div className="text-base font-bold text-slate-900 mt-0.5">{selectedExamDetail.total_questions} câu</div>
                 </div>
                 <div className="p-2.5 bg-white rounded-xl border border-slate-200/80">
-                  <div className="text-[11px] font-semibold text-slate-500">Số mã đề hoán vị</div>
-                  <div className="text-base font-bold text-primary mt-0.5">{selectedExamDetail.variant_count} mã đề</div>
+                  <div className="text-[11px] font-semibold text-slate-500">Số lượt thi thực tế</div>
+                  <div className="text-base font-bold text-slate-900 mt-0.5">
+                    {selectedExamDetail.total_attempts ? selectedExamDetail.total_attempts.toLocaleString('vi-VN') : 0} lượt
+                  </div>
                 </div>
                 <div className="p-2.5 bg-white rounded-xl border border-slate-200/80">
-                  <div className="text-[11px] font-semibold text-slate-500">Điểm chuẩn qua môn</div>
-                  <div className="text-base font-bold text-emerald-600 mt-0.5">{selectedExamDetail.pass_score} / 10đ</div>
+                  <div className="text-[11px] font-semibold text-slate-500">Điểm trung bình</div>
+                  <div className="text-base font-bold text-emerald-600 mt-0.5">
+                    {selectedExamDetail.avg_score ? selectedExamDetail.avg_score + ' / 10đ' : 'Chưa có'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* MỤC QUẢN TRỊ KHÓA HỌC GỢI Ý ĐÍNH KÈM (GỢI Ý ÔN TẬP SAU THI) */}
+            <div className="space-y-3 p-4 bg-amber-50/50 rounded-2xl border border-amber-200/80 shadow-2xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/60 pb-2.5">
+                <div>
+                  <h3 className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                    <Store className="w-4 h-4 text-amber-600" />
+                    Khóa Học Gợi Ý Đính Kèm (Gợi Ý Cho Học Sinh Sau Khi Làm Bài)
+                  </h3>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Khi học sinh nộp bài, hệ thống sẽ đề xuất khóa học này để học sinh bổ sung lỗ hổng kiến thức.
+                  </p>
+                </div>
+                <div className="text-xs font-semibold text-amber-800 bg-amber-100/90 px-2.5 py-1 rounded-lg shrink-0">
+                  Gợi ý ôn tập
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center pt-1">
+                <div className="sm:col-span-8">
+                  <label className="text-[11px] font-semibold text-slate-600 mb-1 block">
+                    Chọn khóa học liên kết từ hệ thống:
+                  </label>
+                  <select
+                    value={selectedExamDetail.upsell_course_id || 'NONE'}
+                    onChange={(e) => handleUpdateUpsellCourse(selectedExamDetail.id, e.target.value)}
+                    className="w-full h-9 bg-white border border-slate-200 text-xs rounded-xl px-3 py-1.5 text-slate-800 font-medium focus:outline-none focus:border-primary shadow-2xs"
+                  >
+                    <option value="NONE">-- Không gắn khóa học gợi ý --</option>
+                    {MOCK_COURSES.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.title} • {c.teacher_name} ({c.price.toLocaleString('vi-VN')} đ)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="sm:col-span-4 p-2.5 rounded-xl bg-white border border-amber-200 text-xs space-y-1">
+                  {(() => {
+                    const course = MOCK_COURSES.find((c) => c.id === selectedExamDetail.upsell_course_id);
+                    if (!course) {
+                      return <span className="text-slate-400 italic">Chưa gắn khóa học gợi ý nào.</span>;
+                    }
+                    return (
+                      <>
+                        <div className="font-bold text-slate-800 truncate" title={course.title}>
+                          {course.title}
+                        </div>
+                        <div className="text-[11px] text-slate-500 truncate">GV: {course.teacher_name}</div>
+                        <div className="text-[11px] text-slate-700 font-semibold">
+                          Học phí: {course.price.toLocaleString('vi-VN')} đ
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
@@ -719,11 +985,10 @@ export default function AdminExamsPage() {
                     key={code}
                     type="button"
                     onClick={() => setActiveVariantCode(code)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
-                      activeVariantCode === code
-                        ? 'bg-primary text-white shadow-xs'
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                    }`}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${activeVariantCode === code
+                      ? 'bg-primary text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      }`}
                   >
                     Mã {code}
                   </button>

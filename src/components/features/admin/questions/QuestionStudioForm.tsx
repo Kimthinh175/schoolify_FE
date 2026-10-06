@@ -5,6 +5,7 @@ import { Question, QuestionType, DifficultyLevel, Answer } from '@/types/exam';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   Save,
   Plus,
@@ -12,18 +13,27 @@ import {
   Sparkles,
   ImageIcon,
   UploadCloud,
+  BookmarkCheck,
+  FolderPlus,
+  RotateCcw,
 } from 'lucide-react';
 import { MathFormulaToolbar } from '@/components/features/admin/questions/MathFormulaToolbar';
 import { toast } from 'sonner';
+import {
+  AVAILABLE_SUBJECTS,
+  getChaptersForSubject,
+} from '@/constants/curriculum';
 
 interface QuestionStudioFormProps {
   initialQuestion?: Question;
+  questionPool?: Question[];
   onSave: (question: Question) => void;
   onCancel?: () => void;
 }
 
 export function QuestionStudioForm({
   initialQuestion,
+  questionPool = [],
   onSave,
   onCancel,
 }: QuestionStudioFormProps) {
@@ -42,9 +52,14 @@ export function QuestionStudioForm({
   const [gradeLevel, setGradeLevel] = React.useState(
     String(initialQuestion?.grade_level || '12')
   );
+
+  // Quản lý Chương / Chuyên đề: Có sẵn vs Tạo mới
+  const [isCreatingNewChapter, setIsCreatingNewChapter] = React.useState(false);
+  const [customChapterName, setCustomChapterName] = React.useState('');
   const [chapter, setChapter] = React.useState(
-    initialQuestion?.chapter || 'Chương 1: Khảo sát hàm số'
+    initialQuestion?.chapter || 'Chương 1: Khảo sát hàm số & Ứng dụng đạo hàm'
   );
+
   const [points, setPoints] = React.useState(
     initialQuestion?.points !== undefined ? initialQuestion.points : 0.25
   );
@@ -72,6 +87,52 @@ export function QuestionStudioForm({
   const [fillAnswer, setFillAnswer] = React.useState(
     initialQuestion?.answers?.[0]?.content || ''
   );
+
+  // 1. Trích xuất danh sách chương thực tế trong questionPool của Môn + Khối lớp này
+  const poolChapters = React.useMemo(() => {
+    const set = new Set<string>();
+    questionPool.forEach((q) => {
+      if (
+        q.subject?.toLowerCase().trim() === subject.toLowerCase().trim() &&
+        String(q.grade_level || '') === String(gradeLevel) &&
+        q.chapter
+      ) {
+        set.add(q.chapter);
+      }
+    });
+    return Array.from(set);
+  }, [questionPool, subject, gradeLevel]);
+
+  // 2. Thống kê số câu hỏi hiện có trong từng chương
+  const countByChapter = React.useMemo(() => {
+    const map: Record<string, number> = {};
+    questionPool.forEach((q) => {
+      if (
+        q.subject?.toLowerCase().trim() === subject.toLowerCase().trim() &&
+        String(q.grade_level || '') === String(gradeLevel) &&
+        q.chapter
+      ) {
+        map[q.chapter] = (map[q.chapter] || 0) + 1;
+      }
+    });
+    return map;
+  }, [questionPool, subject, gradeLevel]);
+
+  // 3. Kết hợp chương chuẩn khung GDPT + chương thực tế trong ngân hàng
+  const combinedChapters = React.useMemo(() => {
+    const curriculum = getChaptersForSubject(subject, gradeLevel);
+    const set = new Set([...curriculum, ...poolChapters]);
+    return Array.from(set);
+  }, [subject, gradeLevel, poolChapters]);
+
+  // Khi đổi Môn học hoặc Khối lớp -> cập nhật chương mặc định nếu không ở chế độ tạo mới
+  React.useEffect(() => {
+    if (!isCreatingNewChapter) {
+      if (!combinedChapters.includes(chapter)) {
+        setChapter(combinedChapters[0] || `Chương 1: Mở đầu môn ${subject} Lớp ${gradeLevel}`);
+      }
+    }
+  }, [subject, gradeLevel, combinedChapters, isCreatingNewChapter, chapter]);
 
   const handleAddAnswer = () => {
     const nextLabel = String.fromCharCode(65 + answers.length);
@@ -116,6 +177,15 @@ export function QuestionStudioForm({
     if (!content.trim()) {
       toast.error('Vui lòng nhập nội dung câu hỏi!');
       return;
+    }
+
+    let finalChapter = chapter;
+    if (isCreatingNewChapter) {
+      if (!customChapterName.trim()) {
+        toast.error('Vui lòng nhập tên chương mới cần tạo!');
+        return;
+      }
+      finalChapter = customChapterName.trim();
     }
 
     let finalAnswers: Answer[] = [];
@@ -163,7 +233,7 @@ export function QuestionStudioForm({
       difficulty,
       subject,
       grade_level: gradeLevel,
-      chapter,
+      chapter: finalChapter,
       points: Number(points) || 0.25,
       answers: finalAnswers,
       explain: explain || undefined,
@@ -223,7 +293,7 @@ export function QuestionStudioForm({
             </select>
           </div>
 
-          {/* Môn học */}
+          {/* Môn học Dropdown chuẩn */}
           <div>
             <label className="text-xs font-semibold text-slate-700 block mb-1">
               Môn học:
@@ -231,15 +301,13 @@ export function QuestionStudioForm({
             <select
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2.5 text-slate-800 focus:outline-none focus:border-primary focus:bg-white font-medium"
+              className="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2.5 text-slate-800 focus:outline-none focus:border-primary focus:bg-white font-semibold"
             >
-              <option value="Toán học">Toán học</option>
-              <option value="Vật lí">Vật lí</option>
-              <option value="Hóa học">Hóa học</option>
-              <option value="Sinh học">Sinh học</option>
-              <option value="Tiếng Anh">Tiếng Anh</option>
-              <option value="Lịch sử">Lịch sử</option>
-              <option value="Địa lí">Địa lí</option>
+              {AVAILABLE_SUBJECTS.map((sub) => (
+                <option key={sub} value={sub}>
+                  {sub}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -258,17 +326,141 @@ export function QuestionStudioForm({
           </div>
         </div>
 
-        {/* Tên chương */}
-        <div>
-          <label className="text-xs font-semibold text-slate-700 block mb-1">
-            Chương / Chuyên đề (Phục vụ sinh đề theo ma trận):
-          </label>
-          <Input
-            value={chapter}
-            onChange={(e) => setChapter(e.target.value)}
-            placeholder="Ví dụ: Chương 1: Khảo sát hàm số"
-            className="bg-slate-50 border-slate-200 text-xs text-slate-900 focus:bg-white"
-          />
+        {/* Khối lớp (1 - 12) & Quản lý Chương (Có sẵn / Tạo mới) */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-2 border-t border-slate-100">
+          {/* Khối lớp từ Lớp 1 đến Lớp 12 */}
+          <div className="sm:col-span-4">
+            <label className="text-xs font-semibold text-slate-700 block mb-1">
+              Khối lớp (Lớp 1 - 12):
+            </label>
+            <select
+              value={gradeLevel}
+              onChange={(e) => setGradeLevel(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2.5 text-slate-800 focus:outline-none focus:border-primary focus:bg-white font-medium"
+            >
+              <optgroup label="THPT (Cấp 3)">
+                <option value="12">Lớp 12</option>
+                <option value="11">Lớp 11</option>
+                <option value="10">Lớp 10</option>
+              </optgroup>
+              <optgroup label="THCS (Cấp 2)">
+                <option value="9">Lớp 9</option>
+                <option value="8">Lớp 8</option>
+                <option value="7">Lớp 7</option>
+                <option value="6">Lớp 6</option>
+              </optgroup>
+              <optgroup label="Tiểu học (Cấp 1)">
+                <option value="5">Lớp 5</option>
+                <option value="4">Lớp 4</option>
+                <option value="3">Lớp 3</option>
+                <option value="2">Lớp 2</option>
+                <option value="1">Lớp 1</option>
+              </optgroup>
+            </select>
+          </div>
+
+          {/* Quản lý Chương / Chuyên đề: Chọn chương cũ hoặc Tạo chương mới */}
+          <div className="sm:col-span-8">
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-semibold text-slate-700 block">
+                Chương / Chuyên đề kiến thức:
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCreatingNewChapter(!isCreatingNewChapter);
+                  if (!isCreatingNewChapter) {
+                    setCustomChapterName('');
+                  }
+                }}
+                className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1"
+              >
+                {isCreatingNewChapter ? (
+                  <>
+                    <RotateCcw className="w-3 h-3" />
+                    Quay lại chọn chương có sẵn
+                  </>
+                ) : (
+                  <>
+                    <FolderPlus className="w-3 h-3" />
+                    ➕ Tạo chương mới cho môn này
+                  </>
+                )}
+              </button>
+            </div>
+
+            {isCreatingNewChapter ? (
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={customChapterName}
+                    onChange={(e) => setCustomChapterName(e.target.value)}
+                    placeholder="Ví dụ: Chương 8: Ôn tập hè và bồi dưỡng nâng cao..."
+                    className="bg-primary/5 border-primary/30 text-xs text-slate-900 focus:bg-white focus:border-primary font-medium"
+                    autoFocus
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setIsCreatingNewChapter(false);
+                      setChapter(combinedChapters[0] || '');
+                    }}
+                    className="text-xs h-9 text-slate-500 border-slate-200 shrink-0"
+                  >
+                    Hủy
+                  </Button>
+                </div>
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                  <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] font-semibold">
+                    ✨ Chương mới
+                  </Badge>
+                  <span>
+                    Chương này sẽ được lưu vào hệ thống cho <strong>{subject}</strong> - Khối{' '}
+                    <strong>{gradeLevel}</strong> để dùng cho các câu hỏi tiếp theo.
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <select
+                  value={chapter}
+                  onChange={(e) => {
+                    if (e.target.value === '__CREATE_NEW__') {
+                      setIsCreatingNewChapter(true);
+                      setCustomChapterName('');
+                    } else {
+                      setChapter(e.target.value);
+                    }
+                  }}
+                  className="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2.5 text-slate-800 focus:outline-none focus:border-primary focus:bg-white font-medium shadow-2xs"
+                >
+                  {combinedChapters.map((ch) => {
+                    const qCount = countByChapter[ch] || 0;
+                    return (
+                      <option key={ch} value={ch}>
+                        {ch} {qCount > 0 ? `(${qCount} câu đã có trong kho)` : '(Chưa có câu nào)'}
+                      </option>
+                    );
+                  })}
+                  <option value="__CREATE_NEW__" className="text-primary font-bold">
+                    ➕ [Tạo chương mới khác cho môn này...]
+                  </option>
+                </select>
+
+                <div className="flex items-center justify-between text-[11px] text-slate-500 px-0.5">
+                  <span className="flex items-center gap-1 truncate max-w-[70%]">
+                    <BookmarkCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span className="truncate">Đang chọn: <strong>{chapter}</strong></span>
+                  </span>
+                  <span className="shrink-0 font-medium text-slate-600">
+                    Kho hiện có: <strong>{countByChapter[chapter] || 0} câu</strong>
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </Card>
 

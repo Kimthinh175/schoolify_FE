@@ -118,6 +118,7 @@ export default function AdminQuestionsPage() {
   // Bộ lọc cho danh sách câu hỏi
   const [search, setSearch] = React.useState('');
   const [selectedSubject, setSelectedSubject] = React.useState<string>('ALL');
+  const [selectedGrade, setSelectedGrade] = React.useState<string>('ALL');
   const [selectedDifficulty, setSelectedDifficulty] = React.useState<string>('ALL');
   const [selectedType, setSelectedType] = React.useState<string>('ALL');
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -210,11 +211,13 @@ export default function AdminQuestionsPage() {
 
     const matchSubject =
       selectedSubject === 'ALL' || q.subject === selectedSubject;
+    const matchGrade =
+      selectedGrade === 'ALL' || String(q.grade_level || '') === selectedGrade;
     const matchDiff =
       selectedDifficulty === 'ALL' || q.difficulty === selectedDifficulty;
     const matchType = selectedType === 'ALL' || q.type === selectedType;
 
-    return matchSearch && matchSubject && matchDiff && matchType;
+    return matchSearch && matchSubject && matchGrade && matchDiff && matchType;
   });
 
   // Phân trang danh sách câu hỏi: 10 câu mỗi trang
@@ -244,6 +247,7 @@ export default function AdminQuestionsPage() {
   const handleResetFilters = () => {
     setSearch('');
     setSelectedSubject('ALL');
+    setSelectedGrade('ALL');
     setSelectedDifficulty('ALL');
     setSelectedType('ALL');
     setCurrentPage(1);
@@ -268,6 +272,7 @@ export default function AdminQuestionsPage() {
   const isFiltered =
     search !== '' ||
     selectedSubject !== 'ALL' ||
+    selectedGrade !== 'ALL' ||
     selectedDifficulty !== 'ALL' ||
     selectedType !== 'ALL';
 
@@ -610,6 +615,36 @@ export default function AdminQuestionsPage() {
                   ))}
                 </select>
 
+                {/* Lọc Khối lớp (1 - 12) */}
+                <select
+                  value={selectedGrade}
+                  onChange={(e) => {
+                    setSelectedGrade(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="h-9 bg-slate-50 border border-slate-200 text-xs rounded-xl px-2.5 py-1.5 text-slate-700 focus:outline-none focus:border-primary focus:bg-white font-medium lg:w-32"
+                >
+                  <option value="ALL">Mọi khối lớp</option>
+                  <optgroup label="THPT">
+                    <option value="12">Lớp 12</option>
+                    <option value="11">Lớp 11</option>
+                    <option value="10">Lớp 10</option>
+                  </optgroup>
+                  <optgroup label="THCS">
+                    <option value="9">Lớp 9</option>
+                    <option value="8">Lớp 8</option>
+                    <option value="7">Lớp 7</option>
+                    <option value="6">Lớp 6</option>
+                  </optgroup>
+                  <optgroup label="Tiểu học">
+                    <option value="5">Lớp 5</option>
+                    <option value="4">Lớp 4</option>
+                    <option value="3">Lớp 3</option>
+                    <option value="2">Lớp 2</option>
+                    <option value="1">Lớp 1</option>
+                  </optgroup>
+                </select>
+
                 {/* Lọc theo Độ khó */}
                 <select
                   value={selectedDifficulty}
@@ -844,7 +879,7 @@ export default function AdminQuestionsPage() {
         >
           <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
             {/* Phân loại & Metadata */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
               <div>
                 <label className="font-semibold text-slate-600 block mb-1">Môn học:</label>
                 <select
@@ -859,6 +894,36 @@ export default function AdminQuestionsPage() {
                       {sub}
                     </option>
                   ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="font-semibold text-slate-600 block mb-1">Khối lớp:</label>
+                <select
+                  value={String(editingQuestion.grade_level || '12')}
+                  onChange={(e) =>
+                    setEditingQuestion({ ...editingQuestion, grade_level: e.target.value })
+                  }
+                  className="w-full bg-white border border-slate-200 rounded-lg p-2 font-medium"
+                >
+                  <optgroup label="THPT">
+                    <option value="12">Lớp 12</option>
+                    <option value="11">Lớp 11</option>
+                    <option value="10">Lớp 10</option>
+                  </optgroup>
+                  <optgroup label="THCS">
+                    <option value="9">Lớp 9</option>
+                    <option value="8">Lớp 8</option>
+                    <option value="7">Lớp 7</option>
+                    <option value="6">Lớp 6</option>
+                  </optgroup>
+                  <optgroup label="Tiểu học">
+                    <option value="5">Lớp 5</option>
+                    <option value="4">Lớp 4</option>
+                    <option value="3">Lớp 3</option>
+                    <option value="2">Lớp 2</option>
+                    <option value="1">Lớp 1</option>
+                  </optgroup>
                 </select>
               </div>
 

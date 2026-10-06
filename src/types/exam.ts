@@ -160,6 +160,8 @@ export interface ExamSubmission {
   graded_at?: string | null;
 }
 
+export type ExamScopeMode = 'CHAPTER_FOCUSED' | 'SEMESTER' | 'NATIONAL_EXAM';
+
 /** Cấu hình sinh đề thi tự động theo ma trận */
 export interface ExamMatrixConfig {
   title: string;
@@ -168,19 +170,24 @@ export interface ExamMatrixConfig {
   total_questions: number;
   duration_minutes: number;
   pass_score: number;
+  scope_mode?: ExamScopeMode;
+  current_chapter?: string;
+  previous_chapters?: string[];
+  selected_chapters?: string[];
+  scope_ratio: {
+    current_chapter: number;     // % Chương trọng tâm (e.g. 70)
+    previous_chapters: number;   // % Các chương cũ liên quan (e.g. 30)
+  };
   difficulty_ratio: {
     recognition: number;         // % Nhận biết (e.g. 40)
     understanding: number;       // % Thông hiểu (e.g. 30)
     application: number;         // % Vận dụng (e.g. 20)
     advanced_application: number;// % Vận dụng cao (e.g. 10)
   };
-  scope_ratio: {
-    current_chapter: number;     // % Chương trọng tâm (e.g. 70)
-    previous_chapters: number;   // % Các chương cũ liên quan (e.g. 30)
-  };
-  current_chapter?: string;
-  previous_chapters?: string[];
   variant_count: 2 | 4 | 8;      // Số lượng mã đề cần sinh (e.g. 4)
+  variant_prefix?: string;       // Tiền tố mã đề (e.g. "10", "20")
+  access_tier?: 'FREE_TRIAL' | 'PRO';
+  upsell_course_id?: string;
 }
 
 /** Mã đề thi được sinh ra (e.g. Đề 101, 102...) */

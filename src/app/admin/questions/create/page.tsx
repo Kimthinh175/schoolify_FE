@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Question } from '@/types/exam';
 import { ArrowLeft, PlusCircle } from 'lucide-react';
 import { QuestionStudioForm } from '@/components/features/admin/questions/QuestionStudioForm';
+import { INITIAL_MASTER_QUESTIONS } from '@/services/mock/master-questions';
 import { toast } from 'sonner';
 
 export default function AdminQuestionCreatePage() {
@@ -34,12 +35,13 @@ export default function AdminQuestionCreatePage() {
           Soạn Thảo Câu Hỏi Chuẩn Hóa
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 mt-1">
-          Hỗ trợ đầy đủ 9 định dạng câu hỏi hiện đại, gắn nhãn Bloom và công thức Toán học KaTeX.
+          Hỗ trợ đầy đủ 9 định dạng câu hỏi hiện đại, phân loại Khối lớp (1 - 12), chọn chương có sẵn hoặc tạo chương mới linh hoạt.
         </p>
       </div>
 
       {/* Form Studio */}
       <QuestionStudioForm
+        questionPool={INITIAL_MASTER_QUESTIONS}
         onSave={handleSave}
         onCancel={() => router.push('/admin/questions')}
       />
