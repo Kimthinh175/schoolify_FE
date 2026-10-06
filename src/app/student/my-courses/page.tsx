@@ -115,6 +115,32 @@ const MOCK_ENROLLED_COURSES: EnrolledCourse[] = [
     total_lessons: 20,
     last_accessed: '01/09/2026',
   },
+  {
+    id: 'crs-07',
+    title: 'Trí Tuệ Nhân Tạo (AI) & Python Khoa Học Dữ Liệu Cho Học Sinh',
+    department_name: 'Tổ Toán & Tin Học',
+    category_id: 'math-it',
+    teacher_name: 'ThS. Nguyễn Văn Hùng',
+    teacher_avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    thumbnail_url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80',
+    progress: 50,
+    completed_lessons: 10,
+    total_lessons: 20,
+    last_accessed: 'Hôm nay, 16:10',
+  },
+  {
+    id: 'crs-08',
+    title: 'Ngữ Văn 11: Phân Tích Tác Phẩm Văn Học Hiện Đại & Kỹ Năng Nghị Luận Văn Học',
+    department_name: 'Tổ Ngữ Văn',
+    category_id: 'social-sci',
+    teacher_name: 'Cô Hoàng Mai Lan',
+    teacher_avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+    thumbnail_url: 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=600&auto=format&fit=crop&q=80',
+    progress: 80,
+    completed_lessons: 16,
+    total_lessons: 20,
+    last_accessed: 'Hôm qua, 09:15',
+  },
 ];
 
 export default function MyCoursesPage() {
@@ -182,7 +208,7 @@ export default function MyCoursesPage() {
             Theo dõi tiến độ, tiếp tục bài học còn dang dở và xem lại các chứng chỉ đã đạt được.
           </p>
         </div>
-        <Link href="/student/marketplace">
+        <Link href="/courses">
           <Button variant="outline" leftIcon={<Sparkles className="w-4 h-4 text-amber-500" />}>
             Khám phá thêm khóa học
           </Button>
@@ -191,7 +217,7 @@ export default function MyCoursesPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card variant="stat" className="p-4 flex items-center gap-4 border-slate-200/80 dark:border-slate-800">
+        <Card className="p-4 flex items-center gap-4 border-slate-200/80 dark:border-slate-800">
           <div className="p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
             <BookOpen className="w-6 h-6" />
           </div>
@@ -201,7 +227,7 @@ export default function MyCoursesPage() {
           </div>
         </Card>
 
-        <Card variant="stat" className="p-4 flex items-center gap-4 border-slate-200/80 dark:border-slate-800">
+        <Card className="p-4 flex items-center gap-4 border-slate-200/80 dark:border-slate-800">
           <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400">
             <Clock className="w-6 h-6" />
           </div>
@@ -211,7 +237,7 @@ export default function MyCoursesPage() {
           </div>
         </Card>
 
-        <Card variant="stat" className="p-4 flex items-center gap-4 border-slate-200/80 dark:border-slate-800">
+        <Card className="p-4 flex items-center gap-4 border-slate-200/80 dark:border-slate-800">
           <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 className="w-6 h-6" />
           </div>
@@ -221,7 +247,7 @@ export default function MyCoursesPage() {
           </div>
         </Card>
 
-        <Card variant="stat" className="p-4 flex items-center gap-4 border-slate-200/80 dark:border-slate-800">
+        <Card className="p-4 flex items-center gap-4 border-slate-200/80 dark:border-slate-800">
           <div className="p-3 rounded-2xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400">
             <BarChart3 className="w-6 h-6" />
           </div>
@@ -294,7 +320,7 @@ export default function MyCoursesPage() {
                   {/* Progress / Status Badge */}
                   <div className="absolute top-3 right-3">
                     {isCompleted ? (
-                      <Badge variant="emerald" className="shadow-md font-bold gap-1 px-2.5 py-1">
+                      <Badge variant="success" className="shadow-md font-bold gap-1 px-2.5 py-1">
                         <CheckCircle2 className="w-3.5 h-3.5" /> Hoàn thành
                       </Badge>
                     ) : (
@@ -352,7 +378,7 @@ export default function MyCoursesPage() {
                       </div>
                       <Progress
                         value={course.progress}
-                        color={isCompleted ? 'emerald' : 'indigo'}
+                        showLabel={false}
                         className="h-2"
                       />
                     </div>
@@ -365,7 +391,7 @@ export default function MyCoursesPage() {
                           </Button>
                         </Link>
                         <Button
-                          variant="emerald"
+                          variant="success"
                           size="sm"
                           className="w-full text-xs gap-1"
                           leftIcon={<Award className="w-3.5 h-3.5" />}

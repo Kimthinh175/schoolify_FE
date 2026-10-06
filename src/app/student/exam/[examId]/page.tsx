@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/input';
 import { Dialog } from '@/components/ui/dialog';
+import { MathEssayEditor } from '@/components/ui/math-editor';
 import { MOCK_EXAMS } from '@/services/mock/data';
 
 export default function OnlineExamRunnerPage() {
@@ -127,11 +128,11 @@ export default function OnlineExamRunnerPage() {
             {/* Các Tùy Chọn Đáp Án */}
             {q.type === 'ESSAY' ? (
               <div className="pt-2">
-                <Textarea
-                  rows={5}
+                <MathEssayEditor
+                  rows={6}
                   placeholder="Nhập lời giải tự luận chi tiết của bạn vào đây..."
                   value={essayAnswer}
-                  onChange={(e) => setEssayAnswer(e.target.value)}
+                  onChange={setEssayAnswer}
                 />
               </div>
             ) : (

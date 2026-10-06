@@ -6,3 +6,4 @@ export * from './order';
 export * from './store';
 export * from './forum';
 export * from './communication';
+export * from './subject';
