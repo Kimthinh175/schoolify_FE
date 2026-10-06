@@ -132,6 +132,12 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['TEACHER'],
   },
   {
+    label: 'Diễn Đàn Thảo Luận',
+    href: '/forum/1',
+    icon: <MessageSquare className="w-5 h-5" />,
+    roles: ['TEACHER'],
+  },
+  {
     label: 'Soạn Khóa Học (Builder)',
     href: '/teacher/courses',
     icon: <BookOpen className="w-5 h-5" />,
@@ -174,6 +180,13 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Góc Học Tập',
     href: '/student/dashboard',
     icon: <LayoutDashboard className="w-5 h-5" />,
+    roles: ['STUDENT'],
+  },
+  {
+    label: 'Diễn Đàn Thảo Luận',
+    href: '/forum/1',
+    icon: <MessageSquare className="w-5 h-5" />,
+    badge: 'Mới',
     roles: ['STUDENT'],
   },
   {

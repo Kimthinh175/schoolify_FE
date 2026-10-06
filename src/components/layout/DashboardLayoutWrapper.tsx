@@ -14,7 +14,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
     pathname?.startsWith('/student/practice/exam-room') ||
     pathname?.startsWith('/student/practice') ||
     pathname?.startsWith('/student/learn') ||
-    pathname?.startsWith('/student/exam');
+    pathname?.startsWith('/student/exam/');
 
   if (isFocusOrPractice) {
     return <>{children}</>;
