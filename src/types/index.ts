@@ -4,3 +4,5 @@ export * from './course';
 export * from './exam';
 export * from './order';
 export * from './store';
+export * from './forum';
+export * from './communication';
