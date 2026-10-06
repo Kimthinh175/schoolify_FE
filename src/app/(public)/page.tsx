@@ -187,7 +187,7 @@ export default function LandingPage() {
   const [targetLevelName, setTargetLevelName] = React.useState<string>('');
 
   const categoryTabs = [
-    { id: 'ALL', label: 'Tất Cả (11 Môn K-12)', icon: <Sparkles className="w-3.5 h-3.5 text-amber-500" /> },
+    { id: 'ALL', label: 'Tất Cả Môn K-12', icon: <Sparkles className="w-3.5 h-3.5 text-amber-500" /> },
     { id: 'NATURAL', label: 'Khoa Học Tự Nhiên', icon: <Atom className="w-3.5 h-3.5 text-emerald-500" /> },
     { id: 'SOCIAL', label: 'Khoa Học Xã Hội', icon: <BookOpen className="w-3.5 h-3.5 text-rose-500" /> },
     { id: 'LANGUAGE', label: 'Ngoại Ngữ', icon: <Languages className="w-3.5 h-3.5 text-sky-500" /> },
@@ -195,8 +195,10 @@ export default function LandingPage() {
   ];
 
   const filteredSubjects = React.useMemo(() => {
-    if (activeCategory === 'ALL') return K12_SUBJECTS;
-    return K12_SUBJECTS.filter((s) => s.category === activeCategory);
+    // Bỏ qua môn văn theo yêu cầu luyện thi trắc nghiệm & khảo thí
+    const availableSubjects = K12_SUBJECTS.filter((s) => s.slug !== 'ngu-van');
+    if (activeCategory === 'ALL') return availableSubjects;
+    return availableSubjects.filter((s) => s.category === activeCategory);
   }, [activeCategory]);
 
   const handleOpenSubjectLevels = (subject: K12Subject) => {

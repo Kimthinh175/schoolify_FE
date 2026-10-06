@@ -1,3 +1,5 @@
+import type { PracticeLevel } from './subject';
+
 export type QuestionType = 'MULTIPLE_CHOICE' | 'SINGLE_CHOICE' | 'ESSAY' | 'TRUE_FALSE' | 'FILL_BLANK';
 export type SubmissionStatus = 'IN_PROGRESS' | 'SUBMITTED' | 'GRADED' | 'RETURNED';
 export type QuestionBankReviewStatus = 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -17,6 +19,21 @@ export interface RubricItem {
   points: number;
 }
 
+/**
+ * Độ khó của câu hỏi — dùng chung thang 5 cấp với lộ trình luyện thi
+ * (BASIC → NATIONAL_EXCELLENT) để FE chỉ có một nguồn sự thật.
+ */
+export type QuestionDifficulty = PracticeLevel;
+
+/** Liên kết tới chương học mà câu hỏi thuộc về. */
+export interface QuestionChapterRef {
+  id?: string | null;
+  /** VD: "Chương 1: Động lực học chất điểm" */
+  title: string;
+  /** Nếu có, UI sẽ render thành link điều hướng tới chương. */
+  href?: string | null;
+}
+
 /** ERD: Question (+ một số field mở rộng FE cần cho Exam Runner) */
 export interface Question {
   id: string;
@@ -30,6 +47,10 @@ export interface Question {
   sample_essay_answer?: string | null;
   hints?: string[];
   rubric?: RubricItem[];
+  /** Optional — data cũ có thể thiếu, UI sẽ tự ẩn badge. */
+  difficulty?: QuestionDifficulty | null;
+  /** Optional — chấp nhận chuỗi (data cũ) hoặc object có `href`. */
+  chapter?: QuestionChapterRef | string | null;
   created_at?: string;
 }
 
