@@ -1,4 +1,4 @@
-﻿import {
+import {
   School,
   SubscriptionPackage,
   Course,
@@ -14,6 +14,8 @@
   Transaction,
   QuestionBank,
 } from '@/types';
+
+export * from './subject-data';
 
 export const MOCK_SCHOOLS: School[] = [
   {
@@ -235,10 +237,10 @@ export const MOCK_COURSES: Course[] = [
           {
             id: 'ls-01',
             chapter_id: 'ch-01',
-            title: 'Bài 1: Giá trị lượng giác của góc lượng giác & Công thức cốt lõi',
+            title: 'Bài 1: Giá trị lượng giác của góc lượng giác & Công thức lượng giác cốt lõi',
             content: 'Nắm vững các công thức cộng, nhân đôi, biến đổi tích thành tổng. Ứng dụng vẽ đường tròn lượng giác giải bài toán thực tế.',
             video_url: 'https://www.w3schools.com/html/mov_bbb.mp4',
-            duration_mins: 35,
+            duration_mins: 31,
             is_free_preview: true,
             order_index: 1,
             is_completed: true,
@@ -260,11 +262,12 @@ export const MOCK_COURSES: Course[] = [
             title: 'Bài 2: Các công thức lượng giác nâng cao (Cộng, Nhân đôi, Biến đổi)',
             content: 'Công thức cộng sin(a+b), cos(a+b), công thức nhân đôi sin(2a), cos(2a) và kỹ thuật biến đổi.',
             video_url: 'https://www.w3schools.com/html/mov_bbb.mp4',
-            duration_mins: 40,
-            is_free_preview: false,
+            duration_mins: 32,
+            is_free_preview: true,
             order_index: 2,
             is_completed: false,
             content_sections: MOCK_LESSON_CONTENTS['ls-02'],
+            materials: [],
           },
           {
             id: 'ls-03',
@@ -277,6 +280,7 @@ export const MOCK_COURSES: Course[] = [
             order_index: 3,
             is_completed: false,
             content_sections: MOCK_LESSON_CONTENTS['ls-03'],
+            materials: [],
           },
           {
             id: 'ls-04',
@@ -289,6 +293,7 @@ export const MOCK_COURSES: Course[] = [
             order_index: 4,
             is_completed: false,
             content_sections: MOCK_LESSON_CONTENTS['ls-04'],
+            materials: [],
           },
           {
             id: 'ls-05',
@@ -301,6 +306,7 @@ export const MOCK_COURSES: Course[] = [
             order_index: 5,
             is_completed: false,
             content_sections: MOCK_LESSON_CONTENTS['ls-05'],
+            materials: [],
           },
           {
             id: 'ls-06',
@@ -313,6 +319,27 @@ export const MOCK_COURSES: Course[] = [
             order_index: 6,
             is_completed: false,
             content_sections: MOCK_LESSON_CONTENTS['ls-06'],
+            materials: [],
+          },
+        ],
+      },
+      {
+        id: 'ch-02',
+        course_id: 'crs-01',
+        title: 'Chương 2: Tổ hợp - Xác suất & Biến cố',
+        order_index: 2,
+        lessons: [
+          {
+            id: 'ls-07',
+            chapter_id: 'ch-02',
+            title: 'Bài 7: Quy tắc đếm, Hoán vị, Chỉnh hợp và Tổ hợp',
+            content: 'Phân biệt chính xác khi nào dùng chỉnh hợp và tổ hợp trong các bài toán bốc thăm, xếp hàng, chọn bi.',
+            video_url: 'https://www.w3schools.com/html/mov_bbb.mp4',
+            duration_mins: 45,
+            is_free_preview: false,
+            order_index: 1,
+            is_completed: false,
+            materials: [],
           },
         ],
       },
@@ -562,6 +589,26 @@ export const MOCK_EXAMS: Exam[] = [
         content: 'Hãy trình bày các bước tìm tập nghiệm của phương trình: sin(2x) = 1/2.',
         points: 2.5,
         sample_essay_answer: 'Ta có sin(2x) = sin(π/6). Suy ra 2x = π/6 + k2π hoặc 2x = 5π/6 + k2π (k ∈ Z). Vậy x = π/12 + kπ hoặc x = 5π/12 + kπ (k ∈ Z).',
+        hints: [
+          'Bước 1: Chuyển vế phải về dạng sin(α), cụ thể 1/2 = sin(π/6).',
+          'Bước 2: Áp dụng công thức nghiệm của phương trình cơ bản: sin(u) = sin(v).',
+          'Bước 3: Rút gọn để giải ra x và ghi rõ điều kiện của k.'
+        ],
+        rubric: [
+          { criterion: 'Đưa được về phương trình sin(2x) = sin(π/6)', points: 0.5 },
+          { criterion: 'Thiết lập đúng 2 họ nghiệm cơ bản', points: 1.0 },
+          { criterion: 'Giải đúng x và có điều kiện k ∈ Z', points: 1.0 }
+        ]
+      },
+      {
+        id: 'q-05',
+        bank_id: 'bank-toan12-luong-giac',
+        type: 'FILL_BLANK',
+        content: 'Giá trị của cos(0) bằng _____.',
+        points: 1,
+        answers: [
+          { id: 'q05-a1', question_id: 'q-05', content: '1', is_answer: true },
+        ],
       },
     ],
   },
@@ -737,7 +784,7 @@ export const MOCK_TIMETABLE: ClassSession[] = [
     class_name: '11A2 - Toán Cơ Bản',
   },
   {
-    id: 'ses-04',
+    id: 'ses-08',
     class_id: 'cls-8b',
     title: 'Tiếng Anh 8: Unit 3 - Teenagers',
     room: 'Phòng 201 (Tòa nhà B)',
@@ -748,7 +795,7 @@ export const MOCK_TIMETABLE: ClassSession[] = [
     class_name: '8B - Song Ngữ Quốc Tế',
   },
   {
-    id: 'ses-05',
+    id: 'ses-09',
     class_id: 'cls-8b',
     title: 'Ngữ Văn 8: Lão Hạc',
     room: 'Phòng 202 (Tòa nhà B)',
@@ -758,7 +805,7 @@ export const MOCK_TIMETABLE: ClassSession[] = [
     class_name: '8B - Song Ngữ Quốc Tế',
   },
   {
-    id: 'ses-06',
+    id: 'ses-10',
     class_id: 'cls-8b',
     title: 'Toán 8: Phân Tích Đa Thức Thành Nhân Tử',
     room: 'Phòng 203 (Tòa nhà B)',

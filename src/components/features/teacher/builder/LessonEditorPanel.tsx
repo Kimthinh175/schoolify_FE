@@ -126,7 +126,7 @@ export function LessonEditorPanel({
               </span>
             </div>
             <a
-              href={lesson.video_url || undefined}
+              href={lesson.video_url || '#'}
               target="_blank"
 
               rel="noopener noreferrer"

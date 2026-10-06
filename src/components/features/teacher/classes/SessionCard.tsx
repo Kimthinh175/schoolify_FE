@@ -8,7 +8,7 @@ import { ClassSession } from '@/types';
 const fmtTime = (iso: string) =>
   new Date(iso).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
-const getPlatform = (url?: string) => {
+const getPlatform = (url?: string | null) => {
   if (!url) return null;
   const lower = url.toLowerCase();
   if (lower.includes('meet.google') || lower.includes('google.com/meet')) return 'Google Meet';

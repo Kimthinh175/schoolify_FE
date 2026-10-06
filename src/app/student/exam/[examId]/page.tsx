@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Dialog } from '@/components/ui/dialog';
+import { MathEssayEditor } from '@/components/ui/math-editor';
 import { MOCK_EXAMS } from '@/services/mock/data';
 import { MathText, cleanOptionText } from '@/components/ui/math-text';
 import { MathEditorToolbar } from '@/components/ui/math-editor-toolbar';

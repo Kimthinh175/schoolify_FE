@@ -8,6 +8,7 @@ import {
   Eye,
   FileQuestion,
   Filter,
+  RotateCcw,
   Search,
   X,
 } from 'lucide-react';
@@ -130,20 +131,29 @@ export function QuestionBankReviewPanel() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="grid gap-3 sm:grid-cols-3">
         <Card className="p-4">
-          <p className="text-xs font-semibold text-slate-500">Tổng ngân hàng đề</p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold text-slate-500">Tổng ngân hàng đề</p>
+            <FileQuestion className="h-4 w-4 text-[#00B8DD]" />
+          </div>
           <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">{filteredBanks.length}</p>
           <p className="mt-1 text-xs text-slate-500">Theo bộ lọc hiện tại</p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs font-semibold text-slate-500">Cần kiểm tra</p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold text-slate-500">Cần kiểm tra</p>
+            <Clock3 className="h-4 w-4 text-amber-500" />
+          </div>
           <p className="mt-2 text-2xl font-bold text-amber-600 dark:text-amber-400">{counts.PENDING || 0}</p>
           <p className="mt-1 text-xs text-slate-500">Đang chờ HOD chuẩn hóa</p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs font-semibold text-slate-500">Đã chuẩn hóa</p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold text-slate-500">Đã chuẩn hóa</p>
+            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+          </div>
           <p className="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{counts.APPROVED || 0}</p>
           <p className="mt-1 text-xs text-slate-500">Có thể dùng để tạo kỳ thi</p>
         </Card>
@@ -152,10 +162,12 @@ export function QuestionBankReviewPanel() {
       <Card className="p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
-            <Filter className="h-4 w-4 text-primary" />
+            <Filter className="h-4 w-4 text-[#00B8DD]" />
             Bộ lọc ngân hàng đề
           </div>
-          <Button size="sm" variant="ghost" onClick={resetFilters}>Đặt lại</Button>
+          <Button size="sm" variant="ghost" onClick={resetFilters} leftIcon={<RotateCcw className="h-3.5 w-3.5" />}>
+            Đặt lại
+          </Button>
         </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <label className="space-y-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 xl:col-span-2">
@@ -166,20 +178,20 @@ export function QuestionBankReviewPanel() {
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Tên đề, môn học, chương hoặc giáo viên..."
-                className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm font-normal text-slate-900 outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm font-normal text-slate-900 outline-none focus:border-[#00B8DD] dark:border-slate-700 dark:bg-slate-900 dark:text-white"
               />
             </div>
           </label>
-          <label className="space-y-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
+          <label className="space-y-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 xl:col-span-1">
             Tổ chuyên môn
-            <select value={selectedDepartment} onChange={(event) => setSelectedDepartment(event.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal text-slate-900 outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+            <select value={selectedDepartment} onChange={(event) => setSelectedDepartment(event.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal text-slate-900 outline-none focus:border-[#00B8DD] dark:border-slate-700 dark:bg-slate-900 dark:text-white">
               <option value="ALL">Tất cả tổ chuyên môn</option>
               {MOCK_DEPARTMENTS.map((department) => <option key={department.id} value={department.name}>{department.name}</option>)}
             </select>
           </label>
-          <label className="space-y-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
+          <label className="space-y-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 xl:col-span-1">
             Giáo viên
-            <select value={selectedTeacher} onChange={(event) => setSelectedTeacher(event.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal text-slate-900 outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+            <select value={selectedTeacher} onChange={(event) => setSelectedTeacher(event.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal text-slate-900 outline-none focus:border-[#00B8DD] dark:border-slate-700 dark:bg-slate-900 dark:text-white">
               <option value="ALL">Tất cả giáo viên</option>
               {teachers.map((teacher) => <option key={teacher.id} value={teacher.id}>{teacher.name}</option>)}
             </select>
@@ -225,9 +237,9 @@ export function QuestionBankReviewPanel() {
                     {bank.review_note && <p className="mt-2 text-xs text-rose-600 dark:text-rose-300">Nhận xét gần nhất: {bank.review_note}</p>}
                   </div>
                   <div className="flex w-full flex-col gap-2 border-t border-slate-100 pt-3 dark:border-slate-800 lg:w-52 lg:shrink-0 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0">
-                    <Button size="sm" variant="outline" className="w-full justify-start" onClick={() => openDetails(bank)} leftIcon={<Eye className="h-4 w-4" />}>Xem và kiểm tra</Button>
+                    <Button size="sm" variant="outline" className="group w-full justify-start text-slate-700 transition-all duration-200 hover:border-[#00B8DD]/40 hover:bg-[#00B8DD]/5 hover:text-[#00B8DD] dark:text-slate-300 dark:hover:border-[#00B8DD]/40 dark:hover:bg-[#00B8DD]/10 dark:hover:text-[#00B8DD]" onClick={() => openDetails(bank)} leftIcon={<Eye className="h-4 w-4 text-slate-500 transition-colors group-hover:text-[#00B8DD] dark:text-slate-400" />}>Xem và kiểm tra</Button>
                     {bank.status === 'PENDING' && <>
-                      <Button size="sm" variant="outline" className="w-full justify-start" onClick={() => openAction(bank, 'REJECT')} leftIcon={<X className="h-4 w-4 text-rose-500" />}>Yêu cầu chỉnh sửa</Button>
+                      <Button size="sm" variant="outline" className="group w-full justify-start text-slate-700 transition-all duration-200 hover:border-rose-500/40 hover:bg-rose-50 hover:text-rose-600 dark:text-slate-300 dark:hover:border-rose-500/40 dark:hover:bg-rose-500/10 dark:hover:text-rose-400" onClick={() => openAction(bank, 'REJECT')} leftIcon={<X className="h-4 w-4 text-rose-500 transition-colors" />}>Yêu cầu chỉnh sửa</Button>
                       <Button size="sm" variant="primary" className="w-full justify-start" onClick={() => openAction(bank, 'APPROVE')} leftIcon={<Check className="h-4 w-4" />}>Phê duyệt đề</Button>
                     </>}
                   </div>
