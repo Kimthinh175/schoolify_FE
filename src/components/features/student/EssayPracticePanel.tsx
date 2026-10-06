@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Question } from '@/types';
 import { MathEssayEditor } from '@/components/ui/math-editor';
+import { ChapterLink, DifficultyBadge } from './QuestionMeta';
 
 interface EssayPracticePanelProps {
   questions: Question[];
@@ -80,6 +81,7 @@ export function EssayPracticePanel({ questions, title }: EssayPracticePanelProps
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <DifficultyBadge difficulty={question.difficulty} />
                     <Badge variant="secondary" className="text-[11px] bg-indigo-500/10 text-indigo-400 border-indigo-500/20">
                       Tự luận
                     </Badge>
@@ -89,6 +91,7 @@ export function EssayPracticePanel({ questions, title }: EssayPracticePanelProps
                       </Badge>
                     )}
                   </div>
+                  <ChapterLink chapter={question.chapter} className="mb-2" />
                   {question.title && (
                     <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
                       {question.title}
