@@ -15,8 +15,10 @@ import {
   Layers,
   FileCode,
   BookOpen,
+  Zap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { MathRenderer } from '@/components/ui/math-renderer';
 
 export interface MathEditorProps {
   value: string;
@@ -29,22 +31,22 @@ export interface MathEditorProps {
   disabled?: boolean;
 }
 
-interface SymbolItem {
+export interface SymbolItem {
   display: string;
   insert: string;
   cursorOffset?: number; // Vị trí con trỏ sau khi chèn (tính từ đầu chuỗi insert)
   tooltip?: string;
 }
 
-const POPULAR_SYMBOLS: SymbolItem[] = [
+export const POPULAR_SYMBOLS: SymbolItem[] = [
   { display: 'x²', insert: 'x²', tooltip: 'Bình phương' },
   { display: 'x³', insert: 'x³', tooltip: 'Lập phương' },
-  { display: 'xⁿ', insert: 'x^[n]', cursorOffset: 3, tooltip: 'Lũy thừa bậc n' },
-  { display: '√x', insert: '√(x)', cursorOffset: 2, tooltip: 'Căn bậc hai' },
-  { display: '∛x', insert: '∛(x)', cursorOffset: 2, tooltip: 'Căn bậc ba' },
-  { display: 'a/b', insert: '(a)/(b)', cursorOffset: 1, tooltip: 'Phân số' },
-  { display: 'x₁', insert: 'x₁', tooltip: 'Chỉ số 1' },
-  { display: 'x₂', insert: 'x₂', tooltip: 'Chỉ số 2' },
+  { display: 'xⁿ', insert: 'x^[N]', cursorOffset: 3, tooltip: 'Lũy thừa bậc N: x^[N] (dễ chỉnh N, hiển thị xⁿ khi lên đề)' },
+  { display: '√x', insert: '√(x)', cursorOffset: 2, tooltip: 'Căn bậc hai: √(x) (hiển thị căn thức chuẩn)' },
+  { display: '∛x', insert: '∛(x)', cursorOffset: 2, tooltip: 'Căn bậc ba: ∛(x)' },
+  { display: 'a/b', insert: '(a)/(b)', cursorOffset: 1, tooltip: 'Phân số: (a)/(b) (dễ chỉnh tử và mẫu, hiển thị phân số khi lên đề)' },
+  { display: 'x₁', insert: 'x_[1]', cursorOffset: 3, tooltip: 'Chỉ số dưới: x_[1] (hiển thị x₁ khi lên đề)' },
+  { display: 'x₂', insert: 'x_[2]', cursorOffset: 3, tooltip: 'Chỉ số dưới: x_[2]' },
   { display: 'y\'', insert: 'y\'', tooltip: 'Đạo hàm bậc 1' },
   { display: 'y\'\'', insert: 'y\'\'', tooltip: 'Đạo hàm bậc 2' },
   { display: '±', insert: '±', tooltip: 'Cộng trừ' },
@@ -57,6 +59,29 @@ const POPULAR_SYMBOLS: SymbolItem[] = [
   { display: '-∞', insert: '-∞', tooltip: 'Âm vô cùng' },
   { display: 'π', insert: 'π', tooltip: 'Số Pi' },
   { display: 'Δ', insert: 'Δ', tooltip: 'Biệt thức Delta' },
+];
+
+export const PHYSICS_SYMBOLS: SymbolItem[] = [
+  { display: 'F⃗ = m.a⃗', insert: '$\\vec{F} = m.\\vec{a}$', tooltip: 'Định luật II Newton' },
+  { display: 'v₀', insert: 'v_[0]', tooltip: 'Vận tốc ban đầu v₀ (hiển thị v₀ khi lên đề)' },
+  { display: 'v = v₀+at', insert: '$v = v_[0] + a.t$', tooltip: 'Vận tốc biến đổi đều' },
+  { display: 'x = A.cos(ωt+φ)', insert: '$x = A.\\cos(\\omega t + \\phi)$', tooltip: 'Dao động điều hòa' },
+  { display: 'λ = v/f', insert: '$\\lambda = (v)/(f)$', tooltip: 'Bước sóng' },
+  { display: 'T = 2π√(l/g)', insert: '$T = 2\\pi \\sqrt{(l)/(g)}$', tooltip: 'Chu kỳ con lắc đơn' },
+  { display: 'I = U/R', insert: '$I = (U)/(R)$', tooltip: 'Định luật Ohm' },
+  { display: 'P = U.I', insert: '$P = U.I$', tooltip: 'Công suất điện' },
+  { display: 'W = 1/2mv²', insert: '$W = (1)/(2)m.v^[2]$', tooltip: 'Động năng' },
+  { display: 'E = mc²', insert: '$E = m.c^[2]$', tooltip: 'Hệ thức Einstein' },
+  { display: 'F⃗', insert: '$\\vec{F}$', tooltip: 'Vectơ lực' },
+  { display: 'v⃗', insert: '$\\vec{v}$', tooltip: 'Vectơ vận tốc' },
+  { display: 'a⃗', insert: '$\\vec{a}$', tooltip: 'Vectơ gia tốc' },
+  { display: 'Ω', insert: ' \\Omega ', tooltip: 'Điện trở Ohm' },
+  { display: 'μF', insert: ' \\mu F', tooltip: 'Microfarad' },
+  { display: 'Δt', insert: '\\Delta t', tooltip: 'Khoảng thời gian' },
+  { display: '°C', insert: '^[o]C', tooltip: 'Độ C' },
+  { display: 'ω', insert: '\\omega ', tooltip: 'Tần số góc' },
+  { display: 'λ', insert: '\\lambda ', tooltip: 'Bước sóng' },
+  { display: 'ρ', insert: '\\rho ', tooltip: 'Khối lượng riêng/Điện trở suất' },
 ];
 
 const CALCULUS_SYMBOLS: SymbolItem[] = [
@@ -180,7 +205,7 @@ export function MathEssayEditor({
 }: MathEditorProps) {
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const [activeCategory, setActiveCategory] = React.useState<
-    'POPULAR' | 'CALCULUS' | 'SETS_LOGIC' | 'GEOMETRY' | 'TEMPLATES'
+    'POPULAR' | 'PHYSICS' | 'CALCULUS' | 'SETS_LOGIC' | 'GEOMETRY' | 'TEMPLATES'
   >('POPULAR');
   const [isToolbarOpen, setIsToolbarOpen] = React.useState<boolean>(true);
   const [viewMode, setViewMode] = React.useState<'EDIT' | 'PREVIEW'>('EDIT');
@@ -235,6 +260,8 @@ export function MathEssayEditor({
   // Active Symbol List
   const currentSymbols = React.useMemo(() => {
     switch (activeCategory) {
+      case 'PHYSICS':
+        return PHYSICS_SYMBOLS;
       case 'CALCULUS':
         return CALCULUS_SYMBOLS;
       case 'SETS_LOGIC':
@@ -353,6 +380,19 @@ export function MathEssayEditor({
 
             <button
               type="button"
+              onClick={() => setActiveCategory('PHYSICS')}
+              className={cn(
+                'px-3 py-1 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer',
+                activeCategory === 'PHYSICS'
+                  ? 'bg-[#00B8DD] text-slate-950 shadow-xs'
+                  : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-[#00B8DD]'
+              )}
+            >
+              <Zap className="w-3 h-3 text-amber-500" /> Vật Lý
+            </button>
+
+            <button
+              type="button"
               onClick={() => setActiveCategory('CALCULUS')}
               className={cn(
                 'px-3 py-1 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer',
@@ -429,33 +469,35 @@ export function MathEssayEditor({
       {/* ── EDITOR TEXTAREA OR PREVIEW PANE ── */}
       <div className="relative flex-1">
         {viewMode === 'EDIT' ? (
-          <textarea
-            ref={textareaRef}
-            rows={rows}
-            value={value}
-            disabled={disabled}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={placeholder}
-            className="w-full p-4 sm:p-5 bg-transparent border-0 text-slate-900 dark:text-slate-100 placeholder-slate-400 font-mono text-sm leading-relaxed focus:outline-none resize-y min-h-[180px]"
-          />
+          <div className="flex flex-col">
+            <textarea
+              ref={textareaRef}
+              rows={rows}
+              value={value}
+              disabled={disabled}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder={placeholder}
+              className="w-full p-4 sm:p-5 bg-transparent border-0 text-slate-900 dark:text-slate-100 placeholder-slate-400 font-mono text-sm leading-relaxed focus:outline-none resize-y min-h-[160px]"
+            />
+
+            {/* Live Formula Preview */}
+            {value.trim() && (
+              <div className="mx-4 mb-4 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 text-xs space-y-1.5">
+                <div className="font-bold text-[#007D99] dark:text-[#00B8DD] flex items-center gap-1.5">
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>Xem trước hiển thị công thức (khi lên đề):</span>
+                </div>
+                <div className="text-slate-800 dark:text-slate-200 text-sm overflow-x-auto py-1">
+                  <MathRenderer text={value} />
+                </div>
+              </div>
+            )}
+          </div>
         ) : (
-          <div className="p-4 sm:p-5 min-h-[180px] bg-slate-50/50 dark:bg-slate-950/40 text-slate-900 dark:text-slate-100 font-mono text-sm leading-relaxed whitespace-pre-line overflow-y-auto">
+          <div className="p-4 sm:p-5 min-h-[180px] bg-slate-50/50 dark:bg-slate-950/40 text-slate-900 dark:text-slate-100 text-sm leading-relaxed overflow-y-auto">
             {value.trim() ? (
-              <div className="space-y-1">
-                {value.split('\n').map((line, i) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      line.startsWith('•') || line.startsWith('1.') || line.startsWith('2.')
-                        ? 'font-bold text-[#007D99] dark:text-[#00B8DD] pt-1'
-                        : line.includes('Bảng biến thiên') || line.includes('|')
-                        ? 'bg-slate-100 dark:bg-slate-900 p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs overflow-x-auto font-mono'
-                        : 'text-slate-800 dark:text-slate-200'
-                    )}
-                  >
-                    {line || '\u00A0'}
-                  </div>
-                ))}
+              <div className="space-y-2">
+                <MathRenderer text={value} />
               </div>
             ) : (
               <p className="text-slate-400 italic text-xs">

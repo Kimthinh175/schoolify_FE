@@ -23,6 +23,8 @@ import {
   HelpCircle,
   FileCheck2,
   BookCheck,
+  FileQuestion,
+  Database,
   ChevronLeft,
   ChevronRight,
   Sparkles,
@@ -42,9 +44,22 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   // SUPER ADMIN
   {
-    label: 'Tổng quan SaaS',
+    label: 'Tổng quan',
     href: '/admin/dashboard',
     icon: <LayoutDashboard className="w-5 h-5" />,
+    roles: ['SUPER_ADMIN'],
+  },
+  {
+    label: 'Ngân Hàng Câu Hỏi Gốc',
+    href: '/admin/questions',
+    icon: <Database className="w-5 h-5" />,
+    badge: 'Mới',
+    roles: ['SUPER_ADMIN'],
+  },
+  {
+    label: 'Kho Đề Thi Hệ Thống',
+    href: '/admin/exams',
+    icon: <FileCheck2 className="w-5 h-5" />,
     roles: ['SUPER_ADMIN'],
   },
   {
@@ -287,15 +302,6 @@ export function AppSidebar({ isMobileOpen, onMobileClose }: { isMobileOpen?: boo
         </button>
       </div>
 
-      {/* Role Badge Indicator */}
-      {!collapsed && (
-        <div className="px-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
-          <span className="text-xs font-semibold text-slate-500">Phân hệ đang xem:</span>
-          <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/80">
-            {currentRole}
-          </span>
-        </div>
-      )}
 
       {/* Nav links */}
       <div className="flex-1 overflow-y-auto p-3 space-y-1.5 no-scrollbar">

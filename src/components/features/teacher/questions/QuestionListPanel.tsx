@@ -17,6 +17,10 @@ const TYPE_LABEL: Record<QuestionType, string> = {
   TRUE_FALSE: 'Đúng/Sai',
   ESSAY: 'Tự luận',
   FILL_BLANK: 'Điền khuyết',
+  GROUP_QUESTIONS: 'Chùm câu hỏi',
+  MATCHING: 'Nối cặp',
+  ORDERING: 'Sắp xếp',
+  CLOZE_DROPDOWN: 'Đục lỗ inline',
 };
 
 export function QuestionListPanel({

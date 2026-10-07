@@ -9,8 +9,10 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
   const [mobileSidebarOpen, setMobileSidebarOpen] = React.useState(false);
   const pathname = usePathname();
 
-  // Bỏ sidebar và header dashboard cho các trang làm bài luyện / thi / phòng học tập trung
+  // Bỏ sidebar và header dashboard cho cổng login admin hoặc các trang thi / phòng học tập trung
   const isFocusOrPractice =
+    pathname === '/admin' ||
+    pathname === '/admin/login' ||
     pathname?.startsWith('/student/practice/exam-room') ||
     pathname?.startsWith('/student/practice') ||
     pathname?.startsWith('/student/learn') ||

@@ -26,6 +26,10 @@ export interface User {
   student_profile?: StudentProfile | null;
   parent_profile?: ParentProfile | null;
   school_memberships?: SchoolMember[];
+
+  // Competency
+  competency_level?: string | null;
+  assessed_subjects?: Record<string, string>;
 }
 
 export interface TeacherProfile {
@@ -45,6 +49,8 @@ export interface StudentProfile {
   date_of_birth?: string | null;
   grade_level?: string | null;
   points: number;
+  competency_level?: string | null;
+  assessed_subjects?: Record<string, string>;
   created_at?: string;
 }
 

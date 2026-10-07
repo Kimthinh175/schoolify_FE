@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { Question, Answer, QuestionType } from '@/types';
+import { MathRenderer } from '@/components/ui/math-renderer';
 
 // ─────────────────────────────────────────────────────────────
 // Types
@@ -205,7 +206,7 @@ function AnswerOption({ answer, index, isSelected, isMulti, phase, onSelect }: A
           isUnrelated && 'text-slate-500',
         )}
       >
-        {answer.content}
+        <MathRenderer text={answer.content} inline />
       </span>
 
       {/* Result icon */}
@@ -438,9 +439,9 @@ const answeredCount = questions.filter((q) => (answers[q.id] ?? []).length > 0 |
                       {question.title}
                     </p>
                   )}
-                  <p className="text-sm font-medium leading-relaxed text-slate-100">
-                    {question.content}
-                  </p>
+                  <div className="text-sm font-medium leading-relaxed text-slate-100">
+                    <MathRenderer text={question.content} />
+                  </div>
                 </div>
               </div>
 
@@ -461,7 +462,9 @@ const answeredCount = questions.filter((q) => (answers[q.id] ?? []).length > 0 |
                           <Lightbulb className="h-3.5 w-3.5" />
                           Đáp án mẫu
                         </p>
-                        <p className="text-sm text-amber-200">{question.sample_essay_answer}</p>
+                        <div className="text-sm text-amber-200">
+                          <MathRenderer text={question.sample_essay_answer} />
+                        </div>
                       </div>
                     )}
                   </div>
@@ -487,9 +490,12 @@ const answeredCount = questions.filter((q) => (answers[q.id] ?? []).length > 0 |
                           <Lightbulb className="h-3.5 w-3.5" />
                           Đáp án đúng
                         </p>
-                        <p className="text-sm text-amber-200">
-                          {(question.answers ?? []).find((a) => a.is_answer)?.content ?? '—'}
-                        </p>
+                        <div className="text-sm text-amber-200">
+                          <MathRenderer
+                            text={(question.answers ?? []).find((a) => a.is_answer)?.content ?? '—'}
+                            inline
+                          />
+                        </div>
                       </div>
                     )}
                   </div>
@@ -569,9 +575,11 @@ const answeredCount = questions.filter((q) => (answers[q.id] ?? []).length > 0 |
                                         a.is_answer ? 'text-emerald-400' : 'text-slate-400'
                                       )}
                                     >
-                                      {a.content}:{' '}
+                                      <MathRenderer text={a.content} inline />:{' '}
                                     </span>
-                                    <span className="text-xs text-slate-300">{a.explain}</span>
+                                    <span className="text-xs text-slate-300">
+                                      <MathRenderer text={a.explain || ''} inline />
+                                    </span>
                                   </div>
                                 </div>
                               ))}

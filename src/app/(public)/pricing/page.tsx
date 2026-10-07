@@ -30,7 +30,7 @@ export default function PricingPage() {
     <div className="py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto">
-        <Badge variant="purple" className="mb-3">Bảng Giá SaaS Doanh Nghiệp 2026</Badge>
+        <Badge variant="purple" className="mb-3">Gói Đăng Ký Bản Quyền Schoolify 2026</Badge>
         <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
           Chi Phí Minh Bạch. <br />
           Quy Mô Linh Hoạt Cho Mọi Trường Học.

@@ -17,6 +17,7 @@ import {
   FileText,
   Check,
   Zap,
+  RotateCcw,
 } from 'lucide-react';
 import { Dialog } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +30,7 @@ import {
   ExamFormat,
 } from '@/services/mock/practice-flow-data';
 import { RequireLoginModal } from '@/components/features/auth/RequireLoginModal';
+import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
 
 interface LevelSelectionModalProps {
@@ -100,6 +102,7 @@ const LEVEL_ICONS: Record<PracticeLevel, React.ReactNode> = {
   ADVANCED: <Flame className="w-5 h-5 text-purple-500" />,
   PROVINCIAL_EXCELLENT: <Trophy className="w-5 h-5 text-amber-500" />,
   NATIONAL_EXCELLENT: <Crown className="w-5 h-5 text-rose-500" />,
+  ASSESSMENT: <Sparkles className="w-5 h-5 text-[#00B8DD]" />,
 };
 
 export function LevelSelectionModal({
@@ -109,10 +112,13 @@ export function LevelSelectionModal({
   isLoggedIn = false,
 }: LevelSelectionModalProps) {
   const router = useRouter();
+  const { user, isAuthenticated } = useAuthStore();
+  const effectiveIsLoggedIn = isLoggedIn || isAuthenticated;
 
   // Wizard Steps
   const [currentStep, setCurrentStep] = React.useState<WizardStep>('LEVEL');
   const [maxStepReached, setMaxStepReached] = React.useState<number>(1);
+  const [isAssessmentMode, setIsAssessmentMode] = React.useState<boolean>(false);
 
   // Selected State
   const [selectedLevel, setSelectedLevel] = React.useState<LevelDetail>(PRACTICE_LEVELS[0]);
@@ -127,6 +133,38 @@ export function LevelSelectionModal({
   const [requireLoginOpen, setRequireLoginOpen] = React.useState(false);
   const [selectedGatedLevelName, setSelectedGatedLevelName] = React.useState<string>('');
 
+  // Competency Check State
+  const [hasAssessedCompetency, setHasAssessedCompetency] = React.useState<boolean>(false);
+  const [assessedLevelName, setAssessedLevelName] = React.useState<string>('');
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const userId = user?.id || '';
+    const subjectSlug = subject?.slug || '';
+
+    const userLevel = (user as any)?.competency_level || user?.student_profile?.competency_level;
+    const localUserLevel = userId ? localStorage.getItem(`schoolify_competency_${userId}`) : null;
+    const localSubjectLevel = userId && subjectSlug ? localStorage.getItem(`schoolify_competency_${userId}_${subjectSlug}`) : null;
+
+    const resolvedLevel = localSubjectLevel || localUserLevel || userLevel;
+
+    if (resolvedLevel) {
+      setHasAssessedCompetency(true);
+      const mapLevelName: Record<string, string> = {
+        BASIC: 'Cơ Bản',
+        MEDIUM: 'Trung Bình',
+        ADVANCED: 'Nâng Cao',
+        PROVINCIAL_EXCELLENT: 'HSG Tỉnh',
+        NATIONAL_EXCELLENT: 'HSG Quốc Gia',
+      };
+      setAssessedLevelName(mapLevelName[resolvedLevel] || resolvedLevel);
+    } else {
+      setHasAssessedCompetency(false);
+      setAssessedLevelName('');
+    }
+  }, [user, subject, isOpen]);
+
   // Reset step on reopen
   React.useEffect(() => {
     if (isOpen) {
@@ -139,6 +177,7 @@ export function LevelSelectionModal({
       setQuizCount(10);
       setEssayCount(5);
       setSelectedDuration(45);
+      setIsAssessmentMode(false);
     }
   }, [isOpen]);
 
@@ -161,11 +200,30 @@ export function LevelSelectionModal({
     }
   };
 
+  // Step 1: Handle Assessment Click
+  const handleSelectAssessment = () => {
+    setIsAssessmentMode(true);
+    setSelectedLevel({
+      id: 'ASSESSMENT',
+      name: 'Đánh Giá Năng Lực',
+      badge: 'Chẩn Đoán Nhanh',
+      tagline: 'Phân tích trình độ học tập',
+      description: 'Bài kiểm tra chẩn đoán năng lực 15 phút.',
+      badgeColor: 'bg-sky-100 text-[#007D99] border-sky-300',
+      gradient: 'from-[#00B8DD] to-indigo-600',
+      pointsReward: 30,
+      totalExams: 1,
+    });
+    setMaxStepReached((prev) => Math.max(prev, 2));
+    setCurrentStep('GRADE');
+  };
+
   // Step 1: Handle Level Click
   const handleSelectLevel = (level: LevelDetail) => {
+    setIsAssessmentMode(false);
     const isFreeTrial = level.id === 'BASIC' || level.id === 'MEDIUM';
 
-    if (!isLoggedIn && !isFreeTrial) {
+    if (!effectiveIsLoggedIn && !isFreeTrial) {
       setSelectedGatedLevelName(level.name);
       setRequireLoginOpen(true);
       return;
@@ -179,6 +237,13 @@ export function LevelSelectionModal({
   // Step 2: Handle Grade Click
   const handleSelectGrade = (gradeId: number) => {
     setSelectedGrade(gradeId);
+    if (isAssessmentMode) {
+      onClose();
+      router.push(
+        `/student/practice/exam-room?subject=${subject.slug}&level=assessment&grade=${gradeId}&chapter=1&format=quiz&duration=15&count=10&mode=diagnostic`
+      );
+      return;
+    }
     setMaxStepReached((prev) => Math.max(prev, 3));
     setCurrentStep('CHAPTER');
   };
@@ -244,7 +309,7 @@ export function LevelSelectionModal({
               </div>
               <div className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
                 {currentStep === 'LEVEL' && 'Bước 1/5: Chọn Cấp Độ Mục Tiêu'}
-                {currentStep === 'GRADE' && 'Bước 2/5: Chọn Khối Lớp'}
+                {currentStep === 'GRADE' && (isAssessmentMode ? 'Bước 2/2: Chọn Khối Lớp Để Đánh Giá Năng Lực' : 'Bước 2/5: Chọn Khối Lớp')}
                 {currentStep === 'CHAPTER' && 'Bước 3/5: Chọn Chương Học (SGK 2018)'}
                 {currentStep === 'FORMAT' && 'Bước 4/5: Chọn Hình Thức Đề Thi'}
                 {currentStep === 'DURATION' && 'Bước 5/5: Chọn Thời Gian Làm Bài'}
@@ -444,6 +509,67 @@ export function LevelSelectionModal({
           {/* ========================================================================= */}
           {currentStep === 'LEVEL' && (
             <div className="space-y-3">
+              {/* 0. Trạng thái năng lực đã xác định (nếu đã login và đã có kết quả đánh giá) */}
+              {effectiveIsLoggedIn && hasAssessedCompetency && (
+                <div className="p-3.5 rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/70 dark:bg-emerald-950/30 flex items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 min-w-0">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span className="truncate">
+                      Năng lực môn này đã xác định: <strong className="font-bold">{assessedLevelName}</strong>
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSelectAssessment}
+                    className="text-[11px] font-bold text-[#007D99] dark:text-[#00B8DD] hover:underline cursor-pointer flex items-center gap-1 shrink-0"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    Làm lại đánh giá
+                  </button>
+                </div>
+              )}
+
+              {/* 0. ĐÁNH GIÁ NĂNG LỰC CỦA BẠN (Hiện trên Cơ bản nếu chưa login hoặc login mà chưa xác định được năng lực) */}
+              {(!effectiveIsLoggedIn || !hasAssessedCompetency) && (
+                <div
+                  onClick={handleSelectAssessment}
+                  className={cn(
+                    'p-4 rounded-2xl border transition-all flex items-center justify-between gap-4 cursor-pointer group relative overflow-hidden',
+                    'border-[#00B8DD]/50 hover:border-[#00B8DD] hover:shadow-lg hover:shadow-[#00B8DD]/10',
+                    'bg-gradient-to-r from-[#00B8DD]/[0.08] via-sky-50/60 to-indigo-50/40 dark:from-[#00B8DD]/15 dark:via-slate-900 dark:to-indigo-950/20'
+                  )}
+                >
+                  <div className="flex items-start gap-3.5 min-w-0">
+                    <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-[#00B8DD] to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-[#00B8DD]/25 group-hover:scale-110 transition-transform">
+                      <Sparkles className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-[#00B8DD] transition-colors flex items-center gap-1.5">
+                          Đánh Giá Năng Lực Của Bạn
+                        </h4>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-white/90 dark:bg-slate-800 text-[#007D99] dark:text-[#00B8DD] border-[#00B8DD]/30 flex items-center gap-1 shadow-2xs">
+                          <Zap className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
+                          Chẩn Đoán Nhanh
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 line-clamp-1">
+                        Làm bài test ngắn 15 phút để AI chẩn đoán trình độ và gợi ý lộ trình luyện thi chuẩn xác nhất.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[11px] font-bold text-[#007D99] dark:text-[#00B8DD] bg-white dark:bg-slate-800 border border-[#00B8DD]/40 px-2.5 py-1 rounded-xl flex items-center gap-1 group-hover:bg-[#00B8DD] group-hover:text-white group-hover:border-[#00B8DD] transition-all shadow-xs">
+                      <Sparkles className="w-3.5 h-3.5 text-[#00B8DD] group-hover:text-white transition-colors" />
+                      Đánh Giá Ngay
+                    </span>
+                    <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#00B8DD] group-hover:translate-x-1 transition-all" />
+                  </div>
+                </div>
+              )}
+
+              {/* 1 -> 5: Danh Sách Cấp Độ Mục Tiêu (Cơ Bản -> HSG Quốc Gia) */}
               {PRACTICE_LEVELS.map((level) => {
                 const icon = LEVEL_ICONS[level.id];
                 const isFree = level.id === 'BASIC' || level.id === 'MEDIUM';
@@ -455,7 +581,7 @@ export function LevelSelectionModal({
                     className={cn(
                       'p-4 rounded-2xl border transition-all flex items-center justify-between gap-4 cursor-pointer group',
                       'hover:border-[#00B8DD] hover:shadow-md bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800',
-                      !isLoggedIn && !isFree && 'hover:border-amber-400'
+                      !effectiveIsLoggedIn && !isFree && 'hover:border-amber-400'
                     )}
                   >
                     <div className="flex items-start gap-3.5">
@@ -507,10 +633,21 @@ export function LevelSelectionModal({
           {/* ========================================================================= */}
           {currentStep === 'GRADE' && (
             <div className="space-y-4">
-              <p className="text-xs text-slate-500">
-                Chọn lớp học bạn muốn luyện đề. Bộ đề mẫu chuẩn GDPT 2018 hiện đã sẵn sàng tại{' '}
-                <strong className="text-[#007D99] dark:text-[#00B8DD]">Lớp 12</strong>.
-              </p>
+              {isAssessmentMode ? (
+                <div className="p-3.5 rounded-2xl bg-gradient-to-r from-sky-50 to-indigo-50/60 dark:from-sky-950/40 dark:to-indigo-950/20 border border-sky-200 dark:border-sky-800 text-xs text-sky-900 dark:text-sky-200 flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-xl bg-[#00B8DD]/20 text-[#007D99] dark:text-[#00B8DD] flex items-center justify-center shrink-0">
+                    <Sparkles className="w-4 h-4 text-[#00B8DD]" />
+                  </div>
+                  <div>
+                    <span className="font-bold">Đánh Giá Năng Lực Môn {subject.name}:</span> Chọn khối lớp bạn đang học để hệ thống cấp đề kiểm tra chẩn đoán 15 phút (10 câu hỏi bao quát chương trình).
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500">
+                  Chọn lớp học bạn muốn luyện đề. Bộ đề mẫu chuẩn GDPT 2018 hiện đã sẵn sàng tại{' '}
+                  <strong className="text-[#007D99] dark:text-[#00B8DD]">Lớp 12</strong>.
+                </p>
+              )}
 
               {/* Group THPT (10, 11, 12) */}
               <div className="space-y-2">
@@ -588,7 +725,7 @@ export function LevelSelectionModal({
                         key={g}
                         onClick={() => handleSelectGrade(g)}
                         className={cn(
-                          'p-3 rounded-xl border text-center cursor-pointer transition-all flex items-center justify-center',
+                          'p-2.5 rounded-xl border text-center cursor-pointer transition-all flex items-center justify-center',
                           isSelected
                             ? 'bg-[#E6F8FC] dark:bg-[#00B8DD]/20 border-[#00B8DD] shadow-md shadow-[#00B8DD]/15 font-bold'
                             : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-[#00B8DD]'
@@ -602,6 +739,28 @@ export function LevelSelectionModal({
                   })}
                 </div>
               </div>
+
+              {/* Assessment Mode Quick CTA */}
+              {isAssessmentMode && (
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                  <div className="text-xs text-slate-500">
+                    Đang chọn: <strong className="text-slate-900 dark:text-white font-bold">Lớp {selectedGrade}</strong> (10 câu trắc nghiệm • 15 phút)
+                  </div>
+                  <Button
+                    onClick={() => {
+                      onClose();
+                      router.push(
+                        `/student/practice/exam-room?subject=${subject.slug}&level=assessment&grade=${selectedGrade}&chapter=1&format=quiz&duration=15&count=10&mode=diagnostic`
+                      );
+                    }}
+                    className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold gap-1.5 rounded-xl shadow-md text-xs sm:text-sm"
+                  >
+                    <Zap className="w-4 h-4 fill-white" />
+                    Vào Làm Bài Đánh Giá Ngay
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 

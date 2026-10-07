@@ -37,15 +37,96 @@ import {
   PracticeExamPackage,
   ExamQuestion,
   ExamFormat,
+  QuestionDifficulty,
 } from '@/services/mock/practice-flow-data';
 import { PracticeLevel } from '@/types/subject';
+import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
 import { MathEssayEditor } from '@/components/ui/math-editor';
+import { MathRenderer } from '@/components/ui/math-renderer';
 import { Navbar } from '@/components/layout/Navbar';
+
+function renderDifficultyBadge(difficulty?: QuestionDifficulty, isDark = true) {
+  switch (difficulty) {
+    case 'EASY':
+      return (
+        <span
+          className={cn(
+            'px-2 py-0.5 rounded-md text-[10px] font-bold shrink-0',
+            isDark
+              ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/60'
+              : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+          )}
+        >
+          Nhận biết (Dễ)
+        </span>
+      );
+    case 'MEDIUM':
+      return (
+        <span
+          className={cn(
+            'px-2 py-0.5 rounded-md text-[10px] font-bold shrink-0',
+            isDark
+              ? 'bg-sky-950/80 text-sky-300 border border-sky-700/60'
+              : 'bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-800'
+          )}
+        >
+          Thông hiểu (TB)
+        </span>
+      );
+    case 'HARD':
+      return (
+        <span
+          className={cn(
+            'px-2 py-0.5 rounded-md text-[10px] font-bold shrink-0',
+            isDark
+              ? 'bg-amber-950/80 text-amber-300 border border-amber-700/60'
+              : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
+          )}
+        >
+          Vận dụng (Khó)
+        </span>
+      );
+    case 'VERY_HARD':
+      return (
+        <span
+          className={cn(
+            'px-2 py-0.5 rounded-md text-[10px] font-bold shrink-0',
+            isDark
+              ? 'bg-purple-950/80 text-purple-300 border border-purple-700/60'
+              : 'bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800'
+          )}
+        >
+          Vận dụng cao
+        </span>
+      );
+    default:
+      return null;
+  }
+}
+
+function renderPreviousChapterBadge(q: ExamQuestion, isDark = true) {
+  if (!q.isPreviousChapterReview) return null;
+  const relCh = q.relatedChapterIds?.[0] || (q.chapterId > 1 ? q.chapterId - 1 : 1);
+  return (
+    <span
+      className={cn(
+        'px-2 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-1 shrink-0',
+        isDark
+          ? 'bg-indigo-950/80 text-indigo-300 border border-indigo-700/60'
+          : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800'
+      )}
+    >
+      <RotateCcw className="w-3 h-3 text-indigo-400" />
+      Ôn tập Chương {relCh}
+    </span>
+  );
+}
 
 function ExamRoomContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { user } = useAuthStore();
 
   const subjectSlug = searchParams.get('subject') || 'toan-hoc';
   const levelParam = (searchParams.get('level') || 'basic').toUpperCase() as PracticeLevel;
@@ -56,6 +137,8 @@ function ExamRoomContent() {
   const durationParam = searchParams.get('duration') ? Number(searchParams.get('duration')) : undefined;
   const quizCountParam = searchParams.get('quizCount') ? Number(searchParams.get('quizCount')) : undefined;
   const essayCountParam = searchParams.get('essayCount') ? Number(searchParams.get('essayCount')) : undefined;
+  const modeParam = searchParams.get('mode') || '';
+  const isAssessment = levelParam === 'ASSESSMENT' || modeParam === 'diagnostic';
 
   // Load Exam Package
   const exam = React.useMemo(() => {
@@ -250,6 +333,33 @@ function ExamRoomContent() {
       };
     });
 
+    // Thống kê theo ma trận độ khó và câu hỏi liên chương
+    const difficultyBreakdown: Record<QuestionDifficulty, { total: number; correct: number }> = {
+      EASY: { total: 0, correct: 0 },
+      MEDIUM: { total: 0, correct: 0 },
+      HARD: { total: 0, correct: 0 },
+      VERY_HARD: { total: 0, correct: 0 },
+    };
+
+    let previousChapterCount = 0;
+    let previousChapterCorrect = 0;
+
+    questionResults.forEach((res) => {
+      const diff = res.question.difficulty || 'MEDIUM';
+      if (difficultyBreakdown[diff]) {
+        difficultyBreakdown[diff].total++;
+        if (res.isCorrect) {
+          difficultyBreakdown[diff].correct++;
+        }
+      }
+      if (res.question.isPreviousChapterReview) {
+        previousChapterCount++;
+        if (res.isCorrect) {
+          previousChapterCorrect++;
+        }
+      }
+    });
+
     // Scale to standard 10-point scale
     const finalScore = Math.min(10, Math.round((totalScore / exam.totalPoints) * 10 * 10) / 10);
     const diamondReward = finalScore >= 8 ? 50 : finalScore >= 5 ? 30 : 15;
@@ -264,6 +374,11 @@ function ExamRoomContent() {
       timeSpentSeconds: secondsElapsed,
       diamondReward,
       questionResults,
+      difficultyBreakdown,
+      previousChapterStats: {
+        total: previousChapterCount,
+        correct: previousChapterCorrect,
+      },
     };
   }, [
     isSubmitted,
@@ -287,6 +402,27 @@ function ExamRoomContent() {
     setSecondsRemaining(totalLimitSeconds);
     setIsSubmitted(false);
   };
+
+  // Lưu kết quả đánh giá năng lực nếu đây là bài thi chẩn đoán (ASSESSMENT)
+  React.useEffect(() => {
+    if (isSubmitted && isAssessment && examResult) {
+      const assignedLevel: PracticeLevel =
+        examResult.finalScore >= 8.5
+          ? 'ADVANCED'
+          : examResult.finalScore >= 5.0
+          ? 'MEDIUM'
+          : 'BASIC';
+
+      if (typeof window !== 'undefined') {
+        const uid = user?.id;
+        if (uid) {
+          localStorage.setItem(`schoolify_competency_${uid}`, assignedLevel);
+          localStorage.setItem(`schoolify_competency_${uid}_${subjectSlug}`, assignedLevel);
+        }
+        localStorage.setItem(`schoolify_competency_guest_${subjectSlug}`, assignedLevel);
+      }
+    }
+  }, [isSubmitted, isAssessment, examResult, user, subjectSlug]);
 
   const currentQ = exam.questions[activeQuestionIdx];
 
@@ -380,6 +516,139 @@ function ExamRoomContent() {
                   <span className="text-[10px] text-slate-500">Xem giải thích bên dưới</span>
                 </div>
               </div>
+            </div>
+
+            {/* AI Competency Assessment Diagnosis */}
+            {isAssessment && (
+              <div className="p-5 my-6 rounded-3xl border-2 border-[#00B8DD]/40 bg-gradient-to-r from-sky-50 via-indigo-50/50 to-white dark:from-slate-800 dark:via-indigo-950/20 dark:to-slate-900 text-left shadow-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="h-8 w-8 rounded-xl bg-[#00B8DD]/20 flex items-center justify-center text-[#007D99] dark:text-[#00B8DD]">
+                    <Sparkles className="w-4 h-4 text-[#00B8DD]" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-slate-900 dark:text-white">
+                      Kết Quả Phân Tích Năng Lực AI
+                    </h3>
+                    <span className="text-[10px] font-bold text-slate-500">Chẩn đoán dựa trên kết quả khảo thí thích ứng</span>
+                  </div>
+                </div>
+                <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed mt-2">
+                  Dựa trên điểm số <strong className="text-slate-950 dark:text-white font-black">{examResult.finalScore}/10</strong>, AI đánh giá năng lực hiện tại của bạn phù hợp nhất với cấp độ:{' '}
+                  <span className="inline-flex items-center gap-1 font-black text-base text-[#007D99] dark:text-[#00B8DD] underline">
+                    {examResult.finalScore >= 8.5
+                      ? 'Nâng Cao (Vận Dụng Cao 9-10đ)'
+                      : examResult.finalScore >= 5.0
+                      ? 'Trung Bình (Học Kỳ & Tốt Nghiệp)'
+                      : 'Cơ Bản (SGK & Lý Thuyết)'}
+                  </span>.
+                </div>
+                <p className="text-xs text-slate-500 mt-2">
+                  ✅ Kết quả đã được cập nhật vào hồ sơ học tập. Khi quay lại kho môn học, hệ thống sẽ đề xuất đúng lộ trình phù hợp với năng lực của bạn!
+                </p>
+              </div>
+            )}
+
+            {/* Question Matrix & Difficulty Breakdown */}
+            <div className="p-5 my-6 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-left space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-700/80 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-[#00B8DD]/10 text-[#00B8DD]">
+                    <BrainCircuit className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                      Phân Tích Ma Trận Độ Khó & Kiến Thức Đề Thi
+                    </h3>
+                    <p className="text-[11px] text-slate-500">
+                      Tỉ lệ phân bổ câu hỏi được tạo tự động theo cấp độ ({exam.level}) và liên kết chương
+                    </p>
+                  </div>
+                </div>
+                {examResult.previousChapterStats.total > 0 && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 self-start sm:self-auto">
+                    <RotateCcw className="w-3.5 h-3.5 text-indigo-500" />
+                    Ôn tập chương trước: {examResult.previousChapterStats.correct}/{examResult.previousChapterStats.total} câu ({Math.round((examResult.previousChapterStats.correct / examResult.previousChapterStats.total) * 100)}%)
+                  </span>
+                )}
+              </div>
+
+              {/* Grid 4 Difficulty Tiers */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  {
+                    key: 'EASY' as QuestionDifficulty,
+                    label: 'Nhận biết (Dễ)',
+                    color: 'text-emerald-600 dark:text-emerald-400',
+                    barColor: 'bg-emerald-500',
+                    bg: 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/50',
+                  },
+                  {
+                    key: 'MEDIUM' as QuestionDifficulty,
+                    label: 'Thông hiểu (TB)',
+                    color: 'text-sky-600 dark:text-sky-400',
+                    barColor: 'bg-sky-500',
+                    bg: 'bg-sky-50/60 dark:bg-sky-950/20 border-sky-200 dark:border-sky-900/50',
+                  },
+                  {
+                    key: 'HARD' as QuestionDifficulty,
+                    label: 'Vận dụng (Khó)',
+                    color: 'text-amber-600 dark:text-amber-400',
+                    barColor: 'bg-amber-500',
+                    bg: 'bg-amber-50/60 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/50',
+                  },
+                  {
+                    key: 'VERY_HARD' as QuestionDifficulty,
+                    label: 'Vận dụng cao',
+                    color: 'text-purple-600 dark:text-purple-400',
+                    barColor: 'bg-purple-500',
+                    bg: 'bg-purple-50/60 dark:bg-purple-950/20 border-purple-200 dark:border-purple-900/50',
+                  },
+                ].map((tier) => {
+                  const data = examResult.difficultyBreakdown[tier.key];
+                  const percentage = data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0;
+                  return (
+                    <div
+                      key={tier.key}
+                      className={cn(
+                        'p-3.5 rounded-2xl border flex flex-col justify-between space-y-2',
+                        tier.bg
+                      )}
+                    >
+                      <div>
+                        <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                          {tier.label}
+                        </div>
+                        <div className="flex items-baseline justify-between mt-1">
+                          <span className={cn('text-lg font-black', tier.color)}>
+                            {data.correct} / {data.total}
+                          </span>
+                          <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
+                            {data.total > 0 ? `${percentage}%` : '0 câu'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Mini Progress Bar */}
+                      <div className="w-full bg-slate-200 dark:bg-slate-700/60 rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className={cn('h-1.5 rounded-full transition-all duration-500', tier.barColor)}
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Previous Chapter Notice if present */}
+              {examResult.previousChapterStats.total > 0 && (
+                <div className="p-3 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/40 text-xs text-indigo-900 dark:text-indigo-200 flex items-start gap-2">
+                  <Sparkles className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                  <div>
+                    <strong>Cơ chế ôn tập ngắt quãng (Spaced Repetition):</strong> Đề thi đã tự động trích xuất {examResult.previousChapterStats.total} câu hỏi liên quan hoặc ôn tập từ chương trước để củng cố phản xạ kiến thức liên chương chuẩn định dạng THPT 2018.
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}
@@ -481,7 +750,7 @@ function ExamRoomContent() {
                       )}
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span
                             className={cn(
                               'px-3 py-1 rounded-lg text-xs font-bold',
@@ -501,14 +770,16 @@ function ExamRoomContent() {
                               ? 'Điền đáp số'
                               : 'Tự luận'}
                           </span>
+                          {renderDifficultyBadge(q.difficulty, false)}
+                          {renderPreviousChapterBadge(q, false)}
                         </div>
                       </div>
 
                       <div className="text-base font-bold text-slate-900 dark:text-white">
-                        {q.title}
+                        <MathRenderer text={q.title} />
                       </div>
-                      <div className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed font-mono">
-                        {q.content}
+                      <div className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed">
+                        <MathRenderer text={q.content} />
                       </div>
 
                       {/* Display choices if multiple choice */}
@@ -528,16 +799,19 @@ function ExamRoomContent() {
                             return (
                               <div
                                 key={choice.key}
-                                className={cn('p-3 rounded-xl border text-xs flex items-center justify-between', optClasses)}
+                                className={cn('p-3 rounded-xl border text-xs flex items-center justify-between gap-2', optClasses)}
                               >
-                                <span className="font-mono">{choice.key}. {choice.content}</span>
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <span className="font-mono font-bold shrink-0">{choice.key}.</span>
+                                  <MathRenderer text={choice.content} inline />
+                                </div>
                                 {isCorrectOpt && (
-                                  <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                                  <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
                                     (Đáp án đúng)
                                   </span>
                                 )}
                                 {isSelected && !isCorrectOpt && (
-                                  <span className="text-[11px] font-bold text-rose-500">
+                                  <span className="text-[11px] font-bold text-rose-500 shrink-0">
                                     (Bạn đã chọn)
                                   </span>
                                 )}
@@ -559,13 +833,15 @@ function ExamRoomContent() {
                                 key={st.subId}
                                 className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2"
                               >
-                                <div className="space-y-0.5">
-                                  <span className="font-bold text-slate-800 dark:text-slate-200">
-                                    Ý {st.subId}) {st.statement}
-                                  </span>
-                                  <p className="text-[11px] text-slate-500">
-                                    Giải thích: {st.explanation}
-                                  </p>
+                                <div className="space-y-1">
+                                  <div className="font-bold text-slate-800 dark:text-slate-200 flex items-start gap-1.5">
+                                    <span className="shrink-0">Ý {st.subId})</span>
+                                    <MathRenderer text={st.statement} inline />
+                                  </div>
+                                  <div className="text-[11px] text-slate-500 flex items-start gap-1">
+                                    <span className="shrink-0">Giải thích:</span>
+                                    <MathRenderer text={st.explanation} inline />
+                                  </div>
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0 text-[11px]">
                                   <span className="text-slate-500">
@@ -596,7 +872,7 @@ function ExamRoomContent() {
                           <div>
                             Đáp số chính xác:{' '}
                             <strong className="text-emerald-600 dark:text-emerald-400 font-mono">
-                              {q.shortAnswerCorrect}
+                              <MathRenderer text={q.shortAnswerCorrect || ''} inline />
                             </strong>
                           </div>
                         </div>
@@ -609,9 +885,9 @@ function ExamRoomContent() {
                             <span className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
                               Bài làm tự luận của bạn:
                             </span>
-                            <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-line leading-relaxed">
-                              {essayAnswers[q.id] || '(Bạn chưa nhập bài làm tự luận)'}
-                            </p>
+                            <div className="text-slate-800 dark:text-slate-200 whitespace-pre-line leading-relaxed">
+                              <MathRenderer text={essayAnswers[q.id] || '(Bạn chưa nhập bài làm tự luận)'} />
+                            </div>
                           </div>
 
                           {/* Rubrics */}
@@ -623,9 +899,10 @@ function ExamRoomContent() {
                               <div className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
                                 {q.gradingRubric.map((r, i) => (
                                   <div key={i} className="flex items-start justify-between gap-3">
-                                    <span>
-                                      • <strong>{r.step}:</strong> {r.detail}
-                                    </span>
+                                    <div className="flex items-start gap-1.5">
+                                      <span className="shrink-0">• <strong>{r.step}:</strong></span>
+                                      <MathRenderer text={r.detail} inline />
+                                    </div>
                                     <span className="font-bold text-emerald-600 dark:text-emerald-400 shrink-0 font-mono">
                                       +{r.point}đ
                                     </span>
@@ -643,8 +920,8 @@ function ExamRoomContent() {
                           <HelpCircle className="w-4 h-4 text-[#00B8DD]" />
                           Phương pháp giải chi tiết theo SGK GDPT 2018:
                         </div>
-                        <div className="text-slate-700 dark:text-slate-300 whitespace-pre-line font-mono leading-relaxed pl-5">
-                          {q.explanation}
+                        <div className="text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed pl-5">
+                          <MathRenderer text={q.explanation} />
                         </div>
                       </div>
                     </Card>
@@ -661,12 +938,9 @@ function ExamRoomContent() {
   // VIEW: EXAM ROOM (PHÒNG THI ĐO THỜI GIAN LÀM BÀI TRỰC TIẾP)
   // =========================================================================
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex flex-col pt-20 font-sans">
-      {/* ── HEADER GIỐNG TRANG CHỦ ── */}
-      <Navbar />
-
+    <div className="min-h-screen bg-slate-900 text-white flex flex-col font-sans">
       {/* Top Focus Sub-bar */}
-      <div className="sticky top-20 z-20 px-4 sm:px-6 py-2.5 bg-slate-950/95 border-b border-slate-800 flex items-center justify-between backdrop-blur-md lg:mr-72 xl:mr-80">
+      <div className="sticky top-0 z-20 px-4 sm:px-6 py-2.5 min-h-[57px] bg-slate-950/95 border-b border-slate-800 flex items-center justify-between backdrop-blur-md lg:mr-72 xl:mr-80">
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={() => router.push('/#kho-mon-hoc')}
@@ -729,7 +1003,7 @@ function ExamRoomContent() {
       </div>
 
       {/* ── Tab Switcher ── */}
-      <div className="sticky top-[125px] z-10 border-b border-slate-800 bg-slate-900/95 px-4 backdrop-blur-sm sm:px-6 lg:mr-72 xl:mr-80">
+      <div className="sticky top-[57px] z-10 border-b border-slate-800 bg-slate-900/95 px-4 backdrop-blur-sm sm:px-6 lg:mr-72 xl:mr-80">
         <div className="flex gap-0 max-w-4xl mx-auto">
           {quizQuestions.length > 0 && (
             <button
@@ -798,7 +1072,7 @@ function ExamRoomContent() {
                 >
                   {/* Card Header */}
                   <div className="flex items-center justify-between border-b border-slate-700/60 px-5 py-4 bg-slate-800/60">
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2.5 flex-wrap">
                       <span className="h-7 px-2.5 rounded-lg bg-[#00B8DD] text-slate-950 font-black text-xs flex items-center justify-center">
                         Câu {globalIdx + 1}
                       </span>
@@ -814,6 +1088,8 @@ function ExamRoomContent() {
                       <Badge variant="outline" className="text-[10px] border-slate-600 text-slate-300">
                         {q.score} điểm
                       </Badge>
+                      {renderDifficultyBadge(q.difficulty, true)}
+                      {renderPreviousChapterBadge(q, true)}
                     </div>
 
                     <button
@@ -836,10 +1112,10 @@ function ExamRoomContent() {
                     {/* Title & Content */}
                     <div className="space-y-2">
                       <h3 className="text-base font-bold text-white leading-relaxed">
-                        {q.title}
+                        <MathRenderer text={q.title} />
                       </h3>
-                      <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 text-sm font-mono text-slate-200 leading-relaxed whitespace-pre-line">
-                        {q.content}
+                      <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 text-sm text-slate-200 leading-relaxed whitespace-pre-line">
+                        <MathRenderer text={q.content} />
                       </div>
                     </div>
 
@@ -875,7 +1151,9 @@ function ExamRoomContent() {
                                 >
                                   {choice.key}
                                 </span>
-                                <span className="font-mono text-xs sm:text-sm">{choice.content}</span>
+                                <span className="text-xs sm:text-sm">
+                                  <MathRenderer text={choice.content} inline />
+                                </span>
                               </button>
                             );
                           })}
@@ -897,11 +1175,11 @@ function ExamRoomContent() {
                                 key={st.subId}
                                 className="p-3 rounded-xl border border-slate-700/70 bg-slate-950/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                               >
-                                <div className="text-xs sm:text-sm text-slate-200 font-mono">
-                                  <strong className="text-[#00B8DD] mr-1.5">
+                                <div className="text-xs sm:text-sm text-slate-200 flex items-start gap-1.5">
+                                  <strong className="text-[#00B8DD] mr-1.5 shrink-0">
                                     {st.subId})
                                   </strong>
-                                  {st.statement}
+                                  <MathRenderer text={st.statement} inline />
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
                                   <button
@@ -1024,7 +1302,7 @@ function ExamRoomContent() {
       {/* Fixed Right Sidebar */}
       <aside
         className={cn(
-          'fixed right-0 top-20 bottom-0 w-72 xl:w-80 bg-slate-950/95 border-l border-slate-800 z-50 lg:z-30 flex flex-col backdrop-blur-md transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none',
+          'fixed right-0 top-0 bottom-0 w-72 xl:w-80 bg-slate-950/95 border-l border-slate-800 z-50 lg:z-30 flex flex-col backdrop-blur-md transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none',
           isMobileSidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
         )}
       >

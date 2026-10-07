@@ -96,8 +96,12 @@ export function Navbar() {
   }, []);
 
   const navLinks = [
+    { label: 'Bảng Xếp Hạng', href: '/leaderboard' },
+    { label: 'Diễn Đàn', href: '/forum' },
+    { label: 'Gói Đăng Ký', href: '/pricing' },
     { label: 'Khám Phá Khóa Học', href: '/courses' },
-    { label: 'Bảng Giá SaaS', href: '/pricing' },
+    { label: 'Tin Tức', href: '/news' },
+    { label: 'Giới Thiệu', href: '/about' },
   ];
 
   return (
@@ -122,22 +126,33 @@ export function Navbar() {
             />
           </Link>
 
-          {/* ── Desktop Navigation Links ── */}
-          <nav className="hidden md:flex items-center gap-2.5">
+          {/* ── Desktop Navigation Links (Không viền, gạch dưới tab đang chọn) ── */}
+          <nav className="hidden md:flex items-center gap-1 sm:gap-1.5 lg:gap-2 h-full">
             {navLinks.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive =
+                item.href === '/'
+                  ? pathname === '/'
+                  : pathname === item.href || pathname.startsWith(item.href + '/');
+
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-xs',
+                    'relative py-2.5 px-2 lg:px-3 text-xs lg:text-sm transition-colors whitespace-nowrap',
                     isActive
-                      ? 'bg-[#00B8DD] text-white shadow-md shadow-[#00B8DD]/25 border border-[#009bbd]'
-                      : 'bg-[#E6F8FC] text-[#007D99] hover:bg-[#00B8DD] hover:text-white border border-[#00B8DD]/30'
+                      ? 'text-[#007D99] dark:text-[#00B8DD] font-bold'
+                      : 'text-slate-600 hover:text-[#007D99] dark:text-slate-300 dark:hover:text-[#00B8DD] font-semibold'
                   )}
                 >
-                  {item.label}
+                  <span>{item.label}</span>
+                  {isActive && (
+                    <motion.div
+                      layoutId="navbar-active-underline"
+                      className="absolute bottom-0 inset-x-1.5 h-[2.5px] bg-[#00B8DD] rounded-full"
+                      transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                    />
+                  )}
                 </Link>
               );
             })}
@@ -188,22 +203,29 @@ export function Navbar() {
             >
               <div className="flex flex-col space-y-4">
                 {/* Navigation Links */}
-                <div className="space-y-2">
-                  {navLinks.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={cn(
-                        'block px-4 py-2.5 rounded-xl text-sm font-bold transition-colors text-center shadow-xs',
-                        pathname === item.href
-                          ? 'bg-[#00B8DD] text-white border border-[#009bbd]'
-                          : 'bg-[#E6F8FC] text-[#007D99] hover:bg-[#00B8DD] hover:text-white border border-[#00B8DD]/30'
-                      )}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
+                <div className="space-y-1">
+                  {navLinks.map((item) => {
+                    const isActive =
+                      item.href === '/'
+                        ? pathname === '/'
+                        : pathname === item.href || pathname.startsWith(item.href + '/');
+
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={cn(
+                          'block px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors',
+                          isActive
+                            ? 'text-[#007D99] dark:text-[#00B8DD] font-bold bg-[#E6F8FC]/60 dark:bg-slate-800 border-l-4 border-[#00B8DD]'
+                            : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                        )}
+                      >
+                        {item.label}
+                      </Link>
+                    );
+                  })}
                 </div>
 
                 {/* Action Buttons */}
