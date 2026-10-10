@@ -26,6 +26,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  Database,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth.store';
@@ -69,6 +70,18 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Quản lý Users Toàn Cầu',
     href: '/admin/users',
     icon: <Users className="w-5 h-5" />,
+    roles: ['SUPER_ADMIN'],
+  },
+  {
+    label: 'Ngân Hàng Câu Hỏi Gốc',
+    href: '/admin/questions',
+    icon: <Database className="w-5 h-5" />,
+    roles: ['SUPER_ADMIN'],
+  },
+  {
+    label: 'Kho Đề Thi Hệ Thống',
+    href: '/admin/exams',
+    icon: <FileCheck2 className="w-5 h-5" />,
     roles: ['SUPER_ADMIN'],
   },
 

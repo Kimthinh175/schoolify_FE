@@ -57,7 +57,7 @@ export interface TheoryPoint {
   formula?: string;
 }
 
-export interface TheorySection {
+export interface PracticeTheorySection {
   summary: string;
   points: TheoryPoint[];
   exampleProblem: {
@@ -77,7 +77,7 @@ export interface QuizItem {
   explanation: string;
 }
 
-export interface QuizSection {
+export interface PracticeQuizSection {
   totalQuestions: number;
   estimatedMinutes: number;
   questions: QuizItem[];
@@ -93,12 +93,12 @@ export interface EssayItem {
   maxPoints: number;
 }
 
-export interface EssaySection {
+export interface PracticeEssaySection {
   totalExercises: number;
   exercises: EssayItem[];
 }
 
-export interface LessonExamSection {
+export interface PracticeLessonExamSection {
   id: string;
   title: string;
   durationMinutes: number;
@@ -114,10 +114,10 @@ export interface PracticeLesson {
   level: PracticeLevel;
   title: string;
   description: string;
-  theory: TheorySection;
-  quiz: QuizSection;
-  essay: EssaySection;
-  exam: LessonExamSection;
+  theory: PracticeTheorySection;
+  quiz: PracticeQuizSection;
+  essay: PracticeEssaySection;
+  exam: PracticeLessonExamSection;
   progressPct: number; // 0 - 100%
   completedParts: ('theory' | 'quiz' | 'essay' | 'exam')[];
   estimatedTotalMinutes: number;
