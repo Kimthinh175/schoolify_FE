@@ -19,11 +19,13 @@ import { Textarea } from '@/components/ui/input';
 import { Dialog } from '@/components/ui/dialog';
 import { MathEssayEditor } from '@/components/ui/math-editor';
 import { MOCK_EXAMS } from '@/services/mock/data';
+import { useNotificationStore } from '@/store/notification.store';
 
 export default function OnlineExamRunnerPage() {
   const params = useParams();
   const router = useRouter();
   const exam = MOCK_EXAMS.find((e) => e.id === params.examId) || MOCK_EXAMS[0];
+  const { addNotification } = useNotificationStore();
 
   // Trạng thái đồng hồ đếm ngược (30 phút đổi ra giây)
   const [secondsLeft, setSecondsLeft] = React.useState(30 * 60);
@@ -57,6 +59,16 @@ export default function OnlineExamRunnerPage() {
   const handleSubmitExam = () => {
     setIsSubmitModalOpen(false);
     setIsSubmitted(true);
+
+    // Gửi thông báo tự động cho phụ huynh
+    addNotification({
+      id: Date.now(),
+      title: `Học sinh đã nộp bài kiểm tra`,
+      date: new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+      content: `Học sinh vừa hoàn thành bài kiểm tra "${exam.title}". Điểm số: 8.5/10. Phụ huynh vui lòng xem kết quả chi tiết trên hệ thống.`,
+      type: 'academic',
+      isRead: false
+    });
   };
 
   if (isSubmitted) {
@@ -88,7 +100,7 @@ export default function OnlineExamRunnerPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-20">
       {/* Thanh Header Bài Thi dính chặt phía trên cùng với Đồng Hồ */}
-      <div className="sticky top-16 z-20 p-4 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md backdrop-blur-md flex items-center justify-between">
+      <div className="sticky top-0 z-50 p-4 rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 shadow-sm backdrop-blur-md flex items-center justify-between mt-4 mb-6">
         <div>
           <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white truncate max-w-xs sm:max-w-md">
             {exam.title}
@@ -97,14 +109,10 @@ export default function OnlineExamRunnerPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 font-mono font-bold text-sm border border-rose-200 dark:border-rose-800">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 font-mono font-bold text-sm border border-rose-200 dark:border-rose-800 shadow-sm">
             <Clock className="w-4 h-4" />
             <span>{formatTimer(secondsLeft)}</span>
           </div>
-
-          <Button onClick={() => setIsSubmitModalOpen(true)} variant="primary" size="sm" leftIcon={<Send className="w-4 h-4" />}>
-            Nộp Bài
-          </Button>
         </div>
       </div>
 
@@ -167,6 +175,13 @@ export default function OnlineExamRunnerPage() {
             )}
           </Card>
         ))}
+      </div>
+
+      {/* Nút Nộp Bài ở cuối trang */}
+      <div className="flex justify-center sm:justify-end pt-8 pb-10">
+        <Button onClick={() => setIsSubmitModalOpen(true)} variant="primary" size="lg" className="w-full sm:w-auto px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all" leftIcon={<Send className="w-5 h-5" />}>
+          Nộp Bài Kiểm Tra
+        </Button>
       </div>
 
       {/* Modal Xác Nhận Nộp Bài */}

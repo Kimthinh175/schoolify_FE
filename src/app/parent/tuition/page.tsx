@@ -139,7 +139,7 @@ export default function ParentTuitionPage() {
               <>
                 <div className="p-3 bg-white border border-slate-200 rounded-2xl shadow-md">
                   <img
-                    src={`https://img.vietqr.io/image/970422-123456789-compact2.png?amount=${payingOrder.item_price_snapshot}&addInfo=${payingOrder.code}&accountName=SCHOOLIFY`}
+                    src={`https://img.vietqr.io/image/970422-123456789-compact2.png?amount=${payingOrder.item_price_snapshot}&addInfo=${encodeURIComponent(payingOrder.code)}&accountName=${encodeURIComponent('THPT CHUYEN CONG NGHE SCHOOLIFY')}`}
                     alt="VietQR"
                     className="w-52 h-52 rounded-xl object-contain"
                   />

@@ -22,45 +22,12 @@ import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useParentStore } from '@/store/parent.store';
 import { MOCK_SUBMISSIONS, MOCK_COURSES, MOCK_TIMETABLE } from '@/services/mock/data';
-
-const MOCK_NOTIFICATIONS = [
-  {
-    id: 1,
-    title: 'Thông báo nghỉ học ngày Giỗ tổ Hùng Vương',
-    date: '10/04/2026',
-    content: 'Kính gửi Quý phụ huynh, nhà trường xin thông báo lịch nghỉ Giỗ tổ Hùng Vương (10/3 âm lịch) vào thứ Sáu ngày 10/04/2026. Học sinh sẽ đi học lại bình thường vào thứ Hai tuần sau.',
-    type: 'holiday',
-    // isRead: false
-    isRead: true
-  },
-  {
-    id: 2,
-    title: 'Nhắc nhở: Hạn chót đóng học phí học kỳ I',
-    date: '05/04/2026',
-    content: 'Quý phụ huynh vui lòng hoàn thành việc đóng học phí học kỳ I trước ngày 15/04/2026. Nếu có bất kỳ thắc mắc nào, xin vui lòng liên hệ phòng tài vụ.',
-    type: 'fee',
-    isRead: true
-  },
-  {
-    id: 3,
-    title: 'Kết quả thi giữa kỳ môn Toán',
-    date: '01/04/2026',
-    content: 'Kết quả bài thi giữa kỳ môn Toán đã được cập nhật. Phụ huynh có thể vào mục Sổ Liên Lạc Điện Tử để xem chi tiết điểm số và nhận xét của giáo viên.',
-    type: 'academic',
-    isRead: true
-  },
-  {
-    id: 4,
-    title: 'Mời họp phụ huynh đầu năm học',
-    date: '25/03/2026',
-    content: 'Nhà trường trân trọng kính mời Quý phụ huynh tham dự buổi họp phụ huynh đầu năm học 2026-2027 vào lúc 08:00 sáng Chủ Nhật, ngày 30/03/2026.',
-    type: 'meeting',
-    isRead: true
-  },
-];
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { useNotificationStore } from '@/store/notification.store';
 
 export default function ParentAcademicPage() {
   const { children, activeChildId } = useParentStore();
+  const { notifications, markAsRead } = useNotificationStore();
   const activeChild = children.find((c) => c.id === activeChildId) || children[0];
   const [activeTab, setActiveTab] = React.useState('SCORES');
 
@@ -72,15 +39,19 @@ export default function ParentAcademicPage() {
     }
   }, []);
 
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+
   const tabs = [
     { id: 'SCORES', label: 'Bảng Điểm Chi Tiết', icon: <Award className="w-4 h-4" /> },
     { id: 'FEEDBACK', label: 'Lời Phê & Bài Làm', icon: <MessageSquare className="w-4 h-4" /> },
     { id: 'ATTENDANCE', label: 'Lịch Học & Chuyên Cần', icon: <CalendarDays className="w-4 h-4" /> },
     { id: 'COURSES', label: 'Tiến Độ Khóa Học', icon: <BookOpen className="w-4 h-4" /> },
-    { id: 'NOTIFICATIONS', label: 'Thông Báo Từ Trường', icon: <Bell className="w-4 h-4" /> },
+    { id: 'NOTIFICATIONS', label: 'Thông Báo Từ Trường', icon: <Bell className="w-4 h-4" />, badge: unreadCount > 0 ? unreadCount : undefined },
   ];
 
-  const childSubmissions = MOCK_SUBMISSIONS.filter(sub => sub.student_id === activeChild.id);
+  const childSubmissions = MOCK_SUBMISSIONS
+    .filter(sub => sub.student_id === activeChild.id)
+    .sort((a, b) => new Date(a.graded_at || 0).getTime() - new Date(b.graded_at || 0).getTime());
   const childTimetable = MOCK_TIMETABLE.filter(session => session.class_id === activeChild.classId);
 
   const getScoreBadge = (score: number) => {
@@ -118,12 +89,50 @@ export default function ParentAcademicPage() {
 
       {/* Tab 1: Bảng Điểm Chi Tiết */}
       {activeTab === 'SCORES' && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <GraduationCap className="w-5 h-5 text-indigo-600" />
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Bảng Điểm Các Môn Thi</h2>
-          </div>
-          <Card className="overflow-hidden shadow-sm">
+        <div className="space-y-6">
+          <Card className="p-6 shadow-sm">
+            <div className="mb-6 flex flex-col gap-1">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Biểu Đồ Điểm Thi Thử Định Kỳ</h2>
+              <p className="text-sm text-slate-500">Thống kê điểm số các bài thi của học sinh theo thời gian</p>
+            </div>
+            <div className="h-[320px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={childSubmissions.map(sub => ({
+                    name: (sub.exam_title || '').length > 15 ? (sub.exam_title || '').substring(0, 15) + '...' : (sub.exam_title || ''),
+                    fullName: sub.exam_title || '',
+                    score: sub.score || 0,
+                    date: sub.graded_at ? formatDate(sub.graded_at) : 'Chưa chấm',
+                    course: sub.course_title
+                  }))}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} tickLine={false} axisLine={false} />
+                  <YAxis domain={[0, 10]} tick={{ fontSize: 12, fill: '#64748b' }} tickLine={false} axisLine={false} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    cursor={{ fill: '#f1f5f9' }}
+                    formatter={(value: any) => [`${value} Điểm`, 'Điểm số']}
+                    labelFormatter={(label: any, payload: any) => {
+                      if (payload && payload.length > 0) {
+                        return `${payload[0].payload.fullName} - ${payload[0].payload.course}`;
+                      }
+                      return label;
+                    }}
+                  />
+                  <Bar dataKey="score" fill="#4f46e5" radius={[6, 6, 0, 0]} maxBarSize={50} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <GraduationCap className="w-5 h-5 text-indigo-600" />
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Bảng Điểm Các Môn Thi</h2>
+            </div>
+            <Card className="overflow-hidden shadow-sm">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -164,6 +173,7 @@ export default function ParentAcademicPage() {
               </TableBody>
             </Table>
           </Card>
+          </div>
         </div>
       )}
 
@@ -328,9 +338,10 @@ export default function ParentAcademicPage() {
       {/* Tab 5: Thông Báo Từ Trường */}
       {activeTab === 'NOTIFICATIONS' && (
         <div className="space-y-4">
-          {MOCK_NOTIFICATIONS.map((note) => (
+          {notifications.map((note) => (
             <Card
               key={note.id}
+              onClick={() => markAsRead(note.id)}
               className={`p-5 transition-all hover:shadow-md cursor-pointer border-l-4 ${!note.isRead
                   ? 'border-l-indigo-500 bg-indigo-50/30 dark:bg-indigo-950/20'
                   : 'border-l-transparent bg-white dark:bg-slate-900'
