@@ -1,6 +1,47 @@
 {
   "offlineSubmissions": [
     {
+      "id": "sub-exam-toan-hoc-basic-g1-ch3-quiz-1791903476350",
+      "sessionId": "session-exam-toan-hoc-basic-g1-ch3-quiz-1791903421610",
+      "examId": "exam-toan-hoc-basic-g1-ch3-quiz",
+      "examTitle": "Đề Luyện Trắc Nghiệm (10 Câu) - Chương 3: Các số đặc trưng đo mức độ phân tán của mẫu số liệu ghép nhóm",
+      "examType": "STANDARD",
+      "answers": {
+        "multipleChoices": {
+          "db-toan-hoc-ch4-mcq-04": "A",
+          "q2-03": "D",
+          "q-03": "D",
+          "db-toan-hoc-ch1-mcq-03": "D",
+          "db-toan-hoc-ch6-mcq-03": "D"
+        },
+        "trueFalseAnswers": {
+          "db-toan-hoc-ch6-tf-01": {
+            "a": true,
+            "b": true,
+            "c": true,
+            "d": true
+          },
+          "db-toan-hoc-ch4-tf-01": {
+            "b": true,
+            "a": true,
+            "c": true,
+            "d": true
+          }
+        },
+        "shortAnswers": {
+          "db-toan-hoc-ch1-sa-01": "6",
+          "db-toan-hoc-ch1-sa-02": "2.5",
+          "q-06": "6"
+        },
+        "essayAnswers": {},
+        "flaggedIds": {}
+      },
+      "timeSpentSeconds": 54,
+      "submittedAt": "2026-10-13T14:57:56.350Z",
+      "isAutoSubmit": false,
+      "syncedAt": "2026-10-13T14:57:56.366Z"
+    },
+    {
       "id": "sub-exam-toan-hoc-assessment-g12-ch1-quiz-1791902794679",
       "sessionId": "session-exam-toan-hoc-assessment-g12-ch1-quiz-1791902774621",
       "examId": "exam-toan-hoc-assessment-g12-ch1-quiz",
@@ -355,6 +396,375 @@
     }
   ],
   "examSnapshots": [
+    {
+      "id": "SNAP-1791903476154",
+      "examId": "exam-toan-hoc-basic-g1-ch3-quiz",
+      "examTitle": "Đề Luyện Trắc Nghiệm (10 Câu) - Chương 3: Các số đặc trưng đo mức độ phân tán của mẫu số liệu ghép nhóm",
+      "subjectSlug": "toan-hoc",
+      "subjectName": "Toán Học",
+      "grade": 1,
+      "chapterId": 3,
+      "chapterName": "Chương 3: Các số đặc trưng đo mức độ phân tán của mẫu số liệu ghép nhóm",
+      "createdAt": "2026-10-13T14:57:56.154Z",
+      "durationMinutes": 10,
+      "timeSpentSeconds": 54,
+      "originalExam": {
+        "finalScore": 2.5,
+        "maxScore": 10,
+        "correctCount": 3,
+        "wrongCount": 6,
+        "totalQuestions": 10,
+        "questions": [
+          {
+            "id": "db-toan-hoc-ch4-mcq-04",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "MEDIUM",
+            "grade": 12,
+            "chapterId": 4,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Nguyên hàm & Ứng dụng tính diện tích, thể tích",
+            "title": "Câu 1: Khảo sát và tính chất tham số Nguyên hàm và tích phân",
+            "content": "Tìm điều kiện của tham số $m$ để bài toán trong nguyên hàm & ứng dụng tính diện tích, thể tích thỏa mãn điều kiện có nghiệm thực dương:",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$m > 1$"
+              },
+              {
+                "key": "B",
+                "content": "$m \\le -2$"
+              },
+              {
+                "key": "C",
+                "content": "$m = 0$"
+              },
+              {
+                "key": "D",
+                "content": "$\\forall m \\in \\mathbb{R}$"
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Xét biệt thức $\\Delta > 0$ và định lý Vi-et, ta suy ra điều kiện cần và đủ là $m > 1$. Chọn A."
+          },
+          {
+            "id": "db-toan-hoc-ch1-sa-01",
+            "type": "SHORT_ANSWER",
+            "difficulty": "HARD",
+            "grade": 12,
+            "chapterId": 1,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Khảo sát hàm số & Ứng dụng thực tế",
+            "title": "Câu 2: Giá trị tối ưu của Khảo sát hàm số & Ứng dụng thực tế",
+            "content": "Biết giá trị lớn nhất của đại lượng toán học trong bài toán ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số trên đoạn $[0; 4]$ có dạng $M = \\frac{a}{b}$ (với $a, b \\in \\mathbb{N}^*$, phân số tối giản). Tính giá trị của biểu thức $T = a + b$.",
+            "score": 1,
+            "shortAnswerCorrect": "17",
+            "explanation": "Sau khi tính đạo hàm và xét các đầu mút, ta tìm được giá trị lớn nhất $M = \\frac{13}{4}$. Do đó $a = 13, b = 4 \\Rightarrow T = 13 + 4 = 17$."
+          },
+          {
+            "id": "db-toan-hoc-ch1-sa-02",
+            "type": "SHORT_ANSWER",
+            "difficulty": "VERY_HARD",
+            "grade": 12,
+            "chapterId": 1,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Khảo sát hàm số & Ứng dụng thực tế",
+            "title": "Câu 3: Số giá trị nguyên của tham số",
+            "content": "Có bao nhiêu giá trị nguyên của tham số $m \\in [-10; 10]$ để điều kiện cực trị / xác suất / khoảng cách trong ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số luôn được thỏa mãn?",
+            "score": 1,
+            "shortAnswerCorrect": "7",
+            "explanation": "Bất phương trình nghiệm đúng với mọi $x$ khi và chỉ khi $m \\in [1; 7]$. Do đó các giá trị nguyên thỏa mãn là $\\{1, 2, 3, 4, 5, 6, 7\\}$, tổng cộng có 7 giá trị."
+          },
+          {
+            "id": "db-toan-hoc-ch6-tf-01",
+            "type": "TRUE_FALSE",
+            "difficulty": "MEDIUM",
+            "grade": 12,
+            "chapterId": 6,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Công thức Bayes & Xác suất toàn phần",
+            "title": "Câu 4: Nhận định khảo sát chuyên đề Xác suất có điều kiện",
+            "content": "Cho mô hình toán học thuộc Xác suất có điều kiện ($D \\subset \\mathbb{R}$). Xét tính đúng hoặc sai của các khẳng định sau:",
+            "score": 1,
+            "statements": [
+              {
+                "subId": "a",
+                "statement": "Tập xác định hoặc miền giá trị của bài toán thỏa mãn điều kiện cơ bản của công thức bayes & xác suất toàn phần.",
+                "isCorrect": true,
+                "explanation": "Khẳng định đúng theo định nghĩa tập xác định chuẩn."
+              },
+              {
+                "subId": "b",
+                "statement": "Đạo hàm hoặc sai số tuyệt đối luôn nhận giá trị âm trên toàn bộ miền xác định.",
+                "isCorrect": false,
+                "explanation": "Sai vì đại lượng luôn có miền nhận giá trị không âm hoặc đổi dấu."
+              },
+              {
+                "subId": "c",
+                "statement": "Các điểm đặc trưng hoặc nghiệm biên thuộc đồ thị nằm trong khoảng liên tục hữu hạn.",
+                "isCorrect": true,
+                "explanation": "Đúng do tính chất liên tục và bị chặn trên đoạn đóng."
+              },
+              {
+                "subId": "d",
+                "statement": "Giá trị trung bình luôn lớn hơn giá trị lớn nhất của mẫu số liệu khảo sát.",
+                "isCorrect": false,
+                "explanation": "Sai, giá trị trung bình luôn nhỏ hơn hoặc bằng giá trị cực đại."
+              }
+            ],
+            "explanation": "Lời giải chi tiết: Ý a đúng do điều kiện xác định. Ý b sai do đổi dấu. Ý c đúng do tính chất liên tục. Ý d sai theo bất đẳng thức trung bình."
+          },
+          {
+            "id": "q2-03",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "MEDIUM",
+            "grade": 12,
+            "chapterId": 2,
+            "title": "Câu 5: Tích vô hướng của hai vectơ trong không gian",
+            "content": "Trong không gian $Oxyz$, cho hai vectơ $\\vec{a} = (1; 2; -1)$ và $\\vec{b} = (2; -1; 3)$. Giá trị của tích vô hướng $\\vec{a}.\\vec{b}$ là:",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$-3$"
+              },
+              {
+                "key": "B",
+                "content": "$3$"
+              },
+              {
+                "key": "C",
+                "content": "$7$"
+              },
+              {
+                "key": "D",
+                "content": "$-1$"
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Ta có $\\vec{a}.\\vec{b} = 1(2) + 2(-1) + (-1)(3) = 2 - 2 - 3 = -3$. Chọn A.",
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Tọa độ vectơ & Không gian Oxyz"
+          },
+          {
+            "id": "q-03",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "MEDIUM",
+            "grade": 12,
+            "chapterId": 1,
+            "title": "Câu 6: Giá trị lớn nhất trên đoạn",
+            "content": "Giá trị lớn nhất của hàm số $f(x) = x + \\frac{4}{x}$ trên đoạn $[1; 3]$ bằng:",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$5$"
+              },
+              {
+                "key": "B",
+                "content": "$4$"
+              },
+              {
+                "key": "C",
+                "content": "$\\frac{13}{3}$"
+              },
+              {
+                "key": "D",
+                "content": "$6$"
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Hàm số liên tục trên $[1; 3]$.\\nĐạo hàm $f'(x) = 1 - \\frac{4}{x^2} = \\frac{x^2 - 4}{x^2}$.\\nCho $f'(x) = 0 \\Leftrightarrow x = 2$ (vì $x \\in [1; 3]$).\\nTính các giá trị:\\n• $f(1) = 1 + 4 = 5$\\n• $f(2) = 2 + 2 = 4$\\n• $f(3) = 3 + \\frac{4}{3} = \\frac{13}{3} \\approx 4.33$\\nSo sánh suy ra $\\max_{[1; 3]} f(x) = f(1) = 5$. Chọn A.",
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Ứng dụng đạo hàm & Khảo sát đồ thị"
+          },
+          {
+            "id": "db-toan-hoc-ch4-tf-01",
+            "type": "TRUE_FALSE",
+            "difficulty": "MEDIUM",
+            "grade": 12,
+            "chapterId": 4,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Nguyên hàm & Ứng dụng tính diện tích, thể tích",
+            "title": "Câu 7: Nhận định khảo sát chuyên đề Nguyên hàm và tích phân",
+            "content": "Cho mô hình toán học thuộc Nguyên hàm và tích phân ($D \\subset \\mathbb{R}$). Xét tính đúng hoặc sai của các khẳng định sau:",
+            "score": 1,
+            "statements": [
+              {
+                "subId": "a",
+                "statement": "Tập xác định hoặc miền giá trị của bài toán thỏa mãn điều kiện cơ bản của nguyên hàm & ứng dụng tính diện tích, thể tích.",
+                "isCorrect": true,
+                "explanation": "Khẳng định đúng theo định nghĩa tập xác định chuẩn."
+              },
+              {
+                "subId": "b",
+                "statement": "Đạo hàm hoặc sai số tuyệt đối luôn nhận giá trị âm trên toàn bộ miền xác định.",
+                "isCorrect": false,
+                "explanation": "Sai vì đại lượng luôn có miền nhận giá trị không âm hoặc đổi dấu."
+              },
+              {
+                "subId": "c",
+                "statement": "Các điểm đặc trưng hoặc nghiệm biên thuộc đồ thị nằm trong khoảng liên tục hữu hạn.",
+                "isCorrect": true,
+                "explanation": "Đúng do tính chất liên tục và bị chặn trên đoạn đóng."
+              },
+              {
+                "subId": "d",
+                "statement": "Giá trị trung bình luôn lớn hơn giá trị lớn nhất của mẫu số liệu khảo sát.",
+                "isCorrect": false,
+                "explanation": "Sai, giá trị trung bình luôn nhỏ hơn hoặc bằng giá trị cực đại."
+              }
+            ],
+            "explanation": "Lời giải chi tiết: Ý a đúng do điều kiện xác định. Ý b sai do đổi dấu. Ý c đúng do tính chất liên tục. Ý d sai theo bất đẳng thức trung bình."
+          },
+          {
+            "id": "db-toan-hoc-ch1-mcq-03",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "MEDIUM",
+            "grade": 12,
+            "chapterId": 1,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Khảo sát hàm số & Ứng dụng thực tế",
+            "title": "Câu 8: Biến đổi và áp dụng định lý Ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số",
+            "content": "Cho hàm số/dữ liệu liên quan đến khảo sát hàm số & ứng dụng thực tế. Giá trị của biểu thức đại diện sau khi rút gọn là:",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$2$"
+              },
+              {
+                "key": "B",
+                "content": "$-1$"
+              },
+              {
+                "key": "C",
+                "content": "$4$"
+              },
+              {
+                "key": "D",
+                "content": "$0$"
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Áp dụng định lý biến đổi đại số cơ bản, rút gọn được kết quả bằng 2. Chọn A."
+          },
+          {
+            "id": "db-toan-hoc-ch6-mcq-03",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "MEDIUM",
+            "grade": 12,
+            "chapterId": 6,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Công thức Bayes & Xác suất toàn phần",
+            "title": "Câu 9: Biến đổi và áp dụng định lý Xác suất có điều kiện",
+            "content": "Cho hàm số/dữ liệu liên quan đến công thức bayes & xác suất toàn phần. Giá trị của biểu thức đại diện sau khi rút gọn là:",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$2$"
+              },
+              {
+                "key": "B",
+                "content": "$-1$"
+              },
+              {
+                "key": "C",
+                "content": "$4$"
+              },
+              {
+                "key": "D",
+                "content": "$0$"
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Áp dụng định lý biến đổi đại số cơ bản, rút gọn được kết quả bằng 2. Chọn A."
+          },
+          {
+            "id": "q-06",
+            "type": "SHORT_ANSWER",
+            "difficulty": "HARD",
+            "grade": 12,
+            "chapterId": 1,
+            "title": "Câu 10: Số điểm cực trị của hàm số",
+            "content": "Biết đồ thị hàm số $y = x^3 - 6x^2 + 9x + 1$ có hai điểm cực trị là $A(x_1; y_1)$ và $B(x_2; y_2)$. Tính tổng giá trị tung độ $y_1 + y_2$ của hai điểm cực trị này.",
+            "score": 1,
+            "shortAnswerCorrect": "6",
+            "explanation": "Đạo hàm $y' = 3x^2 - 12x + 9 = 3(x^2 - 4x + 3)$.\\n$y' = 0 \\Leftrightarrow x = 1$ hoặc $x = 3$.\\n• Với $x_1 = 1 \\Rightarrow y_1 = 1 - 6 + 9 + 1 = 5 \\Rightarrow A(1; 5)$.\\n• Với $x_2 = 3 \\Rightarrow y_2 = 27 - 54 + 27 + 1 = 1 \\Rightarrow B(3; 1)$.\\nTổng giá trị tung độ cực trị: $y_1 + y_2 = 5 + 1 = 6$.\\nĐáp số điền: 6.",
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Ứng dụng đạo hàm & Khảo sát đồ thị"
+          }
+        ],
+        "studentAnswers": {
+          "multipleChoices": {
+            "db-toan-hoc-ch4-mcq-04": "A",
+            "q2-03": "D",
+            "q-03": "D",
+            "db-toan-hoc-ch1-mcq-03": "D",
+            "db-toan-hoc-ch6-mcq-03": "D"
+          },
+          "trueFalseAnswers": {
+            "db-toan-hoc-ch6-tf-01": {
+              "a": true,
+              "b": true,
+              "c": true,
+              "d": true
+            },
+            "db-toan-hoc-ch4-tf-01": {
+              "b": true,
+              "a": true,
+              "c": true,
+              "d": true
+            }
+          },
+          "shortAnswers": {
+            "db-toan-hoc-ch1-sa-01": "6",
+            "db-toan-hoc-ch1-sa-02": "2.5",
+            "q-06": "6"
+          },
+          "essayAnswers": {}
+        },
+        "wrongQuestionIds": [
+          "db-toan-hoc-ch1-sa-01",
+          "db-toan-hoc-ch1-sa-02",
+          "db-toan-hoc-ch6-tf-01",
+          "q2-03",
+          "q-03",
+          "db-toan-hoc-ch4-tf-01",
+          "db-toan-hoc-ch1-mcq-03",
+          "db-toan-hoc-ch6-mcq-03"
+        ]
+      },
+      "bloomSummary": {
+        "EASY": {
+          "total": 0,
+          "correct": 0
+        },
+        "MEDIUM": {
+          "total": 7,
+          "correct": 1
+        },
+        "HARD": {
+          "total": 2,
+          "correct": 1
+        },
+        "VERY_HARD": {
+          "total": 1,
+          "correct": 0
+        }
+      }
+    },
     {
       "id": "SNAP-1791902794570",
       "examId": "exam-toan-hoc-assessment-g12-ch1-quiz",
