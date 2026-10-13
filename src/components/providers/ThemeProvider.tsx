@@ -16,7 +16,7 @@ const ThemeContext = React.createContext<ThemeContextType | undefined>(undefined
 const THEME_STORAGE_KEY = 'schoolify_theme';
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = React.useState<Theme>('system');
+  const [theme, setThemeState] = React.useState<Theme>('light');
   const [resolvedTheme, setResolvedTheme] = React.useState<'light' | 'dark'>('light');
   const [mounted, setMounted] = React.useState(false);
 
@@ -48,7 +48,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Initialize theme from storage
   React.useEffect(() => {
     setMounted(true);
-    let initialTheme: Theme = 'system';
+    let initialTheme: Theme = 'light';
 
     try {
       const stored = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;

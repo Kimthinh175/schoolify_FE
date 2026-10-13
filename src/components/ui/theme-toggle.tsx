@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Sun, Moon, Laptop } from 'lucide-react';
+import { Sun, Moon, SunMoon } from 'lucide-react';
 import { useTheme, Theme } from '@/components/providers/ThemeProvider';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -20,11 +20,16 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
     setMounted(true);
   }, []);
 
+  // Thứ tự chuyển đổi: Sáng -> Tối -> Auto -> Sáng
   const handleCycleTheme = () => {
     let nextTheme: Theme = 'light';
-    if (theme === 'light') nextTheme = 'dark';
-    else if (theme === 'dark') nextTheme = 'system';
-    else nextTheme = 'light';
+    if (theme === 'light') {
+      nextTheme = 'dark';
+    } else if (theme === 'dark') {
+      nextTheme = 'system';
+    } else {
+      nextTheme = 'light';
+    }
 
     setTheme(nextTheme);
   };
@@ -45,10 +50,10 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
 
   const tooltipTitle =
     theme === 'light'
-      ? 'Giao diện Sáng (Bấm để chuyển sang Tối)'
+      ? 'Chế độ Sáng (Bấm để chuyển sang Tối)'
       : theme === 'dark'
-      ? 'Giao diện Tối (Bấm để chuyển sang Tự động hệ thống)'
-      : 'Giao diện Tự động hệ thống (Bấm để chuyển sang Sáng)';
+      ? 'Chế độ Tối (Bấm để chuyển sang Auto)'
+      : 'Chế độ Auto (Bấm để chuyển sang Sáng)';
 
   return (
     <button
@@ -71,20 +76,20 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
         transition={{ duration: 0.2, ease: 'easeOut' }}
         className="relative flex items-center justify-center shrink-0"
       >
-        {theme === 'dark' && (
-          <Moon className="w-4 h-4 text-indigo-400 fill-indigo-400/20" />
-        )}
         {theme === 'light' && (
           <Sun className="w-4 h-4 text-amber-500 fill-amber-500/20" />
         )}
+        {theme === 'dark' && (
+          <Moon className="w-4 h-4 text-indigo-400 fill-indigo-400/20" />
+        )}
         {theme === 'system' && (
-          <Laptop className="w-4 h-4 text-[#00B8DD] fill-[#00B8DD]/20" />
+          <SunMoon className="w-4 h-4 text-[#00B8DD]" />
         )}
       </motion.span>
 
       {showLabel && (
         <span className="text-xs font-semibold hidden sm:inline-block">
-          {theme === 'dark' ? 'Tối' : theme === 'light' ? 'Sáng' : 'Tự động'}
+          {theme === 'light' ? 'Sáng' : theme === 'dark' ? 'Tối' : 'Auto'}
         </span>
       )}
     </button>
