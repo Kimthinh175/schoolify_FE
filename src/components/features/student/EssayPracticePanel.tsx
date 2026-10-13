@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Question } from '@/types';
 import { MathEssayEditor } from '@/components/ui/math-editor';
+import { MathRenderer } from '@/components/ui/math-renderer';
 
 interface EssayPracticePanelProps {
   questions: Question[];
@@ -94,9 +95,9 @@ export function EssayPracticePanel({ questions, title }: EssayPracticePanelProps
                       {question.title}
                     </p>
                   )}
-                  <p className="text-[15px] font-medium leading-relaxed text-slate-100">
-                    {question.content}
-                  </p>
+                  <div className="text-[15px] font-medium leading-relaxed text-slate-100">
+                    <MathRenderer text={question.content} />
+                  </div>
                 </div>
               </div>
 
@@ -131,7 +132,7 @@ export function EssayPracticePanel({ questions, title }: EssayPracticePanelProps
                               {question.hints.map((hint, idx) => (
                                 <li key={idx} className="flex items-start gap-2">
                                   <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
-                                  <span>{hint}</span>
+                                  <MathRenderer text={hint} inline />
                                 </li>
                               ))}
                             </ul>
@@ -186,7 +187,7 @@ export function EssayPracticePanel({ questions, title }: EssayPracticePanelProps
                           <BookOpen className="h-4 w-4" /> Lời Giải Chuẩn
                         </h4>
                         <div className="text-[15px] leading-relaxed text-emerald-100/90 whitespace-pre-wrap">
-                          {question.sample_essay_answer}
+                          <MathRenderer text={question.sample_essay_answer} />
                         </div>
                       </div>
                     )}
@@ -202,7 +203,9 @@ export function EssayPracticePanel({ questions, title }: EssayPracticePanelProps
                         <div className="divide-y divide-slate-700/50">
                           {question.rubric.map((item, idx) => (
                             <div key={idx} className="flex items-center justify-between px-4 py-3 hover:bg-slate-800/30 transition-colors">
-                              <span className="text-sm text-slate-300 pr-4">{item.criterion}</span>
+                              <span className="text-sm text-slate-300 pr-4">
+                                <MathRenderer text={item.criterion} inline />
+                              </span>
                               <Badge variant="secondary" className="shrink-0 font-mono text-xs bg-slate-800 text-slate-300">
                                 +{item.points}đ
                               </Badge>

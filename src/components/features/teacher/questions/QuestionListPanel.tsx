@@ -15,6 +15,7 @@ const TYPE_LABEL: Record<QuestionType, string> = {
   MULTIPLE_CHOICE: 'Nhiều đáp án',
   SINGLE_CHOICE: '1 đáp án',
   TRUE_FALSE: 'Đúng/Sai',
+  SHORT_ANSWER: 'Trả lời ngắn',
   ESSAY: 'Tự luận',
   FILL_BLANK: 'Điền khuyết',
   GROUP_QUESTIONS: 'Chùm câu hỏi',

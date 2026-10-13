@@ -27,8 +27,7 @@ export function SessionCard({
   onDelete: (session: ClassSession) => void;
 }) {
   const isOnline = Boolean(session.meeting_url);
-  const platform = getPlatform(session.meeting_url || undefined);
-
+  const platform = getPlatform(session.meeting_url);
 
   const now = new Date().getTime();
   const start = new Date(session.start_time).getTime();

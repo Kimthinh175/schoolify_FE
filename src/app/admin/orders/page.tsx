@@ -17,8 +17,8 @@ export default function AdminOrdersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Tài Chính & Đối Soát Toàn Sàn</h1>
-        <p className="text-xs text-slate-500 mt-0.5">Kiểm soát đơn hàng, phí hoa hồng nền tảng và dòng tiền SaaS</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Quản Lý Hóa Đơn</h1>
+        <p className="text-xs text-slate-500 mt-0.5">Kiểm soát đơn hàng, hóa đơn thanh toán và dòng tiền dịch vụ</p>
       </div>
 
       <Card className="p-4">

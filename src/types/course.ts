@@ -45,8 +45,6 @@ export interface CourseChapter {
   lessons: Lesson[];
 }
 
-import { LessonFullContent } from './lesson-content';
-
 export interface Lesson {
   id: string;
   chapter_id: string;
@@ -58,7 +56,6 @@ export interface Lesson {
   order_index: number;
   materials?: LessonMaterial[];
   is_completed?: boolean;
-  content_sections?: LessonFullContent;
 }
 
 export interface LessonMaterial {

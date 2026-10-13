@@ -2,18 +2,21 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   GraduationCap,
   Lock,
   User,
   ArrowRight,
+  Sparkles,
+  Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/store/auth.store';
+import { toast } from 'sonner';
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -38,19 +41,34 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-export default function StudentLoginPage() {
+function StudentLoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get('returnUrl') || '/luyen-thi';
+  const isRedirectedFromExam =
+    returnUrl.includes('exam-room') ||
+    returnUrl.includes('olympiad') ||
+    returnUrl.includes('practice');
+
   const { login } = useAuthStore();
   const [studentCode, setStudentCode] = React.useState('HS-2026-8899');
   const [password, setPassword] = React.useState('123456');
   const [isLoading, setIsLoading] = React.useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
 
+  const performLogin = (userData: any, token: string) => {
+    login(userData, token, 'STUDENT', 'sch-01');
+    toast.success('Đăng nhập thành công!', {
+      description: `Chào mừng ${userData.fullname} đã đăng nhập hệ thống!`,
+    });
+    router.push(returnUrl);
+  };
+
   const handleLogin = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setIsLoading(true);
     setTimeout(() => {
-      login(
+      performLogin(
         {
           id: 'usr-student-01',
           fullname: 'Nguyễn Hoàng Minh',
@@ -70,18 +88,15 @@ export default function StudentLoginPage() {
             },
           ],
         },
-        'mock-student-token',
-        'STUDENT',
-        'sch-01'
+        'mock-student-token'
       );
-      router.push('/student/dashboard');
-    }, 400);
+    }, 300);
   };
 
   const handleGoogleLogin = () => {
     setIsGoogleLoading(true);
     setTimeout(() => {
-      login(
+      performLogin(
         {
           id: 'usr-student-google',
           fullname: 'Lê Bảo Nam (Google Student)',
@@ -101,17 +116,29 @@ export default function StudentLoginPage() {
             },
           ],
         },
-        'mock-google-student-token',
-        'STUDENT',
-        'sch-01'
+        'mock-google-student-token'
       );
-      router.push('/student/dashboard');
-    }, 500);
+    }, 350);
   };
 
   return (
     <div className="max-w-md w-full my-auto">
-      <Card className="p-6 sm:p-8 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-xl space-y-6">
+      <Card className="p-6 sm:p-8 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-xl space-y-5">
+        {/* Banner thông báo nếu được chuyển hướng từ kỳ thi nâng cao / HSG */}
+        {isRedirectedFromExam && (
+          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-bold">Yêu cầu đăng nhập để vào phòng thi!</p>
+              <p className="text-[11px] text-amber-700/80 dark:text-amber-300/80 mt-0.5">
+                Kỳ thi Nâng cao & HSG yêu cầu tài khoản để ghi nhận kết quả và mở khóa đầy đủ tính năng.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Form Header */}
         <div className="text-center space-y-2">
           <div className="inline-flex h-12 w-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 items-center justify-center shadow-xs">
@@ -119,30 +146,52 @@ export default function StudentLoginPage() {
           </div>
           <div>
             <Badge className="mb-2 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 text-[10px] font-bold">
-              CỔNG HỌC TẬP THÔNG MINH
+              CỔNG DÀNH CHO NGƯỜI LUYỆN THI
             </Badge>
             <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              Đăng Nhập Học Sinh
+              Đăng Nhập Người Luyện Thi
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Phòng học Focus Mode, làm bài kiểm tra & tích điểm đổi quà
+              Luyện đề ma trận phân tầng Bloom, thi thử ĐGNL & THPT Quốc gia
             </p>
           </div>
+        </div>
+
+        {/* Quick 1-Click Demo Login Box */}
+        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-[#00B8DD]/10 border border-emerald-500/30 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+              <span>⚡ Trải nghiệm nhanh 1-Click</span>
+            </p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+              Học sinh: Nguyễn Hoàng Minh (HS-2026)
+            </p>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => handleLogin()}
+            isLoading={isLoading}
+            className="bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-md shadow-emerald-500/20 shrink-0 cursor-pointer"
+            leftIcon={<Zap className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />}
+          >
+            Vào Luôn
+          </Button>
         </div>
 
         {/* Login Form */}
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-              Mã Học Sinh / Tên Đăng Nhập Do Trường Cấp
+              Email / Số Điện Thoại / Mã Học Sinh
             </label>
             <Input
               type="text"
               value={studentCode}
               onChange={(e) => setStudentCode(e.target.value)}
-              placeholder="VD: HS-2026-8899"
+              placeholder="VD: hocsinh@gmail.com hoặc HS-2026"
               leftIcon={<User className="w-4 h-4 text-emerald-500" />}
-              className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono uppercase"
+              className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
               required
             />
           </div>
@@ -180,12 +229,12 @@ export default function StudentLoginPage() {
             className="w-full justify-center h-11 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-black text-sm shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
             rightIcon={<ArrowRight className="w-4 h-4" />}
           >
-            Bắt Đầu Học Ngay
+            Đăng Nhập & Vào Luyện Thi Ngay
           </Button>
         </form>
 
         {/* Alternate Logins (Google) */}
-        <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+        <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
           {/* Google Login Button */}
           <button
             type="button"
@@ -202,12 +251,29 @@ export default function StudentLoginPage() {
         <div className="text-center text-xs text-slate-500 pt-1">
           <p>
             Bạn thuộc phân hệ khác?{' '}
-            <Link href="/login" className="text-[#00B8DD] font-bold hover:underline">
+            <Link
+              href={returnUrl ? `/login?returnUrl=${encodeURIComponent(returnUrl)}` : '/login'}
+              className="text-[#00B8DD] font-bold hover:underline"
+            >
               Đổi vai trò đăng nhập
             </Link>
           </p>
         </div>
       </Card>
     </div>
+  );
+}
+
+export default function StudentLoginPage() {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="max-w-md w-full my-auto p-8 text-center text-slate-400 text-xs">
+          Đang tải cổng đăng nhập học sinh...
+        </div>
+      }
+    >
+      <StudentLoginForm />
+    </React.Suspense>
   );
 }

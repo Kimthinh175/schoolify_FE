@@ -38,39 +38,103 @@ import {
   ImageIcon,
   UploadCloud,
   Save,
+  AlertTriangle,
+  Laptop,
+  Wrench,
+  Scale,
+  Microscope,
 } from 'lucide-react';
 import { ImportGuidelineModal } from '@/components/features/admin/questions/ImportGuidelineModal';
+import { BugReportsDialog } from '@/components/features/admin/questions/BugReportsDialog';
+import { QuestionBugReport } from '@/components/features/student/practice/ReportQuestionModal';
 import { toast } from 'sonner';
 
 const ITEMS_PER_PAGE = 10;
 
-// Danh sách môn học chuẩn cùng biểu tượng và màu nhận diện
+const DEFAULT_BUG_REPORTS: QuestionBugReport[] = [
+  {
+    id: 'rep-init-01',
+    questionId: 'mst-001',
+    questionTitle: 'Câu 1: Cho hàm số y = f(x) liên tục trên đoạn [a; b]...',
+    subjectName: 'Toán học',
+    issueType: 'KATEX_ERROR',
+    issueTypeLabel: 'Lỗi công thức KaTeX / Hiển thị',
+    description: 'Biểu thức tích phân ở dòng 2 bị thiếu dx, đề nghị ban khảo thí bổ sung để học sinh không nhầm lẫn khi làm bài.',
+    reportedAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+    studentName: 'Nguyễn Văn Minh (Lớp 12A1)',
+    status: 'PENDING',
+  },
+  {
+    id: 'rep-init-02',
+    questionId: 'mst-005',
+    questionTitle: 'Câu 5: Một con lắc lò xo dao động điều hòa với tần số f = 2 Hz...',
+    subjectName: 'Vật lí',
+    issueType: 'WRONG_ANSWER',
+    issueTypeLabel: 'Sai đáp án chuẩn',
+    description: 'Đáp án đúng phải là 4π rad/s thay vì 2π rad/s theo công thức tốc độ góc ω = 2πf.',
+    reportedAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+    studentName: 'Trần Thị Thu Thảo',
+    status: 'PENDING',
+  },
+  {
+    id: 'rep-init-03',
+    questionId: 'mst-008',
+    questionTitle: 'Câu 8: Thủy phân hoàn toàn este X trong môi trường axit...',
+    subjectName: 'Hóa học',
+    issueType: 'TYPO_CONTENT',
+    issueTypeLabel: 'Lỗi chính tả / Đề bài thiếu dữ kiện',
+    description: 'Đề bài chưa ghi rõ nồng độ H2SO4 đặc và nhiệt độ đun hồi lưu phản ứng este hóa.',
+    reportedAt: new Date(Date.now() - 86400000).toISOString(),
+    studentName: 'Lê Hoàng Nam',
+    status: 'RESOLVED',
+  },
+];
+
+export function normalizeSubjectName(raw?: string | null): string {
+  const s = (raw || '').trim();
+  const lower = s.toLowerCase();
+  if (lower === 'toán học' || lower === 'toán') return 'Toán Học';
+  if (lower === 'vật lí' || lower === 'vật lý') return 'Vật Lý';
+  if (lower === 'hóa học' || lower === 'hóa') return 'Hóa Học';
+  if (lower === 'sinh học' || lower === 'sinh') return 'Sinh Học';
+  if (lower === 'tiếng anh' || lower === 'anh') return 'Tiếng Anh';
+  if (lower === 'lịch sử' || lower === 'sử') return 'Lịch Sử';
+  if (lower === 'địa lí' || lower === 'địa lý' || lower === 'địa') return 'Địa Lý';
+  if (lower === 'ngữ văn' || lower === 'văn') return 'Ngữ Văn';
+  if (lower === 'tin học' || lower === 'tin') return 'Tin Học';
+  if (lower === 'công nghệ') return 'Công Nghệ';
+  if (lower === 'gdkt & pháp luật' || lower === 'giáo dục kinh tế & pháp luật' || lower === 'gdcd') return 'GDKT & Pháp Luật';
+  if (lower === 'khoa học tự nhiên' || lower === 'khtn') return 'Khoa Học Tự Nhiên';
+  return s;
+}
+
+// Danh sách 12 môn học chuẩn K-12 GDPT 2018 cùng biểu tượng và màu nhận diện
 const CORE_SUBJECT_CONFIG: Record<
   string,
   { icon: React.ElementType; color: string; bg: string; border: string; category: 'NATURAL' | 'SOCIAL' | 'LANGUAGE' }
 > = {
-  'Toán học': {
+  'Toán Học': {
     icon: Calculator,
     color: 'text-indigo-600',
     bg: 'bg-indigo-50',
     border: 'border-indigo-200',
     category: 'NATURAL',
   },
-  'Vật lí': {
+  'Vật Lý': {
     icon: Atom,
     color: 'text-cyan-600',
     bg: 'bg-cyan-50',
     border: 'border-cyan-200',
     category: 'NATURAL',
   },
-  'Hóa học': {
+  'Hóa Học': {
     icon: FlaskConical,
     color: 'text-emerald-600',
     bg: 'bg-emerald-50',
     border: 'border-emerald-200',
     category: 'NATURAL',
   },
-  'Sinh học': {
+  'Sinh Học': {
     icon: Dna,
     color: 'text-teal-600',
     bg: 'bg-teal-50',
@@ -84,26 +148,54 @@ const CORE_SUBJECT_CONFIG: Record<
     border: 'border-violet-200',
     category: 'LANGUAGE',
   },
-  'Lịch sử': {
+  'Lịch Sử': {
     icon: Landmark,
     color: 'text-amber-600',
     bg: 'bg-amber-50',
     border: 'border-amber-200',
     category: 'SOCIAL',
   },
-  'Địa lí': {
+  'Địa Lý': {
     icon: Compass,
     color: 'text-orange-600',
     bg: 'bg-orange-50',
     border: 'border-orange-200',
     category: 'SOCIAL',
   },
-  'Ngữ văn': {
+  'Ngữ Văn': {
     icon: BookOpen,
     color: 'text-rose-600',
     bg: 'bg-rose-50',
     border: 'border-rose-200',
     category: 'SOCIAL',
+  },
+  'GDKT & Pháp Luật': {
+    icon: Scale,
+    color: 'text-sky-600',
+    bg: 'bg-sky-50',
+    border: 'border-sky-200',
+    category: 'SOCIAL',
+  },
+  'Tin Học': {
+    icon: Laptop,
+    color: 'text-blue-600',
+    bg: 'bg-blue-50',
+    border: 'border-blue-200',
+    category: 'NATURAL',
+  },
+  'Công Nghệ': {
+    icon: Wrench,
+    color: 'text-amber-700',
+    bg: 'bg-amber-50',
+    border: 'border-amber-200',
+    category: 'NATURAL',
+  },
+  'Khoa Học Tự Nhiên': {
+    icon: Microscope,
+    color: 'text-purple-600',
+    bg: 'bg-purple-50',
+    border: 'border-purple-200',
+    category: 'NATURAL',
   },
 };
 
@@ -125,6 +217,66 @@ export default function AdminQuestionsPage() {
 
   // State chỉnh sửa câu hỏi
   const [editingQuestion, setEditingQuestion] = React.useState<Question | null>(null);
+
+  // Quản lý báo cáo sai sót từ học sinh
+  const [bugReports, setBugReports] = React.useState<QuestionBugReport[]>([]);
+  const [isBugReportsOpen, setIsBugReportsOpen] = React.useState(false);
+
+  // Khởi tạo và đọc báo cáo sai sót từ localStorage
+  React.useEffect(() => {
+    try {
+      const stored = localStorage.getItem('schoolify_question_bug_reports');
+      if (stored) {
+        setBugReports(JSON.parse(stored));
+      } else {
+        localStorage.setItem('schoolify_question_bug_reports', JSON.stringify(DEFAULT_BUG_REPORTS));
+        setBugReports(DEFAULT_BUG_REPORTS);
+      }
+    } catch {
+      setBugReports(DEFAULT_BUG_REPORTS);
+    }
+  }, []);
+
+  const handleResolveBugReport = (reportId: string) => {
+    setBugReports((prev) => {
+      const updated = prev.map((r) =>
+        r.id === reportId
+          ? { ...r, status: (r.status === 'PENDING' ? 'RESOLVED' : 'PENDING') as 'PENDING' | 'RESOLVED' }
+          : r
+      );
+      try {
+        localStorage.setItem('schoolify_question_bug_reports', JSON.stringify(updated));
+      } catch (err) {
+        console.warn(err);
+      }
+      return updated;
+    });
+    toast.success('Đã cập nhật trạng thái báo cáo!');
+  };
+
+  const handleDeleteBugReport = (reportId: string) => {
+    setBugReports((prev) => {
+      const updated = prev.filter((r) => r.id !== reportId);
+      try {
+        localStorage.setItem('schoolify_question_bug_reports', JSON.stringify(updated));
+      } catch (err) {
+        console.warn(err);
+      }
+      return updated;
+    });
+    toast.success('Đã xóa báo cáo!');
+  };
+
+  const handleOpenEditFromReport = (questionId: string) => {
+    const targetQ = questions.find((q) => q.id === questionId);
+    if (targetQ) {
+      setEditingQuestion({ ...targetQ });
+    } else {
+      toast.info(`Mã câu hỏi ${questionId} không có trong danh sách ngân hàng.`);
+    }
+  };
+
+  const pendingBugReportsCount = bugReports.filter((r) => r.status === 'PENDING').length;
 
   // Thống kê tổng hợp theo Môn học
   const subjectStats = React.useMemo(() => {
@@ -158,7 +310,7 @@ export default function AdminQuestionsPage() {
 
     // Thống kê từ dữ liệu câu hỏi thực tế
     questions.forEach((q) => {
-      const sub = q.subject || 'Khác';
+      const sub = normalizeSubjectName(q.subject || 'Khác');
       if (!map.has(sub)) {
         map.set(sub, {
           name: sub,
@@ -210,7 +362,8 @@ export default function AdminQuestionsPage() {
       (q.subject && q.subject.toLowerCase().includes(search.toLowerCase()));
 
     const matchSubject =
-      selectedSubject === 'ALL' || q.subject === selectedSubject;
+      selectedSubject === 'ALL' ||
+      normalizeSubjectName(q.subject) === normalizeSubjectName(selectedSubject);
     const matchGrade =
       selectedGrade === 'ALL' || String(q.grade_level || '') === selectedGrade;
     const matchDiff =
@@ -295,6 +448,21 @@ export default function AdminQuestionsPage() {
 
         {/* Nút thao tác nhanh trên desktop */}
         <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsBugReportsOpen(true)}
+            className="border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs gap-1.5 font-semibold shadow-xs whitespace-nowrap relative"
+          >
+            <AlertTriangle className="w-4 h-4 text-amber-600" />
+            Báo cáo từ HS
+            {pendingBugReportsCount > 0 && (
+              <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-black bg-rose-500 text-white animate-pulse">
+                {pendingBugReportsCount}
+              </span>
+            )}
+          </Button>
+
           <ImportGuidelineModal triggerText="Hướng dẫn & File mẫu" />
 
           <Link href="/admin/questions/import">
@@ -315,25 +483,25 @@ export default function AdminQuestionsPage() {
 
       {/* Thẻ Thống Kê Tổng Quan Hệ Thống */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card className="p-4 bg-white border border-slate-200/80 shadow-xs">
-          <div className="text-xs font-semibold text-slate-500">Tổng số câu hỏi</div>
-          <div className="text-2xl font-bold text-slate-900 mt-1">{questions.length}</div>
+        <Card className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+          <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">Tổng số câu hỏi</div>
+          <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{questions.length}</div>
         </Card>
-        <Card className="p-4 bg-white border border-slate-200/80 shadow-xs">
-          <div className="text-xs font-semibold text-emerald-600">Nhận biết (Dễ)</div>
-          <div className="text-2xl font-bold text-slate-900 mt-1">
+        <Card className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+          <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Nhận biết (Dễ)</div>
+          <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
             {questions.filter((q) => q.difficulty === 'RECOGNITION').length}
           </div>
         </Card>
-        <Card className="p-4 bg-white border border-slate-200/80 shadow-xs">
-          <div className="text-xs font-semibold text-sky-600">Thông hiểu (TB)</div>
-          <div className="text-2xl font-bold text-slate-900 mt-1">
+        <Card className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+          <div className="text-xs font-semibold text-sky-600 dark:text-sky-400">Thông hiểu (TB)</div>
+          <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
             {questions.filter((q) => q.difficulty === 'UNDERSTANDING').length}
           </div>
         </Card>
-        <Card className="p-4 bg-white border border-slate-200/80 shadow-xs">
-          <div className="text-xs font-semibold text-amber-600">Vận dụng & VDC</div>
-          <div className="text-2xl font-bold text-slate-900 mt-1">
+        <Card className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+          <div className="text-xs font-semibold text-amber-600 dark:text-amber-400">Vận dụng & VDC</div>
+          <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
             {
               questions.filter(
                 (q) =>
@@ -348,13 +516,13 @@ export default function AdminQuestionsPage() {
       {/* Chuyển Đổi Chế Độ Xem & Bộ Lọc Nâng Cao Cho Subject Hub */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         {/* Toggle View Mode */}
-        <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200 w-fit shrink-0">
+        <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 w-fit shrink-0">
           <button
             type="button"
             onClick={() => setViewMode('SUBJECTS')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${viewMode === 'SUBJECTS'
-              ? 'bg-white text-primary shadow-xs'
-              : 'text-slate-600 hover:text-slate-900'
+              ? 'bg-white dark:bg-slate-900 text-primary dark:text-[#00B8DD] shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
           >
             <LayoutGrid className="w-3.5 h-3.5" />
@@ -364,8 +532,8 @@ export default function AdminQuestionsPage() {
             type="button"
             onClick={() => setViewMode('ALL_QUESTIONS')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${viewMode === 'ALL_QUESTIONS'
-              ? 'bg-white text-primary shadow-xs'
-              : 'text-slate-600 hover:text-slate-900'
+              ? 'bg-white dark:bg-slate-900 text-primary dark:text-[#00B8DD] shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
           >
             <ListFilter className="w-3.5 h-3.5" />
@@ -383,7 +551,7 @@ export default function AdminQuestionsPage() {
                 placeholder="Tìm tên môn học..."
                 value={subjectSearch}
                 onChange={(e) => setSubjectSearch(e.target.value)}
-                className="pl-9 w-full h-9 bg-white border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:border-primary"
+                className="pl-9 w-full h-9 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-primary"
               />
             </div>
 
@@ -391,7 +559,7 @@ export default function AdminQuestionsPage() {
             <select
               value={subjectSort}
               onChange={(e) => setSubjectSort(e.target.value as any)}
-              className="h-9 bg-white border border-slate-200 text-xs rounded-xl px-2.5 py-1.5 text-slate-700 focus:outline-none focus:border-primary font-medium shrink-0"
+              className="h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-primary font-medium shrink-0"
             >
               <option value="DEFAULT">Sắp xếp: Mặc định</option>
               <option value="COUNT_DESC">Nhiều câu hỏi nhất</option>
@@ -427,7 +595,7 @@ export default function AdminQuestionsPage() {
               return (
                 <Card
                   key={sub.name}
-                  className="p-5 bg-white border border-slate-200/80 hover:border-primary/40 hover:shadow-md transition-all flex flex-col justify-between group"
+                  className="p-5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-primary/40 dark:hover:border-primary/60 hover:shadow-md transition-all flex flex-col justify-between group"
                 >
                   <div className="space-y-3.5">
                     {/* Header môn học */}
@@ -439,10 +607,10 @@ export default function AdminQuestionsPage() {
                           <IconComp className="w-5 h-5" />
                         </div>
                         <div>
-                          <h3 className="font-bold text-slate-900 text-base group-hover:text-primary transition-colors">
+                          <h3 className="font-bold text-slate-900 dark:text-white text-base group-hover:text-primary dark:group-hover:text-[#00B8DD] transition-colors">
                             {sub.name}
                           </h3>
-                          <div className="text-[11px] text-slate-500 font-medium flex items-center gap-1 mt-0.5">
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1 mt-0.5">
                             <Layers className="w-3 h-3" />
                             <span>{sub.chapters.size} chuyên đề</span>
                           </div>
@@ -452,8 +620,8 @@ export default function AdminQuestionsPage() {
                       <Badge
                         variant="outline"
                         className={`text-xs font-semibold px-2 py-0.5 shrink-0 ${hasQuestions
-                          ? 'bg-slate-100 text-slate-800 border-slate-200'
-                          : 'bg-slate-50 text-slate-400 border-slate-100'
+                          ? 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700'
+                          : 'bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500 border-slate-100 dark:border-slate-800'
                           }`}
                       >
                         {sub.total} câu
@@ -463,14 +631,14 @@ export default function AdminQuestionsPage() {
                     {/* Thanh phân bố độ khó nhận thức Bloom */}
                     <div className="space-y-1.5 pt-1">
                       <div className="flex items-center justify-between text-[11px]">
-                        <span className="font-semibold text-slate-500">Phân bố Bloom:</span>
-                        <span className="text-slate-400 text-[10px]">
+                        <span className="font-semibold text-slate-500 dark:text-slate-400">Phân bố Bloom:</span>
+                        <span className="text-slate-400 dark:text-slate-500 text-[10px]">
                           {hasQuestions ? `${sub.total} câu hỏi` : 'Chưa có dữ liệu'}
                         </span>
                       </div>
 
                       {/* Multi-segment Progress Bar */}
-                      <div className="w-full h-2 rounded-full bg-slate-100 flex overflow-hidden">
+                      <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 flex overflow-hidden">
                         {hasQuestions ? (
                           <>
                             <div
@@ -495,22 +663,22 @@ export default function AdminQuestionsPage() {
                             />
                           </>
                         ) : (
-                          <div className="w-full bg-slate-200/50" />
+                          <div className="w-full bg-slate-200/50 dark:bg-slate-800" />
                         )}
                       </div>
 
                       {/* Mini Legend */}
                       <div className="grid grid-cols-4 gap-1 text-[10px] text-center pt-1 font-mono">
-                        <div className="bg-emerald-50 text-emerald-800 rounded px-1 py-0.5" title="Nhận biết">
+                        <div className="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 rounded px-1 py-0.5" title="Nhận biết">
                           NB: {sub.recognition}
                         </div>
-                        <div className="bg-sky-50 text-sky-800 rounded px-1 py-0.5" title="Thông hiểu">
+                        <div className="bg-sky-50 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 rounded px-1 py-0.5" title="Thông hiểu">
                           TH: {sub.understanding}
                         </div>
-                        <div className="bg-amber-50 text-amber-800 rounded px-1 py-0.5" title="Vận dụng">
+                        <div className="bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 rounded px-1 py-0.5" title="Vận dụng">
                           VD: {sub.application}
                         </div>
-                        <div className="bg-rose-50 text-rose-800 rounded px-1 py-0.5" title="Vận dụng cao">
+                        <div className="bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 rounded px-1 py-0.5" title="Vận dụng cao">
                           VDC: {sub.advanced}
                         </div>
                       </div>
@@ -518,12 +686,12 @@ export default function AdminQuestionsPage() {
                   </div>
 
                   {/* Nút hành động xem danh sách câu hỏi môn này */}
-                  <div className="pt-4 mt-3 border-t border-slate-100">
+                  <div className="pt-4 mt-3 border-t border-slate-100 dark:border-slate-800">
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => handleSelectSubjectFromHub(sub.name)}
-                      className="w-full justify-between text-xs border-slate-200 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all font-semibold group/btn"
+                      className="w-full justify-between text-xs border-slate-200 dark:border-slate-700 hover:border-primary hover:text-primary dark:hover:text-[#00B8DD] hover:bg-primary/5 transition-all font-semibold group/btn"
                     >
                       <span>Vào kho câu hỏi</span>
                       <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover/btn:translate-x-1 group-hover/btn:text-primary transition-all" />
@@ -711,36 +879,36 @@ export default function AdminQuestionsPage() {
                 return (
                   <Card
                     key={q.id}
-                    className="p-5 bg-white border border-slate-200/80 hover:border-slate-300 hover:shadow-xs transition-all space-y-3"
+                    className="p-5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xs transition-all space-y-3"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-slate-900">
+                        <span className="font-bold text-sm text-slate-900 dark:text-white">
                           {q.title || `Câu ${displayIndex}`}
                         </span>
                         {q.subject && (
                           <Badge
                             variant="outline"
-                            className="text-[10px] bg-sky-50 text-sky-800 border-sky-200 font-medium"
+                            className="text-[10px] bg-sky-50 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border-sky-200 dark:border-sky-800 font-medium"
                           >
-                            {q.subject}
+                            {normalizeSubjectName(q.subject)}
                           </Badge>
                         )}
                         <Badge
                           variant="outline"
-                          className="text-[10px] bg-slate-100 text-slate-700 border-slate-200 font-medium"
+                          className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 font-medium"
                         >
                           {q.type}
                         </Badge>
                         <Badge
                           variant="outline"
-                          className="text-[10px] text-amber-700 bg-amber-50 border-amber-200 font-medium"
+                          className="text-[10px] text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-800 font-medium"
                         >
                           {q.chapter || 'Chương chung'}
                         </Badge>
                         <Badge
                           variant="outline"
-                          className="text-[10px] text-emerald-700 bg-emerald-50 border-emerald-200 font-medium"
+                          className="text-[10px] text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800 font-medium"
                         >
                           {q.difficulty}
                         </Badge>
@@ -748,8 +916,8 @@ export default function AdminQuestionsPage() {
 
                       {/* Nhóm nút hành động: Nút Sửa câu hỏi + Xóa */}
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-slate-500 font-mono mr-1">
-                          Điểm: <strong className="text-slate-800">{q.points}</strong>
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-mono mr-1">
+                          Điểm: <strong className="text-slate-800 dark:text-slate-200">{q.points}</strong>
                         </span>
 
                         {/* NÚT CHỈNH SỬA CÂU HỎI TRỰC TIẾP */}
@@ -757,7 +925,7 @@ export default function AdminQuestionsPage() {
                           size="sm"
                           variant="outline"
                           onClick={() => setEditingQuestion(JSON.parse(JSON.stringify(q)))}
-                          className="h-7 text-xs px-2.5 gap-1.5 border-slate-200 hover:border-primary hover:text-primary font-medium bg-white"
+                          className="h-7 text-xs px-2.5 gap-1.5 border-slate-200 dark:border-slate-700 hover:border-primary hover:text-primary font-medium bg-white dark:bg-slate-800 dark:text-slate-200"
                           title="Chỉnh sửa câu hỏi này"
                         >
                           <Pencil className="w-3 h-3" />
@@ -768,7 +936,7 @@ export default function AdminQuestionsPage() {
                           size="icon"
                           variant="ghost"
                           onClick={() => handleDelete(q.id)}
-                          className="text-slate-400 hover:text-red-500 hover:bg-red-50 w-7 h-7"
+                          className="text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 w-7 h-7"
                           title="Xóa câu hỏi"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -777,7 +945,7 @@ export default function AdminQuestionsPage() {
                     </div>
 
                     {/* Nội dung câu hỏi (Render công thức KaTeX) */}
-                    <div className="text-xs sm:text-sm text-slate-800 leading-relaxed font-sans font-normal">
+                    <div className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-sans font-normal">
                       <MathRenderer content={q.content} />
                     </div>
 
@@ -787,7 +955,7 @@ export default function AdminQuestionsPage() {
                         <img
                           src={q.image_url}
                           alt="Minh họa câu hỏi"
-                          className="max-h-48 rounded-lg border border-slate-200 object-contain bg-slate-50"
+                          className="max-h-48 rounded-lg border border-slate-200 dark:border-slate-700 object-contain bg-slate-50 dark:bg-slate-800"
                         />
                       </div>
                     )}
@@ -799,14 +967,14 @@ export default function AdminQuestionsPage() {
                           <div
                             key={ans.id}
                             className={`p-2.5 rounded-xl text-xs flex items-center gap-2.5 transition-all ${ans.is_answer
-                              ? 'bg-emerald-50/80 text-emerald-800 border border-emerald-300 font-semibold'
-                              : 'bg-slate-50 text-slate-600 border border-slate-200/70'
+                              ? 'bg-emerald-50/80 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 font-semibold'
+                              : 'bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700/70'
                               }`}
                           >
                             <span
                               className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 ${ans.is_answer
                                 ? 'bg-emerald-600 text-white'
-                                : 'bg-slate-200 text-slate-600'
+                                : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                                 }`}
                             >
                               {ans.label || '•'}
@@ -821,8 +989,8 @@ export default function AdminQuestionsPage() {
 
                     {/* Lời giải chi tiết nếu có */}
                     {q.explain && (
-                      <div className="text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-200/80">
-                        <span className="text-sky-700 font-semibold">Lời giải: </span>
+                      <div className="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
+                        <span className="text-sky-700 dark:text-sky-400 font-semibold">Lời giải: </span>
                         <MathRenderer content={q.explain} inline />
                       </div>
                     )}
@@ -1178,6 +1346,16 @@ export default function AdminQuestionsPage() {
           </div>
         </Dialog>
       )}
+
+      {/* Dialog Hộp Thư Báo Cáo Sai Sót Từ Học Sinh */}
+      <BugReportsDialog
+        isOpen={isBugReportsOpen}
+        onClose={() => setIsBugReportsOpen(false)}
+        reports={bugReports}
+        onResolveReport={handleResolveBugReport}
+        onDeleteReport={handleDeleteBugReport}
+        onEditQuestion={handleOpenEditFromReport}
+      />
     </div>
   );
 }

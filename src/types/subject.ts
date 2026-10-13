@@ -3,7 +3,8 @@ export type PracticeLevel =
   | 'MEDIUM'                // 2. Trung bình (Học kỳ / Tốt nghiệp)
   | 'ADVANCED'              // 3. Nâng cao (Vận dụng cao 9-10)
   | 'PROVINCIAL_EXCELLENT'  // 4. HSG Tỉnh / Thành phố
-  | 'NATIONAL_EXCELLENT';   // 5. HSG Quốc Gia / Olympic
+  | 'NATIONAL_EXCELLENT'   // 5. HSG Quốc Gia / Olympic
+  | 'ASSESSMENT';           // 6. Đánh giá năng lực
 
 export interface LevelDetail {
   id: PracticeLevel;
@@ -57,7 +58,7 @@ export interface TheoryPoint {
   formula?: string;
 }
 
-export interface PracticeTheorySection {
+export interface TheorySection {
   summary: string;
   points: TheoryPoint[];
   exampleProblem: {
@@ -77,7 +78,7 @@ export interface QuizItem {
   explanation: string;
 }
 
-export interface PracticeQuizSection {
+export interface QuizSection {
   totalQuestions: number;
   estimatedMinutes: number;
   questions: QuizItem[];
@@ -93,12 +94,12 @@ export interface EssayItem {
   maxPoints: number;
 }
 
-export interface PracticeEssaySection {
+export interface EssaySection {
   totalExercises: number;
   exercises: EssayItem[];
 }
 
-export interface PracticeLessonExamSection {
+export interface LessonExamSection {
   id: string;
   title: string;
   durationMinutes: number;
@@ -114,10 +115,10 @@ export interface PracticeLesson {
   level: PracticeLevel;
   title: string;
   description: string;
-  theory: PracticeTheorySection;
-  quiz: PracticeQuizSection;
-  essay: PracticeEssaySection;
-  exam: PracticeLessonExamSection;
+  theory: TheorySection;
+  quiz: QuizSection;
+  essay: EssaySection;
+  exam: LessonExamSection;
   progressPct: number; // 0 - 100%
   completedParts: ('theory' | 'quiz' | 'essay' | 'exam')[];
   estimatedTotalMinutes: number;

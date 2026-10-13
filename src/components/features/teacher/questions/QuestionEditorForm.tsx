@@ -17,8 +17,9 @@ const TYPE_OPTIONS: { value: QuestionType; label: string }[] = [
   { value: 'MULTIPLE_CHOICE', label: 'Trắc nghiệm – nhiều đáp án đúng' },
   { value: 'SINGLE_CHOICE', label: 'Trắc nghiệm – 1 đáp án đúng' },
   { value: 'TRUE_FALSE', label: 'Đúng / Sai' },
-  { value: 'ESSAY', label: 'Tự luận' },
+  { value: 'SHORT_ANSWER', label: 'Trả lời ngắn / điền số' },
   { value: 'FILL_BLANK', label: 'Điền vào chỗ trống' },
+  { value: 'ESSAY', label: 'Tự luận' },
 ];
 
 function toFormValues(q: Question | undefined): QuestionFormValues {

@@ -5,5 +5,16 @@ export * from './exam';
 export * from './order';
 export * from './store';
 export * from './question';
-export * from './lesson-content';
 export * from './subject';
+export type {
+  TheoryDefinition,
+  TheoryFormula,
+  ExampleStep,
+  TheoryExample,
+  QuizOption,
+  QuizQuestion,
+  EssayProblem,
+  LessonExamQuestion,
+  LessonExamConfig,
+  LessonFullContent,
+} from './lesson-content';

@@ -1,1032 +1,1083 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { Dialog } from '@/components/ui/dialog';
-import { Pagination } from '@/components/ui/pagination';
 import {
-  FileCheck2,
-  Wand2,
-  Search,
-  Clock,
-  RotateCcw,
-  Eye,
-  FileSpreadsheet,
-  FileText,
+  Sliders,
   CheckCircle2,
-  ExternalLink,
+  AlertCircle,
+  RotateCcw,
+  BookOpen,
   Layers,
-  Sparkles,
-  BarChart3,
-  Calendar,
-  Share2,
-  Store,
+  Scale,
+  Save,
+  Search,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Table,
+  Zap,
+  Award,
+  Flame,
+  Trophy,
   Crown,
-  Gift,
-  TrendingUp,
-  GraduationCap,
+  Sparkles,
+  Info,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { MOCK_COURSES } from '@/services/mock/data';
+import { cn } from '@/lib/utils';
+import { AVAILABLE_SUBJECTS, getChaptersForSubject } from '@/constants/curriculum';
+import { PracticeLevel } from '@/types/subject';
+import { QuestionDifficulty } from '@/services/mock/practice-flow-data';
+import {
+  LEVEL_DIFFICULTY_MATRIX,
+  PREVIOUS_CHAPTER_RATIO,
+  getActiveMatrixConfig,
+  getActivePreviousChapterRatio,
+  saveActiveMatrixConfig,
+  resetActiveMatrixConfig,
+} from '@/services/mock/question-matrix-engine';
+import {
+  ChapterRatioItem,
+  createDefaultMatrixConfig,
+  INITIAL_SUBJECT_MATRICES,
+} from '@/services/mock/exam-matrix-configs';
 
-export interface MockExamItem {
-  id: string;
-  title: string;
-  subject: string;
-  grade_level: string;
-  total_questions: number;
-  duration_minutes: number;
-  pass_score: number;
-  variant_count: number;
-  is_published: boolean;
-  created_at: string;
-  // Bổ sung cho mô hình Luyện thi & Sàn khóa học EduTech:
-  access_tier: 'FREE_TRIAL' | 'PRO'; // FREE_TRIAL: Miễn phí 3 lượt/ngày; PRO: Gói Rèn Luyện
-  total_attempts?: number; // Số lượt học sinh đã làm bài
-  avg_score?: number; // Điểm trung bình
-  upsell_course_id?: string; // Khóa học gợi ý sau khi nộp bài (thu hoa hồng 25%)
+// Metadata cho 6 Level luyện thi / đề thi
+interface LevelMeta {
+  id: PracticeLevel;
+  name: string;
+  badge: string;
+  tagline: string;
+  description: string;
+  icon: React.ReactNode;
+  badgeVariant: 'success' | 'default' | 'purple' | 'primary' | 'warning' | 'danger';
+  activeColor: string;
 }
 
-const INITIAL_EXAMS: MockExamItem[] = [
+const LEVEL_LIST: LevelMeta[] = [
   {
-    id: 'exam_1',
-    title: 'Đề Khảo Sát Năng Lực Toán 12 - Chuẩn ĐHQG 2026',
-    subject: 'Toán học',
-    grade_level: '12',
-    total_questions: 40,
-    duration_minutes: 50,
-    pass_score: 5.0,
-    variant_count: 4,
-    is_published: true,
-    created_at: '2026-03-01',
-    access_tier: 'FREE_TRIAL',
-    total_attempts: 1420,
-    avg_score: 6.8,
-    upsell_course_id: 'crs-01',
+    id: 'BASIC',
+    name: 'Cơ Bản',
+    badge: 'SGK & Lý Thuyết',
+    tagline: 'Nắm chắc kiến thức cốt lõi',
+    description: '100% định nghĩa, công thức và dạng bài tập cơ bản SGK chuẩn Bộ GD&ĐT.',
+    icon: <BookOpen className="w-4 h-4 text-emerald-500" />,
+    badgeVariant: 'success',
+    activeColor: 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300',
   },
   {
-    id: 'exam_2',
-    title: 'Đề Thi Thử Tốt Nghiệp THPT Môn Vật Lí (4 Mã Đề)',
-    subject: 'Vật lí',
-    grade_level: '12',
-    total_questions: 40,
-    duration_minutes: 50,
-    pass_score: 5.0,
-    variant_count: 4,
-    is_published: true,
-    created_at: '2026-03-05',
-    access_tier: 'PRO',
-    total_attempts: 890,
-    avg_score: 7.2,
-    upsell_course_id: 'crs-03',
+    id: 'MEDIUM',
+    name: 'Trung Bình',
+    badge: 'Học Kỳ & Tốt Nghiệp',
+    tagline: 'Rèn luyện phản xạ chuẩn mực',
+    description: 'Dạng bài thông hiểu và vận dụng vừa sức, bám sát đề thi giữa kỳ, cuối kỳ và tốt nghiệp.',
+    icon: <Award className="w-4 h-4 text-sky-500" />,
+    badgeVariant: 'default',
+    activeColor: 'border-sky-500 bg-sky-50/50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-300',
   },
   {
-    id: 'exam_3',
-    title: 'Đề Đánh Giá Tư Duy Toán Học Định Lượng',
-    subject: 'Toán học',
-    grade_level: '12',
-    total_questions: 30,
-    duration_minutes: 40,
-    pass_score: 6.0,
-    variant_count: 2,
-    is_published: false,
-    created_at: '2026-03-10',
-    access_tier: 'PRO',
-    total_attempts: 310,
-    avg_score: 5.9,
-    upsell_course_id: 'crs-01',
+    id: 'ADVANCED',
+    name: 'Nâng Cao',
+    badge: 'Vận Dụng Cao (9-10đ)',
+    tagline: 'Chinh phục điểm tuyệt đối',
+    description: 'Bài toán phân hóa, tích hợp liên môn đòi hỏi tư duy biến tấu và giải nhanh.',
+    icon: <Flame className="w-4 h-4 text-purple-500" />,
+    badgeVariant: 'purple',
+    activeColor: 'border-purple-500 bg-purple-50/50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300',
   },
   {
-    id: 'exam_4',
-    title: 'Đề Khảo Sát Tiếng Anh THPTQG 2026 - Đọc Hiểu Chuyên Sâu',
-    subject: 'Tiếng Anh',
-    grade_level: '12',
-    total_questions: 50,
-    duration_minutes: 60,
-    pass_score: 5.0,
-    variant_count: 4,
-    is_published: true,
-    created_at: '2026-03-12',
-    access_tier: 'FREE_TRIAL',
-    total_attempts: 2150,
-    avg_score: 6.4,
-    upsell_course_id: 'crs-02',
+    id: 'ASSESSMENT',
+    name: 'Đánh Giá Năng Lực',
+    badge: 'ĐGNL ĐHQG / ĐHBK',
+    tagline: 'Đa tầng tư duy phân loại',
+    description: 'Khảo sát năng lực tư duy định lượng, đọc hiểu dữ liệu và giải quyết vấn đề.',
+    icon: <Sparkles className="w-4 h-4 text-primary" />,
+    badgeVariant: 'default',
+    activeColor: 'border-[#00B8DD] bg-[#E6F8FC]/60 dark:bg-[#00B8DD]/20 text-[#007D99] dark:text-[#00B8DD]',
   },
   {
-    id: 'exam_5',
-    title: 'Đề Thi Thử Hóa Học Hữu Cơ & Vô Cơ Toàn Diện',
-    subject: 'Hóa học',
-    grade_level: '12',
-    total_questions: 40,
-    duration_minutes: 50,
-    pass_score: 5.0,
-    variant_count: 4,
-    is_published: true,
-    created_at: '2026-03-14',
-    access_tier: 'PRO',
-    total_attempts: 640,
-    avg_score: 7.0,
-    upsell_course_id: 'crs-pending-01',
+    id: 'PROVINCIAL_EXCELLENT',
+    name: 'HSG Tỉnh',
+    badge: 'Học Sinh Giỏi Tỉnh / TP',
+    tagline: 'Đề thi tuyển chọn Tỉnh/Thành phố',
+    description: 'Tuyển chọn học sinh giỏi cấp Tỉnh/Thành phố với mức độ phân hóa cao.',
+    icon: <Trophy className="w-4 h-4 text-amber-500" />,
+    badgeVariant: 'warning',
+    activeColor: 'border-amber-500 bg-amber-50/50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300',
   },
   {
-    id: 'exam_6',
-    title: 'Đề Thi Học Kì 2 Môn Sinh Học Lớp 11',
-    subject: 'Sinh học',
-    grade_level: '11',
-    total_questions: 28,
-    duration_minutes: 45,
-    pass_score: 5.0,
-    variant_count: 2,
-    is_published: true,
-    created_at: '2026-03-15',
-    access_tier: 'FREE_TRIAL',
-    total_attempts: 430,
-    avg_score: 6.7,
-  },
-  {
-    id: 'exam_7',
-    title: 'Đề Khảo Sát Lịch Sử Thế Giới & Việt Nam Hiện Đại',
-    subject: 'Lịch sử',
-    grade_level: '12',
-    total_questions: 40,
-    duration_minutes: 50,
-    pass_score: 5.0,
-    variant_count: 4,
-    is_published: false,
-    created_at: '2026-03-18',
-    access_tier: 'PRO',
-    total_attempts: 180,
-    avg_score: 6.2,
-  },
-  {
-    id: 'exam_8',
-    title: 'Đề Kiểm Tra Giữa Kì 2 Địa Lí Tự Nhiên & Kinh Tế',
-    subject: 'Địa lí',
-    grade_level: '12',
-    total_questions: 40,
-    duration_minutes: 50,
-    pass_score: 5.0,
-    variant_count: 2,
-    is_published: true,
-    created_at: '2026-03-20',
-    access_tier: 'FREE_TRIAL',
-    total_attempts: 720,
-    avg_score: 7.5,
-  },
-  {
-    id: 'exam_9',
-    title: 'Đề Thi Thử Toán Học Chuyên Sâu - ĐGNL ĐHQG Hà Nội',
-    subject: 'Toán học',
-    grade_level: 'ĐGNL',
-    total_questions: 50,
-    duration_minutes: 75,
-    pass_score: 6.0,
-    variant_count: 8,
-    is_published: true,
-    created_at: '2026-03-22',
-    access_tier: 'PRO',
-    total_attempts: 3200,
-    avg_score: 6.9,
-    upsell_course_id: 'crs-01',
-  },
-  {
-    id: 'exam_10',
-    title: 'Đề Khảo Sát Năng Lực Tiếng Anh THCS - Chuyển Cấp Lớp 10',
-    subject: 'Tiếng Anh',
-    grade_level: '10',
-    total_questions: 40,
-    duration_minutes: 60,
-    pass_score: 5.0,
-    variant_count: 2,
-    is_published: true,
-    created_at: '2026-03-25',
-    access_tier: 'FREE_TRIAL',
-    total_attempts: 1890,
-    avg_score: 7.1,
-    upsell_course_id: 'crs-02',
-  },
-  {
-    id: 'exam_11',
-    title: 'Đề Kiểm Tra Định Kì Vật Lí Sóng Ánh Sáng & Lượng Tử',
-    subject: 'Vật lí',
-    grade_level: '12',
-    total_questions: 30,
-    duration_minutes: 45,
-    pass_score: 5.0,
-    variant_count: 4,
-    is_published: false,
-    created_at: '2026-03-27',
-    access_tier: 'PRO',
-    total_attempts: 290,
-    avg_score: 6.5,
-  },
-  {
-    id: 'exam_12',
-    title: 'Đề Khảo Sát Tổng Hợp KHTN - Thi Thử Tốt Nghiệp 2026',
-    subject: 'Hóa học',
-    grade_level: '12',
-    total_questions: 40,
-    duration_minutes: 50,
-    pass_score: 5.0,
-    variant_count: 4,
-    is_published: true,
-    created_at: '2026-03-29',
-    access_tier: 'FREE_TRIAL',
-    total_attempts: 1120,
-    avg_score: 6.8,
+    id: 'NATIONAL_EXCELLENT',
+    name: 'HSG Quốc Gia',
+    badge: 'Olympic & HSGQG',
+    tagline: 'Đỉnh cao trí tuệ học sinh giỏi',
+    description: 'Bộ đề thi chọn đội tuyển Olympic và kỳ thi Học sinh giỏi Quốc gia.',
+    icon: <Crown className="w-4 h-4 text-rose-500" />,
+    badgeVariant: 'danger',
+    activeColor: 'border-rose-500 bg-rose-50/50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300',
   },
 ];
 
-const ITEMS_PER_PAGE = 10;
-
-// Hàm sinh bảng ma trận đáp án mẫu cho từng mã đề hoán vị
-function generateAnswerMatrix(variantCode: string, totalQuestions: number) {
-  const letters = ['A', 'B', 'C', 'D'];
-  const offset = parseInt(variantCode, 10) || 101;
-  return Array.from({ length: totalQuestions }, (_, idx) => {
-    const choice = letters[(idx * 3 + offset + Math.floor(idx / 4)) % 4];
-    return {
-      qNum: idx + 1,
-      answer: choice,
-    };
-  });
+// Định nghĩa tỉ lệ % của 4 loại câu hỏi (0 - 100)
+interface DifficultyPercentage {
+  EASY: number; // Nhận biết
+  MEDIUM: number; // Thông hiểu
+  HARD: number; // Vận dụng
+  VERY_HARD: number; // Vận dụng cao
 }
 
-export default function AdminExamsPage() {
-  const [exams, setExams] = React.useState<MockExamItem[]>(INITIAL_EXAMS);
-  const [search, setSearch] = React.useState('');
-  const [selectedSubject, setSelectedSubject] = React.useState('ALL');
-  const [selectedGrade, setSelectedGrade] = React.useState('ALL');
-  const [selectedTier, setSelectedTier] = React.useState('ALL');
-  const [selectedStatus, setSelectedStatus] = React.useState('ALL');
-  const [selectedVariant, setSelectedVariant] = React.useState('ALL');
-  const [currentPage, setCurrentPage] = React.useState(1);
+type LevelMatrixPercentages = Record<PracticeLevel, DifficultyPercentage>;
 
-  // State Modal Xem Chi Tiết
-  const [selectedExamDetail, setSelectedExamDetail] = React.useState<MockExamItem | null>(null);
-  const [activeVariantCode, setActiveVariantCode] = React.useState<string>('101');
+// Hàm chuyển đổi từ 0.0 - 1.0 sang 0 - 100%
+function convertMatrixToPercentages(
+  matrix: Record<PracticeLevel, Record<QuestionDifficulty, number>>
+): LevelMatrixPercentages {
+  const result = {} as LevelMatrixPercentages;
+  (Object.keys(matrix) as PracticeLevel[]).forEach((lvl) => {
+    const item = matrix[lvl];
+    result[lvl] = {
+      EASY: Math.round((item?.EASY ?? 0) * 100),
+      MEDIUM: Math.round((item?.MEDIUM ?? 0) * 100),
+      HARD: Math.round((item?.HARD ?? 0) * 100),
+      VERY_HARD: Math.round((item?.VERY_HARD ?? 0) * 100),
+    };
+  });
+  return result;
+}
 
-  // Reset trang về 1 khi lọc
-  const handleSearchChange = (val: string) => {
-    setSearch(val);
-    setCurrentPage(1);
-  };
+// Hàm chuyển đổi từ 0 - 100% về 0.0 - 1.0 để lưu vào hệ thống engine
+function convertPercentagesToMatrix(
+  percentages: LevelMatrixPercentages
+): Record<PracticeLevel, Record<QuestionDifficulty, number>> {
+  const result = {} as Record<PracticeLevel, Record<QuestionDifficulty, number>>;
+  (Object.keys(percentages) as PracticeLevel[]).forEach((lvl) => {
+    const item = percentages[lvl];
+    result[lvl] = {
+      EASY: item.EASY / 100,
+      MEDIUM: item.MEDIUM / 100,
+      HARD: item.HARD / 100,
+      VERY_HARD: item.VERY_HARD / 100,
+    };
+  });
+  return result;
+}
 
-  const handleSubjectChange = (val: string) => {
-    setSelectedSubject(val);
-    setCurrentPage(1);
-  };
-
-  const handleGradeChange = (val: string) => {
-    setSelectedGrade(val);
-    setCurrentPage(1);
-  };
-
-  const handleTierChange = (val: string) => {
-    setSelectedTier(val);
-    setCurrentPage(1);
-  };
-
-  const handleStatusChange = (val: string) => {
-    setSelectedStatus(val);
-    setCurrentPage(1);
-  };
-
-  const handleVariantChange = (val: string) => {
-    setSelectedVariant(val);
-    setCurrentPage(1);
-  };
-
-  const handleResetFilters = () => {
-    setSearch('');
-    setSelectedSubject('ALL');
-    setSelectedGrade('ALL');
-    setSelectedTier('ALL');
-    setSelectedStatus('ALL');
-    setSelectedVariant('ALL');
-    setCurrentPage(1);
-  };
-
-  const handleTogglePublish = (examId: string) => {
-    setExams((prev) =>
-      prev.map((e) =>
-        e.id === examId ? { ...e, is_published: !e.is_published } : e
-      )
-    );
-    if (selectedExamDetail && selectedExamDetail.id === examId) {
-      setSelectedExamDetail((prev) =>
-        prev ? { ...prev, is_published: !prev.is_published } : null
-      );
-    }
-    toast.success('Đã cập nhật trạng thái công bố đề thi!');
-  };
-
-  // Chuyển đổi nhanh phân hạng: Khách thi thử (Free Trial) vs Gói Rèn Luyện (Pro)
-  const handleToggleTier = (examId: string) => {
-    let nextTierText = '';
-    setExams((prev) =>
-      prev.map((e) => {
-        if (e.id === examId) {
-          const nextTier: 'FREE_TRIAL' | 'PRO' = e.access_tier === 'FREE_TRIAL' ? 'PRO' : 'FREE_TRIAL';
-          nextTierText = nextTier === 'FREE_TRIAL' ? 'Khách thi thử (Free 3 lần/ngày)' : 'Gói Rèn Luyện (Pro)';
-          return { ...e, access_tier: nextTier };
-        }
-        return e;
-      })
-    );
-    if (selectedExamDetail && selectedExamDetail.id === examId) {
-      setSelectedExamDetail((prev) => {
-        if (!prev) return null;
-        const nextTier: 'FREE_TRIAL' | 'PRO' = prev.access_tier === 'FREE_TRIAL' ? 'PRO' : 'FREE_TRIAL';
-        return { ...prev, access_tier: nextTier };
-      });
-    }
-    toast.success(`Đã chuyển đề thi sang: ${nextTierText}!`);
-  };
-
-  // Cập nhật khóa học gợi ý sau thi (Upsell)
-  const handleUpdateUpsellCourse = (examId: string, courseId: string) => {
-    const val = courseId === 'NONE' ? undefined : courseId;
-    setExams((prev) =>
-      prev.map((e) => (e.id === examId ? { ...e, upsell_course_id: val } : e))
-    );
-    if (selectedExamDetail && selectedExamDetail.id === examId) {
-      setSelectedExamDetail((prev) => (prev ? { ...prev, upsell_course_id: val } : null));
-    }
-    toast.success('Đã cập nhật khóa học gợi ý sau thi!');
-  };
-
-  const isFiltered =
-    search !== '' ||
-    selectedSubject !== 'ALL' ||
-    selectedGrade !== 'ALL' ||
-    selectedTier !== 'ALL' ||
-    selectedStatus !== 'ALL' ||
-    selectedVariant !== 'ALL';
-
-  const filteredExams = exams.filter((e) => {
-    const matchSearch =
-      e.title.toLowerCase().includes(search.toLowerCase()) ||
-      e.subject.toLowerCase().includes(search.toLowerCase());
-
-    const matchSubject =
-      selectedSubject === 'ALL' || e.subject === selectedSubject;
-
-    const matchGrade =
-      selectedGrade === 'ALL' || e.grade_level === selectedGrade;
-
-    const matchTier =
-      selectedTier === 'ALL' || e.access_tier === selectedTier;
-
-    const matchStatus =
-      selectedStatus === 'ALL' ||
-      (selectedStatus === 'PUBLISHED' && e.is_published) ||
-      (selectedStatus === 'DRAFT' && !e.is_published);
-
-    const matchVariant =
-      selectedVariant === 'ALL' || String(e.variant_count) === selectedVariant;
-
-    return matchSearch && matchSubject && matchGrade && matchTier && matchStatus && matchVariant;
+export default function AdminExamsMatrixPage() {
+  // 1. Quản lý tỉ lệ 4 loại câu hỏi cho cả 6 Level
+  const [levelMatrices, setLevelMatrices] = React.useState<LevelMatrixPercentages>(() => {
+    return convertMatrixToPercentages(LEVEL_DIFFICULTY_MATRIX);
   });
 
-  // Phân trang 10 đề mỗi trang
-  const totalPages = Math.ceil(filteredExams.length / ITEMS_PER_PAGE);
-  const paginatedExams = filteredExams.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  // Tỉ lệ câu hỏi liên quan tới các chương trước (Rolling Previous Chapter Ratio: 0 - 100%)
+  const [previousChapterPercentage, setPreviousChapterPercentage] = React.useState<number>(20);
 
-  // Sinh danh sách mã đề dựa theo variant_count
-  const variantList = selectedExamDetail
-    ? Array.from({ length: selectedExamDetail.variant_count }, (_, i) => String(101 + i))
-    : [];
+  // Level hiện tại đang được chọn để chỉnh sửa chi tiết
+  const [activeLevel, setActiveLevel] = React.useState<PracticeLevel>('BASIC');
 
-  const answerMatrix = selectedExamDetail
-    ? generateAnswerMatrix(activeVariantCode, selectedExamDetail.total_questions)
-    : [];
+  // Môn học & Khối lớp để cấu hình phân bổ chương học
+  const [selectedSubject, setSelectedSubject] = React.useState<string>('Toán học');
+  const [selectedGrade, setSelectedGrade] = React.useState<string>('12');
+  const [totalQuestionsRef, setTotalQuestionsRef] = React.useState<number>(40);
+
+  // Danh sách các chương theo môn học
+  const [chapterRatios, setChapterRatios] = React.useState<ChapterRatioItem[]>(() => {
+    const defaultCfg = createDefaultMatrixConfig('Toán học', '12');
+    return defaultCfg.chapter_ratios;
+  });
+
+  // Chế độ xem: Bảng tổng hợp so sánh 6 level
+  const [showAllLevelsTable, setShowAllLevelsTable] = React.useState(true);
+  const [isClientLoaded, setIsClientLoaded] = React.useState(false);
+
+  // Khi component mount trên client, tải cấu hình đã lưu trong localStorage nếu có
+  React.useEffect(() => {
+    setIsClientLoaded(true);
+    const active = getActiveMatrixConfig();
+    setLevelMatrices(convertMatrixToPercentages(active));
+
+    const prevRatio = getActivePreviousChapterRatio();
+    setPreviousChapterPercentage(Math.round(prevRatio * 100));
+  }, []);
+
+  // Cập nhật danh sách chương khi đổi môn học hoặc khối lớp
+  React.useEffect(() => {
+    const foundSubject = INITIAL_SUBJECT_MATRICES.find(
+      (m) => m.subject === selectedSubject && m.grade_level === selectedGrade
+    );
+    if (foundSubject) {
+      setChapterRatios(JSON.parse(JSON.stringify(foundSubject.chapter_ratios)));
+      setTotalQuestionsRef(foundSubject.total_questions);
+    } else {
+      const fresh = createDefaultMatrixConfig(selectedSubject, selectedGrade);
+      setChapterRatios(fresh.chapter_ratios);
+      setTotalQuestionsRef(fresh.total_questions);
+    }
+  }, [selectedSubject, selectedGrade]);
+
+  // Thông tin level đang chọn
+  const currentLevelMeta = LEVEL_LIST.find((l) => l.id === activeLevel) || LEVEL_LIST[0];
+  const currentLevelRatio = levelMatrices[activeLevel] || { EASY: 0, MEDIUM: 0, HARD: 0, VERY_HARD: 0 };
+
+  // Tổng % của level đang chọn
+  const currentLevelTotal =
+    currentLevelRatio.EASY + currentLevelRatio.MEDIUM + currentLevelRatio.HARD + currentLevelRatio.VERY_HARD;
+
+  // Cập nhật % của 1 loại câu hỏi cho level đang chọn
+  const handleDifficultyChange = (key: QuestionDifficulty, value: number) => {
+    const clamped = Math.max(0, Math.min(100, value));
+    setLevelMatrices((prev) => ({
+      ...prev,
+      [activeLevel]: {
+        ...prev[activeLevel],
+        [key]: clamped,
+      },
+    }));
+  };
+
+  // Tự động cân đối 4 loại của level đang chọn về đúng 100%
+  const handleAutoBalanceLevel = (lvlId: PracticeLevel = activeLevel) => {
+    const curr = levelMatrices[lvlId];
+    const sum = curr.EASY + curr.MEDIUM + curr.HARD + curr.VERY_HARD;
+
+    if (sum === 0) {
+      // Mặc định an toàn
+      setLevelMatrices((prev) => ({
+        ...prev,
+        [lvlId]: { EASY: 50, MEDIUM: 30, HARD: 15, VERY_HARD: 5 },
+      }));
+      return;
+    }
+
+    const easy = Math.round((curr.EASY / sum) * 100);
+    const med = Math.round((curr.MEDIUM / sum) * 100);
+    const hard = Math.round((curr.HARD / sum) * 100);
+    const veryHard = 100 - (easy + med + hard);
+
+    setLevelMatrices((prev) => ({
+      ...prev,
+      [lvlId]: {
+        EASY: Math.max(0, easy),
+        MEDIUM: Math.max(0, med),
+        HARD: Math.max(0, hard),
+        VERY_HARD: Math.max(0, veryHard),
+      },
+    }));
+    toast.success(`Đã tự động cân đối tròn 100% cho Level "${LEVEL_LIST.find((l) => l.id === lvlId)?.name}"`);
+  };
+
+  // Khôi phục tỉ lệ mặc định cho Level đang chọn
+  const handleResetLevelDefault = (lvlId: PracticeLevel = activeLevel) => {
+    const def = LEVEL_DIFFICULTY_MATRIX[lvlId];
+    if (def) {
+      setLevelMatrices((prev) => ({
+        ...prev,
+        [lvlId]: {
+          EASY: Math.round(def.EASY * 100),
+          MEDIUM: Math.round(def.MEDIUM * 100),
+          HARD: Math.round(def.HARD * 100),
+          VERY_HARD: Math.round(def.VERY_HARD * 100),
+        },
+      }));
+      toast.info(`Đã khôi phục tỉ lệ mặc định cho Level "${LEVEL_LIST.find((l) => l.id === lvlId)?.name}"`);
+    }
+  };
+
+  // Khôi phục tất cả 6 level về mặc định gốc của hệ thống
+  const handleResetAllToSystemDefaults = () => {
+    resetActiveMatrixConfig();
+    setLevelMatrices(convertMatrixToPercentages(LEVEL_DIFFICULTY_MATRIX));
+    setPreviousChapterPercentage(Math.round(PREVIOUS_CHAPTER_RATIO * 100));
+    toast.success('Đã khôi phục toàn bộ ma trận 6 Level về mặc định gốc!');
+  };
+
+  // Bật/tắt 1 chương học
+  const handleToggleChapter = (index: number) => {
+    setChapterRatios((prev) => {
+      const updated = [...prev];
+      const item = { ...updated[index] };
+      item.selected = !item.selected;
+      if (!item.selected) item.ratio = 0;
+      updated[index] = item;
+      return updated;
+    });
+  };
+
+  // Cập nhật % của 1 chương
+  const handleChapterRatioChange = (index: number, value: number) => {
+    setChapterRatios((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        ratio: Math.max(0, Math.min(100, value)),
+      };
+      return updated;
+    });
+  };
+
+  // Chia đều % cho các chương được chọn
+  const handleEqualizeChapters = () => {
+    const selectedIndices = chapterRatios
+      .map((ch, idx) => (ch.selected ? idx : -1))
+      .filter((idx) => idx !== -1);
+
+    if (selectedIndices.length === 0) {
+      toast.error('Vui lòng chọn ít nhất 1 chương để chia tỉ lệ!');
+      return;
+    }
+
+    const count = selectedIndices.length;
+    const base = Math.floor(100 / count);
+    const rem = 100 - base * count;
+
+    setChapterRatios((prev) =>
+      prev.map((ch, idx) => {
+        const order = selectedIndices.indexOf(idx);
+        if (order !== -1) {
+          return { ...ch, ratio: base + (order === 0 ? rem : 0) };
+        }
+        return { ...ch, ratio: 0 };
+      })
+    );
+    toast.success(`Đã chia đều 100% cho ${count} chương được chọn`);
+  };
+
+  // Tổng % của các chương đang chọn
+  const totalChapterPercentage = chapterRatios
+    .filter((ch) => ch.selected)
+    .reduce((sum, ch) => sum + ch.ratio, 0);
+
+  // Số chương được chọn
+  const selectedChaptersCount = chapterRatios.filter((ch) => ch.selected).length;
+
+  // LƯU CẤU HÌNH TOÀN BỘ MA TRẬN VÀO HỆ THỐNG
+  const handleSaveAllConfig = () => {
+    // Kiểm tra xem có level nào chưa đủ 100% không
+    const invalidLevels: string[] = [];
+    (Object.keys(levelMatrices) as PracticeLevel[]).forEach((lvl) => {
+      const r = levelMatrices[lvl];
+      const sum = r.EASY + r.MEDIUM + r.HARD + r.VERY_HARD;
+      if (sum !== 100) {
+        const name = LEVEL_LIST.find((l) => l.id === lvl)?.name || lvl;
+        invalidLevels.push(`${name} (${sum}%)`);
+      }
+    });
+
+    if (invalidLevels.length > 0) {
+      toast.error(`Có level chưa đủ tròn 100%: ${invalidLevels.join(', ')}. Vui lòng cân đối lại!`);
+      return;
+    }
+
+    if (totalChapterPercentage !== 100 && selectedChaptersCount > 0) {
+      toast.error(`Tổng tỉ lệ Chương học đang là ${totalChapterPercentage}%. Vui lòng chỉnh về đúng 100%!`);
+      return;
+    }
+
+    // Chuyển đổi và lưu vào localStorage thông qua engine
+    const matrixToSave = convertPercentagesToMatrix(levelMatrices);
+    const prevRatioToSave = previousChapterPercentage / 100;
+    saveActiveMatrixConfig(matrixToSave, prevRatioToSave);
+
+    toast.success('Đã lưu cấu hình ma trận trộn đề thành công!', {
+      description: 'Hệ thống sẽ áp dụng ngay lập tức tỉ lệ 4 loại câu hỏi cho các level (Cơ bản, Trung bình, Nâng cao...) và tỉ lệ chương học khi học sinh luyện thi.',
+    });
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Header & Quick Action Buttons */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-6 max-w-7xl mx-auto pb-16">
+      {/* 1. Header Tinh Gọn & Rõ Ràng */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800 pb-5">
         <div>
-          <Badge variant="outline" className="mb-2 bg-primary/10 text-primary border-primary/20">
-            <FileCheck2 className="w-3.5 h-3.5 mr-1" />
-            System Exams
-          </Badge>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-            Kho Đề Thi
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Các bộ đề thi thử khảo sát năng lực dùng chung cho toàn nền tảng và khách luyện thi.
+          <div className="flex items-center gap-2">
+            <span className="p-2 rounded-xl bg-[#E6F8FC] dark:bg-[#00B8DD]/20 text-[#007D99] dark:text-[#00B8DD]">
+              <Sliders className="w-5 h-5 text-primary" />
+            </span>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+              Quản Lý Tỉ Lệ Trộn Đề & Level Luyện Thi
+            </h1>
+          </div>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5">
+            Cấu hình tỉ lệ <strong>4 loại câu hỏi (Nhận biết, Thông hiểu, Vận dụng, Vận dụng cao)</strong> cho từng Level thi (<strong>Cơ bản, Trung bình, Nâng cao, ĐGNL, HSG</strong>) và tỉ lệ phối trộn các chương học.
           </p>
         </div>
 
+        {/* Nút Hành Động Toàn Cục */}
         <div className="flex items-center gap-2">
-          <Link href="/admin/exams/create-matrix">
-            <Button className="bg-primary hover:bg-primary/90 text-white text-xs gap-1.5 font-semibold shadow-xs">
-              <Wand2 className="w-4 h-4" />
-              Tạo Đề Tự Động Theo Ma Trận
-            </Button>
-          </Link>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleResetAllToSystemDefaults}
+            className="rounded-xl text-xs gap-1.5"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            Khôi phục mặc định
+          </Button>
+
+          <Button
+            size="sm"
+            onClick={handleSaveAllConfig}
+            className="rounded-xl text-xs font-semibold bg-[#00B8DD] hover:bg-[#009fb0] text-white gap-1.5 shadow-sm px-4"
+          >
+            <Save className="w-3.5 h-3.5" />
+            Lưu Toàn Bộ Ma Trận
+          </Button>
         </div>
       </div>
 
-      {/* Thẻ Thống Kê Tổng Quan */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <Card className="p-4 bg-white border border-slate-200/80 shadow-xs">
-          <div className="text-xs font-semibold text-slate-500">Tổng số đề hệ thống</div>
-          <div className="text-2xl font-bold text-slate-900 mt-1">{exams.length}</div>
-        </Card>
-        <Card className="p-4 bg-white border border-slate-200/80 shadow-xs">
-          <div className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
-            <Gift className="w-3.5 h-3.5" />
-            <span>Khách thi thử (Free 3 lần/ngày)</span>
-          </div>
-          <div className="text-2xl font-bold text-slate-900 mt-1">
-            {exams.filter((e) => e.access_tier === 'FREE_TRIAL').length}
-          </div>
-        </Card>
-        <Card className="p-4 bg-white border border-slate-200/80 shadow-xs">
-          <div className="text-xs font-semibold text-indigo-600 flex items-center gap-1">
-            <Crown className="w-3.5 h-3.5" />
-            <span>Gói Rèn Luyện (Pro Member)</span>
-          </div>
-          <div className="text-2xl font-bold text-slate-900 mt-1">
-            {exams.filter((e) => e.access_tier === 'PRO').length}
-          </div>
-        </Card>
-        <Card className="p-4 bg-white border border-slate-200/80 shadow-xs">
-          <div className="text-xs font-semibold text-amber-600 flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>Tổng lượt thi toàn sàn</span>
-          </div>
-          <div className="text-2xl font-bold text-slate-900 mt-1">
-            {exams.reduce((sum, e) => sum + (e.total_attempts || 0), 0).toLocaleString('vi-VN')}
-          </div>
-        </Card>
-      </div>
-
-      {/* BỘ LỌC ĐA TIÊU CHÍ (Nằm trên 1 hàng ngang ở Desktop) */}
-      <Card className="p-3.5 sm:p-4 bg-white border border-slate-200/80 shadow-xs">
-        <div className="flex flex-col lg:flex-row lg:items-center gap-2.5">
-          {/* Ô tìm kiếm */}
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <Input
-              placeholder="Tìm kiếm theo tiêu đề đề thi, môn học..."
-              value={search}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-9 h-9 bg-slate-50 border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white"
-            />
-          </div>
-
-          {/* Nhóm các dropdown lọc - grid trên mobile/tablet, flex ngang trên desktop */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:items-center gap-2 shrink-0">
-            {/* Lọc Môn học */}
-            <select
-              value={selectedSubject}
-              onChange={(e) => handleSubjectChange(e.target.value)}
-              className="h-9 bg-slate-50 border border-slate-200 text-xs rounded-xl px-2.5 py-1.5 text-slate-700 focus:outline-none focus:border-primary focus:bg-white font-medium lg:w-36"
-            >
-              <option value="ALL">Tất cả môn học</option>
-              <option value="Toán học">Toán học</option>
-              <option value="Vật lí">Vật lí</option>
-              <option value="Hóa học">Hóa học</option>
-              <option value="Sinh học">Sinh học</option>
-              <option value="Tiếng Anh">Tiếng Anh</option>
-              <option value="Lịch sử">Lịch sử</option>
-              <option value="Địa lí">Địa lí</option>
-            </select>
-
-            {/* Lọc Khối lớp (1 - 12) */}
-            <select
-              value={selectedGrade}
-              onChange={(e) => handleGradeChange(e.target.value)}
-              className="h-9 bg-slate-50 border border-slate-200 text-xs rounded-xl px-2.5 py-1.5 text-slate-700 focus:outline-none focus:border-primary focus:bg-white font-medium lg:w-32"
-            >
-              <option value="ALL">Tất cả khối lớp</option>
-              <optgroup label="THPT">
-                <option value="12">Lớp 12</option>
-                <option value="11">Lớp 11</option>
-                <option value="10">Lớp 10</option>
-                <option value="ĐGNL">ĐGNL / ĐH</option>
-              </optgroup>
-              <optgroup label="THCS">
-                <option value="9">Lớp 9</option>
-                <option value="8">Lớp 8</option>
-                <option value="7">Lớp 7</option>
-                <option value="6">Lớp 6</option>
-              </optgroup>
-              <optgroup label="Tiểu học">
-                <option value="5">Lớp 5</option>
-                <option value="4">Lớp 4</option>
-                <option value="3">Lớp 3</option>
-                <option value="2">Lớp 2</option>
-                <option value="1">Lớp 1</option>
-              </optgroup>
-            </select>
-
-            {/* Lọc Phân Hạng Gói */}
-            <select
-              value={selectedTier}
-              onChange={(e) => handleTierChange(e.target.value)}
-              className="h-9 bg-slate-50 border border-slate-200 text-xs rounded-xl px-2.5 py-1.5 text-slate-700 focus:outline-none focus:border-primary focus:bg-white font-medium lg:w-40"
-            >
-              <option value="ALL">Tất cả phân hạng</option>
-              <option value="FREE_TRIAL">🎁 Khách thi thử (Free)</option>
-              <option value="PRO">⭐ Gói Rèn Luyện (Pro)</option>
-            </select>
-
-            {/* Lọc Trạng thái */}
-            <select
-              value={selectedStatus}
-              onChange={(e) => handleStatusChange(e.target.value)}
-              className="h-9 bg-slate-50 border border-slate-200 text-xs rounded-xl px-2.5 py-1.5 text-slate-700 focus:outline-none focus:border-primary focus:bg-white font-medium lg:w-36"
-            >
-              <option value="ALL">Tất cả trạng thái</option>
-              <option value="PUBLISHED">Đã công bố</option>
-              <option value="DRAFT">Bản nháp</option>
-            </select>
-
-            {/* Lọc Số mã đề */}
-            <select
-              value={selectedVariant}
-              onChange={(e) => handleVariantChange(e.target.value)}
-              className="h-9 bg-slate-50 border border-slate-200 text-xs rounded-xl px-2.5 py-1.5 text-slate-700 focus:outline-none focus:border-primary focus:bg-white font-medium lg:w-32"
-            >
-              <option value="ALL">Tất cả số mã đề</option>
-              <option value="2">2 mã đề</option>
-              <option value="4">4 mã đề</option>
-              <option value="8">8 mã đề</option>
-            </select>
-
-            {/* Nút đặt lại bộ lọc */}
-            {isFiltered && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleResetFilters}
-                className="col-span-2 sm:col-span-3 lg:col-span-1 text-xs text-slate-500 hover:text-slate-900 gap-1.5 h-9 px-2.5 shrink-0 whitespace-nowrap"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Đặt lại</span>
-              </Button>
-            )}
-          </div>
+      {/* 2. Bộ Chọn Cấp Độ (Level Selector Pills) */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+            <Award className="w-4 h-4 text-primary" />
+            Chọn Level Cần Chỉnh Tỉ Lệ 4 Loại Câu Hỏi:
+          </span>
+          <span className="text-xs text-slate-400">
+            Đang chọn: <strong className="text-primary">{currentLevelMeta.name}</strong> ({currentLevelMeta.badge})
+          </span>
         </div>
-      </Card>
 
-      {/* Danh Sách Đề Thi (Đã phân trang 10 đề/trang) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredExams.length === 0 ? (
-          <div className="col-span-full text-center py-12 p-6 rounded-2xl bg-white border border-slate-200 text-slate-400 text-xs shadow-xs">
-            Không tìm thấy đề thi nào phù hợp với bộ lọc hiện tại.
-          </div>
-        ) : (
-          paginatedExams.map((exam) => {
-            const upsellCourse = exam.upsell_course_id
-              ? MOCK_COURSES.find((c) => c.id === exam.upsell_course_id)
-              : undefined;
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+          {LEVEL_LIST.map((lvl) => {
+            const isSelected = activeLevel === lvl.id;
+            const ratios = levelMatrices[lvl.id] || { EASY: 0, MEDIUM: 0, HARD: 0, VERY_HARD: 0 };
+            const sum = ratios.EASY + ratios.MEDIUM + ratios.HARD + ratios.VERY_HARD;
 
             return (
-              <Card
-                key={exam.id}
-                className="p-5 bg-white border border-slate-200/80 hover:border-primary/40 hover:shadow-xs transition-all flex flex-col justify-between space-y-4"
-              >
-                <div className="space-y-2.5">
-                  <div className="flex flex-wrap items-center justify-between gap-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[10px] font-semibold">
-                        {exam.subject}
-                      </Badge>
-                      <Badge variant="outline" className="text-[10px] bg-slate-100 text-slate-700 border-slate-200">
-                        Khối {exam.grade_level}
-                      </Badge>
-                      {exam.access_tier === 'FREE_TRIAL' ? (
-                        <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-bold">
-                          🎁 Khách thi thử (Free)
-                        </Badge>
-                      ) : (
-                        <Badge className="bg-indigo-50 text-indigo-700 border-indigo-200 text-[10px] font-bold">
-                          ⭐ Gói Pro
-                        </Badge>
-                      )}
-                    </div>
-
-                    {exam.is_published ? (
-                      <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-[10px] font-semibold">
-                        Đã công bố
-                      </Badge>
-                    ) : (
-                      <Badge className="bg-slate-100 text-slate-600 border-slate-200 text-[10px] font-medium">
-                        Bản nháp
-                      </Badge>
-                    )}
-                  </div>
-
-                  <h3 className="font-bold text-sm text-slate-900 line-clamp-2">
-                    {exam.title}
-                  </h3>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 text-xs text-slate-500 border-t border-slate-100 pt-3">
-                  <div>
-                    Số câu: <strong className="text-slate-800">{exam.total_questions}</strong>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{exam.duration_minutes} phút</span>
-                  </div>
-                  <div>
-                    Lượt thi: <strong className="text-slate-800 font-semibold">{exam.total_attempts ? exam.total_attempts.toLocaleString('vi-VN') : 0}</strong>
-                  </div>
-                  <div>
-                    Điểm TB: <strong className="text-emerald-600 font-semibold">{exam.avg_score ? exam.avg_score + 'đ' : 'Chưa có'}</strong>
-                  </div>
-                </div>
-
-                {/* Banner Khóa học gợi ý liên quan nếu có */}
-                {upsellCourse && (
-                  <div className="p-2 rounded-xl bg-amber-50/70 border border-amber-200/80 flex items-center justify-between text-[11px] gap-2">
-                    <div className="flex items-center gap-1.5 truncate">
-                      <Store className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                      <span className="text-slate-500 shrink-0">Khóa học gợi ý:</span>
-                      <span className="font-semibold text-slate-800 truncate" title={upsellCourse.title}>
-                        {upsellCourse.title}
-                      </span>
-                    </div>
-                    <span className="font-semibold text-amber-800 shrink-0 text-[10px] bg-amber-100/90 px-2 py-0.5 rounded-full">
-                      Ôn tập thêm
-                    </span>
-                  </div>
+              <button
+                key={lvl.id}
+                type="button"
+                onClick={() => setActiveLevel(lvl.id)}
+                className={cn(
+                  'flex flex-col text-left p-3 rounded-2xl border transition-all text-xs relative overflow-hidden',
+                  isSelected
+                    ? cn('border-2 shadow-xs ring-2 ring-primary/20', lvl.activeColor)
+                    : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
                 )}
-
-                {/* Nút Xem Chi Tiết & Bảng Đáp Án */}
-                <div className="pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setSelectedExamDetail(exam);
-                      setActiveVariantCode('101');
-                    }}
-                    className="w-full border-slate-200 hover:border-primary hover:text-primary hover:bg-primary/5 text-xs text-slate-700 font-semibold gap-1.5 transition-all shadow-2xs"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>Chi tiết & Bảng đáp án</span>
-                  </Button>
+              >
+                <div className="flex items-center justify-between w-full mb-1">
+                  <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white">
+                    {lvl.icon}
+                    <span>{lvl.name}</span>
+                  </div>
+                  <Badge variant={sum === 100 ? 'success' : 'danger'} className="text-[10px] px-1.5 py-0 font-mono">
+                    {sum}%
+                  </Badge>
                 </div>
-              </Card>
+
+                <span className="text-[11px] text-slate-500 line-clamp-1">{lvl.badge}</span>
+
+                {/* Mini Stacked Bar */}
+                <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex mt-2">
+                  <div style={{ width: `${ratios.EASY}%` }} className="bg-sky-500" />
+                  <div style={{ width: `${ratios.MEDIUM}%` }} className="bg-emerald-500" />
+                  <div style={{ width: `${ratios.HARD}%` }} className="bg-amber-500" />
+                  <div style={{ width: `${ratios.VERY_HARD}%` }} className="bg-rose-500" />
+                </div>
+              </button>
             );
-          })
-        )}
+          })}
+        </div>
       </div>
 
-      {/* Phân trang: Tự động hiển thị khi số lượng đề thi > 10 */}
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={filteredExams.length}
-        itemsPerPage={ITEMS_PER_PAGE}
-        onPageChange={setCurrentPage}
-      />
-
-      {/* MODAL XEM CHI TIẾT ĐỀ THI & MA TRẬN BẢNG ĐÁP ÁN */}
-      {selectedExamDetail && (
-        <Dialog
-          isOpen={Boolean(selectedExamDetail)}
-          onClose={() => setSelectedExamDetail(null)}
-          title={
-            <div className="flex items-center gap-2 text-base font-bold text-slate-900">
-              <FileCheck2 className="w-5 h-5 text-primary" />
-              Chi Tiết Đề Thi & Bảng Đáp Án Hệ Thống
-            </div>
-          }
-          description="Tra cứu ma trận câu hỏi, các mã đề hoán vị và bảng soi đáp án chi tiết phục vụ khảo thí."
-          maxWidth="4xl"
-          footer={
-            <div className="flex flex-wrap items-center justify-between gap-2 w-full">
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleToggleTier(selectedExamDetail.id)}
-                  className={`text-xs gap-1.5 font-semibold ${selectedExamDetail.access_tier === 'FREE_TRIAL'
-                    ? 'border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100'
-                    : 'border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
-                    }`}
-                >
-                  {selectedExamDetail.access_tier === 'FREE_TRIAL' ? (
-                    <>
-                      <Crown className="w-3.5 h-3.5" />
-                      <span>Nâng lên Gói Pro</span>
-                    </>
-                  ) : (
-                    <>
-                      <Gift className="w-3.5 h-3.5" />
-                      <span>Mở Miễn Phí (Free 3 lần/ngày)</span>
-                    </>
-                  )}
-                </Button>
-
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleTogglePublish(selectedExamDetail.id)}
-                  className={`text-xs gap-1.5 font-semibold ${selectedExamDetail.is_published
-                    ? 'border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100'
-                    : 'border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
-                    }`}
-                >
-                  {selectedExamDetail.is_published ? 'Thu hồi (Chuyển về Nháp)' : 'Công bố (Cho khách thi thử)'}
-                </Button>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Link
-                  href={`/student/exam/${selectedExamDetail.id}`}
-                  target="_blank"
-                  className="inline-flex"
-                >
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-xs border-primary/30 text-primary hover:bg-primary/5 gap-1.5"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    Thi thử nghiệm (Portal học sinh)
-                  </Button>
-                </Link>
-
-                <Button
-                  size="sm"
-                  onClick={() => setSelectedExamDetail(null)}
-                  className="bg-primary hover:bg-primary/90 text-white text-xs font-semibold"
-                >
-                  Đóng
-                </Button>
-              </div>
-            </div>
-          }
-        >
-          <div className="space-y-5 max-h-[72vh] overflow-y-auto pr-1">
-            {/* Header tóm tắt đề thi */}
-            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-semibold text-xs">
-                    {selectedExamDetail.subject}
-                  </Badge>
-                  <Badge variant="outline" className="bg-white border-slate-200 text-slate-700 text-xs">
-                    Khối {selectedExamDetail.grade_level}
-                  </Badge>
-                  {selectedExamDetail.access_tier === 'FREE_TRIAL' ? (
-                    <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-xs font-bold flex items-center gap-1">
-                      <Gift className="w-3 h-3" />
-                      Khách thi thử (Free 3 lần/ngày)
-                    </Badge>
-                  ) : (
-                    <Badge className="bg-indigo-100 text-indigo-800 border-indigo-200 text-xs font-bold flex items-center gap-1">
-                      <Crown className="w-3 h-3" />
-                      Gói Rèn Luyện (Pro Member)
-                    </Badge>
-                  )}
-                  {selectedExamDetail.is_published ? (
-                    <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-xs">
-                      Đang công bố công khai
-                    </Badge>
-                  ) : (
-                    <Badge className="bg-slate-200 text-slate-700 text-xs">
-                      Bản nháp nội bộ
-                    </Badge>
-                  )}
-                </div>
-
-                <span className="text-xs text-slate-500 font-mono flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" />
-                  Ngày tạo: {selectedExamDetail.created_at}
-                </span>
-              </div>
-
-              <h2 className="text-lg font-bold text-slate-900">
-                {selectedExamDetail.title}
-              </h2>
-
-              {/* 4 Thông số cơ bản */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
-                <div className="p-2.5 bg-white rounded-xl border border-slate-200/80">
-                  <div className="text-[11px] font-semibold text-slate-500">Thời gian làm bài</div>
-                  <div className="text-base font-bold text-slate-900 mt-0.5">{selectedExamDetail.duration_minutes} phút</div>
-                </div>
-                <div className="p-2.5 bg-white rounded-xl border border-slate-200/80">
-                  <div className="text-[11px] font-semibold text-slate-500">Tổng số câu hỏi</div>
-                  <div className="text-base font-bold text-slate-900 mt-0.5">{selectedExamDetail.total_questions} câu</div>
-                </div>
-                <div className="p-2.5 bg-white rounded-xl border border-slate-200/80">
-                  <div className="text-[11px] font-semibold text-slate-500">Số lượt thi thực tế</div>
-                  <div className="text-base font-bold text-slate-900 mt-0.5">
-                    {selectedExamDetail.total_attempts ? selectedExamDetail.total_attempts.toLocaleString('vi-VN') : 0} lượt
-                  </div>
-                </div>
-                <div className="p-2.5 bg-white rounded-xl border border-slate-200/80">
-                  <div className="text-[11px] font-semibold text-slate-500">Điểm trung bình</div>
-                  <div className="text-base font-bold text-emerald-600 mt-0.5">
-                    {selectedExamDetail.avg_score ? selectedExamDetail.avg_score + ' / 10đ' : 'Chưa có'}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* MỤC QUẢN TRỊ KHÓA HỌC GỢI Ý ĐÍNH KÈM (GỢI Ý ÔN TẬP SAU THI) */}
-            <div className="space-y-3 p-4 bg-amber-50/50 rounded-2xl border border-amber-200/80 shadow-2xs">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/60 pb-2.5">
+      {/* 3. Khối Chỉnh Sửa Chi Tiết (Dual-Panel: Cột Trái Chỉnh 4 Loại cho Level - Cột Phải Chỉnh Chương) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* =========================================================================
+            CỘT TRÁI (6 Cols): CHỈNH TỈ LỆ 4 LOẠI CÂU HỎI CHO LEVEL ĐANG CHỌN
+        ========================================================================= */}
+        <div className="lg:col-span-6 space-y-4">
+          <Card className="p-5 border-slate-200 dark:border-slate-800 shadow-xs h-full flex flex-col justify-between">
+            <div className="space-y-5">
+              {/* Header Cột Level */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div>
-                  <h3 className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
-                    <Store className="w-4 h-4 text-amber-600" />
-                    Khóa Học Gợi Ý Đính Kèm (Gợi Ý Cho Học Sinh Sau Khi Làm Bài)
-                  </h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    Khi học sinh nộp bài, hệ thống sẽ đề xuất khóa học này để học sinh bổ sung lỗ hổng kiến thức.
-                  </p>
-                </div>
-                <div className="text-xs font-semibold text-amber-800 bg-amber-100/90 px-2.5 py-1 rounded-lg shrink-0">
-                  Gợi ý ôn tập
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center pt-1">
-                <div className="sm:col-span-8">
-                  <label className="text-[11px] font-semibold text-slate-600 mb-1 block">
-                    Chọn khóa học liên kết từ hệ thống:
-                  </label>
-                  <select
-                    value={selectedExamDetail.upsell_course_id || 'NONE'}
-                    onChange={(e) => handleUpdateUpsellCourse(selectedExamDetail.id, e.target.value)}
-                    className="w-full h-9 bg-white border border-slate-200 text-xs rounded-xl px-3 py-1.5 text-slate-800 font-medium focus:outline-none focus:border-primary shadow-2xs"
-                  >
-                    <option value="NONE">-- Không gắn khóa học gợi ý --</option>
-                    {MOCK_COURSES.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.title} • {c.teacher_name} ({c.price.toLocaleString('vi-VN')} đ)
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="sm:col-span-4 p-2.5 rounded-xl bg-white border border-amber-200 text-xs space-y-1">
-                  {(() => {
-                    const course = MOCK_COURSES.find((c) => c.id === selectedExamDetail.upsell_course_id);
-                    if (!course) {
-                      return <span className="text-slate-400 italic">Chưa gắn khóa học gợi ý nào.</span>;
-                    }
-                    return (
-                      <>
-                        <div className="font-bold text-slate-800 truncate" title={course.title}>
-                          {course.title}
-                        </div>
-                        <div className="text-[11px] text-slate-500 truncate">GV: {course.teacher_name}</div>
-                        <div className="text-[11px] text-slate-700 font-semibold">
-                          Học phí: {course.price.toLocaleString('vi-VN')} đ
-                        </div>
-                      </>
-                    );
-                  })()}
-                </div>
-              </div>
-            </div>
-
-            {/* Phân bố ma trận nhận thức Bloom */}
-            <div className="space-y-2 p-4 bg-white rounded-2xl border border-slate-200 shadow-2xs">
-              <div className="flex items-center justify-between text-xs font-bold text-slate-900">
-                <span className="flex items-center gap-1.5">
-                  <BarChart3 className="w-4 h-4 text-primary" />
-                  Cấu Trúc Ma Trận Nhận Thức (Bloom)
-                </span>
-                <span className="text-slate-400 font-normal text-[11px]">
-                  Tỉ lệ chuẩn 40% - 30% - 20% - 10%
-                </span>
-              </div>
-
-              {/* Progress bar */}
-              <div className="w-full h-2.5 rounded-full bg-slate-100 flex overflow-hidden">
-                <div style={{ width: '40%' }} className="bg-emerald-500" title="Nhận biết: 40%" />
-                <div style={{ width: '30%' }} className="bg-sky-500" title="Thông hiểu: 30%" />
-                <div style={{ width: '20%' }} className="bg-amber-500" title="Vận dụng: 20%" />
-                <div style={{ width: '10%' }} className="bg-rose-500" title="Vận dụng cao: 10%" />
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-emerald-50 text-emerald-800">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-                  <span>Nhận biết: <strong>{Math.round(selectedExamDetail.total_questions * 0.4)} câu (40%)</strong></span>
-                </div>
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-sky-50 text-sky-800">
-                  <span className="w-2.5 h-2.5 rounded-full bg-sky-500 shrink-0" />
-                  <span>Thông hiểu: <strong>{Math.round(selectedExamDetail.total_questions * 0.3)} câu (30%)</strong></span>
-                </div>
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-50 text-amber-800">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
-                  <span>Vận dụng: <strong>{Math.round(selectedExamDetail.total_questions * 0.2)} câu (20%)</strong></span>
-                </div>
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-rose-50 text-rose-800">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" />
-                  <span>VDC: <strong>{Math.round(selectedExamDetail.total_questions * 0.1)} câu (10%)</strong></span>
-                </div>
-              </div>
-            </div>
-
-            {/* BẢNG ĐÁP ÁN THEO MÃ ĐỀ HOÁN VỊ (Answer Key Matrix) */}
-            <div className="space-y-3 p-4 bg-white rounded-2xl border border-slate-200 shadow-2xs">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                <div>
-                  <h3 className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    Bảng Đáp Án Chuẩn Theo Mã Đề
-                  </h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    Chọn mã đề bên dưới để soi đáp án nhanh tương ứng cho từng câu hỏi.
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                      {currentLevelMeta.icon}
+                      Level {currentLevelMeta.name}
+                    </span>
+                    <Badge variant={currentLevelMeta.badgeVariant} className="text-xs">
+                      {currentLevelMeta.badge}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">{currentLevelMeta.description}</p>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => toast.success(`Đã xuất phiếu đáp án mã đề ${activeVariantCode} sang Excel!`)}
-                    className="h-8 text-xs gap-1 border-slate-200 hover:bg-slate-50 text-slate-700"
+                  <Badge
+                    variant={currentLevelTotal === 100 ? 'success' : 'danger'}
+                    className="font-mono text-xs px-2.5 py-1"
                   >
-                    <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
-                    Xuất Excel
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => toast.success(`Đã xuất file Word đề thi mã ${activeVariantCode}!`)}
-                    className="h-8 text-xs gap-1 border-slate-200 hover:bg-slate-50 text-slate-700"
+                    Tổng: {currentLevelTotal}%
+                  </Badge>
+                  {currentLevelTotal !== 100 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleAutoBalanceLevel(activeLevel)}
+                      className="h-7 text-xs text-primary px-2 hover:bg-cyan-50 dark:hover:bg-slate-800"
+                    >
+                      <Scale className="w-3 h-3 mr-1" />
+                      Cân đối 100%
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Stacked Progress Bar Trực Quan */}
+              <div className="space-y-1.5">
+                <div className="h-3.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex shadow-inner">
+                  <div
+                    style={{ width: `${currentLevelRatio.EASY}%` }}
+                    className="bg-sky-500 transition-all duration-300"
+                    title={`Nhận biết: ${currentLevelRatio.EASY}%`}
+                  />
+                  <div
+                    style={{ width: `${currentLevelRatio.MEDIUM}%` }}
+                    className="bg-emerald-500 transition-all duration-300"
+                    title={`Thông hiểu: ${currentLevelRatio.MEDIUM}%`}
+                  />
+                  <div
+                    style={{ width: `${currentLevelRatio.HARD}%` }}
+                    className="bg-amber-500 transition-all duration-300"
+                    title={`Vận dụng: ${currentLevelRatio.HARD}%`}
+                  />
+                  <div
+                    style={{ width: `${currentLevelRatio.VERY_HARD}%` }}
+                    className="bg-rose-500 transition-all duration-300"
+                    title={`Vận dụng cao: ${currentLevelRatio.VERY_HARD}%`}
+                  />
+                </div>
+
+                <div className="grid grid-cols-4 text-[11px] font-semibold text-center pt-0.5">
+                  <span className="text-sky-600 dark:text-sky-400">
+                    Nhận biết: {currentLevelRatio.EASY}%
+                  </span>
+                  <span className="text-emerald-600 dark:text-emerald-400">
+                    Thông hiểu: {currentLevelRatio.MEDIUM}%
+                  </span>
+                  <span className="text-amber-600 dark:text-amber-400">
+                    Vận dụng: {currentLevelRatio.HARD}%
+                  </span>
+                  <span className="text-rose-600 dark:text-rose-400">
+                    V.Dụng cao: {currentLevelRatio.VERY_HARD}%
+                  </span>
+                </div>
+              </div>
+
+              {/* 4 Thẻ Điều Chỉnh 4 Loại Câu Hỏi */}
+              <div className="space-y-3 pt-1">
+                {/* 1. Nhận biết (Easy) */}
+                <div className="p-3.5 rounded-2xl border border-sky-100 dark:border-sky-950/60 bg-sky-50/40 dark:bg-sky-950/20">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-sky-500" />
+                      1. Câu Hỏi Nhận Biết (Dễ / SGK)
+                    </span>
+                    <span className="text-xs font-mono font-bold text-sky-700 dark:text-sky-300">
+                      {currentLevelRatio.EASY}% (~
+                      {Math.round((totalQuestionsRef * currentLevelRatio.EASY) / 100)}/{totalQuestionsRef} câu)
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      step={5}
+                      aria-label="Tỉ lệ câu hỏi Nhận biết"
+                      value={currentLevelRatio.EASY}
+                      onChange={(e) => handleDifficultyChange('EASY', Number(e.target.value))}
+                      className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-500"
+                    />
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        aria-label="Nhập tỉ lệ % Nhận biết"
+                        value={currentLevelRatio.EASY}
+                        onChange={(e) => handleDifficultyChange('EASY', Number(e.target.value))}
+                        className="w-14 h-8 text-xs font-mono text-center p-0 rounded-xl"
+                      />
+                      <span className="text-xs text-slate-400 font-bold">%</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Thông hiểu (Medium) */}
+                <div className="p-3.5 rounded-2xl border border-emerald-100 dark:border-emerald-950/60 bg-emerald-50/40 dark:bg-emerald-950/20">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                      2. Câu Hỏi Thông Hiểu (Trung Bình)
+                    </span>
+                    <span className="text-xs font-mono font-bold text-emerald-700 dark:text-emerald-300">
+                      {currentLevelRatio.MEDIUM}% (~
+                      {Math.round((totalQuestionsRef * currentLevelRatio.MEDIUM) / 100)}/{totalQuestionsRef} câu)
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      step={5}
+                      aria-label="Tỉ lệ câu hỏi Thông hiểu"
+                      value={currentLevelRatio.MEDIUM}
+                      onChange={(e) => handleDifficultyChange('MEDIUM', Number(e.target.value))}
+                      className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                    />
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        aria-label="Nhập tỉ lệ % Thông hiểu"
+                        value={currentLevelRatio.MEDIUM}
+                        onChange={(e) => handleDifficultyChange('MEDIUM', Number(e.target.value))}
+                        className="w-14 h-8 text-xs font-mono text-center p-0 rounded-xl"
+                      />
+                      <span className="text-xs text-slate-400 font-bold">%</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Vận dụng (Hard) */}
+                <div className="p-3.5 rounded-2xl border border-amber-100 dark:border-amber-950/60 bg-amber-50/40 dark:bg-amber-950/20">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                      3. Câu Hỏi Vận Dụng (Khó / Bài Toán Phân Hóa)
+                    </span>
+                    <span className="text-xs font-mono font-bold text-amber-700 dark:text-amber-300">
+                      {currentLevelRatio.HARD}% (~
+                      {Math.round((totalQuestionsRef * currentLevelRatio.HARD) / 100)}/{totalQuestionsRef} câu)
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      step={5}
+                      aria-label="Tỉ lệ câu hỏi Vận dụng"
+                      value={currentLevelRatio.HARD}
+                      onChange={(e) => handleDifficultyChange('HARD', Number(e.target.value))}
+                      className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                    />
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        aria-label="Nhập tỉ lệ % Vận dụng"
+                        value={currentLevelRatio.HARD}
+                        onChange={(e) => handleDifficultyChange('HARD', Number(e.target.value))}
+                        className="w-14 h-8 text-xs font-mono text-center p-0 rounded-xl"
+                      />
+                      <span className="text-xs text-slate-400 font-bold">%</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. Vận dụng cao (Very Hard) */}
+                <div className="p-3.5 rounded-2xl border border-rose-100 dark:border-rose-950/60 bg-rose-50/40 dark:bg-rose-950/20">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                      4. Câu Hỏi Vận Dụng Cao (Điểm 9-10 / Chuyên Sâu)
+                    </span>
+                    <span className="text-xs font-mono font-bold text-rose-700 dark:text-rose-300">
+                      {currentLevelRatio.VERY_HARD}% (~
+                      {Math.round((totalQuestionsRef * currentLevelRatio.VERY_HARD) / 100)}/{totalQuestionsRef} câu)
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      step={5}
+                      aria-label="Tỉ lệ câu hỏi Vận dụng cao"
+                      value={currentLevelRatio.VERY_HARD}
+                      onChange={(e) => handleDifficultyChange('VERY_HARD', Number(e.target.value))}
+                      className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-rose-500"
+                    />
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        aria-label="Nhập tỉ lệ % Vận dụng cao"
+                        value={currentLevelRatio.VERY_HARD}
+                        onChange={(e) => handleDifficultyChange('VERY_HARD', Number(e.target.value))}
+                        className="w-14 h-8 text-xs font-mono text-center p-0 rounded-xl"
+                      />
+                      <span className="text-xs text-slate-400 font-bold">%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Chân Thẻ: Tiện ích khôi phục cho Level */}
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <span className="text-xs text-slate-400">
+                Áp dụng khi học sinh chọn cấp độ &quot;{currentLevelMeta.name}&quot;
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleResetLevelDefault(activeLevel)}
+                className="h-7 text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white"
+              >
+                <RotateCcw className="w-3 h-3 mr-1" />
+                Khôi phục Level này
+              </Button>
+            </div>
+          </Card>
+        </div>
+
+        {/* =========================================================================
+            CỘT PHẢI (6 Cols): CHỈNH TỈ LỆ CÁC CHƯƠNG HỌC & CÂU HỎI LIÊN QUAN
+        ========================================================================= */}
+        <div className="lg:col-span-6 space-y-4">
+          <Card className="p-5 border-slate-200 dark:border-slate-800 shadow-xs h-full flex flex-col justify-between">
+            <div className="space-y-4">
+              {/* Tiêu đề & Chọn môn */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div>
+                  <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-emerald-500" />
+                    Tỉ Lệ Trộn Các Chương Học
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Phân bổ câu hỏi theo chương SGK và tỉ lệ câu hỏi liên quan chương trước
+                  </p>
+                </div>
+
+                {/* Chọn Môn & Lớp */}
+                <div className="flex items-center gap-2">
+                  <select
+                    aria-label="Chọn Môn học"
+                    value={selectedSubject}
+                    onChange={(e) => setSelectedSubject(e.target.value)}
+                    className="h-8 px-2 text-xs font-semibold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary shadow-xs"
                   >
-                    <FileText className="w-3.5 h-3.5 text-sky-600" />
-                    Xuất Word
+                    {AVAILABLE_SUBJECTS.map((sub) => (
+                      <option key={sub} value={sub}>
+                        {sub}
+                      </option>
+                    ))}
+                  </select>
+
+                  <select
+                    aria-label="Chọn Khối lớp"
+                    value={selectedGrade}
+                    onChange={(e) => setSelectedGrade(e.target.value)}
+                    className="h-8 px-2 text-xs font-semibold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary shadow-xs"
+                  >
+                    <option value="12">Lớp 12</option>
+                    <option value="11">Lớp 11</option>
+                    <option value="10">Lớp 10</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* 1. Thanh Chỉnh Tỉ Lệ Câu Hỏi Liên Quan Các Chương Trước (Rolling Ratio) */}
+              <div className="p-3.5 rounded-2xl bg-cyan-50/50 dark:bg-cyan-950/20 border border-cyan-100 dark:border-cyan-900/50">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <Zap className="w-3.5 h-3.5 text-primary" />
+                    Tỉ Lệ Câu Hỏi Liên Quan Tới Các Chương Trước (Cuốn chiếu)
+                  </span>
+                  <span className="text-xs font-mono font-bold text-primary">
+                    {previousChapterPercentage}% cũ / {100 - previousChapterPercentage}% mới
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500 mb-2">
+                  Khi luyện thi từ Chương 2 trở đi: hệ thống dành {previousChapterPercentage}% câu hỏi ôn tập các chương trước và {100 - previousChapterPercentage}% cho chương hiện tại.
+                </p>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min={0}
+                    max={50}
+                    step={5}
+                    aria-label="Tỉ lệ câu hỏi ôn tập chương trước"
+                    value={previousChapterPercentage}
+                    onChange={(e) => setPreviousChapterPercentage(Number(e.target.value))}
+                    className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-primary"
+                  />
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Input
+                      type="number"
+                      min={0}
+                      max={50}
+                      aria-label="Nhập tỉ lệ % chương trước"
+                      value={previousChapterPercentage}
+                      onChange={(e) => setPreviousChapterPercentage(Number(e.target.value))}
+                      className="w-14 h-8 text-xs font-mono text-center p-0 rounded-xl"
+                    />
+                    <span className="text-xs text-slate-400 font-bold">%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Tiện ích phân bổ chương tổng hợp */}
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  Phân bổ từng chương ({selectedChaptersCount}/{chapterRatios.length} chương)
+                </span>
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant={totalChapterPercentage === 100 ? 'success' : 'danger'}
+                    className="font-mono text-xs px-2"
+                  >
+                    Tổng: {totalChapterPercentage}%
+                  </Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleEqualizeChapters}
+                    className="h-6 text-[11px] px-2 rounded-lg"
+                  >
+                    Chia đều
                   </Button>
                 </div>
               </div>
 
-              {/* Tab chọn mã đề */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-                <span className="text-xs font-semibold text-slate-500 mr-1 shrink-0">
-                  Chọn mã đề:
-                </span>
-                {variantList.map((code) => (
-                  <button
-                    key={code}
-                    type="button"
-                    onClick={() => setActiveVariantCode(code)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${activeVariantCode === code
-                      ? 'bg-primary text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                      }`}
-                  >
-                    Mã {code}
-                  </button>
-                ))}
-              </div>
-
-              {/* Lưới hiển thị đáp án nhanh (Answer Matrix Grid) */}
-              <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 pt-2">
-                {answerMatrix.map((item) => {
-                  const colorMap: Record<string, string> = {
-                    A: 'bg-blue-50 text-blue-700 border-blue-200',
-                    B: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                    C: 'bg-amber-50 text-amber-700 border-amber-200',
-                    D: 'bg-purple-50 text-purple-700 border-purple-200',
-                  };
-                  const badgeColor = colorMap[item.answer] || 'bg-slate-50 text-slate-700 border-slate-200';
-
+              {/* Danh Sách Chương Học */}
+              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                {chapterRatios.map((item, idx) => {
                   return (
                     <div
-                      key={item.qNum}
-                      className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-2xs transition-all"
+                      key={item.chapter}
+                      className={cn(
+                        'p-2.5 rounded-xl border transition-all',
+                        item.selected
+                          ? 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 shadow-2xs'
+                          : 'border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 opacity-60'
+                      )}
                     >
-                      <span className="text-[10px] text-slate-400 font-mono">
-                        Câu {item.qNum}
-                      </span>
-                      <span
-                        className={`mt-1 w-6 h-6 rounded-lg border flex items-center justify-center text-xs font-bold shadow-2xs ${badgeColor}`}
-                      >
-                        {item.answer}
-                      </span>
+                      <div className="flex items-center justify-between gap-2">
+                        <label className="flex items-center gap-2 cursor-pointer flex-1">
+                          <input
+                            type="checkbox"
+                            checked={item.selected}
+                            onChange={() => handleToggleChapter(idx)}
+                            className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer"
+                          />
+                          <span
+                            className={cn(
+                              'text-xs font-medium line-clamp-1',
+                              item.selected
+                                ? 'text-slate-900 dark:text-slate-100 font-semibold'
+                                : 'text-slate-500 line-through'
+                            )}
+                          >
+                            {item.chapter}
+                          </span>
+                        </label>
+
+                        {item.selected && (
+                          <div className="flex items-center gap-2 shrink-0">
+                            <input
+                              type="range"
+                              min={0}
+                              max={100}
+                              step={5}
+                              aria-label={`Tỉ lệ ${item.chapter}`}
+                              value={item.ratio}
+                              onChange={(e) => handleChapterRatioChange(idx, Number(e.target.value))}
+                              className="w-20 sm:w-28 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-primary"
+                            />
+                            <div className="flex items-center gap-0.5">
+                              <Input
+                                type="number"
+                                min={0}
+                                max={100}
+                                aria-label={`Nhập % ${item.chapter}`}
+                                value={item.ratio}
+                                onChange={(e) => handleChapterRatioChange(idx, Number(e.target.value))}
+                                className="w-12 h-6 text-xs font-mono text-center p-0 rounded-lg"
+                              />
+                              <span className="text-[11px] text-slate-400 font-bold">%</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
               </div>
             </div>
+
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400">
+              <span>Được nạp theo SGK {selectedSubject} Lớp {selectedGrade}</span>
+              <span>Tổng câu tham chiếu: {totalQuestionsRef} câu</span>
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      {/* 4. Bảng So Sánh Ma Trận Cả 6 Level (Master Matrix Comparison Table) */}
+      <Card className="border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+        <div
+          className="p-4 bg-slate-50/80 dark:bg-slate-800/50 flex items-center justify-between cursor-pointer border-b border-slate-200 dark:border-slate-800"
+          onClick={() => setShowAllLevelsTable(!showAllLevelsTable)}
+        >
+          <div className="flex items-center gap-2">
+            <Table className="w-4 h-4 text-primary" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+              Bảng Tổng Hợp So Sánh Ma Trận 4 Loại Câu Hỏi Của Cả 6 Level
+            </h3>
+            <Badge variant="secondary" className="text-[11px] font-normal">
+              Cơ Bản • Trung Bình • Nâng Cao • ĐGNL • HSG Tỉnh • HSG Quốc Gia
+            </Badge>
           </div>
-        </Dialog>
-      )}
+          <button
+            type="button"
+            aria-label={showAllLevelsTable ? 'Thu gọn bảng' : 'Mở rộng bảng'}
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+          >
+            {showAllLevelsTable ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+        </div>
+
+        {showAllLevelsTable && (
+          <div className="overflow-x-auto p-4">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-600 dark:text-slate-300">
+                  <th className="py-2.5 px-4 font-semibold">Cấp Độ Luyện Thi (Level)</th>
+                  <th className="py-2.5 px-3 font-semibold text-center text-sky-600 dark:text-sky-400">
+                    Nhận biết (EASY)
+                  </th>
+                  <th className="py-2.5 px-3 font-semibold text-center text-emerald-600 dark:text-emerald-400">
+                    Thông hiểu (MEDIUM)
+                  </th>
+                  <th className="py-2.5 px-3 font-semibold text-center text-amber-600 dark:text-amber-400">
+                    Vận dụng (HARD)
+                  </th>
+                  <th className="py-2.5 px-3 font-semibold text-center text-rose-600 dark:text-rose-400">
+                    V.Dụng cao (VERY_HARD)
+                  </th>
+                  <th className="py-2.5 px-4 font-semibold">Thước Phân Bổ Trực Quan</th>
+                  <th className="py-2.5 px-3 font-semibold text-center">Tổng %</th>
+                  <th className="py-2.5 px-4 font-semibold text-right">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {LEVEL_LIST.map((lvl) => {
+                  const isCurrent = activeLevel === lvl.id;
+                  const ratio = levelMatrices[lvl.id] || { EASY: 0, MEDIUM: 0, HARD: 0, VERY_HARD: 0 };
+                  const total = ratio.EASY + ratio.MEDIUM + ratio.HARD + ratio.VERY_HARD;
+
+                  return (
+                    <tr
+                      key={lvl.id}
+                      onClick={() => setActiveLevel(lvl.id)}
+                      className={cn(
+                        'cursor-pointer transition-colors',
+                        isCurrent
+                          ? 'bg-cyan-50/50 dark:bg-cyan-950/20 font-semibold'
+                          : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/50'
+                      )}
+                    >
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={cn(
+                              'w-2 h-2 rounded-full',
+                              isCurrent ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-700'
+                            )}
+                          />
+                          <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white">
+                            {lvl.icon}
+                            <span>{lvl.name}</span>
+                          </div>
+                          <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-normal">
+                            {lvl.badge}
+                          </Badge>
+                        </div>
+                      </td>
+
+                      <td className="py-3 px-3 text-center font-mono font-bold text-sky-700 dark:text-sky-300">
+                        {ratio.EASY}%
+                      </td>
+
+                      <td className="py-3 px-3 text-center font-mono font-bold text-emerald-700 dark:text-emerald-300">
+                        {ratio.MEDIUM}%
+                      </td>
+
+                      <td className="py-3 px-3 text-center font-mono font-bold text-amber-700 dark:text-amber-300">
+                        {ratio.HARD}%
+                      </td>
+
+                      <td className="py-3 px-3 text-center font-mono font-bold text-rose-700 dark:text-rose-300">
+                        {ratio.VERY_HARD}%
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <div className="h-2.5 w-40 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex shadow-inner">
+                          <div
+                            style={{ width: `${ratio.EASY}%` }}
+                            className="bg-sky-500"
+                            title={`Nhận biết: ${ratio.EASY}%`}
+                          />
+                          <div
+                            style={{ width: `${ratio.MEDIUM}%` }}
+                            className="bg-emerald-500"
+                            title={`Thông hiểu: ${ratio.MEDIUM}%`}
+                          />
+                          <div
+                            style={{ width: `${ratio.HARD}%` }}
+                            className="bg-amber-500"
+                            title={`Vận dụng: ${ratio.HARD}%`}
+                          />
+                          <div
+                            style={{ width: `${ratio.VERY_HARD}%` }}
+                            className="bg-rose-500"
+                            title={`Vận dụng cao: ${ratio.VERY_HARD}%`}
+                          />
+                        </div>
+                      </td>
+
+                      <td className="py-3 px-3 text-center font-mono font-bold">
+                        <Badge variant={total === 100 ? 'success' : 'danger'} className="text-[11px] py-0">
+                          {total}%
+                        </Badge>
+                      </td>
+
+                      <td className="py-3 px-4 text-right">
+                        <Button
+                          variant={isCurrent ? 'default' : 'outline'}
+                          size="sm"
+                          className={cn(
+                            'h-7 text-xs rounded-lg px-2.5',
+                            isCurrent && 'bg-[#00B8DD] hover:bg-[#009fb0] text-white'
+                          )}
+                        >
+                          {isCurrent ? (
+                            <>
+                              <Check className="w-3 h-3 mr-1" /> Đang chỉnh
+                            </>
+                          ) : (
+                            'Chỉnh sửa'
+                          )}
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
