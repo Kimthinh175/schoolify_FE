@@ -107,9 +107,20 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   );
 
   const toggleTheme = React.useCallback(() => {
-    // Quick toggle: light -> dark -> system -> light
-    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
-  }, [resolvedTheme, setTheme]);
+    // Luân phiên 3 chế độ: light -> dark -> system -> light
+    setThemeState((currentTheme) => {
+      let nextTheme: Theme = 'light';
+      if (currentTheme === 'light') nextTheme = 'dark';
+      else if (currentTheme === 'dark') nextTheme = 'system';
+      else nextTheme = 'light';
+
+      try {
+        localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+      } catch {}
+      applyTheme(nextTheme);
+      return nextTheme;
+    });
+  }, [applyTheme]);
 
   return (
     <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme, toggleTheme }}>
