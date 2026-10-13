@@ -27,8 +27,11 @@ import { PRACTICE_LEVELS } from '@/services/mock/subject-data';
 import {
   K12_GRADES,
   MATH_GRADE_12_CHAPTERS,
+  getChaptersBySubject,
   ExamFormat,
 } from '@/services/mock/practice-flow-data';
+import { getOlympiadExamsBySubject, OLYMPIAD_EXAMS } from '@/services/mock/olympiad-exams';
+import { OlympiadExam } from '@/types/olympiad';
 import { RequireLoginModal } from '@/components/features/auth/RequireLoginModal';
 import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
@@ -40,7 +43,7 @@ interface LevelSelectionModalProps {
   isLoggedIn?: boolean;
 }
 
-type WizardStep = 'LEVEL' | 'GRADE' | 'CHAPTER' | 'FORMAT' | 'DURATION';
+type WizardStep = 'LEVEL' | 'GRADE' | 'CHAPTER' | 'FORMAT' | 'DURATION' | 'HSG_EXAMS';
 
 const WIZARD_STEPS: { step: WizardStep; number: number; label: string }[] = [
   { step: 'LEVEL', number: 1, label: 'Cấp độ' },
@@ -129,9 +132,24 @@ export function LevelSelectionModal({
   const [essayCount, setEssayCount] = React.useState<number>(5);
   const [selectedDuration, setSelectedDuration] = React.useState<number>(45);
 
+  // Danh sách chương học động bám sát môn học và khối lớp đang chọn
+  const chapters = React.useMemo(() => {
+    if (!subject) return MATH_GRADE_12_CHAPTERS;
+    return getChaptersBySubject(subject.slug, selectedGrade);
+  }, [subject, selectedGrade]);
+
+  // Danh sách đề thi Học Sinh Giỏi theo môn và cấp độ
+  const hsgExams = React.useMemo(() => {
+    if (!subject) return [];
+    const matched = getOlympiadExamsBySubject(subject.slug, selectedLevel.id);
+    if (matched.length > 0) return matched;
+    return OLYMPIAD_EXAMS.filter((e) => e.level === selectedLevel.id);
+  }, [subject, selectedLevel]);
+
   // Gated Login Modal State
   const [requireLoginOpen, setRequireLoginOpen] = React.useState(false);
   const [selectedGatedLevelName, setSelectedGatedLevelName] = React.useState<string>('');
+  const [pendingReturnUrl, setPendingReturnUrl] = React.useState<string>('');
 
   // Competency Check State
   const [hasAssessedCompetency, setHasAssessedCompetency] = React.useState<boolean>(false);
@@ -185,10 +203,14 @@ export function LevelSelectionModal({
 
   // Step calculations & Navigation
   const currentStepIndex = WIZARD_STEPS.findIndex((s) => s.step === currentStep) + 1;
-  const canGoBack = currentStepIndex > 1;
-  const canGoForward = currentStepIndex < maxStepReached;
+  const canGoBack = currentStep === 'HSG_EXAMS' ? true : currentStepIndex > 1;
+  const canGoForward = currentStep === 'HSG_EXAMS' ? false : currentStepIndex < maxStepReached;
 
   const handleGoBack = () => {
+    if (currentStep === 'HSG_EXAMS') {
+      setCurrentStep('LEVEL');
+      return;
+    }
     if (canGoBack) {
       setCurrentStep(WIZARD_STEPS[currentStepIndex - 2].step);
     }
@@ -221,10 +243,30 @@ export function LevelSelectionModal({
   // Step 1: Handle Level Click
   const handleSelectLevel = (level: LevelDetail) => {
     setIsAssessmentMode(false);
+
     const isFreeTrial = level.id === 'BASIC' || level.id === 'MEDIUM';
 
+    // Cấp Học Sinh Giỏi Tỉnh & Quốc Gia: Bắt buộc đăng nhập ngay
+    if (level.id === 'PROVINCIAL_EXCELLENT' || level.id === 'NATIONAL_EXCELLENT') {
+      if (!effectiveIsLoggedIn) {
+        setSelectedGatedLevelName(level.name);
+        setPendingReturnUrl(
+          `/student/practice/exam-room?olympiadId=olympiad-toan-hn-2025&subject=${subject.slug}&level=${level.id.toLowerCase()}`
+        );
+        setRequireLoginOpen(true);
+        return;
+      }
+      setSelectedLevel(level);
+      setCurrentStep('HSG_EXAMS');
+      return;
+    }
+
+    // Cấp Nâng cao (ADVANCED) hoặc bất kỳ cấp độ nào ngoài Basic & Medium: Bắt buộc đăng nhập ngay
     if (!effectiveIsLoggedIn && !isFreeTrial) {
       setSelectedGatedLevelName(level.name);
+      setPendingReturnUrl(
+        `/student/practice/exam-room?subject=${subject.slug}&level=${level.id.toLowerCase()}&grade=${selectedGrade}&chapter=${selectedChapterId}&format=${selectedFormat.toLowerCase()}&duration=${selectedDuration}&count=${quizCount}`
+      );
       setRequireLoginOpen(true);
       return;
     }
@@ -270,7 +312,7 @@ export function LevelSelectionModal({
 
   // Step 5: Start Exam
   const handleStartExam = () => {
-    onClose();
+    const isFreeTrial = selectedLevel.id === 'BASIC' || selectedLevel.id === 'MEDIUM';
     const countParam =
       selectedFormat === 'QUIZ'
         ? quizCount
@@ -278,9 +320,17 @@ export function LevelSelectionModal({
         ? essayCount
         : quizCount + essayCount;
 
-    router.push(
-      `/student/practice/exam-room?subject=${subject.slug}&level=${selectedLevel.id.toLowerCase()}&grade=${selectedGrade}&chapter=${selectedChapterId}&format=${selectedFormat.toLowerCase()}&duration=${selectedDuration}&quizCount=${quizCount}&essayCount=${essayCount}&count=${countParam}`
-    );
+    const examRoomUrl = `/student/practice/exam-room?subject=${subject.slug}&level=${selectedLevel.id.toLowerCase()}&grade=${selectedGrade}&chapter=${selectedChapterId}&format=${selectedFormat.toLowerCase()}&duration=${selectedDuration}&quizCount=${quizCount}&essayCount=${essayCount}&count=${countParam}`;
+
+    if (!effectiveIsLoggedIn && !isFreeTrial) {
+      setSelectedGatedLevelName(selectedLevel.name);
+      setPendingReturnUrl(examRoomUrl);
+      setRequireLoginOpen(true);
+      return;
+    }
+
+    onClose();
+    router.push(examRoomUrl);
   };
 
   return (
@@ -288,7 +338,8 @@ export function LevelSelectionModal({
       <Dialog
         isOpen={isOpen}
         onClose={onClose}
-        maxWidth="2xl"
+        maxWidth="5xl"
+        className="w-full sm:w-[940px] md:w-[980px] lg:w-[1020px] max-w-[96vw] h-[88vh] sm:h-[700px] max-h-[720px]"
         title={
           <div className="flex items-center gap-3">
             <div
@@ -313,197 +364,227 @@ export function LevelSelectionModal({
                 {currentStep === 'CHAPTER' && 'Bước 3/5: Chọn Chương Học (SGK 2018)'}
                 {currentStep === 'FORMAT' && 'Bước 4/5: Chọn Hình Thức Đề Thi'}
                 {currentStep === 'DURATION' && 'Bước 5/5: Chọn Thời Gian Làm Bài'}
+                {currentStep === 'HSG_EXAMS' && `Đề Thi Học Sinh Giỏi ${selectedLevel.id === 'PROVINCIAL_EXCELLENT' ? 'Cấp Tỉnh / TP' : 'Cấp Quốc Gia'} - Môn ${subject.name}`}
               </div>
             </div>
           </div>
         }
         description={
           <div className="space-y-3 mt-1.5">
-            {/* Step Indicators Bar: Stepper with Circles 1-4 and Connecting Lines */}
-            <div className="flex items-center w-full px-1 py-1">
-              {WIZARD_STEPS.map((s, idx) => {
-                const isReached = s.number <= currentStepIndex;
-                const isCurrent = s.number === currentStepIndex;
-                const isUnlocked = s.number <= maxStepReached;
-
-                return (
-                  <React.Fragment key={s.step}>
-                    {/* Circle 1-4 */}
-                    <button
-                      type="button"
-                      onClick={() => isUnlocked && setCurrentStep(s.step)}
-                      disabled={!isUnlocked}
-                      title={`Bước ${s.number}: ${s.label}`}
-                      className={cn(
-                        'w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 transition-all select-none',
-                        isCurrent
-                          ? 'bg-[#00B8DD] text-slate-950 ring-4 ring-[#00B8DD]/25 shadow-md shadow-[#00B8DD]/30 scale-105'
-                          : isReached
-                          ? 'bg-[#00B8DD] text-slate-950 shadow-xs'
-                          : isUnlocked
-                          ? 'bg-white dark:bg-slate-900 border-2 border-[#00B8DD]/70 text-[#007D99] dark:text-[#00B8DD]'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700',
-                        isUnlocked && !isCurrent
-                          ? 'cursor-pointer hover:opacity-90 active:scale-95'
-                          : !isUnlocked
-                          ? 'cursor-not-allowed opacity-50'
-                          : ''
-                      )}
-                    >
-                      {s.number}
-                    </button>
-
-                    {/* Connecting Line */}
-                    {idx < WIZARD_STEPS.length - 1 && (
-                      <div
-                        className={cn(
-                          'h-0.5 flex-1 transition-all duration-300 mx-1 sm:mx-2',
-                          currentStepIndex > s.number
-                            ? 'bg-[#00B8DD]'
-                            : 'bg-slate-200 dark:bg-slate-800'
-                        )}
-                      />
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </div>
-
-            {/* Clickable Breadcrumbs (Left) & Navigation Buttons (Right) on the same row */}
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5 text-xs">
-              {/* Left: Clickable Breadcrumbs to quickly jump */}
-              <div className="flex items-center gap-1.5 flex-wrap text-[11px] min-w-0">
-                {/* Step 1: Level */}
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep('LEVEL')}
-                  className={cn(
-                    'px-2 py-0.5 rounded-lg transition-all cursor-pointer font-bold',
-                    currentStep === 'LEVEL'
-                      ? 'text-[#007D99] dark:text-[#00B8DD] bg-[#E6F8FC] dark:bg-[#00B8DD]/20 border border-[#00B8DD]/30'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-[#00B8DD] hover:bg-slate-100 dark:hover:bg-slate-800'
-                  )}
-                  title="Bấm để chuyển nhanh về Bước 1: Chọn cấp độ"
-                >
-                  {selectedLevel.name}
-                </button>
-
-                {/* Step 2: Grade */}
-                {maxStepReached >= 2 && (
-                  <>
-                    <span className="text-slate-400 select-none">➔</span>
-                    <button
-                      type="button"
-                      onClick={() => setCurrentStep('GRADE')}
-                      className={cn(
-                        'px-2 py-0.5 rounded-lg transition-all cursor-pointer font-bold',
-                        currentStep === 'GRADE'
-                          ? 'text-[#007D99] dark:text-[#00B8DD] bg-[#E6F8FC] dark:bg-[#00B8DD]/20 border border-[#00B8DD]/30'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-[#00B8DD] hover:bg-slate-100 dark:hover:bg-slate-800'
-                      )}
-                      title="Bấm để chuyển nhanh về Bước 2: Chọn khối lớp"
-                    >
-                      Lớp {selectedGrade}
-                    </button>
-                  </>
-                )}
-
-                {/* Step 3: Chapter */}
-                {maxStepReached >= 3 && (
-                  <>
-                    <span className="text-slate-400 select-none">➔</span>
-                    <button
-                      type="button"
-                      onClick={() => setCurrentStep('CHAPTER')}
-                      className={cn(
-                        'px-2 py-0.5 rounded-lg transition-all cursor-pointer font-bold',
-                        currentStep === 'CHAPTER'
-                          ? 'text-[#007D99] dark:text-[#00B8DD] bg-[#E6F8FC] dark:bg-[#00B8DD]/20 border border-[#00B8DD]/30'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-[#00B8DD] hover:bg-slate-100 dark:hover:bg-slate-800'
-                      )}
-                      title="Bấm để chuyển nhanh về Bước 3: Chọn chương học"
-                    >
-                      Chương {selectedChapterId}
-                    </button>
-                  </>
-                )}
-
-                {/* Step 4: Format */}
-                {maxStepReached >= 4 && (
-                  <>
-                    <span className="text-slate-400 select-none">➔</span>
-                    <button
-                      type="button"
-                      onClick={() => setCurrentStep('FORMAT')}
-                      className={cn(
-                        'px-2 py-0.5 rounded-lg transition-all cursor-pointer font-bold',
-                        currentStep === 'FORMAT'
-                          ? 'text-[#007D99] dark:text-[#00B8DD] bg-[#E6F8FC] dark:bg-[#00B8DD]/20 border border-[#00B8DD]/30'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-[#00B8DD] hover:bg-slate-100 dark:hover:bg-slate-800'
-                      )}
-                      title="Bấm để chuyển nhanh về Bước 4: Chọn hình thức đề"
-                    >
-                      {selectedFormat === 'QUIZ'
-                        ? `Trắc Nghiệm (${quizCount}c)`
-                        : selectedFormat === 'ESSAY'
-                        ? `Tự Luận (${essayCount}c)`
-                        : `Trộn (${quizCount}TN+${essayCount}TL)`}
-                    </button>
-                  </>
-                )}
-
-                {/* Step 5: Duration */}
-                {maxStepReached >= 5 && (
-                  <>
-                    <span className="text-slate-400 select-none">➔</span>
-                    <button
-                      type="button"
-                      onClick={() => setCurrentStep('DURATION')}
-                      className={cn(
-                        'px-2 py-0.5 rounded-lg transition-all cursor-pointer font-bold',
-                        currentStep === 'DURATION'
-                          ? 'text-[#007D99] dark:text-[#00B8DD] bg-[#E6F8FC] dark:bg-[#00B8DD]/20 border border-[#00B8DD]/30'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-[#00B8DD] hover:bg-slate-100 dark:hover:bg-slate-800'
-                      )}
-                      title="Bấm để chuyển nhanh về Bước 5: Chọn thời gian làm bài"
-                    >
-                      ⏱️ {selectedDuration} Phút
-                    </button>
-                  </>
-                )}
-              </div>
-
-              {/* Right Action Buttons: Quay lại & Kế tiếp */}
-              <div className="flex items-center gap-1.5 shrink-0 ml-auto">
-                {canGoBack && (
+            {currentStep === 'HSG_EXAMS' ? (
+              <div className="flex flex-wrap items-center justify-between gap-2 py-1 text-xs">
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={handleGoBack}
-                    className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold flex items-center gap-1 transition-all cursor-pointer text-xs shadow-2xs hover:scale-102 active:scale-98"
-                    title="Quay lại bước trước"
+                    onClick={() => setCurrentStep('LEVEL')}
+                    className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold hover:text-[#00B8DD] flex items-center gap-1.5 transition cursor-pointer text-xs"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
-                    Quay lại
+                    Quay lại chọn cấp độ
                   </button>
-                )}
-
-                {canGoForward && (
-                  <button
-                    type="button"
-                    onClick={handleGoForward}
-                    className="px-2.5 py-1 rounded-xl bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold flex items-center gap-1 transition-all cursor-pointer text-xs shadow-2xs hover:scale-102 active:scale-98"
-                    title="Kế tiếp (bước đã mở)"
-                  >
-                    Kế tiếp
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                )}
+                  <span className="text-slate-400 select-none">➔</span>
+                  <Badge className="bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-500/40 text-xs px-2.5 py-0.5 font-bold">
+                    {selectedLevel.name}
+                  </Badge>
+                </div>
+                <span className="text-xs text-slate-500 dark:text-slate-400 italic">
+                  Bỏ qua 5 bước chọn chương • Thi tự luận phân rã ý / code IDE chấm AI
+                </span>
               </div>
-            </div>
+            ) : (
+              <>
+                {/* Step Indicators Bar: Stepper with Circles 1-5, Labels and Connecting Lines */}
+                <div className="flex items-center w-full px-1 py-1">
+                  {WIZARD_STEPS.map((s, idx) => {
+                    const isReached = s.number <= currentStepIndex;
+                    const isCurrent = s.number === currentStepIndex;
+                    const isUnlocked = s.number <= maxStepReached;
+
+                    return (
+                      <React.Fragment key={s.step}>
+                        {/* Circle 1-5 + Label */}
+                        <button
+                          type="button"
+                          onClick={() => isUnlocked && setCurrentStep(s.step)}
+                          disabled={!isUnlocked}
+                          title={`Bước ${s.number}: ${s.label}`}
+                          className={cn(
+                            'h-7 sm:h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 transition-all select-none px-2 sm:px-3 gap-1.5',
+                            isCurrent
+                              ? 'bg-[#00B8DD] text-slate-950 ring-4 ring-[#00B8DD]/25 shadow-md shadow-[#00B8DD]/30 scale-102'
+                              : isReached
+                              ? 'bg-[#00B8DD] text-slate-950 shadow-xs'
+                              : isUnlocked
+                              ? 'bg-white dark:bg-slate-900 border-2 border-[#00B8DD]/70 text-[#007D99] dark:text-[#00B8DD]'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700',
+                            isUnlocked && !isCurrent
+                              ? 'cursor-pointer hover:opacity-90 active:scale-95'
+                              : !isUnlocked
+                              ? 'cursor-not-allowed opacity-50'
+                              : ''
+                          )}
+                        >
+                          <span className="w-4 h-4 rounded-full flex items-center justify-center text-[11px] font-black shrink-0">
+                            {s.number}
+                          </span>
+                          <span className="hidden md:inline font-bold text-xs whitespace-nowrap">
+                            {s.label}
+                          </span>
+                        </button>
+
+                        {/* Connecting Line */}
+                        {idx < WIZARD_STEPS.length - 1 && (
+                          <div
+                            className={cn(
+                              'h-0.5 flex-1 transition-all duration-300 mx-1.5 sm:mx-3',
+                              currentStepIndex > s.number
+                                ? 'bg-[#00B8DD]'
+                                : 'bg-slate-200 dark:bg-slate-800'
+                            )}
+                          />
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
+
+                {/* Clickable Breadcrumbs (Left) & Navigation Buttons (Right) on the same row */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5 text-xs">
+                  {/* Left: Clickable Breadcrumbs to quickly jump */}
+                  <div className="flex items-center gap-1.5 flex-wrap text-[11px] min-w-0">
+                    {/* Step 1: Level */}
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep('LEVEL')}
+                      className={cn(
+                        'px-2 py-0.5 rounded-lg transition-all cursor-pointer font-bold',
+                        currentStep === 'LEVEL'
+                          ? 'text-[#007D99] dark:text-[#00B8DD] bg-[#E6F8FC] dark:bg-[#00B8DD]/20 border border-[#00B8DD]/30'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-[#00B8DD] hover:bg-slate-100 dark:hover:bg-slate-800'
+                      )}
+                      title="Bấm để chuyển nhanh về Bước 1: Chọn cấp độ"
+                    >
+                      {selectedLevel.name}
+                    </button>
+
+                    {/* Step 2: Grade */}
+                    {maxStepReached >= 2 && (
+                      <>
+                        <span className="text-slate-400 select-none">➔</span>
+                        <button
+                          type="button"
+                          onClick={() => setCurrentStep('GRADE')}
+                          className={cn(
+                            'px-2 py-0.5 rounded-lg transition-all cursor-pointer font-bold',
+                            currentStep === 'GRADE'
+                              ? 'text-[#007D99] dark:text-[#00B8DD] bg-[#E6F8FC] dark:bg-[#00B8DD]/20 border border-[#00B8DD]/30'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-[#00B8DD] hover:bg-slate-100 dark:hover:bg-slate-800'
+                          )}
+                          title="Bấm để chuyển nhanh về Bước 2: Chọn khối lớp"
+                        >
+                          Lớp {selectedGrade}
+                        </button>
+                      </>
+                    )}
+
+                    {/* Step 3: Chapter */}
+                    {maxStepReached >= 3 && (
+                      <>
+                        <span className="text-slate-400 select-none">➔</span>
+                        <button
+                          type="button"
+                          onClick={() => setCurrentStep('CHAPTER')}
+                          className={cn(
+                            'px-2 py-0.5 rounded-lg transition-all cursor-pointer font-bold',
+                            currentStep === 'CHAPTER'
+                              ? 'text-[#007D99] dark:text-[#00B8DD] bg-[#E6F8FC] dark:bg-[#00B8DD]/20 border border-[#00B8DD]/30'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-[#00B8DD] hover:bg-slate-100 dark:hover:bg-slate-800'
+                          )}
+                          title="Bấm để chuyển nhanh về Bước 3: Chọn chương học"
+                        >
+                          Chương {selectedChapterId}
+                        </button>
+                      </>
+                    )}
+
+                    {/* Step 4: Format */}
+                    {maxStepReached >= 4 && (
+                      <>
+                        <span className="text-slate-400 select-none">➔</span>
+                        <button
+                          type="button"
+                          onClick={() => setCurrentStep('FORMAT')}
+                          className={cn(
+                            'px-2 py-0.5 rounded-lg transition-all cursor-pointer font-bold',
+                            currentStep === 'FORMAT'
+                              ? 'text-[#007D99] dark:text-[#00B8DD] bg-[#E6F8FC] dark:bg-[#00B8DD]/20 border border-[#00B8DD]/30'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-[#00B8DD] hover:bg-slate-100 dark:hover:bg-slate-800'
+                          )}
+                          title="Bấm để chuyển nhanh về Bước 4: Chọn hình thức đề"
+                        >
+                          {selectedFormat === 'QUIZ'
+                            ? `Trắc Nghiệm (${quizCount}c)`
+                            : selectedFormat === 'ESSAY'
+                            ? `Tự Luận (${essayCount}c)`
+                            : `Trộn (${quizCount}TN+${essayCount}TL)`}
+                        </button>
+                      </>
+                    )}
+
+                    {/* Step 5: Duration */}
+                    {maxStepReached >= 5 && (
+                      <>
+                        <span className="text-slate-400 select-none">➔</span>
+                        <button
+                          type="button"
+                          onClick={() => setCurrentStep('DURATION')}
+                          className={cn(
+                            'px-2 py-0.5 rounded-lg transition-all cursor-pointer font-bold',
+                            currentStep === 'DURATION'
+                              ? 'text-[#007D99] dark:text-[#00B8DD] bg-[#E6F8FC] dark:bg-[#00B8DD]/20 border border-[#00B8DD]/30'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-[#00B8DD] hover:bg-slate-100 dark:hover:bg-slate-800'
+                          )}
+                          title="Bấm để chuyển nhanh về Bước 5: Chọn thời gian làm bài"
+                        >
+                          ⏱️ {selectedDuration} Phút
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Right Action Buttons: Quay lại & Kế tiếp */}
+                  <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+                    {canGoBack && (
+                      <button
+                        type="button"
+                        onClick={handleGoBack}
+                        className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold flex items-center gap-1 transition-all cursor-pointer text-xs shadow-2xs hover:scale-102 active:scale-98"
+                        title="Quay lại bước trước"
+                      >
+                        <ArrowLeft className="w-3.5 h-3.5" />
+                        Quay lại
+                      </button>
+                    )}
+
+                    {canGoForward && (
+                      <button
+                        type="button"
+                        onClick={handleGoForward}
+                        className="px-2.5 py-1 rounded-xl bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold flex items-center gap-1 transition-all cursor-pointer text-xs shadow-2xs hover:scale-102 active:scale-98"
+                        title="Kế tiếp (bước đã mở)"
+                      >
+                        Kế tiếp
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         }
       >
-        <div className="py-2">
+        <div className="py-2 min-h-full flex flex-col justify-start">
           {/* ========================================================================= */}
           {/* STEP 1: CHỌN CẤP ĐỘ                                                       */}
           {/* ========================================================================= */}
@@ -534,33 +615,33 @@ export function LevelSelectionModal({
                 <div
                   onClick={handleSelectAssessment}
                   className={cn(
-                    'p-4 rounded-2xl border transition-all flex items-center justify-between gap-4 cursor-pointer group relative overflow-hidden',
+                    'p-4 sm:p-5 rounded-2xl border transition-all flex items-center justify-between gap-4 cursor-pointer group relative overflow-hidden',
                     'border-[#00B8DD]/50 hover:border-[#00B8DD] hover:shadow-lg hover:shadow-[#00B8DD]/10',
                     'bg-gradient-to-r from-[#00B8DD]/[0.08] via-sky-50/60 to-indigo-50/40 dark:from-[#00B8DD]/15 dark:via-slate-900 dark:to-indigo-950/20'
                   )}
                 >
-                  <div className="flex items-start gap-3.5 min-w-0">
-                    <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-[#00B8DD] to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-[#00B8DD]/25 group-hover:scale-110 transition-transform">
-                      <Sparkles className="w-5 h-5 text-white" />
+                  <div className="flex items-center gap-4 min-w-0 flex-1">
+                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[#00B8DD] to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-[#00B8DD]/25 group-hover:scale-105 transition-transform">
+                      <Sparkles className="w-6 h-6 text-white" />
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-[#00B8DD] transition-colors flex items-center gap-1.5">
+                        <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white group-hover:text-[#00B8DD] transition-colors flex items-center gap-1.5">
                           Đánh Giá Năng Lực Của Bạn
                         </h4>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-white/90 dark:bg-slate-800 text-[#007D99] dark:text-[#00B8DD] border-[#00B8DD]/30 flex items-center gap-1 shadow-2xs">
+                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full border bg-white/90 dark:bg-slate-800 text-[#007D99] dark:text-[#00B8DD] border-[#00B8DD]/30 flex items-center gap-1 shadow-2xs">
                           <Zap className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
                           Chẩn Đoán Nhanh
                         </span>
                       </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 line-clamp-1">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed sm:line-clamp-none line-clamp-2">
                         Làm bài test ngắn 15 phút để AI chẩn đoán trình độ và gợi ý lộ trình luyện thi chuẩn xác nhất.
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-[11px] font-bold text-[#007D99] dark:text-[#00B8DD] bg-white dark:bg-slate-800 border border-[#00B8DD]/40 px-2.5 py-1 rounded-xl flex items-center gap-1 group-hover:bg-[#00B8DD] group-hover:text-white group-hover:border-[#00B8DD] transition-all shadow-xs">
+                    <span className="text-xs font-bold text-[#007D99] dark:text-[#00B8DD] bg-white dark:bg-slate-800 border border-[#00B8DD]/40 px-3 py-1.5 rounded-xl flex items-center gap-1.5 group-hover:bg-[#00B8DD] group-hover:text-white group-hover:border-[#00B8DD] transition-all shadow-xs">
                       <Sparkles className="w-3.5 h-3.5 text-[#00B8DD] group-hover:text-white transition-colors" />
                       Đánh Giá Ngay
                     </span>
@@ -579,30 +660,30 @@ export function LevelSelectionModal({
                     key={level.id}
                     onClick={() => handleSelectLevel(level)}
                     className={cn(
-                      'p-4 rounded-2xl border transition-all flex items-center justify-between gap-4 cursor-pointer group',
+                      'p-4 sm:p-4.5 rounded-2xl border transition-all flex items-center justify-between gap-4 cursor-pointer group',
                       'hover:border-[#00B8DD] hover:shadow-md bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800',
                       !effectiveIsLoggedIn && !isFree && 'hover:border-amber-400'
                     )}
                   >
-                    <div className="flex items-start gap-3.5">
-                      <div className="h-11 w-11 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                    <div className="flex items-center gap-4 min-w-0 flex-1">
+                      <div className="h-11 w-11 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                         {icon}
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-[#00B8DD] transition-colors">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white group-hover:text-[#00B8DD] transition-colors">
                             {level.name}
                           </h4>
                           <span
                             className={cn(
-                              'text-[10px] font-bold px-2 py-0.5 rounded-full border',
+                              'text-[10px] font-bold px-2.5 py-0.5 rounded-full border shrink-0',
                               level.badgeColor
                             )}
                           >
                             {level.badge}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-500 mt-1 line-clamp-1">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed sm:line-clamp-none line-clamp-2">
                           {level.description}
                         </p>
                       </div>
@@ -610,12 +691,22 @@ export function LevelSelectionModal({
 
                     <div className="flex items-center gap-2 shrink-0">
                       {isFree ? (
-                        <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded-xl flex items-center gap-1">
+                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           Luyện Thử
                         </span>
+                      ) : level.id === 'PROVINCIAL_EXCELLENT' || level.id === 'NATIONAL_EXCELLENT' ? (
+                        <span className="text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+                          <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                          Xem Đề HSG
+                        </span>
+                      ) : effectiveIsLoggedIn ? (
+                        <span className="text-xs font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+                          <Flame className="w-3.5 h-3.5 text-purple-500" />
+                          Luyện Ngay
+                        </span>
                       ) : (
-                        <span className="text-[11px] font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-xl flex items-center gap-1">
+                        <span className="text-xs font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
                           <Lock className="w-3.5 h-3.5 text-amber-500" />
                           Cần Login
                         </span>
@@ -625,6 +716,152 @@ export function LevelSelectionModal({
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* STEP HSG: KHO ĐỀ THI HỌC SINH GIỎI CẤP TỈNH & QUỐC GIA                    */}
+          {/* ========================================================================= */}
+          {currentStep === 'HSG_EXAMS' && (
+            <div className="space-y-4">
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 flex items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="h-8 w-8 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <Trophy className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="font-bold text-amber-800 dark:text-amber-300">
+                      Chế độ thi chuyên biệt: {selectedLevel.name}
+                    </span>
+                    <p className="text-[11px] text-amber-700 dark:text-amber-400/90 mt-0.5 leading-relaxed">
+                      {subject.slug === 'tin-hoc'
+                        ? 'Đề thi lập trình được giải trực tiếp trên IDE biên dịch (C++, C, Python), chấm tự động bằng testcase ẩn và phân tích độ phức tạp thuật toán AI.'
+                        : 'Đề thi được phân rã thành các ý nhỏ, hỗ trợ gõ công thức KaTeX và chấm điểm bằng AI hai giai đoạn (khớp đáp số cốt lõi + barem phương pháp).'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Danh sách các đề thi HSG đã tuyển chọn */}
+              <div className="space-y-3">
+                {hsgExams.length > 0 ? (
+                  hsgExams.map((hExam) => (
+                    <div
+                      key={hExam.id}
+                      className="p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-[#00B8DD] hover:shadow-lg transition-all space-y-3 group"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                            {hExam.levelLabel}
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/30">
+                            {hExam.province || 'Toàn Quốc'} • {hExam.year}
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/30">
+                            {hExam.examType === 'CODING' ? '💻 Lập Trình Online Judge' : '✍️ Tự Luận Chấm AI 2 Giai Đoạn'}
+                          </span>
+                        </div>
+                        <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-0.5 rounded-lg border border-amber-200 dark:border-amber-800">
+                          Thang 20.0 Điểm HSG
+                        </span>
+                      </div>
+
+                      <div>
+                        <h4 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white group-hover:text-[#00B8DD] transition-colors">
+                          {hExam.title}
+                        </h4>
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+                          {hExam.description}
+                        </p>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                          <span className="flex items-center gap-1 font-mono">
+                            <Clock className="w-3.5 h-3.5 text-[#00B8DD]" />
+                            {hExam.durationMinutes} Phút
+                          </span>
+                          <span>•</span>
+                          <span className="flex items-center gap-1">
+                            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                            Thưởng +{hExam.pointsReward} 💎
+                          </span>
+                          <span>•</span>
+                          <span>
+                            {hExam.examType === 'CODING'
+                              ? `${hExam.codingProblems?.length || 3} bài thuật toán`
+                              : `${hExam.mathProblems?.length || 4} bài tự luận phân rã`}
+                          </span>
+                        </div>
+
+                        <Button
+                          onClick={() => {
+                            const targetUrl = `/student/practice/exam-room?olympiadId=${hExam.id}&subject=${subject.slug}&level=${selectedLevel.id.toLowerCase()}`;
+                            if (!effectiveIsLoggedIn) {
+                              setSelectedGatedLevelName(hExam.title);
+                              setPendingReturnUrl(targetUrl);
+                              setRequireLoginOpen(true);
+                              return;
+                            }
+                            onClose();
+                            router.push(targetUrl);
+                          }}
+                          className="bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold rounded-xl text-xs px-4 shadow-md shadow-[#00B8DD]/20"
+                          rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+                        >
+                          Vào Phòng Thi Ngay
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-8 text-center rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 space-y-3">
+                    <BookOpen className="w-8 h-8 text-slate-400 mx-auto" />
+                    <p className="text-xs text-slate-500">
+                      Hiện tại môn {subject.name} đang hoàn tất biên soạn kho đề thi {selectedLevel.name}. Bạn có thể trải nghiệm các đề HSG mẫu đang mở:
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const targetUrl = '/student/practice/exam-room?olympiadId=olympiad-toan-hn-2025&subject=toan-hoc&level=provincial_excellent';
+                          if (!effectiveIsLoggedIn) {
+                            setSelectedGatedLevelName('Đề HSG Toán Hà Nội');
+                            setPendingReturnUrl(targetUrl);
+                            setRequireLoginOpen(true);
+                            return;
+                          }
+                          onClose();
+                          router.push(targetUrl);
+                        }}
+                        className="text-xs rounded-xl"
+                      >
+                        Đề HSG Toán Hà Nội (Tự Luận)
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const targetUrl = '/student/practice/exam-room?olympiadId=olympiad-tin-tinh-2025&subject=tin-hoc&level=provincial_excellent';
+                          if (!effectiveIsLoggedIn) {
+                            setSelectedGatedLevelName('Đề HSG Tin Học Nghệ An');
+                            setPendingReturnUrl(targetUrl);
+                            setRequireLoginOpen(true);
+                            return;
+                          }
+                          onClose();
+                          router.push(targetUrl);
+                        }}
+                        className="text-xs rounded-xl"
+                      >
+                        Đề HSG Tin Học Nghệ An (Coding IDE)
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -770,11 +1007,11 @@ export function LevelSelectionModal({
           {currentStep === 'CHAPTER' && (
             <div className="space-y-3">
               <p className="text-xs text-slate-500">
-                Danh sách 6 chương chuẩn SGK Toán {selectedGrade} mới. Chọn chương để luyện đề:
+                Danh sách các chương/chuyên đề chuẩn SGK môn <strong className="text-slate-900 dark:text-white">{subject.name}</strong> Lớp {selectedGrade}. Chọn chương để luyện đề:
               </p>
 
-              <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
-                {MATH_GRADE_12_CHAPTERS.map((ch) => {
+              <div className="space-y-2.5 pr-1">
+                {chapters.map((ch) => {
                   const isSelected = selectedChapterId === ch.id;
 
                   return (
@@ -782,15 +1019,15 @@ export function LevelSelectionModal({
                       key={ch.id}
                       onClick={() => handleSelectChapter(ch.id)}
                       className={cn(
-                        'p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 cursor-pointer group',
+                        'p-4 sm:p-4.5 rounded-2xl border transition-all flex items-center justify-between gap-4 cursor-pointer group',
                         isSelected
                           ? 'bg-[#E6F8FC] dark:bg-[#00B8DD]/20 border-[#00B8DD] shadow-md shadow-[#00B8DD]/10'
                           : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-[#00B8DD]'
                       )}
                     >
-                      <div className="space-y-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-[#00B8DD] transition-colors truncate">
+                      <div className="space-y-1 min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white group-hover:text-[#00B8DD] transition-colors">
                             {ch.name}
                           </h4>
                           {ch.isDemoReady && (
@@ -799,13 +1036,13 @@ export function LevelSelectionModal({
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-slate-500 line-clamp-1 leading-relaxed">
+                        <p className="text-xs text-slate-500 leading-relaxed sm:line-clamp-none line-clamp-2">
                           {ch.description}
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[11px] text-slate-400 font-medium">
+                      <div className="flex items-center gap-2.5 shrink-0">
+                        <span className="text-xs text-slate-400 font-medium">
                           {ch.examCount} đề
                         </span>
                         <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#00B8DD] group-hover:translate-x-1 transition-all" />
@@ -827,12 +1064,12 @@ export function LevelSelectionModal({
               </p>
 
               {/* 3 Formats Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
                 {/* 1. Trắc Nghiệm */}
                 <div
                   onClick={() => handleSelectFormat('QUIZ')}
                   className={cn(
-                    'p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group',
+                    'p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group',
                     selectedFormat === 'QUIZ'
                       ? 'bg-[#E6F8FC] dark:bg-[#00B8DD]/20 border-[#00B8DD] shadow-md shadow-[#00B8DD]/20 ring-2 ring-[#00B8DD]/30'
                       : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-[#00B8DD]'
@@ -863,7 +1100,7 @@ export function LevelSelectionModal({
                 <div
                   onClick={() => handleSelectFormat('ESSAY')}
                   className={cn(
-                    'p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group',
+                    'p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group',
                     selectedFormat === 'ESSAY'
                       ? 'bg-[#E6F8FC] dark:bg-[#00B8DD]/20 border-[#00B8DD] shadow-md shadow-[#00B8DD]/20 ring-2 ring-[#00B8DD]/30'
                       : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-[#00B8DD]'
@@ -894,7 +1131,7 @@ export function LevelSelectionModal({
                 <div
                   onClick={() => handleSelectFormat('MIXED')}
                   className={cn(
-                    'p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group',
+                    'p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group',
                     selectedFormat === 'MIXED'
                       ? 'bg-[#E6F8FC] dark:bg-[#00B8DD]/20 border-[#00B8DD] shadow-md shadow-[#00B8DD]/20 ring-2 ring-[#00B8DD]/30'
                       : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-[#00B8DD]'
@@ -1186,7 +1423,7 @@ export function LevelSelectionModal({
               </p>
 
               {/* 5 Duration Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-3.5">
                 {DURATION_OPTIONS.map((opt) => {
                   const isSelected = selectedDuration === opt.minutes;
                   return (
@@ -1194,7 +1431,7 @@ export function LevelSelectionModal({
                       key={opt.minutes}
                       onClick={() => setSelectedDuration(opt.minutes)}
                       className={cn(
-                        'p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group relative',
+                        'p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group relative',
                         isSelected
                           ? 'bg-[#E6F8FC] dark:bg-[#00B8DD]/20 border-[#00B8DD] shadow-md shadow-[#00B8DD]/20 ring-2 ring-[#00B8DD]/30'
                           : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-[#00B8DD]'
@@ -1225,6 +1462,60 @@ export function LevelSelectionModal({
                     </div>
                   );
                 })}
+              </div>
+
+              {/* Đề Xuất Lộ Trình & Khóa Học Bổ Trợ Sau Khi Thiết Lập Ma Trận */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-sky-50/70 via-indigo-50/50 to-emerald-50/50 dark:from-slate-900 dark:via-indigo-950/20 dark:to-slate-900 border border-[#00B8DD]/30 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-[#00B8DD]" />
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                      Đề Xuất Bổ Trợ Dành Cho Bạn Theo Ma Trận Đã Chọn
+                    </h4>
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-500">Cá nhân hóa theo môn {subject.name}</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+                  {/* Card 1: Bài viết trọng tâm */}
+                  <div className="p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 space-y-1">
+                    <span className="text-[10px] font-bold text-sky-600 dark:text-sky-400 flex items-center gap-1">
+                      <BookOpen className="w-3 h-3" /> Cẩm Nang Ôn Thi
+                    </span>
+                    <h5 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
+                      Bí quyết giải nhanh trắc nghiệm 30s môn {subject.name}
+                    </h5>
+                    <p className="text-[10px] text-slate-500 line-clamp-2">
+                      Sơ đồ tư duy và công thức then chốt giúp ôn lại kiến thức cốt lõi chỉ trong 3 phút.
+                    </p>
+                  </div>
+
+                  {/* Card 2: Khóa học bổ trợ */}
+                  <div className="p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 space-y-1">
+                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                      <Award className="w-3 h-3" /> Khóa Học Video Bổ Trợ
+                    </span>
+                    <h5 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
+                      Chuyên đề củng cố kiến thức hổng {subject.name}
+                    </h5>
+                    <p className="text-[10px] text-slate-500 line-clamp-2">
+                      Giảng viên đối tác • 18 video bài giảng • Học thử miễn phí không áp lực.
+                    </p>
+                  </div>
+
+                  {/* Card 3: Lộ trình rèn luyện */}
+                  <div className="p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 space-y-1">
+                    <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1">
+                      <Trophy className="w-3 h-3" /> Lộ Trình Mục Tiêu
+                    </span>
+                    <h5 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
+                      Mục tiêu 8.5+ Điểm Thi Học Kỳ & THPT
+                    </h5>
+                    <p className="text-[10px] text-slate-500 line-clamp-2">
+                      Cấp độ: {selectedLevel.name} • Thi &gt; 8.5 nhận +1đ, đạt 10 nhận +2đ thưởng 💎.
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Ready summary bar & Start exam button */}
@@ -1261,6 +1552,14 @@ export function LevelSelectionModal({
         onClose={() => setRequireLoginOpen(false)}
         reason="ADVANCED_LEVEL"
         targetLevelName={selectedGatedLevelName}
+        returnUrl={pendingReturnUrl}
+        onSuccessLogin={() => {
+          setRequireLoginOpen(false);
+          if (pendingReturnUrl) {
+            onClose();
+            router.push(pendingReturnUrl);
+          }
+        }}
       />
     </>
   );

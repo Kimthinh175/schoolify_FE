@@ -224,6 +224,21 @@ export const K12_SUBJECTS: K12Subject[] = [
     description: 'Thiết kế kỹ thuật, Điện - Điện tử ứng dụng, Công nghệ trồng trọt và chăn nuôi hiện đại.',
     category: 'TECH',
   },
+  {
+    id: 'sub-12',
+    slug: 'khoa-hoc-tu-nhien',
+    name: 'Khoa Học Tự Nhiên',
+    shortCode: 'KHTN',
+    iconName: 'Sparkles',
+    themeColor: 'text-emerald-500',
+    bgLight: 'bg-emerald-50 dark:bg-emerald-950/20',
+    borderColor: 'border-emerald-200 dark:border-emerald-900/40',
+    badgeBg: 'bg-emerald-600 text-white',
+    totalExams: 75,
+    completedExams: 5,
+    description: 'Tích hợp Vật lý, Hóa học và Sinh học chuẩn GDPT (Chất & sự biến đổi, Năng lượng, Trái Đất & Sự sống).',
+    category: 'NATURAL',
+  },
 ];
 
 export const MOCK_PRACTICE_EXAMS: PracticeExamItem[] = [

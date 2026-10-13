@@ -55,7 +55,7 @@ function questionTypeLabel(type: QuestionType): string {
   if (type === 'MULTIPLE_CHOICE') return 'Nhiều đáp án';
   if (type === 'SINGLE_CHOICE') return 'Một đáp án';
   if (type === 'TRUE_FALSE') return 'Đúng / Sai';
-  if (type === 'FILL_BLANK') return 'Điền vào chỗ trống';
+  if (type === 'SHORT_ANSWER' || type === 'FILL_BLANK') return 'Điền vào chỗ trống';
   if (type === 'ESSAY') return 'Tự luận';
   return 'Khác';
 }
@@ -64,7 +64,7 @@ function questionTypeIcon(type: QuestionType) {
   if (type === 'MULTIPLE_CHOICE') return <CheckSquare className="h-3.5 w-3.5" />;
   if (type === 'TRUE_FALSE') return <ToggleLeft className="h-3.5 w-3.5" />;
   if (type === 'ESSAY') return <FileText className="h-3.5 w-3.5" />;
-  if (type === 'FILL_BLANK') return <FileText className="h-3.5 w-3.5" />;
+  if (type === 'SHORT_ANSWER' || type === 'FILL_BLANK') return <FileText className="h-3.5 w-3.5" />;
   return <CircleDot className="h-3.5 w-3.5" />;
 }
 

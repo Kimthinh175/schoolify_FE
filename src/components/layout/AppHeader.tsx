@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useAuthStore } from '@/store/auth.store';
 import { useParentStore } from '@/store/parent.store';
 
@@ -64,8 +65,10 @@ export function AppHeader({ onOpenMobileSidebar }: { onOpenMobileSidebar: () => 
         )}
       </div>
 
-      {/* Right Controls: Notifications + Profile */}
-      <div className="flex items-center gap-3">
+      {/* Right Controls: Theme Toggle + Notifications + Profile */}
+      <div className="flex items-center gap-2.5">
+        {/* Theme Toggle Button */}
+        <ThemeToggle />
 
         {/* Notifications Icon */}
         <button className="relative rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors">

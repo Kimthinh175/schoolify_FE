@@ -13,7 +13,7 @@ export interface DialogProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   className?: string;
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '4xl' | 'full';
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | 'full';
 }
 
 export function Dialog({
@@ -46,7 +46,9 @@ export function Dialog({
     lg: 'max-w-lg',
     xl: 'max-w-xl',
     '2xl': 'max-w-2xl',
+    '3xl': 'max-w-3xl',
     '4xl': 'max-w-4xl',
+    '5xl': 'max-w-5xl',
     full: 'sm:max-w-[92vw]',
   };
 
@@ -76,7 +78,7 @@ export function Dialog({
             )}
           >
             {/* Header */}
-            <div className="flex items-start justify-between pb-3">
+            <div className="flex items-start justify-between pb-3 shrink-0">
               <div className="flex-1 mr-3">
                 {title && (
                   typeof title === 'string' ? (
@@ -103,10 +105,10 @@ export function Dialog({
             </div>
 
             {/* Body */}
-            <div className="overflow-y-auto py-2 flex-1 pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">{children}</div>
+            <div className="overflow-y-auto py-2 flex-1 pr-1">{children}</div>
 
             {/* Footer */}
-            {footer && <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">{footer}</div>}
+            {footer && <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3 shrink-0">{footer}</div>}
           </motion.div>
         </div>
       )}

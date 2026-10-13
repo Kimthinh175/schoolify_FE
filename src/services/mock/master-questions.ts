@@ -1,6 +1,90 @@
-import { Question } from '@/types/exam';
+import { Question, DifficultyLevel, QuestionType, Answer } from '@/types/exam';
+import questionsDb from '@/data/questions-db.json';
 
-export const INITIAL_MASTER_QUESTIONS: Question[] = [
+const DB_MASTER_QUESTIONS: Question[] = (questionsDb as any[]).map((q, idx) => {
+  const diffMap: Record<string, DifficultyLevel> = {
+    EASY: 'RECOGNITION',
+    MEDIUM: 'UNDERSTANDING',
+    HARD: 'APPLICATION',
+    VERY_HARD: 'ADVANCED_APPLICATION',
+  };
+
+  let mappedType: QuestionType = 'MULTIPLE_CHOICE';
+  let answers: Answer[] | undefined = undefined;
+
+  if (q.type === 'ESSAY') {
+    mappedType = 'ESSAY';
+  } else if (q.type === 'TRUE_FALSE') {
+    mappedType = 'TRUE_FALSE';
+    if (q.statements) {
+      answers = q.statements.map((st: any) => ({
+        id: `ans_${q.id}_${st.subId}`,
+        question_id: q.id,
+        content: st.statement,
+        is_answer: !!st.isCorrect,
+        label: st.subId?.toUpperCase() || '',
+        explain: st.explanation,
+      }));
+    }
+  } else if (q.type === 'SHORT_ANSWER') {
+    mappedType = 'FILL_BLANK';
+    if (q.shortAnswerCorrect) {
+      answers = [
+        {
+          id: `ans_${q.id}_val`,
+          question_id: q.id,
+          content: q.shortAnswerCorrect,
+          is_answer: true,
+          label: 'Đáp số',
+          explain: q.explanation,
+        },
+      ];
+    }
+  } else {
+    mappedType = 'MULTIPLE_CHOICE';
+    if (q.choices) {
+      answers = q.choices.map((c: any) => ({
+        id: `ans_${q.id}_${c.key}`,
+        question_id: q.id,
+        content: c.content,
+        is_answer: c.key === q.correctChoice,
+        label: c.key,
+      }));
+    }
+  }
+
+  const rubric = q.gradingRubric
+    ? q.gradingRubric.map((r: any) => ({
+        criterion: `${r.step}: ${r.detail}`,
+        points: r.point,
+      }))
+    : undefined;
+
+  return {
+    id: q.id,
+    type: mappedType,
+    title: q.title || `Câu hỏi ${idx + 1}`,
+    content: q.content,
+    difficulty: diffMap[q.difficulty] || 'UNDERSTANDING',
+    subject: q.subjectName,
+    grade_level: String(q.grade || 12),
+    chapter: `Chương ${q.chapterId}: ${q.topic || ''}`,
+    points: q.score || (q.type === 'ESSAY' ? 2.0 : q.type === 'TRUE_FALSE' ? 1.0 : 0.25),
+    answers,
+    choices: q.choices,
+    correctChoice: q.correctChoice,
+    statements: q.statements,
+    shortAnswerCorrect: q.shortAnswerCorrect,
+    gradingRubric: q.gradingRubric,
+    sample_essay_answer: q.type === 'ESSAY' ? q.explanation : undefined,
+    explain: q.explanation,
+    rubric,
+    count_used: 10 + (idx % 25),
+    created_at: '2026-03-01T08:00:00Z',
+  };
+});
+
+const LEGACY_MASTER_QUESTIONS: Question[] = [
   {
     id: 'mst_q_1',
     type: 'SINGLE_CHOICE',
@@ -418,4 +502,9 @@ export const INITIAL_MASTER_QUESTIONS: Question[] = [
     count_used: 7,
     created_at: '2026-03-22T08:00:00Z',
   },
+];
+
+export const INITIAL_MASTER_QUESTIONS: Question[] = [
+  ...DB_MASTER_QUESTIONS,
+  ...LEGACY_MASTER_QUESTIONS,
 ];

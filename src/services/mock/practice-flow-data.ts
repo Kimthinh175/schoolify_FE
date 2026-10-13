@@ -1,5 +1,6 @@
 import { PracticeLevel } from '@/types/subject';
 import { generateQuestionsByMatrix } from './question-matrix-engine';
+import questionsDb from '@/data/questions-db.json';
 
 export type ExamFormat = 'QUIZ' | 'ESSAY' | 'MIXED';
 export type QuestionDifficulty = 'EASY' | 'MEDIUM' | 'HARD' | 'VERY_HARD';
@@ -88,6 +89,468 @@ export const MATH_GRADE_12_CHAPTERS: ChapterItem[] = [
     examCount: 15,
   },
 ];
+
+// Bản đồ chương học chuẩn GDPT 2018 cho 12 môn K-12
+export const CHAPTERS_BY_SUBJECT: Record<string, ChapterItem[]> = {
+  'toan-hoc': MATH_GRADE_12_CHAPTERS,
+  'vat-ly': [
+    {
+      id: 1,
+      slug: 'vat-ly-nhiet',
+      name: 'Chương 1: Vật lý nhiệt',
+      description: 'Nhiệt độ, thang nhiệt độ Kelvin - Celsius, nhiệt dung riêng, nhiệt nóng chảy và nhiệt hóa hơi riêng.',
+      lessonCount: 5,
+      examCount: 22,
+      isDemoReady: true,
+    },
+    {
+      id: 2,
+      slug: 'khi-ly-tuong',
+      name: 'Chương 2: Khí lý tưởng',
+      description: 'Mô hình động học phân tử chất khí, định luật Boyle, định luật Charles và phương trình Clapeyron.',
+      lessonCount: 4,
+      examCount: 18,
+    },
+    {
+      id: 3,
+      slug: 'tu-truong-va-cam-ung-dien-tu',
+      name: 'Chương 3: Từ trường & Cảm ứng điện từ',
+      description: 'Từ trường, lực từ, từ thông, hiện tượng cảm ứng điện từ và năng lượng từ trường.',
+      lessonCount: 5,
+      examCount: 25,
+    },
+    {
+      id: 4,
+      slug: 'vat-ly-hat-nhan',
+      name: 'Chương 4: Vật lý hạt nhân',
+      description: 'Cấu trúc hạt nhân, độ hụt khối, năng lượng liên kết, hiện tượng phóng xạ và phản ứng phân hạch.',
+      lessonCount: 4,
+      examCount: 20,
+    },
+    {
+      id: 5,
+      slug: 'dao-dong-dieu-hoa-va-song-co',
+      name: 'Chương 5: Dao động điều hòa & Sóng cơ',
+      description: 'Phương trình dao động, con lắc đơn, con lắc lò xo, sự truyền sóng và hiện tượng giao thoa sóng.',
+      lessonCount: 4,
+      examCount: 20,
+    },
+    {
+      id: 6,
+      slug: 'dong-dien-xoay-chieu',
+      name: 'Chương 6: Dòng điện xoay chiều',
+      description: 'Mạch RLC mắc nối tiếp, hiện tượng cộng hưởng điện, công suất và máy biến áp.',
+      lessonCount: 4,
+      examCount: 16,
+    },
+  ],
+  'hoa-hoc': [
+    {
+      id: 1,
+      slug: 'este-lipit-chat-giat-rua',
+      name: 'Chương 1: Este - Lipit & Chất giặt rửa',
+      description: 'Khái niệm, cấu trúc este, phản ứng xà phòng hóa chất béo và cơ chế tẩy rửa tổng hợp.',
+      lessonCount: 4,
+      examCount: 24,
+      isDemoReady: true,
+    },
+    {
+      id: 2,
+      slug: 'carbohydrate',
+      name: 'Chương 2: Carbohydrate',
+      description: 'Glucose, Fructose, Saccharose, Maltose, Tinh bột và Cellulose trong đời sống.',
+      lessonCount: 4,
+      examCount: 20,
+    },
+    {
+      id: 3,
+      slug: 'hop-chat-chua-nitrogen',
+      name: 'Chương 3: Hợp chất chứa Nitrogen',
+      description: 'Amine, Amino acid, Peptide, Protein và cấu trúc enzyme sinh học.',
+      lessonCount: 5,
+      examCount: 22,
+    },
+    {
+      id: 4,
+      slug: 'polymer-va-vat-lieu-polymer',
+      name: 'Chương 4: Polymer & Vật liệu polymer',
+      description: 'Phản ứng trùng hợp, trùng ngưng, chất dẻo, tơ sợi nhân tạo và cao su tổng hợp.',
+      lessonCount: 3,
+      examCount: 16,
+    },
+    {
+      id: 5,
+      slug: 'pin-dien-va-dien-phan',
+      name: 'Chương 5: Pin điện & Điện phân',
+      description: 'Thế điện cực chuẩn, cấu tạo pin Galvani, sự ăn mòn kim loại và ứng dụng điện phân công nghiệp.',
+      lessonCount: 4,
+      examCount: 18,
+    },
+    {
+      id: 6,
+      slug: 'kim-loai-chuyen-tiep',
+      name: 'Chương 6: Kim loại chuyển tiếp',
+      description: 'Cấu hình electron phân lớp d, số oxi hóa và ứng dụng của phức chất.',
+      lessonCount: 3,
+      examCount: 14,
+    },
+  ],
+  'sinh-hoc': [
+    {
+      id: 1,
+      slug: 'di-truyen-phan-tu-va-te-bao',
+      name: 'Chương 1: Di truyền phân tử & Di truyền tế bào',
+      description: 'Nhân đôi DNA, phiên mã, dịch mã, điều hòa hoạt động của operon Lac và đột biến gen.',
+      lessonCount: 5,
+      examCount: 26,
+      isDemoReady: true,
+    },
+    {
+      id: 2,
+      slug: 'tinh-quy-luat-hien-tuong-di-truyen',
+      name: 'Chương 2: Tính quy luật của hiện tượng di truyền',
+      description: 'Quy luật phân ly Mendel, tương tác gen, liên kết gen hoàn toàn và hoán vị gen.',
+      lessonCount: 5,
+      examCount: 22,
+    },
+    {
+      id: 3,
+      slug: 'di-truyen-quan-the-va-nguoi',
+      name: 'Chương 3: Di truyền quần thể & Di truyền người',
+      description: 'Cấu trúc di truyền quần thể, định luật Hardy - Weinberg và nghiên cứu phả hệ di truyền.',
+      lessonCount: 4,
+      examCount: 18,
+    },
+    {
+      id: 4,
+      slug: 'bang-chung-va-co-che-tien-hoa',
+      name: 'Chương 4: Bằng chứng & Cơ chế tiến hóa',
+      description: 'Học thuyết Darwin, thuyết tiến hóa hiện đại, các nhân tố tiến hóa và quá trình hình thành loài.',
+      lessonCount: 4,
+      examCount: 16,
+    },
+    {
+      id: 5,
+      slug: 'sinh-thai-hoc',
+      name: 'Chương 5: Sinh thái học & Môi trường',
+      description: 'Quần thể sinh vật, quần xã sinh vật, hệ sinh thái và chu trình tuần hoàn vật chất sinh địa hóa.',
+      lessonCount: 4,
+      examCount: 18,
+    },
+    {
+      id: 6,
+      slug: 'vi-sinh-vat-va-cong-nghe-sinh-hoc',
+      name: 'Chương 6: Vi sinh vật & Công nghệ sinh học',
+      description: 'Chuyển hóa vật chất vi sinh vật, sinh trưởng và ứng dụng trong nông nghiệp, y học.',
+      lessonCount: 3,
+      examCount: 14,
+    },
+  ],
+  'tieng-anh': [
+    {
+      id: 1,
+      slug: 'unit-1-life-stories',
+      name: 'Unit 1: Life Stories',
+      description: 'Past Simple vs Past Continuous, vocabulary about inspirational historical figures and achievers.',
+      lessonCount: 5,
+      examCount: 24,
+      isDemoReady: true,
+    },
+    {
+      id: 2,
+      slug: 'unit-2-a-multicultural-world',
+      name: 'Unit 2: A Multicultural World',
+      description: 'Cultural diversity, traditions, international festivals, comparative structures and idioms.',
+      lessonCount: 4,
+      examCount: 20,
+    },
+    {
+      id: 3,
+      slug: 'unit-3-green-living',
+      name: 'Unit 3: Green Living',
+      description: 'Environmental protection, passive voice forms, carbon footprint and sustainable lifestyles.',
+      lessonCount: 4,
+      examCount: 22,
+    },
+    {
+      id: 4,
+      slug: 'unit-4-urbanisation',
+      name: 'Unit 4: Urbanisation',
+      description: 'Relative clauses, rapid urban growth, challenges and development in modern megacities.',
+      lessonCount: 4,
+      examCount: 18,
+    },
+    {
+      id: 5,
+      slug: 'unit-5-the-world-of-work',
+      name: 'Unit 5: The World of Work',
+      description: 'Reported speech, future career choices, resume preparation and mock interview dialogues.',
+      lessonCount: 4,
+      examCount: 20,
+    },
+    {
+      id: 6,
+      slug: 'unit-6-lifelong-learning',
+      name: 'Unit 6: Lifelong Learning',
+      description: 'Conditional sentences, self-directed learning skills, digital education and future competencies.',
+      lessonCount: 3,
+      examCount: 16,
+    },
+  ],
+  'lich-su': [
+    {
+      id: 1,
+      slug: 'the-gioi-sau-chien-tranh-lanh',
+      name: 'Chuyên đề 1: Thế giới trong và sau Chiến tranh Lạnh',
+      description: 'Trật tự hai cực Ianta, xu thế đa cực, hợp tác quốc tế và toàn cầu hóa.',
+      lessonCount: 4,
+      examCount: 20,
+      isDemoReady: true,
+    },
+    {
+      id: 2,
+      slug: 'asean-nhung-chang-duong-lich-su',
+      name: 'Chuyên đề 2: ASEAN: Những chặng đường lịch sử',
+      description: 'Quá trình hình thành, phát triển từ ASEAN 5 đến ASEAN 10 và vai trò trung tâm khu vực.',
+      lessonCount: 3,
+      examCount: 16,
+    },
+    {
+      id: 3,
+      slug: 'cach-mang-thang-tam-dien-bien-phu',
+      name: 'Chuyên đề 3: Cách mạng tháng Tám 1945 & Chiến thắng Điện Biên Phủ',
+      description: 'Nghệ thuật chớp thời cơ, xây dựng căn cứ địa và cuộc kháng chiến chống thực dân Pháp.',
+      lessonCount: 5,
+      examCount: 24,
+    },
+    {
+      id: 4,
+      slug: 'khang-chien-chong-my-cuu-nuoc',
+      name: 'Chuyên đề 4: Cuộc kháng chiến chống Mỹ cứu nước (1954 - 1975)',
+      description: 'Các chiến lược chiến tranh của Mỹ, Hiệp định Paris 1973 và Đại thắng mùa Xuân 1975.',
+      lessonCount: 5,
+      examCount: 25,
+    },
+  ],
+  'dia-ly': [
+    {
+      id: 1,
+      slug: 'dia-ly-tu-nhien-viet-nam',
+      name: 'Chuyên đề 1: Địa lý tự nhiên Việt Nam',
+      description: 'Vị trí địa lý, phạm vi lãnh thổ biển đảo, đặc điểm địa hình, khí hậu nhiệt đới ẩm gió mùa.',
+      lessonCount: 4,
+      examCount: 22,
+      isDemoReady: true,
+    },
+    {
+      id: 2,
+      slug: 'dan-cu-va-do-thi-hoa',
+      name: 'Chuyên đề 2: Địa lý dân cư & Đô thị hóa',
+      description: 'Cơ cấu dân số vàng, phân bố dân cư, nguồn lao động và quá trình đô thị hóa tại Việt Nam.',
+      lessonCount: 3,
+      examCount: 18,
+    },
+    {
+      id: 3,
+      slug: 'cac-nganh-kinh-te-trong-diem',
+      name: 'Chuyên đề 3: Địa lý các ngành kinh tế trọng điểm',
+      description: 'Nông nghiệp công nghệ cao, các ngành công nghiệp chủ chốt và giao thông vận tải, du lịch.',
+      lessonCount: 5,
+      examCount: 24,
+    },
+    {
+      id: 4,
+      slug: 'cac-vung-kinh-te-trong-diem',
+      name: 'Chuyên đề 4: Địa lý các vùng kinh tế trọng điểm',
+      description: 'Đồng bằng sông Hồng, Đông Nam Bộ, Đồng bằng sông Cửu Long và vấn đề biển đảo.',
+      lessonCount: 4,
+      examCount: 20,
+    },
+  ],
+  'gdcd': [
+    {
+      id: 1,
+      slug: 'kinh-te-va-chu-the-kinh-te',
+      name: 'Chuyên đề 1: Nền kinh tế và các chủ thể kinh tế',
+      description: 'Cơ chế thị trường, quy luật cung cầu, giá cả và trách nhiệm xã hội của doanh nghiệp.',
+      lessonCount: 3,
+      examCount: 18,
+      isDemoReady: true,
+    },
+    {
+      id: 2,
+      slug: 'thi-truong-lao-dong-viec-lam',
+      name: 'Chuyên đề 2: Thị trường lao động và khởi nghiệp',
+      description: 'Cung cầu lao động, chính sách hỗ trợ việc làm, kỹ năng định hướng nghề nghiệp thời đại số.',
+      lessonCount: 3,
+      examCount: 16,
+    },
+    {
+      id: 3,
+      slug: 'quyen-binh-dang-cua-cong-dan',
+      name: 'Chuyên đề 3: Quyền bình đẳng của công dân trước pháp luật',
+      description: 'Bình đẳng về quyền, nghĩa vụ và trách nhiệm pháp lý trong gia đình, lao động và kinh doanh.',
+      lessonCount: 4,
+      examCount: 20,
+    },
+    {
+      id: 4,
+      slug: 'phap-luat-voi-phat-trien-ben-vung',
+      name: 'Chuyên đề 4: Pháp luật với phát triển bền vững đất nước',
+      description: 'Pháp luật về bảo vệ môi trường, quốc phòng an ninh và hội nhập quốc tế.',
+      lessonCount: 3,
+      examCount: 16,
+    },
+  ],
+  'tin-hoc': [
+    {
+      id: 1,
+      slug: 'lap-trinh-python-nang-cao',
+      name: 'Chuyên đề 1: Lập trình Python & Giải thuật nâng cao',
+      description: 'Kỹ thuật đệ quy, sắp xếp, tìm kiếm nhị phân, xử lý xâu ký tự và lập trình hướng đối tượng OOP.',
+      lessonCount: 5,
+      examCount: 25,
+      isDemoReady: true,
+    },
+    {
+      id: 2,
+      slug: 'co-so-du-lieu-quan-he-sql',
+      name: 'Chuyên đề 2: Cơ sở dữ liệu quan hệ & Truy vấn SQL',
+      description: 'Mô hình quan hệ, khóa chính, khóa ngoại, chuẩn hóa dữ liệu và câu lệnh SELECT, JOIN, GROUP BY.',
+      lessonCount: 4,
+      examCount: 22,
+    },
+    {
+      id: 3,
+      slug: 'tri-tue-nhan-tao-ai-ung-dung',
+      name: 'Chuyên đề 3: Trí tuệ nhân tạo (AI) ứng dụng',
+      description: 'Khái niệm học máy Machine Learning, xử lý ngôn ngữ tự nhiên NLP và ứng dụng thực tiễn.',
+      lessonCount: 4,
+      examCount: 20,
+    },
+    {
+      id: 4,
+      slug: 'mang-may-tinh-an-toan-thong-tin',
+      name: 'Chuyên đề 4: Mạng máy tính & An toàn an ninh mạng',
+      description: 'Địa chỉ IP, giao thức TCP/IP, chữ ký điện tử, mã hóa RSA và phòng chống tấn công mạng.',
+      lessonCount: 4,
+      examCount: 18,
+    },
+  ],
+  'cong-nghe': [
+    {
+      id: 1,
+      slug: 've-ky-thuat-cad',
+      name: 'Chuyên đề 1: Vẽ kỹ thuật & Bản vẽ cơ khí CAD',
+      description: 'Các phép chiếu vuông góc, hình cắt, mặt cắt và đọc bản vẽ lắp ráp chi tiết cơ khí.',
+      lessonCount: 3,
+      examCount: 16,
+      isDemoReady: true,
+    },
+    {
+      id: 2,
+      slug: 'dien-tu-ung-dung-vi-dieu-khien',
+      name: 'Chuyên đề 2: Điện tử ứng dụng & Vi điều khiển',
+      description: 'Linh kiện bán dẫn Diode, Transistor, IC khuếch đại thuật toán và vi điều khiển nhúng.',
+      lessonCount: 4,
+      examCount: 18,
+    },
+    {
+      id: 3,
+      slug: 'tu-dong-hoa-robotics',
+      name: 'Chuyên đề 3: Tự động hóa & Hệ thống Robotics',
+      description: 'Cơ cấu chấp hành khí nén, động cơ bước, cảm biến công nghiệp và lập trình điều khiển tự động.',
+      lessonCount: 3,
+      examCount: 16,
+    },
+    {
+      id: 4,
+      slug: 'nang-luong-tai-tao',
+      name: 'Chuyên đề 4: Công nghệ năng lượng tái tạo',
+      description: 'Công nghệ điện mặt trời quang điện, tuabin điện gió và bảo tồn năng lượng trong công nghiệp.',
+      lessonCount: 3,
+      examCount: 14,
+    },
+  ],
+  'ngu-van': [
+    {
+      id: 1,
+      slug: 'doc-hieu-truyen-va-ky-hien-dai',
+      name: 'Chuyên đề 1: Đọc hiểu văn bản truyện & ký hiện đại',
+      description: 'Nghệ thuật xây dựng điểm nhìn trần thuật, tình huống truyện độc đáo và diễn biến tâm lý nhân vật.',
+      lessonCount: 4,
+      examCount: 20,
+      isDemoReady: true,
+    },
+    {
+      id: 2,
+      slug: 'tho-tru-tinh-va-tho-tuong-trung',
+      name: 'Chuyên đề 2: Thơ trữ tình & Thơ tượng trưng',
+      description: 'Cấu tứ bài thơ, hình ảnh tượng trưng, nhịp điệu và phong cách nghệ thuật của các nhà thơ lớn.',
+      lessonCount: 4,
+      examCount: 18,
+    },
+    {
+      id: 3,
+      slug: 'nghi-luan-xa-hoi',
+      name: 'Chuyên đề 3: Kỹ năng viết bài Nghị luận xã hội',
+      description: 'Kỹ năng giải thích tư tưởng, chứng minh dẫn chứng thực tế và bình luận bài học hành động trong kỷ nguyên số.',
+      lessonCount: 4,
+      examCount: 22,
+    },
+    {
+      id: 4,
+      slug: 'nghi-luan-van-hoc-so-sanh',
+      name: 'Chuyên đề 4: Nghị luận văn học so sánh & Bình diện thi pháp',
+      description: 'So sánh hai đoạn trích, liên hệ phong cách sáng tác và chiều sâu giá trị nhân đạo tác phẩm.',
+      lessonCount: 4,
+      examCount: 24,
+    },
+  ],
+  'khoa-hoc-tu-nhien': [
+    {
+      id: 1,
+      slug: 'chat-va-su-bien-doi-chat',
+      name: 'Chủ đề 1: Chất và sự biến đổi của chất',
+      description: 'Cấu tạo nguyên tử, bảng tuần hoàn, liên kết ion, liên kết cộng hóa trị và các loại phản ứng hóa học.',
+      lessonCount: 4,
+      examCount: 20,
+      isDemoReady: true,
+    },
+    {
+      id: 2,
+      slug: 'nang-luong-va-bien-doi-nang-luong',
+      name: 'Chủ đề 2: Năng lượng và các dạng năng lượng',
+      description: 'Động năng, thế năng, nhiệt năng, công và công suất cơ học, định luật bảo toàn năng lượng.',
+      lessonCount: 4,
+      examCount: 20,
+    },
+    {
+      id: 3,
+      slug: 'trai-dat-va-bau-troi',
+      name: 'Chủ đề 3: Trái Đất và bầu trời',
+      description: 'Hệ Mặt Trời, chuyển động tự quay và quanh Mặt Trời của Trái Đất, các hiện tượng khí tượng.',
+      lessonCount: 3,
+      examCount: 16,
+    },
+    {
+      id: 4,
+      slug: 'su-song-va-moi-truong-sinh-thai',
+      name: 'Chủ đề 4: Sự sống & Môi trường sinh thái',
+      description: 'Cấu trúc tế bào, trao đổi chất ở cơ thể thực vật, động vật và cân bằng sinh thái tự nhiên.',
+      lessonCount: 4,
+      examCount: 18,
+    },
+  ],
+};
+
+export function getChaptersBySubject(subjectSlug: string, _grade = 12): ChapterItem[] {
+  const slug = (subjectSlug || '').toLowerCase().trim();
+  if (slug === 'gdkt' || slug === 'gdkt-phap-luat' || slug === 'giao-duc-kinh-te-va-phap-luat') {
+    return CHAPTERS_BY_SUBJECT['gdcd'] || [];
+  }
+  return CHAPTERS_BY_SUBJECT[slug] || MATH_GRADE_12_CHAPTERS;
+}
 
 export interface QuestionChoice {
   key: 'A' | 'B' | 'C' | 'D';
@@ -1160,7 +1623,8 @@ const INITIAL_MATH_QUESTIONS: ExamQuestion[] = [
 // =========================================================================
 // TOÀN BỘ KHO CÂU HỎI MẪU TOÀN DIỆN (QUESTION BANK)
 // =========================================================================
-export const MOCK_QUESTION_BANK: ExamQuestion[] = [
+const ALL_RAW_QUESTIONS: ExamQuestion[] = [
+  ...(questionsDb as unknown as ExamQuestion[]),
   ...INITIAL_MATH_QUESTIONS,
   ...MOCK_PHYSICS_QUESTIONS,
   ...MOCK_CHEMISTRY_QUESTIONS,
@@ -1168,6 +1632,15 @@ export const MOCK_QUESTION_BANK: ExamQuestion[] = [
   ...MOCK_BIOLOGY_QUESTIONS,
   ...MOCK_LITERATURE_QUESTIONS,
 ];
+
+const QUESTION_BANK_MAP = new Map<string, ExamQuestion>();
+for (const q of ALL_RAW_QUESTIONS) {
+  if (!QUESTION_BANK_MAP.has(q.id)) {
+    QUESTION_BANK_MAP.set(q.id, q);
+  }
+}
+
+export const MOCK_QUESTION_BANK: ExamQuestion[] = Array.from(QUESTION_BANK_MAP.values());
 
 export function getSystemQuestionBank(): ExamQuestion[] {
   if (typeof window !== 'undefined') {
@@ -1314,8 +1787,8 @@ export function getPracticeExam(
   const opts: PracticeExamOptions =
     typeof options === 'number' ? { requestedCount: options } : options || {};
 
-  const chapter =
-    MATH_GRADE_12_CHAPTERS.find((c) => c.id === chapterId) || MATH_GRADE_12_CHAPTERS[0];
+  const chapters = getChaptersBySubject(subjectSlug, grade);
+  const chapter = chapters.find((c) => c.id === chapterId) || chapters[0] || MATH_GRADE_12_CHAPTERS[0];
 
   const targetTotal =
     format === 'QUIZ'
@@ -1364,10 +1837,28 @@ export function getPracticeExam(
 
   const totalPoints = questions.reduce((sum, q) => sum + q.score, 0);
 
+  const subjectNameMap: Record<string, string> = {
+    'toan-hoc': 'Toán Học',
+    'vat-ly': 'Vật Lý',
+    'hoa-hoc': 'Hóa Học',
+    'sinh-hoc': 'Sinh Học',
+    'tieng-anh': 'Tiếng Anh',
+    'lich-su': 'Lịch Sử',
+    'dia-ly': 'Địa Lý',
+    'gdcd': 'GDKT & Pháp Luật',
+    'gdkt': 'GDKT & Pháp Luật',
+    'gdkt-phap-luat': 'GDKT & Pháp Luật',
+    'giao-duc-kinh-te-va-phap-luat': 'GDKT & Pháp Luật',
+    'tin-hoc': 'Tin Học',
+    'cong-nghe': 'Công Nghệ',
+    'ngu-van': 'Ngữ Văn',
+    'khoa-hoc-tu-nhien': 'Khoa Học Tự Nhiên',
+  };
+
   return {
     id: `exam-${subjectSlug}-${level.toLowerCase()}-g${grade}-ch${chapterId}-${format.toLowerCase()}`,
     subjectSlug,
-    subjectName: subjectSlug === 'toan-hoc' ? 'Toán Học' : 'Môn Học K-12',
+    subjectName: subjectNameMap[subjectSlug] || 'Môn Học K-12',
     level,
     grade,
     chapterId,

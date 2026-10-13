@@ -3,6 +3,7 @@ export type QuestionType =
   | 'MULTIPLE_CHOICE'
   | 'TRUE_FALSE'
   | 'FILL_BLANK'
+  | 'SHORT_ANSWER'
   | 'ESSAY'
   | 'GROUP_QUESTIONS'
   | 'MATCHING'
@@ -89,6 +90,13 @@ export interface Question {
   // Dành cho CLOZE_DROPDOWN
   cloze_blanks?: ClozeBlank[];
   explain?: string | null;
+  // Dành cho 4 danh mục câu hỏi chuẩn GDPT 2018 / Bộ GD&ĐT 2025
+  choices?: { key: string; content: string }[];
+  correctChoice?: string;
+  statements?: { subId: string; statement: string; isCorrect: boolean; explanation?: string }[];
+  shortAnswerCorrect?: string;
+  gradingRubric?: { step: string; point: number; detail: string }[];
+  section_title?: string;
   count_used?: number;
   created_at?: string;
   updated_at?: string;
@@ -163,6 +171,14 @@ export interface ExamSubmission {
 
 export type ExamScopeMode = 'CHAPTER_FOCUSED' | 'SEMESTER' | 'NATIONAL_EXAM';
 
+/** Phân bổ 4 danh mục câu hỏi chuẩn Bộ GD&ĐT 2025 */
+export interface ExamCategoryDistribution {
+  multiple_choice: number; // Phần I: Trắc nghiệm 4 lựa chọn (số lượng câu)
+  true_false: number;      // Phần II: Đúng / Sai 4 ý a,b,c,d (số lượng câu)
+  short_answer: number;    // Phần III: Trả lời ngắn / điền số (số lượng câu)
+  essay: number;           // Phần IV: Tự luận kèm barem (số lượng câu)
+}
+
 /** Cấu hình sinh đề thi tự động theo ma trận */
 export interface ExamMatrixConfig {
   title: string;
@@ -185,10 +201,22 @@ export interface ExamMatrixConfig {
     application: number;         // % Vận dụng (e.g. 20)
     advanced_application: number;// % Vận dụng cao (e.g. 10)
   };
+  category_distribution?: ExamCategoryDistribution; // Phân bổ 4 danh mục
   variant_count: 2 | 4 | 8;      // Số lượng mã đề cần sinh (e.g. 4)
   variant_prefix?: string;       // Tiền tố mã đề (e.g. "10", "20")
   access_tier?: 'FREE_TRIAL' | 'PRO';
   upsell_course_id?: string;
+}
+
+/** Từng phần trong cấu trúc đề thi chuẩn Bộ GD&ĐT 2025 */
+export interface ExamVariantPart {
+  part_number: 1 | 2 | 3 | 4;
+  title: string;
+  description: string;
+  question_type: QuestionType;
+  questions: Question[];
+  points_per_question: number;
+  total_points: number;
 }
 
 /** Mã đề thi được sinh ra (e.g. Đề 101, 102...) */
@@ -199,6 +227,52 @@ export interface ExamVariant {
   duration_minutes: number;
   questions: Question[];
   answer_key: Record<string, string | string[]>; // Map question_id -> đáp án đúng
+  parts?: ExamVariantPart[];     // Chia 4 phần chuẩn Bộ GD&ĐT
+  total_score?: number;          // Điểm tối đa (thang 10)
+}
+
+/** Payload chuẩn gửi Backend API để sinh đề theo ma trận */
+export interface ExamMatrixApiPayload {
+  exam_info: {
+    title: string;
+    subject: string;
+    grade_level: string;
+    duration_minutes: number;
+    pass_score: number;
+    access_tier: 'FREE_TRIAL' | 'PRO';
+    upsell_course_id?: string;
+  };
+  scope_config: {
+    scope_mode: ExamScopeMode;
+    current_chapter?: string;
+    previous_chapters?: string[];
+    selected_chapters?: string[];
+    scope_ratio: {
+      current_chapter_percentage: number;
+      previous_chapters_percentage: number;
+    };
+  };
+  matrix_blueprint: {
+    total_questions: number;
+    category_distribution: ExamCategoryDistribution;
+    bloom_ratio: {
+      recognition_percentage: number;         // Nhận biết
+      understanding_percentage: number;       // Thông hiểu
+      application_percentage: number;         // Vận dụng
+      advanced_application_percentage: number;// Vận dụng cao
+    };
+  };
+  variants_config: {
+    variant_count: 2 | 4 | 8;
+    variant_prefix: string;
+    shuffle_questions: boolean;
+    shuffle_choices: boolean;
+  };
+  metadata?: {
+    created_by?: string;
+    client_timestamp: string;
+    standards: string;
+  };
 }
 
 /** Lỗi bắt được khi import file Word / Excel */

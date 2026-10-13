@@ -14,9 +14,10 @@ export const AVAILABLE_SUBJECTS: string[] = [
   'Khoa học tự nhiên',
   'Lịch sử',
   'Địa lí',
-  'Lịch sử và Địa lí',
+  'GDKT & Pháp Luật',
   'Giáo dục công dân',
   'Tin học',
+  'Công nghệ',
 ];
 
 export const GRADE_LEVELS = [
@@ -270,11 +271,71 @@ export const CURRICULUM_CHAPTERS: Record<string, Record<string, string[]>> = {
       'Chương 2: Các nền văn minh cổ - trung đại',
     ],
   },
+  'GDKT & Pháp Luật': {
+    '12': [
+      'Chương 1: Nền kinh tế và các chủ thể kinh tế',
+      'Chương 2: Thị trường lao động và khởi nghiệp',
+      'Chương 3: Quyền bình đẳng của công dân trước pháp luật',
+      'Chương 4: Pháp luật với phát triển bền vững đất nước',
+    ],
+    '11': [
+      'Chương 1: Cạnh tranh, cung cầu trong kinh tế thị trường',
+      'Chương 2: Lạm phát và thất nghiệp',
+      'Chương 3: Quyền bình đẳng của công dân',
+      'Chương 4: Quyền dân chủ của công dân',
+    ],
+    '10': [
+      'Chương 1: Nền kinh tế và các hoạt động kinh tế',
+      'Chương 2: Thị trường và cơ chế thị trường',
+      'Chương 3: Ngân sách nhà nước và thuế',
+      'Chương 4: Hệ thống chính trị và pháp luật Việt Nam',
+    ],
+  },
+  'Giáo dục công dân': {
+    '12': [
+      'Chương 1: Nền kinh tế và các chủ thể kinh tế',
+      'Chương 2: Thị trường lao động và khởi nghiệp',
+      'Chương 3: Quyền bình đẳng của công dân trước pháp luật',
+      'Chương 4: Pháp luật với phát triển bền vững đất nước',
+    ],
+  },
+  'Tin học': {
+    '12': [
+      'Chương 1: Lập trình Python & Giải thuật nâng cao',
+      'Chương 2: Cơ sở dữ liệu quan hệ & Truy vấn SQL',
+      'Chương 3: Trí tuệ nhân tạo (AI) ứng dụng',
+      'Chương 4: Mạng máy tính & An toàn an ninh mạng',
+    ],
+  },
+  'Công nghệ': {
+    '12': [
+      'Chương 1: Vẽ kỹ thuật & Bản vẽ cơ khí CAD',
+      'Chương 2: Điện tử ứng dụng & Vi điều khiển',
+      'Chương 3: Tự động hóa & Hệ thống Robotics',
+      'Chương 4: Công nghệ năng lượng tái tạo',
+    ],
+  },
+  'Địa lí': {
+    '12': [
+      'Chương 1: Địa lý tự nhiên Việt Nam',
+      'Chương 2: Địa lý dân cư & Đô thị hóa',
+      'Chương 3: Địa lý các ngành kinh tế trọng điểm',
+      'Chương 4: Địa lý các vùng kinh tế trọng điểm & Biển đảo',
+    ],
+  },
 };
 
 export function getChaptersForSubject(subject: string, grade: string): string[] {
   if (CURRICULUM_CHAPTERS[subject]?.[grade]) {
     return CURRICULUM_CHAPTERS[subject][grade];
+  }
+
+  // Alias lookup
+  const subLower = (subject || '').toLowerCase().trim();
+  if (subLower.includes('gdcd') || subLower.includes('pháp luật') || subLower.includes('phap luat') || subLower.includes('kinh tế') || subLower.includes('công dân')) {
+    if (CURRICULUM_CHAPTERS['GDKT & Pháp Luật']?.[grade]) {
+      return CURRICULUM_CHAPTERS['GDKT & Pháp Luật'][grade];
+    }
   }
 
   // Dự phòng thông minh cho môn học hoặc khối lớp chưa có bảng map chi tiết

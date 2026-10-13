@@ -28,6 +28,7 @@ const FOOTER_COLUMNS = {
     { label: 'Tạo Quà Thưởng Gamification', href: '/login' },
   ],
   portals: [
+    { label: 'Cổng Luyện Thi K-12', href: '/luyen-thi' },
     { label: 'Super Admin Portal', href: '/admin/dashboard' },
     { label: 'Hiệu Trưởng / Chủ Trường', href: '/school/dashboard' },
     { label: 'Trưởng Bộ Môn (HOD)', href: '/school/curriculum-approval' },

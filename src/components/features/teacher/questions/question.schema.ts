@@ -18,6 +18,7 @@ export const questionFormSchema = z
       'ESSAY',
       'TRUE_FALSE',
       'FILL_BLANK',
+      'SHORT_ANSWER',
       'GROUP_QUESTIONS',
       'MATCHING',
       'ORDERING',
@@ -33,6 +34,7 @@ export const questionFormSchema = z
     if (
       val.type === 'ESSAY' ||
       val.type === 'FILL_BLANK' ||
+      val.type === 'SHORT_ANSWER' ||
       val.type === 'GROUP_QUESTIONS' ||
       val.type === 'MATCHING' ||
       val.type === 'ORDERING' ||

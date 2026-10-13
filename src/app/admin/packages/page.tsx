@@ -48,11 +48,11 @@ export default function AdminPackagesPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Cấu Hình Gói Cước SaaS</h1>
-          <p className="text-xs text-slate-500 mt-0.5">Tạo các gói bản quyền B2B bán cho các trường học và trung tâm</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Gói Đăng Ký</h1>
+          <p className="text-xs text-slate-500 mt-0.5">Quản lý và thiết lập các gói đăng ký dịch vụ trên hệ thống</p>
         </div>
         <Button onClick={() => setIsModalOpen(true)} leftIcon={<Plus className="w-4 h-4" />}>
-          Tạo Gói Cước Mới
+          Tạo Gói Đăng Ký Mới
         </Button>
       </div>
 

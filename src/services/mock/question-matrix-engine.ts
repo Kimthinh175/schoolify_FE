@@ -197,6 +197,73 @@ export function calculateMatrixQuota(
 }
 
 /**
+ * Chuẩn hóa tên/slug môn học để so khớp chính xác
+ */
+function normalizeSubject(str: string): string {
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .replace(/[^a-z0-9]/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+export function isSubjectMatch(a?: string | null, b?: string | null): boolean {
+  if (!a || !b) return false;
+  const normA = normalizeSubject(a);
+  const normB = normalizeSubject(b);
+  if (normA === normB) return true;
+
+  const gdcdGroup = [
+    'gdcd',
+    'gdkt',
+    'gdkt phap luat',
+    'gdkt va phap luat',
+    'giao duc cong dan',
+    'giao duc kinh te va phap luat',
+    'phap luat',
+  ];
+  if (gdcdGroup.includes(normA) && gdcdGroup.includes(normB)) return true;
+
+  const khtnGroup = ['khtn', 'khoa hoc tu nhien'];
+  if (khtnGroup.includes(normA) && khtnGroup.includes(normB)) return true;
+
+  const vatLyGroup = ['vat ly', 'vat li'];
+  if (vatLyGroup.includes(normA) && vatLyGroup.includes(normB)) return true;
+
+  const diaLyGroup = ['dia ly', 'dia li'];
+  if (diaLyGroup.includes(normA) && diaLyGroup.includes(normB)) return true;
+
+  const suGroup = ['lich su', 'su'];
+  if (suGroup.includes(normA) && suGroup.includes(normB)) return true;
+
+  const sinhGroup = ['sinh hoc', 'sinh'];
+  if (sinhGroup.includes(normA) && sinhGroup.includes(normB)) return true;
+
+  const hoaGroup = ['hoa hoc', 'hoa'];
+  if (hoaGroup.includes(normA) && hoaGroup.includes(normB)) return true;
+
+  const toanGroup = ['toan hoc', 'toan'];
+  if (toanGroup.includes(normA) && toanGroup.includes(normB)) return true;
+
+  const tinGroup = ['tin hoc', 'tin'];
+  if (tinGroup.includes(normA) && tinGroup.includes(normB)) return true;
+
+  const cnGroup = ['cong nghe', 'cn'];
+  if (cnGroup.includes(normA) && cnGroup.includes(normB)) return true;
+
+  const anhGroup = ['tieng anh', 'anh'];
+  if (anhGroup.includes(normA) && anhGroup.includes(normB)) return true;
+
+  const vanGroup = ['ngu van', 'van'];
+  if (vanGroup.includes(normA) && vanGroup.includes(normB)) return true;
+
+  return false;
+}
+
+/**
  * Thuật toán Shuffle Fisher-Yates
  */
 function shuffleArray<T>(array: T[]): T[] {
@@ -215,21 +282,35 @@ export function generateQuestionsByMatrix(
   questionBank: ExamQuestion[],
   config: MatrixGenerationConfig
 ): ExamQuestion[] {
-  const { grade, chapterId, level, format } = config;
+  const { grade, chapterId, level, format, subjectSlug } = config;
   const isMixed = format === 'MIXED';
+
+  // LỌC CHẶT CHẼ THEO MÔN HỌC - TUYỆT ĐỐI KHÔNG ĐỂ LẪN CÂU HỎI MÔN KHÁC
+  let subjectOnlyBank = questionBank.filter((q) =>
+    isSubjectMatch(q.subjectSlug || q.subjectName, subjectSlug)
+  );
+
+  if (subjectOnlyBank.length === 0 && subjectSlug) {
+    subjectOnlyBank = questionBank.filter((q) =>
+      isSubjectMatch(q.subjectSlug, subjectSlug) || isSubjectMatch(q.subjectName, subjectSlug)
+    );
+  }
+
+  // Sử dụng ngân hàng riêng của môn này để tránh rò rỉ câu hỏi môn khác
+  const bank = subjectOnlyBank.length > 0 ? subjectOnlyBank : questionBank.filter((q) => !subjectSlug || isSubjectMatch(q.subjectSlug, subjectSlug));
 
   if (isMixed) {
     const targetQuiz = config.quizCount || 10;
     const targetEssay = config.essayCount || 2;
 
     const quizQuestions = sampleQuestionsForType(
-      questionBank.filter((q) => q.type !== 'ESSAY'),
+      bank.filter((q) => q.type !== 'ESSAY'),
       { ...config, totalQuestions: targetQuiz, format: 'QUIZ' },
       'QUIZ'
     );
 
     const essayQuestions = sampleQuestionsForType(
-      questionBank.filter((q) => q.type === 'ESSAY'),
+      bank.filter((q) => q.type === 'ESSAY'),
       { ...config, totalQuestions: targetEssay, format: 'ESSAY' },
       'ESSAY'
     );
@@ -257,8 +338,8 @@ export function generateQuestionsByMatrix(
   // QUIZ hoặc ESSAY đơn thuần
   const filteredBank =
     format === 'ESSAY'
-      ? questionBank.filter((q) => q.type === 'ESSAY')
-      : questionBank.filter((q) => q.type !== 'ESSAY');
+      ? bank.filter((q) => q.type === 'ESSAY')
+      : bank.filter((q) => q.type !== 'ESSAY');
 
   const picked = sampleQuestionsForType(filteredBank, config, format);
   const scoreEach = Math.round((10 / Math.max(1, picked.length)) * 100) / 100;
@@ -278,29 +359,32 @@ function sampleQuestionsForType(
   config: MatrixGenerationConfig,
   format: ExamFormat
 ): ExamQuestion[] {
-  const { totalQuestions, level, chapterId, grade } = config;
+  const { totalQuestions, level, chapterId, grade, subjectSlug } = config;
+  const isAssessment = level === 'ASSESSMENT';
   const quota = calculateMatrixQuota(totalQuestions, level, chapterId);
 
-  const currentChapterPool = candidateBank.filter(
-    (q) =>
-      (!config.subjectSlug || !q.subjectSlug || q.subjectSlug === config.subjectSlug) &&
-      q.chapterId === chapterId &&
-      (!grade || q.grade === grade)
-  );
+  // ĐÁNH GIÁ NĂNG LỰC: Lấy câu hỏi trên TOÀN BỘ CÁC CHƯƠNG của môn học đó!
+  // LUYỆN TẬP THEO CHƯƠNG: Lấy câu hỏi theo chương hiện tại và các chương trước.
+  const currentChapterPool = candidateBank.filter((q) => {
+    if (subjectSlug && !isSubjectMatch(q.subjectSlug || q.subjectName, subjectSlug)) return false;
+    if (grade && q.grade && q.grade !== grade) return false;
+    if (isAssessment) return true; // ĐGNL bao quát tất cả các chương trong môn
+    return q.chapterId === chapterId;
+  });
 
-  const prevChapterPool = candidateBank.filter(
-    (q) =>
-      (!config.subjectSlug || !q.subjectSlug || q.subjectSlug === config.subjectSlug) &&
-      (q.chapterId < chapterId || q.isPreviousChapterReview) &&
-      (!grade || q.grade === grade)
-  );
+  const prevChapterPool = candidateBank.filter((q) => {
+    if (subjectSlug && !isSubjectMatch(q.subjectSlug || q.subjectName, subjectSlug)) return false;
+    if (grade && q.grade && q.grade !== grade) return false;
+    if (isAssessment) return false;
+    return q.chapterId < chapterId || q.isPreviousChapterReview;
+  });
 
   const selectedQuestions: ExamQuestion[] = [];
   const selectedIds = new Set<string>();
 
   const difficulties: QuestionDifficulty[] = ['EASY', 'MEDIUM', 'HARD', 'VERY_HARD'];
 
-  // 1. Bốc câu hỏi cho Chương Hiện Tại theo từng mức độ
+  // 1. Bốc câu hỏi cho Chương Hiện Tại (hoặc Toàn bộ môn đối với ĐGNL) theo từng mức độ
   difficulties.forEach((diff) => {
     const needed = quota.currentChapter[diff];
     if (needed <= 0) return;
@@ -315,7 +399,7 @@ function sampleQuestionsForType(
       selectedIds.add(q.id);
     });
 
-    // Fallback trong chương hiện tại nếu thiếu mức độ này
+    // Fallback trong cùng pool nếu thiếu mức độ này
     if (taken.length < needed) {
       const remainingNeeded = needed - taken.length;
       const fallbackPool = shuffleArray(
@@ -330,7 +414,7 @@ function sampleQuestionsForType(
   });
 
   // 2. Bốc câu hỏi cho Các Chương Trước (nếu có yêu cầu)
-  if (quota.totalPrevious > 0) {
+  if (!isAssessment && quota.totalPrevious > 0) {
     difficulties.forEach((diff) => {
       const needed = quota.previousChapters[diff];
       if (needed <= 0) return;
@@ -366,20 +450,22 @@ function sampleQuestionsForType(
     });
   }
 
-  // 3. Fallback tối hậu: Nếu tổng câu bốc được vẫn chưa đủ totalQuestions
+  // 3. Fallback: Nếu tổng câu bốc được vẫn chưa đủ totalQuestions, CHỈ ĐƯỢC PHÉP LẤY TRONG CÙNG MÔN HỌC!
   if (selectedQuestions.length < totalQuestions) {
     const deficit = totalQuestions - selectedQuestions.length;
-    const remainingInEntireBank = shuffleArray(
-      candidateBank.filter((q) => !selectedIds.has(q.id))
+    const remainingInSameSubject = shuffleArray(
+      candidateBank.filter(
+        (q) => (!subjectSlug || isSubjectMatch(q.subjectSlug || q.subjectName, subjectSlug)) && !selectedIds.has(q.id)
+      )
     );
-    const bonus = remainingInEntireBank.slice(0, deficit);
+    const bonus = remainingInSameSubject.slice(0, deficit);
     bonus.forEach((q) => {
       selectedQuestions.push(q);
       selectedIds.add(q.id);
     });
   }
 
-  // 4. Nếu toàn bộ kho câu hỏi vẫn ít hơn totalQuestions (tạo biến thể bản sao có hậu tố _var)
+  // 4. Nếu toàn bộ kho câu hỏi của môn này vẫn ít hơn totalQuestions -> Tạo bản sao variant của CHÍNH MÔN NÀY (Không lấy môn khác)
   if (selectedQuestions.length < totalQuestions && selectedQuestions.length > 0) {
     const baseList = [...selectedQuestions];
     let idx = 0;
