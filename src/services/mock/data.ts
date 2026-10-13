@@ -231,7 +231,8 @@ export const MOCK_COURSES: Course[] = [
         course_id: 'crs-01',
         title: 'Chương 1: Hàm số lượng giác và Phương trình lượng giác',
         order_index: 1,
-        lessons: [          {
+        lessons: [
+          {
             id: 'ls-01',
             chapter_id: 'ch-01',
             title: 'Bài 1: Giá trị lượng giác của góc lượng giác & Công thức lượng giác cốt lõi',
@@ -241,7 +242,16 @@ export const MOCK_COURSES: Course[] = [
             is_free_preview: true,
             order_index: 1,
             is_completed: false,
-            materials: []
+            materials: [
+              {
+                id: 'mat-01',
+                lesson_id: 'ls-01',
+                title: 'Tong_Hop_Cong_Thuc_Luong_Giac_11.pdf',
+                file_url: '/downloads/Tong_Hop_Cong_Thuc_Luong_Giac_11.pdf',
+                file_type: 'PDF',
+                file_size_bytes: 2450000,
+              },
+            ],
           },
           {
             id: 'ls-02',
@@ -1579,6 +1589,8 @@ export const MOCK_QUESTION_BANKS: QuestionBank[] = [
         title: 'Tính tích phân',
         content: 'Tính tích phân I = ∫₀¹ (2x + 1) dx và trình bày các bước giải.',
         points: 3,
+        difficulty: 'ADVANCED',
+        chapter: 'Chương 3: Nguyên hàm và tích phân',
         sample_essay_answer: 'I = [x² + x]₀¹ = (1 + 1) − 0 = 2.',
         created_at: '2026-07-10T08:10:00Z',
         answers: [],
@@ -1590,6 +1602,12 @@ export const MOCK_QUESTION_BANKS: QuestionBank[] = [
         title: 'Nguyên hàm cơ bản',
         content: 'Nguyên hàm của hàm số f(x) = cos(x) là:',
         points: 2.5,
+        difficulty: 'BASIC',
+        chapter: {
+          id: 'ch-01',
+          title: 'Chương 3: Nguyên hàm và tích phân',
+          href: '/student/learn/crs-01/ls-01',
+        },
         created_at: '2026-07-11T08:10:00Z',
         answers: [
           { id: 'qk-05-a1', question_id: 'qk-05', content: 'sin(x) + C', is_answer: true, explain: 'Đạo hàm của sin(x) là cos(x).' },

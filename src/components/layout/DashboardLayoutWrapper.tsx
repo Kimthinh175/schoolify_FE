@@ -1,11 +1,24 @@
 'use client';
 
 import * as React from 'react';
+import { usePathname } from 'next/navigation';
 import { AppSidebar } from './AppSidebar';
 import { AppHeader } from './AppHeader';
 
 export function DashboardLayoutWrapper({ children }: { children: React.ReactNode }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = React.useState(false);
+  const pathname = usePathname();
+
+  // Bỏ sidebar và header dashboard cho các trang làm bài luyện / thi / phòng học tập trung
+  const isFocusOrPractice =
+    pathname?.startsWith('/student/practice/exam-room') ||
+    pathname?.startsWith('/student/practice') ||
+    pathname?.startsWith('/student/learn') ||
+    pathname?.startsWith('/student/exam');
+
+  if (isFocusOrPractice) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="min-h-screen flex bg-slate-50/60 dark:bg-slate-950 text-slate-900 dark:text-slate-100">

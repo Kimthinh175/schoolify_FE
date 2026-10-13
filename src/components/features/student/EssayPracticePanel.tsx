@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Question } from '@/types';
+import { MathEssayEditor } from '@/components/ui/math-editor';
+import { ChapterLink, DifficultyBadge } from './QuestionMeta';
 
 interface EssayPracticePanelProps {
   questions: Question[];
@@ -79,6 +81,7 @@ export function EssayPracticePanel({ questions, title }: EssayPracticePanelProps
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <DifficultyBadge difficulty={question.difficulty} />
                     <Badge variant="secondary" className="text-[11px] bg-indigo-500/10 text-indigo-400 border-indigo-500/20">
                       Tự luận
                     </Badge>
@@ -88,6 +91,7 @@ export function EssayPracticePanel({ questions, title }: EssayPracticePanelProps
                       </Badge>
                     )}
                   </div>
+                  <ChapterLink chapter={question.chapter} className="mb-2" />
                   {question.title && (
                     <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
                       {question.title}
@@ -141,22 +145,20 @@ export function EssayPracticePanel({ questions, title }: EssayPracticePanelProps
                   </div>
                 )}
 
-                {/* ── Textarea cho bài làm ── */}
+                {/* ── Editor cho bài làm tự luận ── */}
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                      <PenTool className="h-4 w-4 text-slate-400" />
-                      Bài làm của bạn
-                    </label>
-                    <span className="text-xs text-slate-500">{currentAnswer.length} ký tự</span>
-                  </div>
-                  <textarea
+                  <MathEssayEditor
                     disabled={isSubmitted}
                     rows={6}
                     value={currentAnswer}
-                    onChange={(e) => setAnswers({ ...answers, [question.id]: e.target.value })}
+                    onChange={(val) => setAnswers({ ...answers, [question.id]: val })}
+                    label={
+                      <span className="flex items-center gap-1.5 text-slate-300">
+                        <PenTool className="h-4 w-4 text-[#00B8DD]" />
+                        Bài làm tự luận của bạn
+                      </span>
+                    }
                     placeholder="Trình bày bài giải chi tiết vào đây..."
-                    className="w-full resize-y rounded-xl border border-slate-600 bg-slate-900/50 px-4 py-3 text-sm text-slate-200 outline-none placeholder:text-slate-600 focus:border-[#00B8DD] focus:ring-1 focus:ring-[#00B8DD] disabled:opacity-60 transition-all"
                   />
                 </div>
 

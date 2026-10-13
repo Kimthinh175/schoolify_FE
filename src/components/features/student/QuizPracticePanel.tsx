@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { Question, Answer, QuestionType } from '@/types';
+import { ChapterLink, DifficultyBadge } from './QuestionMeta';
 
 // ─────────────────────────────────────────────────────────────
 // Types
@@ -134,12 +135,11 @@ interface AnswerOptionProps {
   answer: Answer;
   index: number;
   isSelected: boolean;
-  isMulti: boolean;
   phase: QuizPhase;
   onSelect: () => void;
 }
 
-function AnswerOption({ answer, index, isSelected, isMulti, phase, onSelect }: AnswerOptionProps) {
+function AnswerOption({ answer, index, isSelected, phase, onSelect }: AnswerOptionProps) {
   const label = ['A', 'B', 'C', 'D', 'E'][index] ?? String(index + 1);
 
   const isCorrect = phase === 'REVIEWING' && answer.is_answer;
@@ -401,6 +401,7 @@ const answeredCount = questions.filter((q) => (answers[q.id] ?? []).length > 0 |
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <DifficultyBadge difficulty={question.difficulty} />
                     <Badge variant="secondary" icon={questionTypeIcon(question.type)} className="text-[11px]">
                       {questionTypeLabel(question.type)}
                     </Badge>
@@ -433,6 +434,7 @@ const answeredCount = questions.filter((q) => (answers[q.id] ?? []).length > 0 |
                       </Badge>
                     )}
                   </div>
+                  <ChapterLink chapter={question.chapter} className="mb-2" />
                   {question.title && (
                     <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
                       {question.title}
@@ -502,7 +504,6 @@ const answeredCount = questions.filter((q) => (answers[q.id] ?? []).length > 0 |
                         answer={answer}
                         index={aIndex}
                         isSelected={selected.includes(answer.id)}
-                        isMulti={isMulti}
                         phase={phase}
                         onSelect={() =>
                           dispatch({

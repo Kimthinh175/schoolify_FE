@@ -38,6 +38,7 @@ import { Card } from '@/components/ui/card';
 import { Tabs } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { getCurriculum, SubjectCurriculum } from '@/services/mock/curriculumData';
+import { MathEssayEditor } from '@/components/ui/math-editor';
 
 // Helper function to turn slug to human friendly title
 function formatSlug(slug: string | string[] | undefined): string {
@@ -736,16 +737,17 @@ export default function StudentPracticeWorkspacePage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                  <FileText className="w-4 h-4 text-indigo-400" />
-                  Nhập bài làm / Trình bày lời giải của bạn:
-                </label>
-                <textarea
+                <MathEssayEditor
                   value={essayAnswer}
-                  onChange={(e) => setEssayAnswer(e.target.value)}
+                  onChange={setEssayAnswer}
+                  label={
+                    <span className="flex items-center gap-1.5 text-slate-300">
+                      <FileText className="w-4 h-4 text-indigo-400" />
+                      Trình Bày Lời Giải Tự Luận
+                    </span>
+                  }
                   placeholder="Ghi chi tiết các bước biến đổi, điều kiện nghiệm và họ nghiệm tìm được..."
                   rows={6}
-                  className="w-full p-4 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-mono"
                 />
               </div>
 
