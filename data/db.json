@@ -1,6 +1,26 @@
 {
   "offlineSubmissions": [
     {
+      "id": "sub-exam-toan-hoc-assessment-g12-ch1-quiz-1791882379717",
+      "sessionId": "session-exam-toan-hoc-assessment-g12-ch1-quiz-1791881479526",
+      "examId": "exam-toan-hoc-assessment-g12-ch1-quiz",
+      "examTitle": "Đề Khảo Thí Đánh Giá Năng Lực (10 Câu) - Lớp 12",
+      "examType": "STANDARD",
+      "answers": {
+        "multipleChoices": {
+          "db-toan-hoc-ch5-mcq-02": "C"
+        },
+        "trueFalseAnswers": {},
+        "shortAnswers": {},
+        "essayAnswers": {},
+        "flaggedIds": {}
+      },
+      "timeSpentSeconds": 1,
+      "submittedAt": "2026-10-13T09:06:19.717Z",
+      "isAutoSubmit": true,
+      "syncedAt": "2026-10-13T09:06:19.794Z"
+    },
+    {
       "id": "sub-exam-toan-hoc-assessment-g12-ch1-quiz-1791875965900",
       "sessionId": "session-exam-toan-hoc-assessment-g12-ch1-quiz-1791875170923",
       "examId": "exam-toan-hoc-assessment-g12-ch1-quiz",
@@ -119,6 +139,371 @@
     }
   ],
   "examSnapshots": [
+    {
+      "id": "SNAP-1791882379720",
+      "examId": "exam-toan-hoc-assessment-g12-ch1-quiz",
+      "examTitle": "Đề Khảo Thí Đánh Giá Năng Lực (10 Câu) - Lớp 12",
+      "subjectSlug": "toan-hoc",
+      "subjectName": "Toán Học",
+      "grade": 12,
+      "chapterId": 1,
+      "chapterName": "Chương 1: Ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số",
+      "createdAt": "2026-10-13T09:06:19.720Z",
+      "durationMinutes": 15,
+      "timeSpentSeconds": 900,
+      "originalExam": {
+        "finalScore": 0,
+        "maxScore": 10,
+        "correctCount": 0,
+        "wrongCount": 11,
+        "totalQuestions": 10,
+        "questions": [
+          {
+            "id": "db-toan-hoc-ch5-mcq-02",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "EASY",
+            "grade": 12,
+            "chapterId": 5,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Mặt phẳng, đường thẳng và mặt cầu Oxyz",
+            "title": "Câu 1: Công thức và tính chất Phương pháp tọa độ trong không gian",
+            "content": "Công thức cơ bản nào sau đây được sử dụng để tính toán trong phương pháp tọa độ trong không gian?",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$\\int x^n dx = \\frac{x^{n+1}}{n+1} + C$ (với $n \\neq -1$)"
+              },
+              {
+                "key": "B",
+                "content": "$\\int e^x dx = x e^{x-1} + C$"
+              },
+              {
+                "key": "C",
+                "content": "$\\vec{a} + \\vec{b} = \\vec{a} - \\vec{b}$"
+              },
+              {
+                "key": "D",
+                "content": "$P(A|B) = P(A) + P(B)$"
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Phương án A là công thức chuẩn mực được định nghĩa trong sách giáo khoa."
+          },
+          {
+            "id": "q-04",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "HARD",
+            "grade": 12,
+            "chapterId": 1,
+            "title": "Câu 2: Đường tiệm cận xiên của đồ thị hàm số",
+            "content": "Đường tiệm cận xiên của đồ thị hàm số $y = \\frac{x^2 + 2x - 1}{x - 1}$ có phương trình là:",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$y = x + 3$"
+              },
+              {
+                "key": "B",
+                "content": "$y = x - 3$"
+              },
+              {
+                "key": "C",
+                "content": "$y = x + 1$"
+              },
+              {
+                "key": "D",
+                "content": "$y = 2x + 1$"
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Chia đa thức tử cho mẫu:\\n$y = \\frac{x^2 + 2x - 1}{x - 1} = (x + 3) + \\frac{2}{x - 1}$.\\nKhi $x \\to \\pm\\infty$, $\\lim_{x \\to \\pm\\infty} [y - (x + 3)] = \\lim_{x \\to \\pm\\infty} \\frac{2}{x - 1} = 0$.\\nVậy đường thẳng $y = x + 3$ là tiệm cận xiên của đồ thị. Chọn A.",
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Ứng dụng đạo hàm & Khảo sát đồ thị"
+          },
+          {
+            "id": "db-toan-hoc-ch5-sa-02",
+            "type": "SHORT_ANSWER",
+            "difficulty": "VERY_HARD",
+            "grade": 12,
+            "chapterId": 5,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Mặt phẳng, đường thẳng và mặt cầu Oxyz",
+            "title": "Câu 3: Số giá trị nguyên của tham số",
+            "content": "Có bao nhiêu giá trị nguyên của tham số $m \\in [-10; 10]$ để điều kiện cực trị / xác suất / khoảng cách trong phương pháp tọa độ trong không gian luôn được thỏa mãn?",
+            "score": 1,
+            "shortAnswerCorrect": "7",
+            "explanation": "Bất phương trình nghiệm đúng với mọi $x$ khi và chỉ khi $m \\in [1; 7]$. Do đó các giá trị nguyên thỏa mãn là $\\{1, 2, 3, 4, 5, 6, 7\\}$, tổng cộng có 7 giá trị."
+          },
+          {
+            "id": "db-toan-hoc-ch4-tf-01",
+            "type": "TRUE_FALSE",
+            "difficulty": "MEDIUM",
+            "grade": 12,
+            "chapterId": 4,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Nguyên hàm & Ứng dụng tính diện tích, thể tích",
+            "title": "Câu 4: Nhận định khảo sát chuyên đề Nguyên hàm và tích phân",
+            "content": "Cho mô hình toán học thuộc Nguyên hàm và tích phân ($D \\subset \\mathbb{R}$). Xét tính đúng hoặc sai của các khẳng định sau:",
+            "score": 1,
+            "statements": [
+              {
+                "subId": "a",
+                "statement": "Tập xác định hoặc miền giá trị của bài toán thỏa mãn điều kiện cơ bản của nguyên hàm & ứng dụng tính diện tích, thể tích.",
+                "isCorrect": true,
+                "explanation": "Khẳng định đúng theo định nghĩa tập xác định chuẩn."
+              },
+              {
+                "subId": "b",
+                "statement": "Đạo hàm hoặc sai số tuyệt đối luôn nhận giá trị âm trên toàn bộ miền xác định.",
+                "isCorrect": false,
+                "explanation": "Sai vì đại lượng luôn có miền nhận giá trị không âm hoặc đổi dấu."
+              },
+              {
+                "subId": "c",
+                "statement": "Các điểm đặc trưng hoặc nghiệm biên thuộc đồ thị nằm trong khoảng liên tục hữu hạn.",
+                "isCorrect": true,
+                "explanation": "Đúng do tính chất liên tục và bị chặn trên đoạn đóng."
+              },
+              {
+                "subId": "d",
+                "statement": "Giá trị trung bình luôn lớn hơn giá trị lớn nhất của mẫu số liệu khảo sát.",
+                "isCorrect": false,
+                "explanation": "Sai, giá trị trung bình luôn nhỏ hơn hoặc bằng giá trị cực đại."
+              }
+            ],
+            "explanation": "Lời giải chi tiết: Ý a đúng do điều kiện xác định. Ý b sai do đổi dấu. Ý c đúng do tính chất liên tục. Ý d sai theo bất đẳng thức trung bình."
+          },
+          {
+            "id": "q2-11",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "EASY",
+            "grade": 12,
+            "chapterId": 1,
+            "isPreviousChapterReview": true,
+            "relatedChapterIds": [
+              1
+            ],
+            "title": "Câu 5: Đường tiệm cận đứng của đồ thị hàm phân thức (Ôn tập Chương 1)",
+            "content": "Phương trình đường tiệm cận đứng của đồ thị hàm số $y = \\frac{2x + 1}{x - 3}$ là:",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$x = 3$"
+              },
+              {
+                "key": "B",
+                "content": "$x = -3$"
+              },
+              {
+                "key": "C",
+                "content": "$y = 2$"
+              },
+              {
+                "key": "D",
+                "content": "$y = 3$"
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Tiệm cận đứng tại nghiệm của mẫu $x - 3 = 0 \\Leftrightarrow x = 3$. Chọn A.",
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Tọa độ vectơ & Không gian Oxyz"
+          },
+          {
+            "id": "db-toan-hoc-ch6-mcq-01",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "EASY",
+            "grade": 12,
+            "chapterId": 6,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Công thức Bayes & Xác suất toàn phần",
+            "title": "Câu 6: Khái niệm nền tảng Xác suất có điều kiện",
+            "content": "Trong chương trình Toán 12, khẳng định nào sau đây là đúng về lý thuyết của công thức bayes & xác suất toàn phần?",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "Định lý và quy tắc cơ bản áp dụng trực tiếp cho công thức bayes & xác suất toàn phần."
+              },
+              {
+                "key": "B",
+                "content": "Mọi hàm số liên tục đều không có cực trị hoặc nguyên hàm xác định."
+              },
+              {
+                "key": "C",
+                "content": "Vectơ không có hướng không cùng phương với bất kỳ vectơ nào."
+              },
+              {
+                "key": "D",
+                "content": "Xác suất của biến cố chắc chắn luôn bằng 0."
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Khẳng định A là định lý cơ bản chuẩn SGK GDPT 2018 cho Xác suất có điều kiện."
+          },
+          {
+            "id": "q-03",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "MEDIUM",
+            "grade": 12,
+            "chapterId": 1,
+            "title": "Câu 7: Giá trị lớn nhất trên đoạn",
+            "content": "Giá trị lớn nhất của hàm số $f(x) = x + \\frac{4}{x}$ trên đoạn $[1; 3]$ bằng:",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$5$"
+              },
+              {
+                "key": "B",
+                "content": "$4$"
+              },
+              {
+                "key": "C",
+                "content": "$\\frac{13}{3}$"
+              },
+              {
+                "key": "D",
+                "content": "$6$"
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Hàm số liên tục trên $[1; 3]$.\\nĐạo hàm $f'(x) = 1 - \\frac{4}{x^2} = \\frac{x^2 - 4}{x^2}$.\\nCho $f'(x) = 0 \\Leftrightarrow x = 2$ (vì $x \\in [1; 3]$).\\nTính các giá trị:\\n• $f(1) = 1 + 4 = 5$\\n• $f(2) = 2 + 2 = 4$\\n• $f(3) = 3 + \\frac{4}{3} = \\frac{13}{3} \\approx 4.33$\\nSo sánh suy ra $\\max_{[1; 3]} f(x) = f(1) = 5$. Chọn A.",
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Ứng dụng đạo hàm & Khảo sát đồ thị"
+          },
+          {
+            "id": "db-toan-hoc-ch4-mcq-03",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "MEDIUM",
+            "grade": 12,
+            "chapterId": 4,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Nguyên hàm & Ứng dụng tính diện tích, thể tích",
+            "title": "Câu 8: Biến đổi và áp dụng định lý Nguyên hàm và tích phân",
+            "content": "Cho hàm số/dữ liệu liên quan đến nguyên hàm & ứng dụng tính diện tích, thể tích. Giá trị của biểu thức đại diện sau khi rút gọn là:",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$2$"
+              },
+              {
+                "key": "B",
+                "content": "$-1$"
+              },
+              {
+                "key": "C",
+                "content": "$4$"
+              },
+              {
+                "key": "D",
+                "content": "$0$"
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Áp dụng định lý biến đổi đại số cơ bản, rút gọn được kết quả bằng 2. Chọn A."
+          },
+          {
+            "id": "db-toan-hoc-ch1-mcq-03",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "MEDIUM",
+            "grade": 12,
+            "chapterId": 1,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Khảo sát hàm số & Ứng dụng thực tế",
+            "title": "Câu 9: Biến đổi và áp dụng định lý Ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số",
+            "content": "Cho hàm số/dữ liệu liên quan đến khảo sát hàm số & ứng dụng thực tế. Giá trị của biểu thức đại diện sau khi rút gọn là:",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$2$"
+              },
+              {
+                "key": "B",
+                "content": "$-1$"
+              },
+              {
+                "key": "C",
+                "content": "$4$"
+              },
+              {
+                "key": "D",
+                "content": "$0$"
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Áp dụng định lý biến đổi đại số cơ bản, rút gọn được kết quả bằng 2. Chọn A."
+          },
+          {
+            "id": "q-06",
+            "type": "SHORT_ANSWER",
+            "difficulty": "HARD",
+            "grade": 12,
+            "chapterId": 1,
+            "title": "Câu 10: Số điểm cực trị của hàm số",
+            "content": "Biết đồ thị hàm số $y = x^3 - 6x^2 + 9x + 1$ có hai điểm cực trị là $A(x_1; y_1)$ và $B(x_2; y_2)$. Tính tổng giá trị tung độ $y_1 + y_2$ của hai điểm cực trị này.",
+            "score": 1,
+            "shortAnswerCorrect": "6",
+            "explanation": "Đạo hàm $y' = 3x^2 - 12x + 9 = 3(x^2 - 4x + 3)$.\\n$y' = 0 \\Leftrightarrow x = 1$ hoặc $x = 3$.\\n• Với $x_1 = 1 \\Rightarrow y_1 = 1 - 6 + 9 + 1 = 5 \\Rightarrow A(1; 5)$.\\n• Với $x_2 = 3 \\Rightarrow y_2 = 27 - 54 + 27 + 1 = 1 \\Rightarrow B(3; 1)$.\\nTổng giá trị tung độ cực trị: $y_1 + y_2 = 5 + 1 = 6$.\\nĐáp số điền: 6.",
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Ứng dụng đạo hàm & Khảo sát đồ thị"
+          }
+        ],
+        "studentAnswers": {
+          "multipleChoices": {
+            "db-toan-hoc-ch5-mcq-02": "C"
+          },
+          "trueFalseAnswers": {},
+          "shortAnswers": {},
+          "essayAnswers": {}
+        },
+        "wrongQuestionIds": [
+          "db-toan-hoc-ch5-mcq-02",
+          "q-04",
+          "db-toan-hoc-ch5-sa-02",
+          "db-toan-hoc-ch4-tf-01",
+          "q2-11",
+          "db-toan-hoc-ch6-mcq-01",
+          "q-03",
+          "db-toan-hoc-ch4-mcq-03",
+          "db-toan-hoc-ch1-mcq-03",
+          "q-06"
+        ]
+      },
+      "bloomSummary": {
+        "EASY": {
+          "total": 3,
+          "correct": 0
+        },
+        "MEDIUM": {
+          "total": 4,
+          "correct": 0
+        },
+        "HARD": {
+          "total": 2,
+          "correct": 0
+        },
+        "VERY_HARD": {
+          "total": 1,
+          "correct": 0
+        }
+      }
+    },
     {
       "id": "SNAP-1791875965785",
       "examId": "exam-toan-hoc-assessment-g12-ch1-quiz",
