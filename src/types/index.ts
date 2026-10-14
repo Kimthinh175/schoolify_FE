@@ -4,6 +4,8 @@ export * from './course';
 export * from './exam';
 export * from './order';
 export * from './store';
+export * from './forum';
+export * from './communication';
 export * from './question';
 export * from './subject';
 export type {

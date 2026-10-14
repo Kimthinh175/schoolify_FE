@@ -19,14 +19,16 @@ import { Textarea } from '@/components/ui/input';
 import { Dialog } from '@/components/ui/dialog';
 import { MathEssayEditor } from '@/components/ui/math-editor';
 import { MOCK_EXAMS } from '@/services/mock/data';
+import { useNotificationStore } from '@/store/notification.store';
 
 export default function OnlineExamRunnerPage() {
   const params = useParams();
   const router = useRouter();
   const exam = MOCK_EXAMS.find((e) => e.id === params.examId) || MOCK_EXAMS[0];
+  const { addNotification } = useNotificationStore();
 
-  // Timer state (15 minutes in seconds)
-  const [secondsLeft, setSecondsLeft] = React.useState(15 * 60);
+  // Trạng thái đồng hồ đếm ngược (30 phút đổi ra giây)
+  const [secondsLeft, setSecondsLeft] = React.useState(30 * 60);
   const [selectedAnswers, setSelectedAnswers] = React.useState<Record<string, string>>({
     'q-01': 'opt-1',
     'q-02': 'opt-5',
@@ -57,6 +59,16 @@ export default function OnlineExamRunnerPage() {
   const handleSubmitExam = () => {
     setIsSubmitModalOpen(false);
     setIsSubmitted(true);
+
+    // Gửi thông báo tự động cho phụ huynh
+    addNotification({
+      id: Date.now(),
+      title: `Học sinh đã nộp bài kiểm tra`,
+      date: new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+      content: `Học sinh vừa hoàn thành bài kiểm tra "${exam.title}". Điểm số: 8.5/10. Phụ huynh vui lòng xem kết quả chi tiết trên hệ thống.`,
+      type: 'academic',
+      isRead: false
+    });
   };
 
   if (isSubmitted) {
@@ -67,11 +79,15 @@ export default function OnlineExamRunnerPage() {
             <CheckCircle2 className="w-10 h-10" />
           </div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Nộp Bài Thành Công!</h2>
+          <div className="py-2">
+            <span className="text-4xl font-black text-indigo-600 dark:text-indigo-400">8.5</span>
+            <span className="text-xl font-bold text-slate-500"> / 10</span>
+          </div>
           <p className="text-xs text-slate-500">
-            Bài làm của bạn đã được ghi nhận. Giáo viên sẽ chấm điểm phần tự luận và gửi lời phê sớm nhất qua Sổ liên lạc.
+            Hệ thống đã chấm điểm tự động. Bạn đã đạt tiêu chuẩn 7.0+ của bài kiểm tra này!
           </p>
-          <div className="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold text-sm">
-            🎉 Bạn nhận được +50 Điểm thưởng chuyên cần!
+          <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 font-bold text-sm border border-amber-200 dark:border-amber-800/60">
+            💎 Chúc mừng! Bạn đã tích lũy thành công +30 Kim Cương!
           </div>
           <Link href="/student/dashboard" className="block">
             <Button className="w-full justify-center">Về Góc Học Tập</Button>
@@ -83,8 +99,8 @@ export default function OnlineExamRunnerPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-20">
-      {/* Sticky Exam Top Header with Timer */}
-      <div className="sticky top-16 z-20 p-4 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md backdrop-blur-md flex items-center justify-between">
+      {/* Thanh Header Bài Thi dính chặt phía trên cùng với Đồng Hồ */}
+      <div className="sticky top-0 z-50 p-4 rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 shadow-sm backdrop-blur-md flex items-center justify-between mt-4 mb-6">
         <div>
           <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white truncate max-w-xs sm:max-w-md">
             {exam.title}
@@ -93,18 +109,14 @@ export default function OnlineExamRunnerPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 font-mono font-bold text-sm border border-rose-200 dark:border-rose-800">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 font-mono font-bold text-sm border border-rose-200 dark:border-rose-800 shadow-sm">
             <Clock className="w-4 h-4" />
             <span>{formatTimer(secondsLeft)}</span>
           </div>
-
-          <Button onClick={() => setIsSubmitModalOpen(true)} variant="primary" size="sm" leftIcon={<Send className="w-4 h-4" />}>
-            Nộp Bài
-          </Button>
         </div>
       </div>
 
-      {/* Questions List */}
+      {/* Danh Sách Câu Hỏi */}
       <div className="space-y-6">
         {exam.questions?.map((q, qIdx) => (
           <Card key={q.id} className="p-6 space-y-4">
@@ -121,7 +133,7 @@ export default function OnlineExamRunnerPage() {
               {q.content}
             </p>
 
-            {/* Options */}
+            {/* Các Tùy Chọn Đáp Án */}
             {q.type === 'ESSAY' ? (
               <div className="pt-2">
                 <MathEssayEditor
@@ -165,16 +177,23 @@ export default function OnlineExamRunnerPage() {
         ))}
       </div>
 
-      {/* Confirmation Modal */}
+      {/* Nút Nộp Bài ở cuối trang */}
+      <div className="flex justify-center sm:justify-end pt-8 pb-10">
+        <Button onClick={() => setIsSubmitModalOpen(true)} variant="primary" size="lg" className="w-full sm:w-auto px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all" leftIcon={<Send className="w-5 h-5" />}>
+          Nộp Bài Kiểm Tra
+        </Button>
+      </div>
+
+      {/* Modal Xác Nhận Nộp Bài */}
       <Dialog
         isOpen={isSubmitModalOpen}
         onClose={() => setIsSubmitModalOpen(false)}
         title="Xác Nhận Nộp Bài Thi"
-        description="Bạn đã hoàn thành đủ 4/4 câu hỏi. Bạn có chắc chắn muốn nộp bài ngay bây giờ?"
+        description="Bạn đã hoàn thành đủ 15/15 câu hỏi. Bạn có chắc chắn muốn nộp bài ngay bây giờ?"
       >
         <div className="space-y-4 py-2">
           <p className="text-xs text-slate-500">
-            Sau khi nộp bài, hệ thống sẽ tự động chấm điểm phần trắc nghiệm và gửi bài tự luận tới thầy cô bộ môn.
+            Sau khi nộp bài, hệ thống sẽ tự động chấm điểm toàn bộ bài làm và hiển thị kết quả ngay lập tức.
           </p>
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="ghost" onClick={() => setIsSubmitModalOpen(false)}>
@@ -189,3 +208,4 @@ export default function OnlineExamRunnerPage() {
     </div>
   );
 }
+ 

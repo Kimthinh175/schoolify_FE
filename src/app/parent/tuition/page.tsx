@@ -13,112 +13,242 @@ import {
   GraduationCap,
   Wallet,
   Info,
+  Copy,
+  Check,
+  Printer,
+  Baby,
+  Building2,
+  ShieldCheck,
+  Sparkles,
+  ArrowRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { Tabs } from '@/components/ui/tabs';
 import { Dialog } from '@/components/ui/dialog';
 import { useParentStore } from '@/store/parent.store';
-import { MOCK_ORDERS } from '@/services/mock/data';
-import { Order } from '@/types';
+import { MOCK_GDPT_TUITIONS, TuitionItem } from '@/services/mock/parent-flow-data';
 
 export default function ParentTuitionPage() {
-  const { children, activeChildId } = useParentStore();
+  const { children, activeChildId, setActiveChild } = useParentStore();
   const activeChild = children.find((c) => c.id === activeChildId) || children[0];
 
-  const [tuitionOrders, setTuitionOrders] = React.useState<Order[]>([
-    ...MOCK_ORDERS.filter((o) => o.reference_type === 'TUITION'),
-    {
-      id: 'ord-pending-02',
-      code: 'ORD-20260901-011',
-      buyer_id: 'usr-parent-01',
-      buyer_name: 'Nguyễn Văn Tuấn',
-      reference_type: 'TUITION',
-      reference_id: 'cls-11a1-hk2',
-      item_name_snapshot: 'Tiền Quỹ Cơ Sở Vật Chất & BHYT Học Sinh 2026',
-      item_price_snapshot: 850000,
-      payment_method: 'BANK',
-      status: 'PENDING',
-      qr_code_url: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=VIETQR-TUITION-011',
-      created_at: '2026-08-24T08:00:00Z',
-    },
-  ]);
+  // State lưu danh sách hóa đơn theo con cái
+  const [tuitionRecords, setTuitionRecords] = React.useState<Record<string, TuitionItem[]>>(MOCK_GDPT_TUITIONS);
 
-  const [payingOrder, setPayingOrder] = React.useState<Order | null>(null);
-  const [receiptOrder, setReceiptOrder] = React.useState<Order | null>(null);
+  const [payingItem, setPayingItem] = React.useState<TuitionItem | null>(null);
+  const [receiptItem, setReceiptItem] = React.useState<TuitionItem | null>(null);
+  const [isVerifying, setIsVerifying] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
+  const [copiedField, setCopiedField] = React.useState<string | null>(null);
+
+  // Danh sách hóa đơn của con hiện tại
+  const currentTuitions = tuitionRecords[activeChild.id] || [];
+
+  const childTabs = children.map((c) => ({
+    id: c.id,
+    label: c.name,
+    icon: <Baby className="w-4 h-4" />,
+  }));
 
   const formatMoney = (amount: number) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 
+  const totalPaid = currentTuitions
+    .filter((t) => t.status === 'PAID')
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  const totalPending = currentTuitions
+    .filter((t) => t.status === 'PENDING')
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  const handleCopyText = (text: string, field: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
   const handleConfirmPaid = () => {
-    if (!payingOrder) return;
-    setTuitionOrders((prev) =>
-      prev.map((o) => (o.id === payingOrder.id ? { ...o, status: 'PAID' } : o))
-    );
-    setIsSuccess(true);
+    if (!payingItem) return;
+    setIsVerifying(true);
+
+    // Mô phỏng xác thực webhook ngân hàng thời gian thực
+    setTimeout(() => {
+      setTuitionRecords((prev) => ({
+        ...prev,
+        [activeChild.id]: prev[activeChild.id].map((item) =>
+          item.id === payingItem.id
+            ? { ...item, status: 'PAID', paidAt: new Date().toISOString() }
+            : item
+        ),
+      }));
+      setIsVerifying(false);
+      setIsSuccess(true);
+    }, 1200);
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <Badge variant="purple" className="mb-2">Cổng Thanh Toán Học Phí Trực Tuyến</Badge>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-          Phiếu Thu Học Phí Của Con: {activeChild.name}
-        </h1>
-        <p className="text-xs text-slate-500 mt-0.5">
-          Quét mã VietQR chuyển khoản nhanh từ mọi ứng dụng ngân hàng. Hệ thống tự động gạch nợ sau 30 giây.
-        </p>
+      {/* Thanh Chọn Con Cái */}
+      {children.length > 1 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Học sinh nộp phí:</span>
+            <Tabs
+              tabs={childTabs}
+              activeTab={activeChildId}
+              onChange={setActiveChild}
+              variant="pill"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="font-semibold text-xs border-cyan-500/30 text-cyan-600 dark:text-cyan-400">
+              {activeChild.grade} • {activeChild.className}
+            </Badge>
+          </div>
+        </div>
+      )}
+
+      {/* Header Trang Thanh Toán */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Badge variant="purple">Cổng Thanh Toán Trực Tuyến</Badge>
+            <Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200">
+              VietQR Napas247 Tự Động Gạch Nợ
+            </Badge>
+          </div>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white">
+            Các Khoản Thu Học Phí: {activeChild.name}
+          </h1>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Quét mã QR từ ứng dụng ngân hàng bất kỳ để chuyển khoản. Hệ thống tự động xuất biên lai điện tử hợp lệ.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            leftIcon={<Printer className="w-4 h-4" />}
+            onClick={() => window.print()}
+            className="hidden sm:inline-flex"
+          >
+            In Phiếu Báo Thu
+          </Button>
+        </div>
       </div>
 
-      {/* Tuition Bills List */}
+      {/* Thẻ Thống Kê Tổng Thu / Công Nợ */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card className="p-5 border-l-4 border-l-emerald-500">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Đã Thanh Toán</span>
+          <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
+            {formatMoney(totalPaid)}
+          </p>
+          <p className="text-xs text-slate-500 mt-1">Đã có biên lai điện tử đầy đủ</p>
+        </Card>
+
+        <Card className="p-5 border-l-4 border-l-amber-500">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Còn Cần Thanh Toán</span>
+          <p className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">
+            {formatMoney(totalPending)}
+          </p>
+          <p className="text-xs text-slate-500 mt-1">
+            {totalPending > 0 ? 'Vui lòng thanh toán trước hạn chót' : 'Tất cả các khoản đã hoàn tất!'}
+          </p>
+        </Card>
+
+        <Card className="p-5 border-l-4 border-l-cyan-500">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Phương Thức Thanh Toán</span>
+          <p className="text-xl font-bold text-slate-900 dark:text-white mt-1 flex items-center gap-2">
+            <QrCode className="w-5 h-5 text-cyan-600" />
+            VietQR Napas247
+          </p>
+          <p className="text-xs text-emerald-600 font-semibold mt-1">Miễn phí giao dịch 100%</p>
+        </Card>
+      </div>
+
+      {/* Danh Sách Các Khoản Thu Chi Tiết */}
       <div className="space-y-4">
-        {tuitionOrders.map((order) => (
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Receipt className="w-5 h-5 text-indigo-600" />
+            Danh Sách Khoản Thu Học Kỳ
+          </h2>
+          <span className="text-xs text-slate-500">
+            Năm học 2025 - 2026 • Lớp {activeChild.className}
+          </span>
+        </div>
+
+        {currentTuitions.map((item) => (
           <Card
-            key={order.id}
-            className={`p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all ${order.status === 'PENDING'
-              ? 'border-indigo-500/80 bg-indigo-50/20 dark:bg-indigo-950/20 shadow-md'
-              : ''
-              }`}
+            key={item.id}
+            className={`p-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 transition-all ${
+              item.status === 'PENDING'
+                ? 'border-indigo-500/80 bg-indigo-50/20 dark:bg-indigo-950/20 shadow-md'
+                : 'border-slate-200 dark:border-slate-800'
+            }`}
           >
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-bold text-slate-500">{order.code}</span>
-                <Badge variant={order.status === 'PAID' ? 'success' : 'warning'}>
-                  {order.status === 'PAID' ? 'ĐÃ HOÀN TẤT' : 'CHƯA THANH TOÁN'}
+            <div className="space-y-2 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                  {item.code}
+                </span>
+                <Badge variant={item.status === 'PAID' ? 'success' : 'warning'} className="font-bold">
+                  {item.status === 'PAID' ? 'ĐÃ HOÀN TẤT' : 'CHƯA THANH TOÁN'}
                 </Badge>
+                <Badge variant="outline" className="text-xs">
+                  {item.category}
+                </Badge>
+                <span className="text-xs text-slate-500">Hạn chót: <b>{item.dueDate}</b></span>
               </div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">{order.item_name_snapshot}</h3>
-              <p className="text-xs text-slate-500">
-                Học sinh: <span className="font-semibold text-slate-700 dark:text-slate-300">{activeChild.name}</span> ({activeChild.className})
-              </p>
+
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">{item.title}</h3>
+
+              {/* Bảng kê chi tiết các mục */}
+              <div className="pt-2">
+                <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 space-y-1.5 text-xs">
+                  {item.details.map((detail, idx) => (
+                    <div key={idx} className="flex justify-between text-slate-600 dark:text-slate-300">
+                      <span>• {detail.label}</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">
+                        {formatMoney(detail.amount)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-3">
-              <span className="text-xl font-black text-indigo-600 dark:text-indigo-400">
-                {formatMoney(order.item_price_snapshot)}
-              </span>
+            <div className="flex flex-row lg:flex-col items-center lg:items-end justify-between w-full lg:w-auto gap-4 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-200 dark:border-slate-800">
+              <div className="text-left lg:text-right">
+                <span className="text-xs text-slate-500 block">Số tiền cần đóng:</span>
+                <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">
+                  {formatMoney(item.amount)}
+                </span>
+              </div>
 
-              {order.status === 'PENDING' ? (
+              {item.status === 'PENDING' ? (
                 <Button
                   onClick={() => {
-                    setPayingOrder(order);
+                    setPayingItem(item);
                     setIsSuccess(false);
                   }}
                   variant="primary"
+                  className="bg-cyan-600 hover:bg-cyan-500 font-bold shadow-md shadow-cyan-600/20 cursor-pointer"
                   leftIcon={<QrCode className="w-4 h-4" />}
                 >
                   Quét Mã VietQR Đóng Tiền
                 </Button>
               ) : (
                 <Button
-                  size="sm"
                   variant="outline"
-                  leftIcon={<Receipt className="w-3.5 h-3.5" />}
-                  onClick={() => setReceiptOrder(order)}
+                  leftIcon={<Receipt className="w-4 h-4 text-emerald-600" />}
+                  onClick={() => setReceiptItem(item)}
+                  className="font-bold border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
                 >
-                  Xem Biên Lai
+                  Xem Biên Lai Điện Tử
                 </Button>
               )}
             </div>
@@ -126,42 +256,109 @@ export default function ParentTuitionPage() {
         ))}
       </div>
 
-      {/* VietQR Payment Modal */}
+      {/* MODAL THANH TOÁN VIETQR CHUẨN NAPAS247 */}
       <Dialog
-        isOpen={!!payingOrder}
-        onClose={() => setPayingOrder(null)}
-        title={`Thanh Toán Học Phí: ${payingOrder?.item_name_snapshot}`}
-        description="Mở ứng dụng Mobile Banking bất kỳ để quét mã QR chuyển khoản."
+        isOpen={!!payingItem}
+        onClose={() => setPayingItem(null)}
+        title={`Thanh Toán Học Phí: ${payingItem?.title}`}
+        description="Mở ứng dụng Mobile Banking của bạn (Vietcombank, MB, Techcombank, VPBank...) để quét mã chuyển tiền."
       >
-        {payingOrder && (
+        {payingItem && (
           <div className="py-2 flex flex-col items-center text-center space-y-4">
             {!isSuccess ? (
               <>
-                <div className="p-3 bg-white border border-slate-200 rounded-2xl shadow-md">
+                {/* Khung Mã QR */}
+                <div className="p-3 bg-white border-2 border-slate-200 rounded-2xl shadow-lg relative group">
                   <img
-                    src={`https://img.vietqr.io/image/970422-123456789-compact2.png?amount=${payingOrder.item_price_snapshot}&addInfo=${payingOrder.code}&accountName=SCHOOLIFY`}
+                    src={`https://img.vietqr.io/image/970422-113000889999-compact2.png?amount=${payingItem.amount}&addInfo=${encodeURIComponent(
+                      payingItem.code
+                    )}&accountName=${encodeURIComponent(payingItem.bankAccount.accountHolder)}`}
                     alt="VietQR"
-                    className="w-52 h-52 rounded-xl object-contain"
+                    className="w-56 h-56 rounded-xl object-contain"
                   />
+                  <div className="mt-2 flex items-center justify-center gap-1.5 text-[11px] font-bold text-indigo-600">
+                    <ShieldCheck className="w-4 h-4" />
+                    Chuyển Khoản An Toàn Napas247
+                  </div>
                 </div>
 
-                <div className="w-full rounded-xl bg-slate-50 dark:bg-slate-800 p-4 text-xs space-y-1.5 text-left">
-                  <div className="flex justify-between">
+                {/* Hộp Thông Tin Chuyển Khoản kèm Nút Sao Chép Nhanh */}
+                <div className="w-full rounded-2xl bg-slate-50 dark:bg-slate-800 p-4 text-xs space-y-2.5 text-left border border-slate-200 dark:border-slate-700">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500">Ngân hàng thụ hưởng:</span>
+                    <span className="font-bold text-slate-900 dark:text-white">
+                      {payingItem.bankAccount.bankName}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500">Số tài khoản:</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-mono font-bold text-base text-indigo-600 dark:text-indigo-400">
+                        {payingItem.bankAccount.accountNumber}
+                      </span>
+                      <button
+                        onClick={() => handleCopyText(payingItem.bankAccount.accountNumber, 'acc')}
+                        className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 cursor-pointer"
+                        title="Sao chép số tài khoản"
+                      >
+                        {copiedField === 'acc' ? (
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500">Tên người thụ hưởng:</span>
+                    <span className="font-bold text-slate-900 dark:text-white">
+                      {payingItem.bankAccount.accountHolder}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
                     <span className="text-slate-500">Số tiền:</span>
-                    <span className="font-bold text-indigo-600 text-sm">{formatMoney(payingOrder.item_price_snapshot)}</span>
+                    <span className="font-black text-base text-emerald-600">
+                      {formatMoney(payingItem.amount)}
+                    </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Nội dung CK:</span>
-                    <span className="font-mono font-bold text-slate-900 dark:text-white">{payingOrder.code}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Người thụ hưởng:</span>
-                    <span className="font-bold text-slate-900 dark:text-white">THPT Chuyên Công Nghệ Schoolify</span>
+
+                  <div className="flex justify-between items-center pt-1 border-t border-slate-200 dark:border-slate-700">
+                    <span className="text-slate-500">Nội dung chuyển khoản (bắt buộc):</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-mono font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded">
+                        {payingItem.code}
+                      </span>
+                      <button
+                        onClick={() => handleCopyText(payingItem.code, 'code')}
+                        className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 cursor-pointer"
+                        title="Sao chép nội dung"
+                      >
+                        {copiedField === 'code' ? (
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <Button onClick={handleConfirmPaid} className="w-full justify-center" leftIcon={<CheckCircle2 className="w-4 h-4" />}>
-                  Tôi Đã Hoàn Tất Chuyển Khoản
+                <Button
+                  onClick={handleConfirmPaid}
+                  disabled={isVerifying}
+                  className="w-full justify-center bg-cyan-600 hover:bg-cyan-500 font-bold py-3 text-sm rounded-xl cursor-pointer"
+                  leftIcon={
+                    isVerifying ? (
+                      <span className="animate-spin mr-1">⏳</span>
+                    ) : (
+                      <CheckCircle2 className="w-4 h-4" />
+                    )
+                  }
+                >
+                  {isVerifying ? 'Đang Kiểm Tra Với Ngân Hàng...' : 'Tôi Đã Hoàn Tất Chuyển Khoản'}
                 </Button>
               </>
             ) : (
@@ -169,158 +366,146 @@ export default function ParentTuitionPage() {
                 <div className="h-16 w-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
                   <CheckCircle2 className="w-10 h-10" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Thanh Toán Học Phí Thành Công!</h3>
-                <p className="text-xs text-slate-500 max-w-xs">
-                  Biên lai điện tử đã được xuất và đồng bộ sang hệ thống kế toán nhà trường.
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                  Thanh Toán Học Phí Thành Công!
+                </h3>
+                <p className="text-xs text-slate-500 max-w-sm">
+                  Khoản thu <b className="text-slate-800 dark:text-slate-200">{payingItem.title}</b> đã được hệ thống gạch nợ thành công. Biên lai điện tử có chữ ký số đã được xuất.
                 </p>
-                <Button onClick={() => setPayingOrder(null)} className="mt-2">
-                  Đóng Hộp Thoại
-                </Button>
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const updated = { ...payingItem, status: 'PAID' as const };
+                      setPayingItem(null);
+                      setReceiptItem(updated);
+                    }}
+                  >
+                    Xem Biên Lai Ngay
+                  </Button>
+                  <Button onClick={() => setPayingItem(null)} variant="primary">
+                    Hoàn Tất
+                  </Button>
+                </div>
               </div>
             )}
           </div>
         )}
       </Dialog>
 
-      {/* Custom Mockup Receipt Modal */}
+      {/* MODAL BIÊN LAI THU TIỀN ĐIỆN TỬ CHUẨN PHÁP LÝ NHÀ TRƯỜNG */}
       <Dialog
-        isOpen={!!receiptOrder}
-        onClose={() => setReceiptOrder(null)}
+        isOpen={!!receiptItem}
+        onClose={() => setReceiptItem(null)}
         className="!shadow-none"
       >
-        {receiptOrder && (
-          <div className="relative bg-[#f4f7fb] dark:bg-slate-900 rounded-3xl overflow-hidden p-4 sm:p-8 space-y-6 sm:space-y-8 font-sans border border-slate-100 dark:border-slate-800 w-full max-w-[500px] mx-auto">
-            {/* Background Decorations */}
-            <div className="absolute top-0 left-0 w-64 h-64 bg-blue-100/50 rounded-full mix-blend-multiply filter blur-3xl opacity-60 dark:opacity-10 -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-            <div className="absolute bottom-0 right-0 w-80 h-80 bg-blue-100/50 rounded-full mix-blend-multiply filter blur-3xl opacity-60 dark:opacity-10 translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
-
-            <div className="relative z-10 flex flex-col items-center w-full">
-              {/* Header */}
-              <div className="flex flex-col items-center mb-8">
-                <div className="flex items-center gap-3 mb-1">
-                  <div className="w-12 h-12 rounded-[14px] bg-[#5c59e6] flex items-center justify-center shadow-sm shrink-0">
-                    <span className="text-white font-bold text-3xl leading-none">S</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-3xl font-black tracking-tight text-[#1e1b4b] dark:text-white leading-none mb-0.5">Schoolify</span>
-                    <span className="text-[11px] text-slate-500 font-medium">Hệ thống quản lý giáo dục toàn diện</span>
-                  </div>
+        {receiptItem && (
+          <div className="relative bg-[#f8fafc] dark:bg-slate-900 rounded-3xl overflow-hidden p-6 sm:p-8 space-y-6 font-sans border border-slate-200 dark:border-slate-800 w-full max-w-[540px] mx-auto">
+            {/* Header Biên Lai */}
+            <div className="text-center pb-4 border-b border-slate-200 dark:border-slate-700">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <div className="w-10 h-10 rounded-xl bg-cyan-600 flex items-center justify-center text-white font-black text-xl shadow-md">
+                  S
+                </div>
+                <div className="text-left">
+                  <p className="font-black text-lg text-slate-900 dark:text-white leading-tight">Schoolify Pay</p>
+                  <p className="text-[10px] text-slate-500 font-medium">Hệ thống biên lai điện tử ngành giáo dục</p>
                 </div>
               </div>
 
-              <div className="w-full flex items-center justify-center gap-4 mb-5">
-                <div className="h-[1px] flex-1 bg-slate-200 dark:bg-slate-700 max-w-[40px]"></div>
-                <h2 className="text-xl sm:text-[22px] font-black text-[#1e1b4b] dark:text-white uppercase tracking-wider text-center shrink-0">Biên Lai Thanh Toán</h2>
-                <div className="h-[1px] flex-1 bg-slate-200 dark:bg-slate-700 max-w-[40px]"></div>
-              </div>
+              <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-wider mt-3">
+                Biên Lai Thu Học Phí Điện Tử
+              </h2>
+              <p className="text-xs text-slate-500 font-mono mt-0.5">Số tham chiếu: {receiptItem.code}</p>
 
-              <div className="bg-[#dcfce7] dark:bg-emerald-900/50 text-[#166534] dark:text-emerald-400 px-4 py-1.5 rounded-full flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
-                <span className="text-[11px] font-bold uppercase tracking-wider shrink-0">Đã thanh toán</span>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-xs font-bold mt-2">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                ĐÃ HOÀN TẤT THANH TOÁN
               </div>
             </div>
 
-            {/* Top Cards Info */}
-            <div className="relative z-10 flex flex-row w-full mb-2">
-              {/* Left Col */}
-              <div className="flex-1 py-4 pr-2">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 rounded-full bg-blue-100/50 dark:bg-slate-700 flex items-center justify-center text-blue-500 shrink-0">
-                    <User className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Thông tin thanh toán</span>
-                </div>
-                <p className="text-[15px] sm:text-[17px] font-bold text-[#1e1b4b] dark:text-white mb-1.5 leading-tight">{receiptOrder.buyer_name || 'Phụ huynh'}</p>
-                <p className="text-[12px] sm:text-[13px] text-slate-500 font-medium">Phương thức: VietQR</p>
+            {/* Thông tin học sinh & Đơn vị thu */}
+            <div className="grid grid-cols-2 gap-4 text-xs py-2">
+              <div>
+                <span className="text-slate-400 block mb-0.5">Học sinh nộp phí:</span>
+                <p className="font-bold text-slate-900 dark:text-white text-sm">{activeChild.name}</p>
+                <p className="text-slate-500">{activeChild.className}</p>
+                <p className="text-slate-500">{activeChild.schoolName}</p>
               </div>
 
-              {/* Right Col */}
-              <div className="flex-1 py-4 pl-4 sm:pl-5 border-l border-slate-200 dark:border-slate-700">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 rounded-full bg-blue-100/50 dark:bg-slate-700 flex items-center justify-center text-blue-500 shrink-0">
-                    <Calendar className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Chi tiết hóa đơn</span>
-                </div>
-                <div>
-                  <div className="flex flex-col text-[12px] sm:text-[13px] mb-2">
-                    <span className="text-slate-500 mb-0.5">Mã tham chiếu:</span>
-                    <span className="font-semibold text-[#1e1b4b] dark:text-slate-200 break-all leading-tight">{receiptOrder.code}</span>
-                  </div>
-                  <div className="flex flex-row text-[12px] sm:text-[13px] gap-1.5 mb-1.5">
-                    <span className="text-slate-500 whitespace-nowrap">Ngày lập:</span>
-                    <span className="font-semibold text-[#1e1b4b] dark:text-slate-200">{receiptOrder.created_at ? new Date(receiptOrder.created_at).toLocaleDateString('vi-VN') : new Date().toLocaleDateString('vi-VN')}</span>
-                  </div>
-                  <div className="flex flex-row text-[12px] sm:text-[13px] gap-1.5">
-                    <span className="text-slate-500 whitespace-nowrap">Ngày thu:</span>
-                    <span className="font-semibold text-[#1e1b4b] dark:text-slate-200">{receiptOrder.paid_at ? new Date(receiptOrder.paid_at).toLocaleDateString('vi-VN') : new Date().toLocaleDateString('vi-VN')}</span>
-                  </div>
-                </div>
+              <div className="text-right">
+                <span className="text-slate-400 block mb-0.5">Chi tiết hóa đơn:</span>
+                <p className="text-slate-600 dark:text-slate-300">
+                  Ngày thu: <b>{receiptItem.paidAt ? new Date(receiptItem.paidAt).toLocaleDateString('vi-VN') : new Date().toLocaleDateString('vi-VN')}</b>
+                </p>
+                <p className="text-slate-500">Phương thức: <b>VietQR Napas247</b></p>
+                <p className="text-slate-500">Trạng thái: <b className="text-emerald-600">Hợp lệ</b></p>
               </div>
             </div>
 
-            {/* Details Table Card */}
-            <div className="relative z-10 w-full">
-              <div className="py-3.5 flex justify-between items-center border-t border-b border-slate-200 dark:border-slate-700">
-                <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nội dung khoản thu</span>
-                <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Thành tiền</span>
+            {/* Bảng kê chi tiết các mục thu */}
+            <div className="space-y-2">
+              <div className="py-2 flex justify-between text-xs font-bold text-slate-500 uppercase tracking-wider border-t border-b border-slate-200 dark:border-slate-700">
+                <span>Nội dung khoản thu</span>
+                <span>Thành tiền</span>
               </div>
 
-              <div className="py-5 border-b border-slate-200 dark:border-slate-700 border-dashed">
-                <div className="flex flex-row items-start justify-between gap-2 sm:gap-4">
-                  <div className="flex items-start gap-2.5 sm:gap-3 w-full">
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-100/50 dark:bg-slate-700 flex items-center justify-center shrink-0">
-                      <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <p className="text-[13px] sm:text-[14px] font-semibold text-[#1e1b4b] dark:text-slate-200 flex-1 leading-snug pt-0.5">{receiptOrder.item_name_snapshot}</p>
+              <div className="space-y-1.5 py-1">
+                {receiptItem.details.map((detail, idx) => (
+                  <div key={idx} className="flex justify-between text-xs text-slate-700 dark:text-slate-300">
+                    <span>{detail.label}</span>
+                    <span className="font-semibold">{formatMoney(detail.amount)}</span>
                   </div>
-                  <p className="text-[14px] sm:text-[15px] font-bold text-[#1e1b4b] dark:text-slate-200 whitespace-nowrap shrink-0 pt-0.5">{formatMoney(receiptOrder.item_price_snapshot)}</p>
-                </div>
+                ))}
               </div>
 
-              <div className="py-5 border-b border-slate-200 dark:border-slate-700 flex flex-col gap-2.5 w-full">
-                <div className="flex justify-between items-center text-[12px] sm:text-[13px] w-full">
-                  <span className="text-slate-500 font-medium whitespace-nowrap">Tạm tính</span>
-                  <span className="text-[#1e1b4b] dark:text-slate-300 font-semibold text-right whitespace-nowrap">{formatMoney(receiptOrder.item_price_snapshot)}</span>
-                </div>
-                <div className="flex justify-between items-center text-[12px] sm:text-[13px] w-full">
-                  <span className="text-slate-500 font-medium whitespace-nowrap">Thuế (0%)</span>
-                  <span className="text-[#1e1b4b] dark:text-slate-300 font-semibold text-right whitespace-nowrap">0 ₫</span>
-                </div>
-              </div>
-
-              <div className="py-4 sm:py-5 flex flex-row justify-between items-center gap-2">
-                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-100/50 dark:bg-slate-700 flex items-center justify-center">
-                    <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <span className="text-[12px] sm:text-[13px] font-bold text-[#1e1b4b] dark:text-white uppercase tracking-wider">Tổng cộng</span>
-                </div>
-                <span className="text-[20px] sm:text-[24px] font-black text-[#5c59e6] dark:text-indigo-400 tracking-tight whitespace-nowrap ml-auto">{formatMoney(receiptOrder.item_price_snapshot)}</span>
+              <div className="pt-3 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                <span className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                  Tổng Cộng Thực Thu:
+                </span>
+                <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">
+                  {formatMoney(receiptItem.amount)}
+                </span>
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="relative z-10 pt-4 pb-2 space-y-8 w-full">
-              <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <Button variant="outline" className="w-full sm:w-36 h-12 border-slate-300 dark:border-slate-600 font-bold rounded-xl bg-white dark:bg-slate-800 text-[#1e1b4b] dark:text-slate-200" leftIcon={<Download className="w-4 h-4" />}>
-                  Tải PDF
-                </Button>
-                <Button variant="primary" className="w-full sm:w-36 h-12 bg-[#12b2d6] hover:bg-[#0f9fbf] border-none text-white font-bold shadow-md rounded-xl" onClick={() => setReceiptOrder(null)}>
-                  Đóng
-                </Button>
+            {/* Dấu mộc & Chữ ký số điện tử */}
+            <div className="pt-2 pb-1 border-t border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-between text-xs">
+              <div className="space-y-1">
+                <p className="font-bold text-slate-700 dark:text-slate-300">Đơn vị thụ hưởng:</p>
+                <p className="text-[11px] text-slate-500">{receiptItem.bankAccount.accountHolder}</p>
+                <p className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5" /> Ký số bởi Schoolify Payment Gateway
+                </p>
               </div>
-              <div className="flex flex-row items-start justify-center gap-3 mx-auto max-w-sm">
-                <div className="w-6 h-6 rounded-full border-2 border-blue-200 dark:border-slate-600 flex items-center justify-center text-blue-400 dark:text-slate-400 shrink-0 mt-0.5">
-                  <Info className="w-3.5 h-3.5" />
-                </div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 border-l border-slate-200 dark:border-slate-700 pl-4 py-0.5 font-medium leading-relaxed">
-                  <p>Mọi thắc mắc vui lòng liên hệ bộ phận hỗ trợ Schoolify.</p>
-                  {/* <p>Cảm ơn quý phụ huynh đã đồng hành cùng Schoolify.</p> */}
+
+              <div className="text-right">
+                <div className="w-20 h-20 rounded-full border-2 border-rose-500/80 text-rose-600 flex flex-col items-center justify-center font-bold text-[9px] uppercase tracking-tighter transform rotate-[-8deg] p-1 shadow-xs ml-auto">
+                  <span>★ ĐÃ THU TIỀN ★</span>
+                  <span className="text-[8px] font-mono mt-0.5">SCHOOLIFY</span>
+                  <span className="text-[7px] text-slate-500">PAID & VERIFIED</span>
                 </div>
               </div>
             </div>
 
+            {/* Nút hành động */}
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                className="flex-1 font-bold"
+                leftIcon={<Printer className="w-4 h-4" />}
+                onClick={() => window.print()}
+              >
+                In Biên Lai
+              </Button>
+              <Button
+                variant="primary"
+                className="flex-1 font-bold bg-cyan-600 hover:bg-cyan-500"
+                onClick={() => setReceiptItem(null)}
+              >
+                Đóng
+              </Button>
+            </div>
           </div>
         )}
       </Dialog>
