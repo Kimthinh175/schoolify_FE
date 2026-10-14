@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Lock,
   Sparkles,
@@ -11,10 +12,13 @@ import {
   ArrowRight,
   CheckCircle2,
   BookOpen,
+  Zap,
 } from 'lucide-react';
 import { Dialog } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useAuthStore } from '@/store/auth.store';
+import { toast } from 'sonner';
 
 export type RequireLoginReason = 'ADVANCED_LEVEL' | 'LEADERBOARD' | 'STORE' | 'GENERAL';
 
@@ -24,6 +28,8 @@ interface RequireLoginModalProps {
   reason?: RequireLoginReason;
   targetLevelName?: string;
   onContinueGuest?: () => void;
+  returnUrl?: string;
+  onSuccessLogin?: () => void;
 }
 
 export function RequireLoginModal({
@@ -32,7 +38,52 @@ export function RequireLoginModal({
   reason = 'GENERAL',
   targetLevelName,
   onContinueGuest,
+  returnUrl,
+  onSuccessLogin,
 }: RequireLoginModalProps) {
+  const router = useRouter();
+  const { login } = useAuthStore();
+  const [isDemoLoggingIn, setIsDemoLoggingIn] = React.useState(false);
+
+  const handleQuickDemoLogin = () => {
+    setIsDemoLoggingIn(true);
+    setTimeout(() => {
+      login(
+        {
+          id: 'usr-student-01',
+          fullname: 'Nguyễn Hoàng Minh',
+          email: 'student.minh@schoolify.edu.vn',
+          role: 'USER',
+          status: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          school_memberships: [
+            {
+              id: 'mem-01',
+              user_id: 'usr-student-01',
+              school_id: 'sch-01',
+              school_name: 'THPT Chuyên Công Nghệ Schoolify',
+              role: 'STUDENT',
+              joined_at: new Date().toISOString(),
+            },
+          ],
+        },
+        'mock-student-token',
+        'STUDENT',
+        'sch-01'
+      );
+      toast.success('Đăng nhập thành công!', {
+        description: 'Chào mừng Nguyễn Hoàng Minh (THPT Chuyên Công Nghệ Schoolify)',
+      });
+      setIsDemoLoggingIn(false);
+      onClose();
+      if (onSuccessLogin) {
+        onSuccessLogin();
+      } else if (returnUrl) {
+        router.push(returnUrl);
+      }
+    }, 300);
+  };
   const getHeaderInfo = () => {
     switch (reason) {
       case 'ADVANCED_LEVEL':
@@ -143,13 +194,31 @@ export function RequireLoginModal({
 
         {/* CTA Buttons */}
         <div className="mt-6 space-y-2.5">
-          <Link href="/login/student" className="block w-full">
+          {/* Quick 1-Click Login Button */}
+          <Button
+            type="button"
+            size="lg"
+            isLoading={isDemoLoggingIn}
+            onClick={handleQuickDemoLogin}
+            className="w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-black text-sm rounded-xl shadow-lg shadow-emerald-500/25 transition-all cursor-pointer"
+            leftIcon={<Zap className="w-4 h-4 text-amber-300 fill-amber-300" />}
+            rightIcon={<ArrowRight className="w-4 h-4" />}
+          >
+            ⚡ Đăng Nhập Nhanh 1-Click (Tài Khoản Mẫu)
+          </Button>
+
+          {/* Standard Student Login Page Button */}
+          <Link
+            href={returnUrl ? `/login/student?returnUrl=${encodeURIComponent(returnUrl)}` : '/login/student'}
+            className="block w-full"
+          >
             <Button
               size="lg"
-              className="w-full bg-[#00B8DD] hover:bg-[#009BBD] text-slate-950 font-bold text-sm rounded-xl shadow-lg shadow-[#00B8DD]/20"
+              variant="outline"
+              className="w-full border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-sm rounded-xl"
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
-              Đăng Nhập Tài Khoản Học Sinh
+              Đăng Nhập Bằng Email / SĐT Khác
             </Button>
           </Link>
 

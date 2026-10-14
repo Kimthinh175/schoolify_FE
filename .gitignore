@@ -59,4 +59,12 @@ docker-compose.override.yml
 docs/*.md
 docs/**/*.md
 
+# AI rules & design tokens
+.cursor
+.cursor/
+design
+design/
+
+
+
 

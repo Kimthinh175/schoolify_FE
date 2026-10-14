@@ -28,12 +28,10 @@ export default function ProfileSettingsPage() {
 
   const getRoleLabel = (role?: string) => {
     switch (role) {
-      case 'STUDENT': return 'Học Sinh K-12';
-      case 'TEACHER': return 'Giáo Viên / Creator';
-      case 'PARENT': return 'Phụ Huynh Học Sinh';
-      case 'PRINCIPAL': return 'Ban Giám Hiệu';
-      case 'SUPER_ADMIN': return 'Quản Trị Hệ Thống';
-      default: return 'Học Sinh K-12';
+      case 'STUDENT': return 'Người Luyện Thi';
+      case 'TEACHER': return 'Người Bán Khóa Học & Giảng Viên';
+      case 'SUPER_ADMIN': return 'Quản Trị Toàn Hệ Thống';
+      default: return 'Người Luyện Thi';
     }
   };
 

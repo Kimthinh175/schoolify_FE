@@ -121,13 +121,13 @@ export default function TeacherLoginPage() {
           </div>
           <div>
             <Badge className="mb-2 bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 text-[10px] font-bold">
-              CỔNG GIẢNG DẠY & SÁNG TẠO
+              CỔNG DÀNH CHO GIẢNG VIÊN & CREATOR
             </Badge>
             <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              Đăng Nhập Giáo Viên
+              Đăng Nhập Người Bán Khóa Học
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Quản lý lớp học, soạn khóa học số & chấm bài trực tuyến
+              Quản lý khóa học số, doanh thu và ngân hàng ma trận đề thi
             </p>
           </div>
         </div>
@@ -136,7 +136,7 @@ export default function TeacherLoginPage() {
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-              Email Giáo Viên / Số Điện Thoại
+              Email Giảng Viên / Số Điện Thoại
             </label>
             <Input
               type="text"
@@ -182,7 +182,7 @@ export default function TeacherLoginPage() {
             className="w-full justify-center h-11 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-slate-950 font-black text-sm shadow-md shadow-amber-500/20 transition-all cursor-pointer"
             rightIcon={<ArrowRight className="w-4 h-4" />}
           >
-            Vào Không Gian Giảng Dạy
+            Vào Không Gian Giảng Viên
           </Button>
         </form>
 

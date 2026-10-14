@@ -3,7 +3,8 @@ export type PracticeLevel =
   | 'MEDIUM'                // 2. Trung bình (Học kỳ / Tốt nghiệp)
   | 'ADVANCED'              // 3. Nâng cao (Vận dụng cao 9-10)
   | 'PROVINCIAL_EXCELLENT'  // 4. HSG Tỉnh / Thành phố
-  | 'NATIONAL_EXCELLENT';   // 5. HSG Quốc Gia / Olympic
+  | 'NATIONAL_EXCELLENT'   // 5. HSG Quốc Gia / Olympic
+  | 'ASSESSMENT';           // 6. Đánh giá năng lực
 
 export interface LevelDetail {
   id: PracticeLevel;

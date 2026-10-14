@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Plus, Wallet, UserX } from 'lucide-react';
+import { Plus, Wallet, UserX, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -54,7 +54,12 @@ export default function TeacherDashboardPage() {
             Theo dõi thu nhập bán khóa học, số học viên, lớp giảng dạy và quản lý trạng thái mở bán khóa học trên Marketplace.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link href="/profile">
+            <Button variant="outline" leftIcon={<User className="w-4 h-4" />}>
+              Tài Khoản Cá Nhân
+            </Button>
+          </Link>
           <Link href="/teacher/revenue">
             <Button variant="outline" leftIcon={<Wallet className="w-4 h-4" />}>
               Doanh Thu

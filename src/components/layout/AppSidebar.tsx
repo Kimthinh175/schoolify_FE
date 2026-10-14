@@ -23,9 +23,12 @@ import {
   HelpCircle,
   FileCheck2,
   BookCheck,
+  FileQuestion,
+  Database,
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth.store';
@@ -42,31 +45,38 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   // SUPER ADMIN
   {
-    label: 'Tổng quan SaaS',
+    label: 'Tổng quan',
     href: '/admin/dashboard',
     icon: <LayoutDashboard className="w-5 h-5" />,
     roles: ['SUPER_ADMIN'],
   },
   {
-    label: 'Quản lý Trường học',
-    href: '/admin/schools',
-    icon: <Building2 className="w-5 h-5" />,
+    label: 'Ngân Hàng Câu Hỏi Gốc',
+    href: '/admin/questions',
+    icon: <Database className="w-5 h-5" />,
+    badge: 'Mới',
     roles: ['SUPER_ADMIN'],
   },
   {
-    label: 'Gói Cước SaaS',
+    label: 'Quản Lý Ma Trận Đề Thi',
+    href: '/admin/exams',
+    icon: <FileCheck2 className="w-5 h-5" />,
+    roles: ['SUPER_ADMIN'],
+  },
+  {
+    label: 'Gói Đăng Ký',
     href: '/admin/packages',
     icon: <Package className="w-5 h-5" />,
     roles: ['SUPER_ADMIN'],
   },
   {
-    label: 'Tài Chính & Đối Soát',
+    label: 'Hóa Đơn',
     href: '/admin/orders',
     icon: <CreditCard className="w-5 h-5" />,
     roles: ['SUPER_ADMIN'],
   },
   {
-    label: 'Quản lý Users Toàn Cầu',
+    label: 'Người Dùng',
     href: '/admin/users',
     icon: <Users className="w-5 h-5" />,
     roles: ['SUPER_ADMIN'],
@@ -132,6 +142,12 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['TEACHER'],
   },
   {
+    label: 'Hồ Sơ & Tài Khoản',
+    href: '/profile',
+    icon: <User className="w-5 h-5" />,
+    roles: ['TEACHER'],
+  },
+  {
     label: 'Diễn Đàn Thảo Luận',
     href: '/forum/1',
     icon: <MessageSquare className="w-5 h-5" />,
@@ -175,11 +191,17 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['TEACHER'],
   },
 
-  // STUDENT
+  // STUDENT (Người Luyện Thi & Quản Lý Cá Nhân)
   {
-    label: 'Góc Học Tập',
-    href: '/student/dashboard',
-    icon: <LayoutDashboard className="w-5 h-5" />,
+    label: 'Về Trang Luyện Thi',
+    href: '/luyen-thi',
+    icon: <Sparkles className="w-5 h-5 text-amber-500" />,
+    roles: ['STUDENT'],
+  },
+  {
+    label: 'Tài Khoản Cá Nhân',
+    href: '/student',
+    icon: <User className="w-5 h-5" />,
     roles: ['STUDENT'],
   },
   {
@@ -203,13 +225,7 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['STUDENT'],
   },
   {
-    label: 'Thời Khóa Biểu Tuần',
-    href: '/student/timetable',
-    icon: <Calendar className="w-5 h-5" />,
-    roles: ['STUDENT'],
-  },
-  {
-    label: 'Bài Thi & Điểm Số',
+    label: 'Lịch Sử Luyện Đề & Điểm',
     href: '/student/exams',
     icon: <Award className="w-5 h-5" />,
     roles: ['STUDENT'],
@@ -221,7 +237,7 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['STUDENT'],
   },
   {
-    label: 'Túi Đồ Của Tôi',
+    label: 'Túi Đồ & Phần Thưởng',
     href: '/student/inventory',
     icon: <Gift className="w-5 h-5" />,
     roles: ['STUDENT'],
@@ -300,20 +316,15 @@ export function AppSidebar({ isMobileOpen, onMobileClose }: { isMobileOpen?: boo
         </button>
       </div>
 
-      {/* Role Badge Indicator */}
-      {!collapsed && (
-        <div className="px-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
-          <span className="text-xs font-semibold text-slate-500">Phân hệ đang xem:</span>
-          <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/80">
-            {currentRole}
-          </span>
-        </div>
-      )}
 
       {/* Nav links */}
       <div className="flex-1 overflow-y-auto p-3 space-y-1.5 no-scrollbar">
         {filteredNavItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          const matches = (href: string) => pathname === href || pathname.startsWith(href + '/');
+          // Chỉ active mục khớp cụ thể nhất (tránh /student và /student/exams cùng sáng)
+          const isActive =
+            matches(item.href) &&
+            !filteredNavItems.some((other) => other.href.length > item.href.length && matches(other.href));
           return (
             <Link
               key={item.href}

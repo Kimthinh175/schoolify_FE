@@ -1,24 +1,37 @@
 'use client';
 
+import * as React from 'react';
 import Link from 'next/link';
-import { Award, Clock, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { PracticeHistoryList } from '@/components/features/student/PracticeHistoryList';
 import { MOCK_EXAMS, MOCK_SUBMISSIONS } from '@/services/mock/data';
 
 export default function StudentExamsPage() {
   return (
-    <div className="space-y-8">
-      <div>
-        <Badge variant="purple" className="mb-2">Khảo Thí Trực Tuyến</Badge>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-          Bài Kiểm Tra & Điểm Số
-        </h1>
-        <p className="text-xs text-slate-500 mt-0.5">
-          Danh sách các bài kiểm tra cần làm và xem lại chi tiết điểm số, lời phê của thầy cô.
-        </p>
-      </div>
+    <div className="space-y-6 sm:space-y-8">
+      {/* Header */}
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <Badge className="bg-cyan-50 text-[#007D99] dark:bg-cyan-950/60 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800 text-[10px] font-bold">
+            Khảo Thí & Luyện Đề
+          </Badge>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Lịch Sử Luyện Thi & Điểm Số</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Xem lại các đề đã luyện và chi tiết từng bài làm.
+          </p>
+        </div>
+        <Link href="/luyen-thi" className="shrink-0">
+          <Button
+            className="min-h-[44px] bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs px-4 rounded-xl cursor-pointer"
+            rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+          >
+            Luyện Đề Mới Ngay
+          </Button>
+        </Link>
+      </header>
 
       {/* Danh Sách Bài Thi Cần Làm */}
       <div className="space-y-4">
@@ -50,8 +63,14 @@ export default function StudentExamsPage() {
         ))}
       </div>
 
+      {/* Danh sách lịch sử luyện thi */}
+      <div className="space-y-4 pt-2">
+        <h3 className="text-base font-bold text-slate-900 dark:text-white">Lịch Sử Luyện Đề Thi</h3>
+        <PracticeHistoryList showHeader={false} />
+      </div>
+
       {/* Bài Thi Đã Chấm Điểm */}
-      <div className="space-y-4 pt-4">
+      <div className="space-y-4 pt-2">
         <h3 className="text-base font-bold text-slate-900 dark:text-white">Kết Quả Bài Đã Chấm</h3>
         {MOCK_SUBMISSIONS.map((sub) => (
           <Card key={sub.id} className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
