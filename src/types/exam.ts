@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 export type QuestionType =
   | 'SINGLE_CHOICE'
   | 'MULTIPLE_CHOICE'
@@ -16,6 +17,11 @@ export type DifficultyLevel =
   | 'APPLICATION'           // Vận dụng
   | 'ADVANCED_APPLICATION';  // Vận dụng cao
 
+=======
+import type { PracticeLevel } from './subject';
+
+export type QuestionType = 'MULTIPLE_CHOICE' | 'SINGLE_CHOICE' | 'ESSAY' | 'TRUE_FALSE' | 'FILL_BLANK';
+>>>>>>> 7db6a01c8d7f2ce0a5c8c0369cdfa5dacb890043
 export type SubmissionStatus = 'IN_PROGRESS' | 'SUBMITTED' | 'GRADED' | 'RETURNED';
 export type QuestionBankReviewStatus = 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED';
 
@@ -36,6 +42,7 @@ export interface RubricItem {
   points: number;
 }
 
+<<<<<<< HEAD
 /** Cặp ghép nối cho loại MATCHING */
 export interface MatchingPair {
   id: string;
@@ -57,6 +64,21 @@ export interface ClozeBlank {
   index: number;
   options: string[];
   correct_answer: string;
+=======
+/**
+ * Độ khó của câu hỏi — dùng chung thang 5 cấp với lộ trình luyện thi
+ * (BASIC → NATIONAL_EXCELLENT) để FE chỉ có một nguồn sự thật.
+ */
+export type QuestionDifficulty = PracticeLevel;
+
+/** Liên kết tới chương học mà câu hỏi thuộc về. */
+export interface QuestionChapterRef {
+  id?: string | null;
+  /** VD: "Chương 1: Động lực học chất điểm" */
+  title: string;
+  /** Nếu có, UI sẽ render thành link điều hướng tới chương. */
+  href?: string | null;
+>>>>>>> 7db6a01c8d7f2ce0a5c8c0369cdfa5dacb890043
 }
 
 /** ERD: Question (+ một số field mở rộng FE cần cho Exam Runner) */
@@ -80,6 +102,7 @@ export interface Question {
   sample_essay_answer?: string | null;
   hints?: string[];
   rubric?: RubricItem[];
+<<<<<<< HEAD
   // Dành cho GROUP_QUESTIONS (Chùm câu hỏi ngữ liệu)
   passage_content?: string | null;
   sub_questions?: Question[];
@@ -98,6 +121,12 @@ export interface Question {
   gradingRubric?: { step: string; point: number; detail: string }[];
   section_title?: string;
   count_used?: number;
+=======
+  /** Optional — data cũ có thể thiếu, UI sẽ tự ẩn badge. */
+  difficulty?: QuestionDifficulty | null;
+  /** Optional — chấp nhận chuỗi (data cũ) hoặc object có `href`. */
+  chapter?: QuestionChapterRef | string | null;
+>>>>>>> 7db6a01c8d7f2ce0a5c8c0369cdfa5dacb890043
   created_at?: string;
   updated_at?: string;
 }
