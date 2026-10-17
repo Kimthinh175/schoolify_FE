@@ -575,7 +575,7 @@ export function MathEssayEditor({
       {isToolbarOpen && viewMode === 'EDIT' && (
         <div className="bg-slate-50/70 dark:bg-slate-950/50 border-b border-slate-200/80 dark:border-slate-800 p-3 space-y-2.5">
           {/* Category Tabs */}
-          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-1 text-xs">
+          <div className="flex flex-wrap items-center gap-1.5 pb-1 text-xs">
             <button
               type="button"
               onClick={() => setActiveCategory('POPULAR')}

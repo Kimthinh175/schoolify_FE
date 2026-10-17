@@ -18,6 +18,7 @@ import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/input';
 import { Dialog } from '@/components/ui/dialog';
 import { MathEssayEditor } from '@/components/ui/math-editor';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { MOCK_EXAMS } from '@/services/mock/data';
 
 export default function OnlineExamRunnerPage() {
@@ -61,20 +62,20 @@ export default function OnlineExamRunnerPage() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center p-4">
-        <Card className="max-w-md w-full p-8 text-center space-y-4">
-          <div className="h-16 w-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50/70 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+        <Card className="max-w-md w-full p-8 text-center space-y-4 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+          <div className="h-16 w-16 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
             <CheckCircle2 className="w-10 h-10" />
           </div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Nộp Bài Thành Công!</h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Bài làm của bạn đã được ghi nhận. Giáo viên sẽ chấm điểm phần tự luận và gửi lời phê sớm nhất qua Sổ liên lạc.
           </p>
           <div className="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold text-sm">
             🎉 Bạn nhận được +50 Điểm thưởng chuyên cần!
           </div>
           <Link href="/student/dashboard" className="block">
-            <Button className="w-full justify-center">Về Góc Học Tập</Button>
+            <Button className="w-full justify-center bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold">Về Góc Học Tập</Button>
           </Link>
         </Card>
       </div>
@@ -82,27 +83,50 @@ export default function OnlineExamRunnerPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-20">
-      {/* Sticky Exam Top Header with Timer */}
-      <div className="sticky top-16 z-20 p-4 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md backdrop-blur-md flex items-center justify-between">
-        <div>
-          <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white truncate max-w-xs sm:max-w-md">
-            {exam.title}
-          </h1>
-          <span className="text-xs text-slate-500">{exam.total_questions} Câu hỏi • Điểm tối đa: {exam.max_score}đ</span>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 font-mono font-bold text-sm border border-rose-200 dark:border-rose-800">
-            <Clock className="w-4 h-4" />
-            <span>{formatTimer(secondsLeft)}</span>
+    <div className="min-h-screen bg-slate-50/70 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+      {/* Sticky Exam Top Header with Timer & Theme Toggle */}
+      <header className="sticky top-0 z-30 px-4 sm:px-6 py-3 bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 shadow-xs backdrop-blur-md">
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Link
+              href="/student/dashboard"
+              className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+              title="Về danh sách bài thi"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+            <div className="min-w-0">
+              <h1 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate">
+                {exam.title}
+              </h1>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                {exam.total_questions} Câu hỏi • Tối đa: {exam.max_score}đ
+              </span>
+            </div>
           </div>
 
-          <Button onClick={() => setIsSubmitModalOpen(true)} variant="primary" size="sm" leftIcon={<Send className="w-4 h-4" />}>
-            Nộp Bài
-          </Button>
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <ThemeToggle />
+
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 font-mono font-bold text-xs sm:text-sm border border-rose-200 dark:border-rose-800">
+              <Clock className="w-4 h-4" />
+              <span>{formatTimer(secondsLeft)}</span>
+            </div>
+
+            <Button
+              onClick={() => setIsSubmitModalOpen(true)}
+              variant="primary"
+              size="sm"
+              leftIcon={<Send className="w-4 h-4" />}
+              className="bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold"
+            >
+              Nộp Bài
+            </Button>
+          </div>
         </div>
-      </div>
+      </header>
+
+      <div className="max-w-4xl mx-auto space-y-6 p-4 sm:p-6 pb-20">
 
       {/* Questions List */}
       <div className="space-y-6">
@@ -186,6 +210,7 @@ export default function OnlineExamRunnerPage() {
           </div>
         </div>
       </Dialog>
+      </div>
     </div>
   );
 }

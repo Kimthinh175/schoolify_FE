@@ -22,7 +22,7 @@ export interface TabsProps {
 export function Tabs({ tabs, activeTab, onChange, className, variant = 'pill' }: TabsProps) {
   if (variant === 'underline') {
     return (
-      <div className={cn('flex items-center gap-6 border-b border-slate-200 dark:border-slate-800 overflow-x-auto no-scrollbar', className)}>
+      <div className={cn('flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-slate-200 dark:border-slate-800', className)}>
         {tabs.map((tab) => {
           const isActive = tab.id === activeTab;
           return (
@@ -57,7 +57,7 @@ export function Tabs({ tabs, activeTab, onChange, className, variant = 'pill' }:
   }
 
   return (
-    <div className={cn('inline-flex p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl max-w-full overflow-x-auto no-scrollbar', className)}>
+    <div className={cn('inline-flex flex-wrap gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl max-w-full', className)}>
       {tabs.map((tab) => {
         const isActive = tab.id === activeTab;
         return (

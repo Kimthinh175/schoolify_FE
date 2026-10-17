@@ -75,7 +75,7 @@ const PRACTICE_LEVELS_SHOWCASE = [
     name: 'Nắm Chắc Kiến Thức SGK',
     desc: 'Hệ thống hóa 100% lý thuyết, định lý và dạng bài tập cơ bản trong Sách giáo khoa chuẩn Bộ GD&ĐT.',
     badge: 'Miễn Phí • Không Cần Login',
-    badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+    badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800',
     icon: BookOpen,
     iconColor: 'text-emerald-500',
     reward: '+10 💎',
@@ -86,7 +86,7 @@ const PRACTICE_LEVELS_SHOWCASE = [
     name: 'Rèn Phản Xạ Bài Thi Học Kỳ',
     desc: 'Các dạng bài thông hiểu và vận dụng vừa sức, bám sát đề thi giữa kỳ, học kỳ và cấu trúc thi Tốt nghiệp THPT.',
     badge: 'Học Kỳ & Tốt Nghiệp',
-    badgeColor: 'bg-sky-100 text-sky-800 border-sky-300',
+    badgeColor: 'bg-sky-100 text-sky-800 border-sky-300 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800',
     icon: Award,
     iconColor: 'text-sky-500',
     reward: '+20 💎',
@@ -97,7 +97,7 @@ const PRACTICE_LEVELS_SHOWCASE = [
     name: 'Vận Dụng Cao Lấy Điểm 9 - 10',
     desc: 'Bộ câu hỏi phân loại đòi hỏi tư duy logic, kỹ thuật giải nhanh trắc nghiệm và xử lý các bẫy đề thi.',
     badge: 'Cần Đăng Nhập',
-    badgeColor: 'bg-purple-100 text-purple-800 border-purple-300',
+    badgeColor: 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800',
     icon: Flame,
     iconColor: 'text-purple-500',
     reward: '+50 💎',
@@ -108,7 +108,7 @@ const PRACTICE_LEVELS_SHOWCASE = [
     name: 'Đề Thi Tuyển Chọn Tỉnh & TP',
     desc: 'Tổng hợp đề thi chọn Học sinh giỏi cấp Tỉnh/Thành phố của Hà Nội, TP.HCM, Nam Định, Nghệ An...',
     badge: 'Cần Đăng Nhập',
-    badgeColor: 'bg-amber-100 text-amber-800 border-amber-300',
+    badgeColor: 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800',
     icon: Trophy,
     iconColor: 'text-amber-500',
     reward: '+100 💎',
@@ -119,7 +119,7 @@ const PRACTICE_LEVELS_SHOWCASE = [
     name: 'Chuyên Đề Olympic & Đội Tuyển',
     desc: 'Đỉnh cao học sinh giỏi với các chuyên đề Olympic, vòng chọn đội tuyển và đề thi HSG Quốc gia chính thức.',
     badge: 'Cần Đăng Nhập',
-    badgeColor: 'bg-rose-100 text-rose-800 border-rose-300',
+    badgeColor: 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800',
     icon: Crown,
     iconColor: 'text-rose-500',
     reward: '+200 💎',
@@ -134,7 +134,7 @@ const FOUR_STEP_WORKFLOW = [
     desc: 'Flashcard định nghĩa, sơ đồ tư duy và bảng công thức then chốt giúp ôn lại kiến thức chỉ trong 3-5 phút.',
     icon: BookOpen,
     tag: 'Ghi Nhớ Nhanh',
-    color: 'text-sky-600 bg-sky-50 border-sky-200',
+    color: 'text-sky-600 bg-sky-50 border-sky-200 dark:text-sky-400 dark:bg-sky-950/50 dark:border-sky-800',
   },
   {
     step: '02',
@@ -142,7 +142,7 @@ const FOUR_STEP_WORKFLOW = [
     desc: 'Chấm điểm tức thì sau mỗi câu, đồng hồ bấm giờ áp lực thi thật và giải thích chi tiết phương pháp làm bài.',
     icon: Zap,
     tag: 'Phản Xạ Nhanh',
-    color: 'text-amber-600 bg-amber-50 border-amber-200',
+    color: 'text-amber-600 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950/50 dark:border-amber-800',
   },
   {
     step: '03',
@@ -150,7 +150,7 @@ const FOUR_STEP_WORKFLOW = [
     desc: 'Khung soạn thảo lời giải hoàn chỉnh, đối chiếu barem điểm chi tiết của từng bước biến đổi chuẩn khảo thí.',
     icon: Award,
     tag: 'Barem Chuẩn',
-    color: 'text-purple-600 bg-purple-50 border-purple-200',
+    color: 'text-purple-600 bg-purple-50 border-purple-200 dark:text-purple-400 dark:bg-purple-950/50 dark:border-purple-800',
   },
   {
     step: '04',
@@ -158,7 +158,7 @@ const FOUR_STEP_WORKFLOW = [
     desc: 'Đề thi tổng hợp tính điểm chuẩn xác, cập nhật vào Bảng vàng thi đua và cộng thưởng kim cương 💎 vào ví.',
     icon: Trophy,
     tag: 'Đua Top Điểm',
-    color: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+    color: 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/50 dark:border-emerald-800',
   },
 ];
 
@@ -286,7 +286,7 @@ export default function LuyenThiPage() {
           </div>
 
           {/* Category Filter Tabs */}
-          <div className="overflow-x-auto no-scrollbar pt-1 pb-1">
+          <div className="pt-1 pb-1">
             <Tabs
               tabs={categoryTabs}
               activeTab={activeCategory}

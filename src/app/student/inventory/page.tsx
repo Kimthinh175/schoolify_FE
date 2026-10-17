@@ -60,7 +60,7 @@ export default function StudentInventoryPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {inventoryItems.map((item) => (
           <Card key={item.id} className="p-5 flex items-start gap-4">
-            <div className="h-20 w-20 rounded-2xl overflow-hidden bg-slate-100 shrink-0">
+            <div className="h-20 w-20 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0">
               <img src={item.image || ''} alt="" className="h-full w-full object-cover" />
             </div>
 

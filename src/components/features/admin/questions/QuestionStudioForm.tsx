@@ -247,8 +247,8 @@ export function QuestionStudioForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Phân loại & Metadata */}
-      <Card className="p-5 sm:p-6 bg-white border border-slate-200/80 shadow-xs space-y-4">
-        <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+      <Card className="p-5 sm:p-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-primary" />
           Phân Loại & Cấu Hình Câu Hỏi
         </h3>
@@ -256,13 +256,13 @@ export function QuestionStudioForm({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Loại câu hỏi */}
           <div>
-            <label className="text-xs font-semibold text-slate-700 block mb-1">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
               Loại câu hỏi:
             </label>
             <select
               value={type}
               onChange={(e) => setType(e.target.value as QuestionType)}
-              className="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2.5 text-slate-800 focus:outline-none focus:border-primary focus:bg-white font-medium"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-3 py-2.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 font-medium"
             >
               <option value="SINGLE_CHOICE">Trắc nghiệm 1 đáp án (Single Choice)</option>
               <option value="MULTIPLE_CHOICE">Trắc nghiệm nhiều đáp án (Multi Choice)</option>
@@ -278,13 +278,13 @@ export function QuestionStudioForm({
 
           {/* Mức độ Bloom */}
           <div>
-            <label className="text-xs font-semibold text-slate-700 block mb-1">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
               Mức độ nhận thức (Bloom):
             </label>
             <select
               value={difficulty}
               onChange={(e) => setDifficulty(e.target.value as DifficultyLevel)}
-              className="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2.5 text-slate-800 focus:outline-none focus:border-primary focus:bg-white font-medium"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-3 py-2.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 font-medium"
             >
               <option value="RECOGNITION">Nhận biết (Dễ)</option>
               <option value="UNDERSTANDING">Thông hiểu (Trung bình)</option>
@@ -295,13 +295,13 @@ export function QuestionStudioForm({
 
           {/* Môn học Dropdown chuẩn */}
           <div>
-            <label className="text-xs font-semibold text-slate-700 block mb-1">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
               Môn học:
             </label>
             <select
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2.5 text-slate-800 focus:outline-none focus:border-primary focus:bg-white font-semibold"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-3 py-2.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 font-semibold"
             >
               {AVAILABLE_SUBJECTS.map((sub) => (
                 <option key={sub} value={sub}>
@@ -313,7 +313,7 @@ export function QuestionStudioForm({
 
           {/* Điểm số */}
           <div>
-            <label className="text-xs font-semibold text-slate-700 block mb-1">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
               Điểm số mặc định:
             </label>
             <Input
@@ -321,22 +321,22 @@ export function QuestionStudioForm({
               step="0.05"
               value={points}
               onChange={(e) => setPoints(parseFloat(e.target.value) || 0)}
-              className="bg-slate-50 border-slate-200 text-xs text-slate-900 focus:bg-white"
+              className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900"
             />
           </div>
         </div>
 
         {/* Khối lớp (1 - 12) & Quản lý Chương (Có sẵn / Tạo mới) */}
-        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-2 border-t border-slate-100">
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
           {/* Khối lớp từ Lớp 1 đến Lớp 12 */}
           <div className="sm:col-span-4">
-            <label className="text-xs font-semibold text-slate-700 block mb-1">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
               Khối lớp (Lớp 1 - 12):
             </label>
             <select
               value={gradeLevel}
               onChange={(e) => setGradeLevel(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2.5 text-slate-800 focus:outline-none focus:border-primary focus:bg-white font-medium"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-3 py-2.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 font-medium"
             >
               <optgroup label="THPT (Cấp 3)">
                 <option value="12">Lớp 12</option>
@@ -362,7 +362,7 @@ export function QuestionStudioForm({
           {/* Quản lý Chương / Chuyên đề: Chọn chương cũ hoặc Tạo chương mới */}
           <div className="sm:col-span-8">
             <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-semibold text-slate-700 block">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
                 Chương / Chuyên đề kiến thức:
               </label>
               <button
@@ -396,7 +396,7 @@ export function QuestionStudioForm({
                     value={customChapterName}
                     onChange={(e) => setCustomChapterName(e.target.value)}
                     placeholder="Ví dụ: Chương 8: Ôn tập hè và bồi dưỡng nâng cao..."
-                    className="bg-primary/5 border-primary/30 text-xs text-slate-900 focus:bg-white focus:border-primary font-medium"
+                    className="bg-primary/5 dark:bg-primary/20 border-primary/30 text-xs text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900 focus:border-primary font-medium"
                     autoFocus
                   />
                   <Button
@@ -407,12 +407,12 @@ export function QuestionStudioForm({
                       setIsCreatingNewChapter(false);
                       setChapter(combinedChapters[0] || '');
                     }}
-                    className="text-xs h-9 text-slate-500 border-slate-200 shrink-0"
+                    className="text-xs h-9 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 shrink-0"
                   >
                     Hủy
                   </Button>
                 </div>
-                <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
                   <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] font-semibold">
                     ✨ Chương mới
                   </Badge>
@@ -434,7 +434,7 @@ export function QuestionStudioForm({
                       setChapter(e.target.value);
                     }
                   }}
-                  className="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2.5 text-slate-800 focus:outline-none focus:border-primary focus:bg-white font-medium shadow-2xs"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-3 py-2.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 font-medium shadow-2xs"
                 >
                   {combinedChapters.map((ch) => {
                     const qCount = countByChapter[ch] || 0;
@@ -449,12 +449,12 @@ export function QuestionStudioForm({
                   </option>
                 </select>
 
-                <div className="flex items-center justify-between text-[11px] text-slate-500 px-0.5">
+                <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 px-0.5">
                   <span className="flex items-center gap-1 truncate max-w-[70%]">
-                    <BookmarkCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <BookmarkCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <span className="truncate">Đang chọn: <strong>{chapter}</strong></span>
                   </span>
-                  <span className="shrink-0 font-medium text-slate-600">
+                  <span className="shrink-0 font-medium text-slate-600 dark:text-slate-300">
                     Kho hiện có: <strong>{countByChapter[chapter] || 0} câu</strong>
                   </span>
                 </div>
@@ -465,12 +465,12 @@ export function QuestionStudioForm({
       </Card>
 
       {/* Nội dung câu hỏi */}
-      <Card className="p-5 sm:p-6 bg-white border border-slate-200/80 shadow-xs space-y-3">
+      <Card className="p-5 sm:p-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
         <div className="flex items-center justify-between">
-          <label className="text-xs font-bold text-slate-900">
+          <label className="text-xs font-bold text-slate-900 dark:text-white">
             Nội dung câu hỏi:
           </label>
-          <span className="text-[11px] text-slate-500 font-medium">
+          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
             Hỗ trợ công thức KaTeX đặt trong dấu <code className="text-primary font-bold bg-primary/10 px-1 rounded">$...$</code>
           </span>
         </div>
@@ -488,13 +488,13 @@ export function QuestionStudioForm({
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Nhập nội dung câu hỏi tại đây... Ví dụ: Cho hàm số $y = x^2$..."
-          className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-primary focus:bg-white font-sans"
+          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 font-sans"
         />
 
         {/* Khu vực đính kèm ảnh minh họa câu hỏi */}
-        <div className="pt-2 border-t border-slate-100 space-y-2">
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
               <ImageIcon className="w-3.5 h-3.5 text-primary" />
               Hình ảnh minh họa câu hỏi (nếu có):
             </span>
@@ -504,7 +504,7 @@ export function QuestionStudioForm({
                 size="sm"
                 variant="ghost"
                 onClick={() => setImageUrl(null)}
-                className="h-7 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 gap-1 px-2"
+                className="h-7 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 gap-1 px-2"
               >
                 <Trash2 className="w-3 h-3" />
                 Gỡ ảnh
@@ -513,11 +513,11 @@ export function QuestionStudioForm({
           </div>
 
           {imageUrl ? (
-            <div className="relative p-2 rounded-xl border border-slate-200 bg-slate-50/50 w-fit">
+            <div className="relative p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 w-fit">
               <img
                 src={imageUrl}
                 alt="Minh họa câu hỏi"
-                className="max-h-48 rounded-lg object-contain border border-slate-200 bg-white"
+                className="max-h-48 rounded-lg object-contain border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
               />
             </div>
           ) : (
@@ -541,7 +541,7 @@ export function QuestionStudioForm({
                     }
                   }}
                 />
-                <span className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/80 transition-colors whitespace-nowrap shrink-0">
+                <span className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 transition-colors whitespace-nowrap shrink-0">
                   <UploadCloud className="w-4 h-4 text-primary" />
                   Tải ảnh từ máy tính...
                 </span>
@@ -551,7 +551,7 @@ export function QuestionStudioForm({
 
               <Input
                 placeholder="https://example.com/hinh-anh.png"
-                className="h-9 text-xs bg-slate-50 border-slate-200 focus:bg-white flex-1"
+                className="h-9 text-xs bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900 flex-1"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
@@ -576,14 +576,14 @@ export function QuestionStudioForm({
       </Card>
 
       {/* Soạn thảo đáp án theo QuestionType */}
-      <Card className="p-5 sm:p-6 bg-white border border-slate-200/80 shadow-xs space-y-4">
-        <h3 className="text-sm font-bold text-slate-900">
+      <Card className="p-5 sm:p-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white">
           Thiết Lập Đáp Án
         </h3>
 
         {(type === 'SINGLE_CHOICE' || type === 'MULTIPLE_CHOICE') && (
           <div className="space-y-3">
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Click vào biểu tượng chữ cái (A, B, C, D) để đánh dấu đáp án đúng.
             </p>
             {answers.map((ans, idx) => (
@@ -593,8 +593,8 @@ export function QuestionStudioForm({
                   onClick={() => handleToggleAnswer(idx)}
                   className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition-all shadow-xs ${
                     ans.is_answer
-                      ? 'bg-emerald-600 text-white shadow-emerald-200'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
+                      ? 'bg-emerald-600 text-white shadow-emerald-200 dark:shadow-none'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
                   }`}
                 >
                   {ans.label || String.fromCharCode(65 + idx)}
@@ -608,7 +608,7 @@ export function QuestionStudioForm({
                     setAnswers(newAns);
                   }}
                   placeholder={`Nội dung phương án ${ans.label}...`}
-                  className="bg-slate-50 border-slate-200 text-xs text-slate-900 flex-1 focus:bg-white"
+                  className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white flex-1 focus:bg-white dark:focus:bg-slate-900"
                 />
 
                 <Button
@@ -616,7 +616,7 @@ export function QuestionStudioForm({
                   size="icon"
                   variant="ghost"
                   onClick={() => handleRemoveAnswer(idx)}
-                  className="text-slate-400 hover:text-red-500 hover:bg-red-50"
+                  className="text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -628,7 +628,7 @@ export function QuestionStudioForm({
               variant="outline"
               size="sm"
               onClick={handleAddAnswer}
-              className="text-xs gap-1.5 border-slate-200 text-slate-700 hover:bg-slate-50"
+              className="text-xs gap-1.5 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
             >
               <Plus className="w-3.5 h-3.5" />
               Thêm phương án
@@ -638,12 +638,12 @@ export function QuestionStudioForm({
 
         {type === 'TRUE_FALSE' && (
           <div className="space-y-3">
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Nhập nội dung 4 mệnh đề a, b, c, d và chọn trạng thái Đúng / Sai cho từng mệnh đề:
             </p>
             {tfStatements.map((st, idx) => (
               <div key={st.id} className="flex items-center gap-3">
-                <span className="font-bold text-xs text-slate-700 w-6">
+                <span className="font-bold text-xs text-slate-700 dark:text-slate-300 w-6">
                   {st.label})
                 </span>
                 <Input
@@ -654,7 +654,7 @@ export function QuestionStudioForm({
                     setTfStatements(updated);
                   }}
                   placeholder={`Nội dung mệnh đề ${st.label}...`}
-                  className="bg-slate-50 border-slate-200 text-xs text-slate-900 flex-1 focus:bg-white"
+                  className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white flex-1 focus:bg-white dark:focus:bg-slate-900"
                 />
                 <div className="flex items-center gap-1">
                   <Button
@@ -669,7 +669,7 @@ export function QuestionStudioForm({
                     className={`text-xs px-3 shadow-xs ${
                       st.is_answer
                         ? 'bg-emerald-600 text-white'
-                        : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                        : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   >
                     Đúng
@@ -695,21 +695,21 @@ export function QuestionStudioForm({
 
         {type === 'FILL_BLANK' && (
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-700 block">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
               Kết quả đáp án đúng (Học sinh nhập đúng chuỗi này sẽ có điểm):
             </label>
             <Input
               value={fillAnswer}
               onChange={(e) => setFillAnswer(e.target.value)}
               placeholder="Ví dụ: 3.5 hoặc 42"
-              className="bg-slate-50 border-slate-200 text-xs text-slate-900 max-w-md focus:bg-white"
+              className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white max-w-md focus:bg-white dark:focus:bg-slate-900"
             />
           </div>
         )}
 
         {type === 'ESSAY' && (
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-700 block">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
               Gợi ý đáp án mẫu / Barem chấm:
             </label>
             <textarea
@@ -717,16 +717,16 @@ export function QuestionStudioForm({
               value={explain}
               onChange={(e) => setExplain(e.target.value)}
               placeholder="Nhập tiêu chí chấm điểm tự luận..."
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-900 focus:outline-none focus:border-primary focus:bg-white"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900"
             />
           </div>
         )}
       </Card>
 
       {/* Lời giải chi tiết */}
-      <Card className="p-5 sm:p-6 bg-white border border-slate-200/80 shadow-xs space-y-3">
+      <Card className="p-5 sm:p-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
         <div className="flex items-center justify-between">
-          <label className="text-xs font-bold text-slate-900 block">
+          <label className="text-xs font-bold text-slate-900 dark:text-white block">
             Lời giải chi tiết (Hiển thị sau khi thi):
           </label>
           <span className="text-[11px] text-slate-400">
@@ -747,7 +747,7 @@ export function QuestionStudioForm({
           value={explain}
           onChange={(e) => setExplain(e.target.value)}
           placeholder="Nhập hướng dẫn giải chi tiết cho học sinh..."
-          className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-900 focus:outline-none focus:border-primary focus:bg-white font-sans"
+          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 font-sans"
         />
       </Card>
 
@@ -758,7 +758,7 @@ export function QuestionStudioForm({
             type="button"
             variant="outline"
             onClick={onCancel}
-            className="border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-medium"
+            className="border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-medium"
           >
             Hủy bỏ
           </Button>

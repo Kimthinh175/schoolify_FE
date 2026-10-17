@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/store/auth.store';
+import { GoogleLoginButton } from '@/components/features/auth/GoogleLoginButton';
+import { toast } from 'sonner';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -17,12 +19,34 @@ export default function RegisterPage() {
   const [email, setEmail] = React.useState('');
   const [phone, setPhone] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [isLoading, setIsLoading] = React.useState(false);
   const [role, setRole] = React.useState<'STUDENT' | 'TEACHER' | 'PRINCIPAL' | 'PARENT'>('STUDENT');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    login(
-      {
+    setIsLoading(true);
+    try {
+      const profileType =
+        role === 'TEACHER' || role === 'PRINCIPAL'
+          ? 'TEACHER'
+          : role === 'PARENT'
+            ? 'PARENT'
+            : 'STUDENT';
+
+      const res = await fetch('/api/v1/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullname: name || 'Người Dùng Mới',
+          email: email || `user.${Date.now()}@schoolify.edu.vn`,
+          phone: phone || '0901234567',
+          password: password || 'Schoolify@2026',
+          profile_type: profileType,
+        }),
+      });
+
+      const data = await res.json();
+      const userObj = data?.user || {
         id: `usr-${Date.now()}`,
         fullname: name || 'Người Dùng Mới',
         email: email || 'user@schoolify.edu.vn',
@@ -31,11 +55,31 @@ export default function RegisterPage() {
         status: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      },
-      'mock-jwt-token',
-      role,
-      'sch-01'
-    );
+      };
+
+      login(userObj, data?.accessToken || 'jwt-token', role, 'sch-01');
+      toast.success('Đăng ký tài khoản thành công!', {
+        description: `Chào mừng ${userObj.fullname} đến với Schoolify!`,
+      });
+    } catch {
+      login(
+        {
+          id: `usr-${Date.now()}`,
+          fullname: name || 'Người Dùng Mới',
+          email: email || 'user@schoolify.edu.vn',
+          phone: phone || '0901234567',
+          role: 'USER',
+          status: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        'mock-jwt-token',
+        role,
+        'sch-01'
+      );
+    } finally {
+      setIsLoading(false);
+    }
 
     switch (role) {
       case 'PRINCIPAL':
@@ -164,6 +208,7 @@ export default function RegisterPage() {
 
           <Button
             type="submit"
+            isLoading={isLoading}
             className="w-full justify-center h-11 bg-[#00B8DD] hover:bg-[#009bbd] active:bg-[#007D99] text-white font-black text-sm shadow-md shadow-[#00B8DD]/25 transition-all mt-2 cursor-pointer"
             rightIcon={<ArrowRight className="w-4 h-4" />}
           >
@@ -171,11 +216,17 @@ export default function RegisterPage() {
           </Button>
         </form>
 
-        <div className="pt-3 border-t border-slate-100 dark:border-slate-800 text-center text-xs text-slate-500">
-          Đã có tài khoản?{' '}
-          <Link href="/login" className="text-[#00B8DD] font-bold hover:underline">
-            Đăng nhập ngay
-          </Link>
+        <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
+          <GoogleLoginButton
+            role={role}
+            label="Đăng ký nhanh bằng tài khoản Google"
+          />
+          <div className="text-center text-xs text-slate-500">
+            Đã có tài khoản?{' '}
+            <Link href="/login" className="text-[#00B8DD] font-bold hover:underline">
+              Đăng nhập ngay
+            </Link>
+          </div>
         </div>
       </Card>
     </div>

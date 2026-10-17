@@ -137,11 +137,11 @@ export default function ParentTuitionPage() {
           <div className="py-2 flex flex-col items-center text-center space-y-4">
             {!isSuccess ? (
               <>
-                <div className="p-3 bg-white border border-slate-200 rounded-2xl shadow-md">
+                <div className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-md">
                   <img
                     src={`https://img.vietqr.io/image/970422-123456789-compact2.png?amount=${payingOrder.item_price_snapshot}&addInfo=${payingOrder.code}&accountName=SCHOOLIFY`}
                     alt="VietQR"
-                    className="w-52 h-52 rounded-xl object-contain"
+                    className="w-52 h-52 rounded-xl object-contain bg-white"
                   />
                 </div>
 
@@ -166,7 +166,7 @@ export default function ParentTuitionPage() {
               </>
             ) : (
               <div className="py-6 flex flex-col items-center space-y-3">
-                <div className="h-16 w-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                <div className="h-16 w-16 rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 flex items-center justify-center">
                   <CheckCircle2 className="w-10 h-10" />
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white">Thanh Toán Học Phí Thành Công!</h3>

@@ -62,7 +62,7 @@ export default function StudentRewardsStorePage() {
           const canAfford = points >= item.points_required;
           return (
             <Card key={item.id} className="p-0 overflow-hidden flex flex-col group hover:shadow-xl transition-all">
-              <div className="relative h-44 w-full bg-slate-100 overflow-hidden">
+              <div className="relative h-44 w-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                 <img
                   src={item.image_url || ''}
                   alt={item.name}
@@ -114,12 +114,12 @@ export default function StudentRewardsStorePage() {
         description={`Bạn đã đổi thành công: ${selectedItem?.name}`}
       >
         <div className="py-4 flex flex-col items-center text-center space-y-4">
-          <div className="h-16 w-16 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
+          <div className="h-16 w-16 rounded-full bg-amber-100 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400 flex items-center justify-center">
             <Gift className="w-10 h-10" />
           </div>
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 w-full text-xs space-y-2">
             <p className="font-bold text-sm text-slate-900 dark:text-white">Mã Voucher / Quà Tặng:</p>
-            <p className="font-mono text-base font-black text-indigo-600 tracking-wider">
+            <p className="font-mono text-base font-black text-indigo-600 dark:text-indigo-400 tracking-wider">
               SCHOOLIFY-GIFT-{Math.floor(100000 + Math.random() * 900000)}
             </p>
             <p className="text-slate-500">Vật phẩm đã được lưu vào <b>Túi Đồ Của Tôi</b>.</p>

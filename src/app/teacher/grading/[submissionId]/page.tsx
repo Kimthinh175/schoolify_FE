@@ -48,7 +48,7 @@ export default function TeacherGradingDetailPage() {
         <div>
           <Link
             href="/teacher/grading"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:hover:text-white mb-2"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white mb-2"
           >
             <ArrowLeft className="w-4 h-4" />
             Quay lại danh sách bài nộp
@@ -56,7 +56,7 @@ export default function TeacherGradingDetailPage() {
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
             Chấm Bài: {submission.student_name}
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Bài thi: <span className="font-semibold text-slate-700 dark:text-slate-300">{submission.exam_title}</span> • Nộp lúc {new Date(submission.submitted_at || '').toLocaleString('vi-VN')}
           </p>
         </div>

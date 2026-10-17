@@ -151,7 +151,7 @@ export default function NewsPage() {
 
       {/* ── SEARCH & CATEGORY FILTER TABS ── */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-none">
+        <div className="flex flex-wrap items-center gap-1.5 w-full md:w-auto pb-2 md:pb-0">
           {CATEGORIES.map((cat) => (
             <button
               key={cat}

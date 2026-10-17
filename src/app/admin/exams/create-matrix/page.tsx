@@ -25,16 +25,16 @@ export default function AdminExamCreateMatrixPage() {
       <div>
         <Link
           href="/admin/exams"
-          className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 transition-colors mb-2 font-medium"
+          className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors mb-2 font-medium"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Quay lại Quản lý Ma trận đề thi
         </Link>
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-2">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <Wand2 className="w-7 h-7 text-primary" />
           Thiết Kế Đề Thi Tự Động Theo Ma Trận (Blueprint)
         </h1>
-        <p className="text-xs sm:text-sm text-slate-500 mt-1">
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
           Cấu hình tỉ lệ % độ khó (Bloom), tỉ lệ % chương học cũ vs mới, và tự động sinh 2, 4 hoặc 8 mã đề độc lập.
         </p>
       </div>

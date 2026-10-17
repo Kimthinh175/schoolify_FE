@@ -52,22 +52,22 @@ export default function FocusLearningPlayerPage() {
 
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex flex-col pt-20">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white flex flex-col pt-20 transition-colors">
       {/* ── HEADER GIỐNG TRANG CHỦ ── */}
       <Navbar />
 
       {/* Top Focus Sub-bar */}
-      <div className="sticky top-20 z-20 px-4 sm:px-6 py-2.5 bg-slate-950/95 border-b border-slate-800 flex items-center justify-between backdrop-blur-md">
+      <div className="sticky top-20 z-20 px-4 sm:px-6 py-2.5 bg-white/95 dark:bg-slate-950/95 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between backdrop-blur-md">
         <div className="flex items-center gap-3 min-w-0">
           <Link
             href="/student/dashboard"
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 hover:text-white transition-colors shrink-0"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Rời Không Gian Học</span>
           </Link>
-          <div className="h-4 w-px bg-slate-800" />
-          <span className="text-xs sm:text-sm font-bold truncate max-w-md text-slate-200">
+          <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
+          <span className="text-xs sm:text-sm font-bold truncate max-w-md text-slate-800 dark:text-slate-200">
             {course.title}
           </span>
         </div>
@@ -80,20 +80,20 @@ export default function FocusLearningPlayerPage() {
       </div>
 
       {/* Main Focus Area (Không sidebar) */}
-      <div className="flex-1 flex flex-col bg-slate-900 overflow-y-auto">
+      <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900 overflow-y-auto">
         {/* Left: Main Content Panel */}
-        <div className="flex-1 flex flex-col bg-slate-900">
+        <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900">
 
           {/* ── Tab Switcher ── */}
-          <div className="sticky top-[125px] z-10 border-b border-slate-800 bg-slate-900/95 px-4 backdrop-blur-sm sm:px-6">
-            <div className="flex gap-0">
+          <div className="sticky top-[125px] z-10 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 px-4 backdrop-blur-sm sm:px-6">
+            <div className="flex flex-wrap gap-0">
               <button
                 type="button"
                 onClick={() => setActiveTab('video')}
                 className={`flex items-center gap-2 border-b-2 px-4 py-3.5 text-sm font-semibold transition-colors ${
                   activeTab === 'video'
-                    ? 'border-[#00B8DD] text-[#00B8DD]'
-                    : 'border-transparent text-slate-500 hover:text-slate-300'
+                    ? 'border-[#00B8DD] text-[#007D99] dark:text-[#00B8DD]'
+                    : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
                 }`}
               >
                 <Clapperboard className="h-4 w-4" />
@@ -104,8 +104,8 @@ export default function FocusLearningPlayerPage() {
                 onClick={() => setActiveTab('quiz')}
                 className={`flex items-center gap-2 border-b-2 px-4 py-3.5 text-sm font-semibold transition-colors ${
                   activeTab === 'quiz'
-                    ? 'border-[#00B8DD] text-[#00B8DD]'
-                    : 'border-transparent text-slate-500 hover:text-slate-300'
+                    ? 'border-[#00B8DD] text-[#007D99] dark:text-[#00B8DD]'
+                    : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
                 }`}
               >
                 <BrainCircuit className="h-4 w-4" />
@@ -113,8 +113,8 @@ export default function FocusLearningPlayerPage() {
                 {quizQuestions.length > 0 && (
                   <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
                     activeTab === 'quiz'
-                      ? 'bg-[#00B8DD]/20 text-[#00B8DD]'
-                      : 'bg-slate-700 text-slate-400'
+                      ? 'bg-[#00B8DD]/20 text-[#007D99] dark:text-[#00B8DD]'
+                      : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
                   }`}>
                     {quizQuestions.length}
                   </span>
@@ -125,8 +125,8 @@ export default function FocusLearningPlayerPage() {
                 onClick={() => setActiveTab('essay')}
                 className={`flex items-center gap-2 border-b-2 px-4 py-3.5 text-sm font-semibold transition-colors ${
                   activeTab === 'essay'
-                    ? 'border-[#00B8DD] text-[#00B8DD]'
-                    : 'border-transparent text-slate-500 hover:text-slate-300'
+                    ? 'border-[#00B8DD] text-[#007D99] dark:text-[#00B8DD]'
+                    : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
                 }`}
               >
                 <PenTool className="h-4 w-4" />
@@ -134,8 +134,8 @@ export default function FocusLearningPlayerPage() {
                 {quizQuestions.filter(q => q.type === 'ESSAY').length > 0 && (
                   <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
                     activeTab === 'essay'
-                      ? 'bg-[#00B8DD]/20 text-[#00B8DD]'
-                      : 'bg-slate-700 text-slate-400'
+                      ? 'bg-[#00B8DD]/20 text-[#007D99] dark:text-[#00B8DD]'
+                      : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
                   }`}>
                     {quizQuestions.filter(q => q.type === 'ESSAY').length}
                   </span>
@@ -146,9 +146,9 @@ export default function FocusLearningPlayerPage() {
 
           {/* ── Tab 1: Video Bài Giảng ── */}
           {activeTab === 'video' && (
-            <div className="flex-1 space-y-6 bg-black p-4 sm:p-6">
+            <div className="flex-1 space-y-6 bg-slate-50 dark:bg-black p-4 sm:p-6">
               {/* Video Container */}
-              <div className="relative aspect-video w-full max-w-5xl mx-auto rounded-2xl overflow-hidden bg-slate-950 shadow-2xl border border-slate-800">
+              <div className="relative aspect-video w-full max-w-5xl mx-auto rounded-2xl overflow-hidden bg-slate-950 shadow-2xl border border-slate-200 dark:border-slate-800">
                 <video
                   src="https://www.w3schools.com/html/mov_bbb.mp4"
                   controls
@@ -158,12 +158,12 @@ export default function FocusLearningPlayerPage() {
 
               {/* Lesson Content & Actions */}
               <div className="max-w-5xl mx-auto w-full space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
                   <div>
-                    <h1 className="text-xl sm:text-2xl font-bold">
+                    <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
                       {currentLesson?.title || 'Chưa có tên bài học'}
                     </h1>
-                    <p className="text-xs text-slate-400 mt-1">Giảng dạy bởi: {course.teacher_name}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Giảng dạy bởi: {course.teacher_name}</p>
                   </div>
 
                   <Button
@@ -176,15 +176,15 @@ export default function FocusLearningPlayerPage() {
                 </div>
 
                 {/* Document Material Downloads */}
-                <div className="p-4 rounded-2xl bg-slate-800/60 border border-slate-700/60 space-y-3">
-                  <h4 className="text-sm font-bold flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-indigo-400" />
+                <div className="p-4 rounded-2xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-3 shadow-xs">
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                     Tài Liệu Đính Kèm Của Bài Học
                   </h4>
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800">
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                     <div className="flex items-center gap-3">
                       <Badge variant="secondary" className="text-[10px]">PDF</Badge>
-                      <span className="text-xs font-semibold">Tong_Hop_Cong_Thuc_Luong_Giac_11.pdf (2.4 MB)</span>
+                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Tong_Hop_Cong_Thuc_Luong_Giac_11.pdf (2.4 MB)</span>
                     </div>
                     <Button size="sm" variant="ghost" leftIcon={<Download className="w-3.5 h-3.5" />}>
                       Tải Xuống

@@ -312,7 +312,7 @@ export default function LeaderboardPage() {
         <motion.div {...fadeUp(0)} className="order-1 md:order-2">
           <Card className="p-7 rounded-3xl border-2 border-amber-400/80 bg-gradient-to-b from-amber-50/60 via-white to-amber-50/40 dark:from-slate-850 dark:via-slate-900 dark:to-slate-850 text-center relative overflow-hidden shadow-2xl scale-105 z-10">
             <div className="absolute top-0 inset-x-0 h-3 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400" />
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-black shadow-sm mb-3">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 text-xs font-black shadow-sm mb-3">
               <Crown className="w-4 h-4 text-amber-600 fill-amber-500" />
               QUÁN QUÂN TOÀN QUỐC 🥇
             </div>

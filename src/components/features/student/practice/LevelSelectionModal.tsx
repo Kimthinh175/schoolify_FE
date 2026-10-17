@@ -231,7 +231,7 @@ export function LevelSelectionModal({
       badge: 'Chẩn Đoán Nhanh',
       tagline: 'Phân tích trình độ học tập',
       description: 'Bài kiểm tra chẩn đoán năng lực 15 phút.',
-      badgeColor: 'bg-sky-100 text-[#007D99] border-sky-300',
+      badgeColor: 'bg-sky-100 text-[#007D99] border-sky-300 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800',
       gradient: 'from-[#00B8DD] to-indigo-600',
       pointsReward: 30,
       totalExams: 1,
@@ -339,7 +339,7 @@ export function LevelSelectionModal({
         isOpen={isOpen}
         onClose={onClose}
         maxWidth="5xl"
-        className="w-full sm:w-[940px] md:w-[980px] lg:w-[1020px] max-w-[96vw] h-[88vh] sm:h-[700px] max-h-[720px]"
+        className="w-full sm:w-[860px] md:w-[900px] lg:w-[940px] max-w-[95vw] h-auto max-h-[82vh] md:max-h-[78vh] lg:max-h-[74vh] p-4 sm:p-5"
         title={
           <div className="flex items-center gap-3">
             <div
@@ -589,10 +589,10 @@ export function LevelSelectionModal({
           {/* STEP 1: CHỌN CẤP ĐỘ                                                       */}
           {/* ========================================================================= */}
           {currentStep === 'LEVEL' && (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-2.5">
               {/* 0. Trạng thái năng lực đã xác định (nếu đã login và đã có kết quả đánh giá) */}
               {effectiveIsLoggedIn && hasAssessedCompetency && (
-                <div className="p-3.5 rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/70 dark:bg-emerald-950/30 flex items-center justify-between gap-3 text-xs">
+                <div className="p-2.5 sm:p-3 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/70 dark:bg-emerald-950/30 flex items-center justify-between gap-3 text-xs">
                   <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 min-w-0">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                     <span className="truncate">
@@ -615,14 +615,14 @@ export function LevelSelectionModal({
                 <div
                   onClick={handleSelectAssessment}
                   className={cn(
-                    'p-4 sm:p-5 rounded-2xl border transition-all flex items-center justify-between gap-4 cursor-pointer group relative overflow-hidden',
+                    'p-3 sm:p-3.5 rounded-xl border transition-all flex items-center justify-between gap-3 cursor-pointer group relative overflow-hidden',
                     'border-[#00B8DD]/50 hover:border-[#00B8DD] hover:shadow-lg hover:shadow-[#00B8DD]/10',
                     'bg-gradient-to-r from-[#00B8DD]/[0.08] via-sky-50/60 to-indigo-50/40 dark:from-[#00B8DD]/15 dark:via-slate-900 dark:to-indigo-950/20'
                   )}
                 >
-                  <div className="flex items-center gap-4 min-w-0 flex-1">
-                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[#00B8DD] to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-[#00B8DD]/25 group-hover:scale-105 transition-transform">
-                      <Sparkles className="w-6 h-6 text-white" />
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-gradient-to-br from-[#00B8DD] to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-[#00B8DD]/25 group-hover:scale-105 transition-transform">
+                      <Sparkles className="w-5 h-5 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -634,7 +634,7 @@ export function LevelSelectionModal({
                           Chẩn Đoán Nhanh
                         </span>
                       </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed sm:line-clamp-none line-clamp-2">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed line-clamp-1 sm:line-clamp-2">
                         Làm bài test ngắn 15 phút để AI chẩn đoán trình độ và gợi ý lộ trình luyện thi chuẩn xác nhất.
                       </p>
                     </div>
@@ -660,30 +660,30 @@ export function LevelSelectionModal({
                     key={level.id}
                     onClick={() => handleSelectLevel(level)}
                     className={cn(
-                      'p-4 sm:p-4.5 rounded-2xl border transition-all flex items-center justify-between gap-4 cursor-pointer group',
+                      'p-2.5 sm:p-3 rounded-xl border transition-all flex items-center justify-between gap-3 cursor-pointer group',
                       'hover:border-[#00B8DD] hover:shadow-md bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800',
                       !effectiveIsLoggedIn && !isFree && 'hover:border-amber-400'
                     )}
                   >
-                    <div className="flex items-center gap-4 min-w-0 flex-1">
-                      <div className="h-11 w-11 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="h-9 w-9 sm:h-9.5 sm:w-9.5 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                         {icon}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white group-hover:text-[#00B8DD] transition-colors">
+                          <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-[#00B8DD] transition-colors">
                             {level.name}
                           </h4>
                           <span
                             className={cn(
-                              'text-[10px] font-bold px-2.5 py-0.5 rounded-full border shrink-0',
+                              'text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0',
                               level.badgeColor
                             )}
                           >
                             {level.badge}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed sm:line-clamp-none line-clamp-2">
+                        <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed line-clamp-1 sm:line-clamp-2">
                           {level.description}
                         </p>
                       </div>

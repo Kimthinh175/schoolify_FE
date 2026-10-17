@@ -51,7 +51,7 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['SUPER_ADMIN'],
   },
   {
-    label: 'Ngân Hàng Câu Hỏi Gốc',
+    label: 'Ngân Hàng Câu Hỏi',
     href: '/admin/questions',
     icon: <Database className="w-5 h-5" />,
     badge: 'Mới',

@@ -1246,14 +1246,14 @@ export default function PricingPage() {
           {!isPaidSuccess ? (
             <>
               {/* Authentic VietQR Card Box */}
-              <div className="p-4 bg-white border border-slate-200 rounded-3xl shadow-lg relative flex flex-col items-center max-w-[280px] w-full">
+              <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-lg relative flex flex-col items-center max-w-[280px] w-full">
                 {/* VietQR Header */}
-                <div className="w-full flex items-center justify-between pb-2.5 mb-2 border-b border-slate-100">
+                <div className="w-full flex items-center justify-between pb-2.5 mb-2 border-b border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-1">
-                    <span className="text-base font-black tracking-tight text-blue-900">Viet</span>
-                    <span className="text-base font-black tracking-tight text-red-600">QR</span>
+                    <span className="text-base font-black tracking-tight text-blue-900 dark:text-blue-400">Viet</span>
+                    <span className="text-base font-black tracking-tight text-red-600 dark:text-red-500">QR</span>
                   </div>
-                  <div className="px-2 py-0.5 rounded bg-blue-50 text-[10px] font-black text-blue-700">
+                  <div className="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-[10px] font-black text-blue-700 dark:text-blue-300">
                     NAPAS 247
                   </div>
                 </div>

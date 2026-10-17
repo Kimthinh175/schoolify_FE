@@ -242,7 +242,7 @@ export default function ForumPage() {
       {/* ── FILTER BARS ── */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         {/* Subject Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 lg:pb-0 scrollbar-none">
+        <div className="flex flex-wrap items-center gap-1.5 pb-2 lg:pb-0">
           {SUBJECT_FILTERS.map((s) => (
             <button
               key={s}

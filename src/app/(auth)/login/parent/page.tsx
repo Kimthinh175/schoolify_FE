@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/store/auth.store';
+import { GoogleLoginButton } from '@/components/features/auth/GoogleLoginButton';
 
 export default function ParentLoginPage() {
   const router = useRouter();
@@ -235,8 +236,14 @@ export default function ParentLoginPage() {
             </Button>
           </form>
         )}
-
-
+        {/* Alternate Logins (Google) */}
+        <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+          <GoogleLoginButton
+            role="PARENT"
+            returnUrl="/parent/dashboard"
+            label="Đăng nhập Phụ huynh bằng Google"
+          />
+        </div>
 
         {/* Switch Role Footer */}
         <div className="text-center text-xs text-slate-500 pt-1">

@@ -228,7 +228,7 @@ export function StudentAccountHub() {
       </div>
 
       {/* -- 3. Navigation Tabs -- */}
-      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar border-b border-slate-200 dark:border-slate-800 pb-2">
+      <div className="flex flex-wrap items-center gap-1.5 border-b border-slate-200 dark:border-slate-800 pb-2">
         <button
           onClick={() => setActiveTab('profile')}
           className={cn(

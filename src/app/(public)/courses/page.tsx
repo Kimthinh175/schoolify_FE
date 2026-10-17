@@ -70,7 +70,7 @@ export default function CoursesMarketplacePage() {
                 className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
               />
             </div>
-            <div className="overflow-x-auto w-full no-scrollbar">
+            <div className="w-full">
               <Tabs tabs={deptTabs} activeTab={activeDept} onChange={setActiveDept} />
             </div>
           </div>

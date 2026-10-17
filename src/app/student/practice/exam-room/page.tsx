@@ -49,6 +49,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
 import { MathEssayEditor } from '@/components/ui/math-editor';
 import { MathRenderer } from '@/components/ui/math-renderer';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Navbar } from '@/components/layout/Navbar';
 import { ReportQuestionModal } from '@/components/features/student/practice/ReportQuestionModal';
 import { generateRemediationExamPackage } from '@/services/remediation-engine.service';
@@ -2246,6 +2247,9 @@ function StandardExamRoomContent() {
             <Calculator className="w-3.5 h-3.5" />
             <span>Casio</span>
           </button>
+
+          {/* Theme Toggle Button */}
+          <ThemeToggle className="shrink-0 h-auto py-1 px-2 sm:px-2.5 rounded-xl" />
 
           {/* Mobile open question list button (hidden on <380px since bottom drawer button is available) */}
           <button

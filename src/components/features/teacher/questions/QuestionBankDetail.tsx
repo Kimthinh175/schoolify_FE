@@ -291,8 +291,8 @@ export function QuestionBankDetail({
       </div>
 
       {/* Filter Tabs by Question Type */}
-      <div className="flex items-center justify-between gap-3 overflow-x-auto pb-1">
-        <div className="flex items-center gap-1.5">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-1">
+        <div className="flex flex-wrap items-center gap-1.5">
           {[
             { key: 'ALL', label: `Tất cả (${questions.length})` },
             { key: 'SINGLE_CHOICE', label: '1 Đáp án' },

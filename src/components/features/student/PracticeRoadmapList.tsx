@@ -189,16 +189,16 @@ export function PracticeRoadmapList({
     <div className="space-y-8">
       {/* GUEST TRIAL BANNER */}
       {selectedLevel === 'basic' && (
-        <div className="rounded-2xl bg-gradient-to-r from-emerald-950/70 via-slate-900 to-slate-900 border border-emerald-500/40 p-4 text-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+        <div className="rounded-2xl bg-gradient-to-r from-emerald-50 via-white to-slate-50 dark:from-emerald-950/70 dark:via-slate-900 dark:to-slate-900 border border-emerald-300 dark:border-emerald-500/40 p-4 text-emerald-800 dark:text-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm dark:shadow-lg">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold text-lg shrink-0">
+            <div className="h-10 w-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-500/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold text-lg shrink-0">
               🎯
             </div>
             <div>
-              <span className="text-xs font-bold text-white block">
+              <span className="text-xs font-bold text-slate-900 dark:text-white block">
                 Chế Độ Khách: Đang Luyện Thử Cấp Độ Cơ Bản Miễn Phí
               </span>
-              <span className="text-[11px] text-emerald-300/80">
+              <span className="text-[11px] text-emerald-700 dark:text-emerald-300/80">
                 Làm trắc nghiệm và đọc lý thuyết tự do. Đăng nhập để lưu tiến độ và ghi tên vào Bảng xếp hạng thi đua.
               </span>
             </div>
@@ -212,35 +212,35 @@ export function PracticeRoadmapList({
       )}
 
       {/* 1. FILTER & HEADER SECTION */}
-      <section className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-800">
+      <section className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm dark:shadow-2xl space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-200 dark:border-slate-800">
           <div>
-            <div className="flex items-center gap-2 text-xs font-bold text-[#00B8DD] uppercase tracking-wider mb-1">
-              <Sparkles className="w-4 h-4 text-amber-400" /> Lộ Trình Học Cá Nhân Hóa
+            <div className="flex items-center gap-2 text-xs font-bold text-[#007D99] dark:text-[#00B8DD] uppercase tracking-wider mb-1">
+              <Sparkles className="w-4 h-4 text-amber-500 dark:text-amber-400" /> Lộ Trình Học Cá Nhân Hóa
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
               <span>{subjectInfo.icon}</span> Lộ Trình Luyện Tập {subjectInfo.name} - {levelInfo.name}
             </h1>
-            <p className="text-sm text-slate-400 mt-1">
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
               Hoàn thành từng bài luyện theo thứ tự từ Bài 01 đến Bài N để mở khóa phần thưởng Kim Cương.
             </p>
           </div>
 
           {/* Overall Progress Stats */}
-          <div className="flex items-center gap-4 bg-slate-950 p-4 rounded-2xl border border-slate-800 shrink-0">
+          <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shrink-0">
             <div className="space-y-1">
-              <span className="text-xs text-slate-400 block">Tiến độ lộ trình</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 block">Tiến độ lộ trình</span>
               <div className="flex items-center gap-2">
-                <span className="text-xl font-black text-[#00B8DD]">{overallProgress}%</span>
-                <span className="text-xs text-slate-400">({completedLessonsCount}/{totalLessons} bài)</span>
+                <span className="text-xl font-black text-[#007D99] dark:text-[#00B8DD]">{overallProgress}%</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">({completedLessonsCount}/{totalLessons} bài)</span>
               </div>
             </div>
-            <div className="h-9 w-px bg-slate-800" />
-            <div className="flex items-center gap-2 text-amber-400 bg-amber-500/10 px-3.5 py-2 rounded-xl border border-amber-500/20">
-              <Gem className="w-5 h-5 animate-bounce text-amber-400" />
+            <div className="h-9 w-px bg-slate-200 dark:bg-slate-800" />
+            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-3.5 py-2 rounded-xl border border-amber-200 dark:border-amber-500/20">
+              <Gem className="w-5 h-5 animate-bounce text-amber-500 dark:text-amber-400" />
               <div>
-                <span className="text-[10px] text-amber-300/80 block leading-tight">Tích lũy</span>
-                <span className="text-sm font-bold text-amber-300">+250 💎</span>
+                <span className="text-[10px] text-amber-700 dark:text-amber-300/80 block leading-tight">Tích lũy</span>
+                <span className="text-sm font-bold text-amber-700 dark:text-amber-300">+250 💎</span>
               </div>
             </div>
           </div>
@@ -249,8 +249,8 @@ export function PracticeRoadmapList({
         {/* Filters Controls */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
           {/* Subject Tabs */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-            <span className="text-xs font-semibold text-slate-400 flex items-center gap-1 shrink-0 mr-1">
+          <div className="flex flex-wrap items-center gap-2 pb-1">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1 shrink-0 mr-1">
               <Filter className="w-3.5 h-3.5 text-[#00B8DD]" /> Môn học:
             </span>
             {MOCK_SUBJECTS.map((subj) => (
@@ -260,7 +260,7 @@ export function PracticeRoadmapList({
                 className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                   selectedSubject === subj.slug
                     ? 'bg-[#00B8DD] text-slate-950 shadow-md'
-                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 <span>{subj.icon}</span>
@@ -270,15 +270,15 @@ export function PracticeRoadmapList({
           </div>
 
           {/* Level Selector Buttons */}
-          <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800 shrink-0 self-start sm:self-auto">
+          <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0 self-start sm:self-auto">
             {MOCK_LEVELS.map((lvl) => (
               <button
                 key={lvl.slug}
                 onClick={() => handleLevelChange(lvl.slug)}
                 className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                   selectedLevel === lvl.slug
-                    ? 'bg-slate-800 text-[#00B8DD] font-bold shadow-xs'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-white dark:bg-slate-800 text-[#007D99] dark:text-[#00B8DD] font-bold shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
                 {lvl.name}
@@ -291,7 +291,7 @@ export function PracticeRoadmapList({
       {/* 2. ROADMAP TIMELINE LIST (BÀI 01 -> BÀI N) */}
       <section className="relative space-y-6">
         {/* Vertical Connecting Line */}
-        <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-gradient-to-b from-indigo-500 via-slate-700 to-slate-800 hidden sm:block z-0" />
+        <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-gradient-to-b from-indigo-500 via-slate-300 dark:via-slate-700 to-slate-200 dark:to-slate-800 hidden sm:block z-0" />
 
         <div className="space-y-6 relative z-10">
           {MOCK_ROADMAP_LESSONS.map((lesson, index) => {
@@ -304,10 +304,10 @@ export function PracticeRoadmapList({
                 key={lesson.id}
                 className={`p-6 rounded-3xl transition-all border ${
                   isCompleted
-                    ? 'bg-slate-900/80 border-emerald-500/30 shadow-lg hover:border-emerald-500/50'
+                    ? 'bg-white dark:bg-slate-900/80 border-emerald-300 dark:border-emerald-500/30 shadow-sm dark:shadow-lg hover:border-emerald-400 dark:hover:border-emerald-500/50'
                     : isLocked
-                    ? 'bg-slate-900/40 border-slate-800/80 opacity-75'
-                    : 'bg-slate-900 border-indigo-500/40 shadow-xl hover:border-indigo-500/70 ring-1 ring-indigo-500/20'
+                    ? 'bg-slate-50/80 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800/80 opacity-75'
+                    : 'bg-white dark:bg-slate-900 border-indigo-300 dark:border-indigo-500/40 shadow-md dark:shadow-xl hover:border-indigo-400 dark:hover:border-indigo-500/70 ring-1 ring-indigo-500/10 dark:ring-indigo-500/20'
                 }`}
               >
                 <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
@@ -317,16 +317,16 @@ export function PracticeRoadmapList({
                     <div
                       className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 font-bold text-sm shadow-md ${
                         isCompleted
-                          ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400'
+                          ? 'bg-emerald-50 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-500/50 text-emerald-600 dark:text-emerald-400'
                           : isLocked
-                          ? 'bg-slate-800 border border-slate-700 text-slate-500'
+                          ? 'bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500'
                           : 'bg-indigo-600 border border-indigo-400 text-white shadow-indigo-500/30'
                       }`}
                     >
                       {isCompleted ? (
-                        <Check className="w-6 h-6 text-emerald-400" />
+                        <Check className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                       ) : isLocked ? (
-                        <Lock className="w-5 h-5 text-slate-500" />
+                        <Lock className="w-5 h-5 text-slate-400 dark:text-slate-500" />
                       ) : (
                         <span>{index + 1}</span>
                       )}
@@ -334,7 +334,7 @@ export function PracticeRoadmapList({
 
                     <div className="space-y-2 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-bold text-indigo-400 bg-indigo-950/80 border border-indigo-500/30 px-2.5 py-0.5 rounded-lg">
+                        <span className="text-xs font-bold text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-200 dark:border-indigo-500/30 px-2.5 py-0.5 rounded-lg">
                           {lesson.number}
                         </span>
                         {isCompleted && (
@@ -348,49 +348,49 @@ export function PracticeRoadmapList({
                           </Badge>
                         )}
                         {isLocked && (
-                          <Badge variant="secondary" className="text-[10px] text-slate-400">
+                          <Badge variant="secondary" className="text-[10px] text-slate-500 dark:text-slate-400">
                             Chưa Mở Khóa
                           </Badge>
                         )}
-                        <span className="text-xs text-amber-400 font-semibold flex items-center gap-1 ml-auto sm:ml-0">
+                        <span className="text-xs text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1 ml-auto sm:ml-0">
                           <Gem className="w-3.5 h-3.5" /> +{lesson.rewardDiamonds} 💎
                         </span>
                       </div>
 
-                      <h3 className="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors">
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">
                         {lesson.title}
                       </h3>
-                      <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-2xl">
+                      <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
                         {lesson.description}
                       </p>
 
                       {/* Lesson Progress Bar */}
                       <div className="pt-2 max-w-md space-y-1.5">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-slate-400 font-medium">Tiến độ bài học</span>
+                          <span className="text-slate-500 dark:text-slate-400 font-medium">Tiến độ bài học</span>
                           <span
                             className={`font-bold ${
-                              isCompleted ? 'text-emerald-400' : 'text-indigo-300'
+                              isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-indigo-600 dark:text-indigo-300'
                             }`}
                           >
                             {lesson.progressPercent}%
                           </span>
                         </div>
-                        <Progress value={lesson.progressPercent} className="h-2 bg-slate-800" />
+                        <Progress value={lesson.progressPercent} className="h-2 bg-slate-100 dark:bg-slate-800" />
                       </div>
                     </div>
                   </div>
 
                   {/* Right: 4 Mini-Badges & Action Button */}
-                  <div className="w-full lg:w-auto flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end justify-between gap-4 pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-800">
+                  <div className="w-full lg:w-auto flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end justify-between gap-4 pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-200 dark:border-slate-800">
                     {/* 4 Mini-Badges Grid */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2 text-xs w-full sm:w-auto">
                       {/* Mini-badge 1: Lý thuyết */}
                       <div
                         className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-colors ${
                           lesson.badges.theory.completed
-                            ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300'
-                            : 'bg-slate-950/60 border-slate-800 text-slate-400'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-300'
+                            : 'bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400'
                         }`}
                         title="Lý thuyết"
                       >
@@ -404,8 +404,8 @@ export function PracticeRoadmapList({
                       <div
                         className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-colors ${
                           lesson.badges.quiz.completed
-                            ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300'
-                            : 'bg-slate-950/60 border-slate-800 text-slate-400'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-300'
+                            : 'bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400'
                         }`}
                         title="Trắc nghiệm"
                       >
@@ -419,8 +419,8 @@ export function PracticeRoadmapList({
                       <div
                         className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-colors ${
                           lesson.badges.essay.completed
-                            ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300'
-                            : 'bg-slate-950/60 border-slate-800 text-slate-400'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-300'
+                            : 'bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400'
                         }`}
                         title="Tự luận"
                       >
@@ -434,10 +434,10 @@ export function PracticeRoadmapList({
                       <div
                         className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-colors ${
                           lesson.badges.exam.completed
-                            ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-300'
                             : lesson.badges.exam.locked
-                            ? 'bg-slate-950/60 border-slate-800 text-slate-500'
-                            : 'bg-amber-950/30 border-amber-500/30 text-amber-300'
+                            ? 'bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500'
+                            : 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-300'
                         }`}
                         title="Bài thi"
                       >

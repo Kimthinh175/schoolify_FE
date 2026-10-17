@@ -158,21 +158,21 @@ function AnswerOption({ answer, index, isSelected, isMulti, phase, onSelect }: A
         'flex items-start gap-3 disabled:cursor-default',
         // ANSWERING state
         phase === 'ANSWERING' && !isSelected &&
-          'border-slate-700 bg-slate-800/40 hover:border-[#00B8DD]/50 hover:bg-[#00B8DD]/5',
+          'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/40 hover:border-[#00B8DD]/50 hover:bg-[#00B8DD]/5',
         phase === 'ANSWERING' && isSelected &&
           'border-[#00B8DD] bg-[#00B8DD]/10 shadow-sm shadow-[#00B8DD]/10',
         // REVIEWING: correct
         isCorrect &&
-          'border-emerald-500/60 bg-emerald-900/20',
+          'border-emerald-500/60 bg-emerald-50 dark:bg-emerald-900/20',
         // REVIEWING: wrong (selected but wrong)
         isWrong &&
-          'border-rose-500/60 bg-rose-900/20',
+          'border-rose-500/60 bg-rose-50 dark:bg-rose-900/20',
         // REVIEWING: correct but not picked (show highlight too)
         isCorrectNotPicked &&
-          'border-emerald-500/40 bg-emerald-900/10',
+          'border-emerald-500/40 bg-emerald-50/60 dark:bg-emerald-900/10',
         // REVIEWING: unrelated dimmed
         isUnrelated &&
-          'border-slate-700/50 bg-slate-800/20 opacity-50',
+          'border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800/20 opacity-50',
       )}
       animate={{
         scale: phase === 'ANSWERING' && isSelected ? 1.005 : 1,
@@ -183,12 +183,12 @@ function AnswerOption({ answer, index, isSelected, isMulti, phase, onSelect }: A
       <span
         className={cn(
           'mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-bold transition-colors',
-          phase === 'ANSWERING' && !isSelected && 'bg-slate-700 text-slate-300',
-          phase === 'ANSWERING' && isSelected && 'bg-[#00B8DD] text-white',
+          phase === 'ANSWERING' && !isSelected && 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300',
+          phase === 'ANSWERING' && isSelected && 'bg-[#00B8DD] text-slate-950 font-black',
           isCorrect && 'bg-emerald-500 text-white',
           isWrong && 'bg-rose-500 text-white',
           isCorrectNotPicked && 'bg-emerald-600/60 text-white',
-          isUnrelated && 'bg-slate-700 text-slate-400',
+          isUnrelated && 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400',
         )}
       >
         {label}
@@ -198,11 +198,11 @@ function AnswerOption({ answer, index, isSelected, isMulti, phase, onSelect }: A
       <span
         className={cn(
           'flex-1 text-sm leading-relaxed transition-colors',
-          phase === 'ANSWERING' && !isSelected && 'text-slate-300',
-          phase === 'ANSWERING' && isSelected && 'font-medium text-white',
-          isCorrect && 'font-medium text-emerald-200',
-          isWrong && 'font-medium text-rose-200',
-          isCorrectNotPicked && 'text-emerald-300',
+          phase === 'ANSWERING' && !isSelected && 'text-slate-700 dark:text-slate-300',
+          phase === 'ANSWERING' && isSelected && 'font-medium text-slate-900 dark:text-white',
+          isCorrect && 'font-medium text-emerald-800 dark:text-emerald-200',
+          isWrong && 'font-medium text-rose-800 dark:text-rose-200',
+          isCorrectNotPicked && 'text-emerald-700 dark:text-emerald-300',
           isUnrelated && 'text-slate-500',
         )}
       >
@@ -213,9 +213,9 @@ function AnswerOption({ answer, index, isSelected, isMulti, phase, onSelect }: A
       {phase === 'REVIEWING' && (
         <span className="mt-0.5 shrink-0">
           {(isCorrect || isCorrectNotPicked) && (
-            <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+            <CheckCircle2 className="h-5 w-5 text-emerald-500 dark:text-emerald-400" />
           )}
-          {isWrong && <XCircle className="h-5 w-5 text-rose-400" />}
+          {isWrong && <XCircle className="h-5 w-5 text-rose-500 dark:text-rose-400" />}
         </span>
       )}
     </motion.button>
@@ -267,7 +267,7 @@ export function QuizPracticePanel({ questions: allQuestions, title }: QuizPracti
   }, [phase, questions]);
 
   const [fillAnswers, setFillAnswers] = React.useState<Record<string, string>>({});
-const answeredCount = questions.filter((q) => (answers[q.id] ?? []).length > 0 || (fillAnswers[q.id] ?? '').length > 0).length;
+  const answeredCount = questions.filter((q) => (answers[q.id] ?? []).length > 0 || (fillAnswers[q.id] ?? '').length > 0).length;
   const progressPct = questions.length > 0 ? (answeredCount / questions.length) * 100 : 0;
 
   const score = React.useMemo(
@@ -280,23 +280,23 @@ const answeredCount = questions.filter((q) => (answers[q.id] ?? []).length > 0 |
 
   if (questions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-700 px-6 py-16 text-center">
-        <BookOpen className="h-10 w-10 text-slate-600" />
-        <p className="font-semibold text-slate-400">Chưa có câu hỏi luyện tập</p>
-        <p className="text-sm text-slate-600">Giáo viên chưa gắn ngân hàng đề vào bài học này.</p>
+      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 px-6 py-16 text-center">
+        <BookOpen className="h-10 w-10 text-slate-400 dark:text-slate-600" />
+        <p className="font-semibold text-slate-600 dark:text-slate-400">Chưa có câu hỏi luyện tập</p>
+        <p className="text-sm text-slate-500 dark:text-slate-600">Giáo viên chưa gắn ngân hàng đề vào bài học này.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 bg-slate-900/30 p-4 rounded-lg sm:p-6">
+    <div className="space-y-6 bg-white dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800/60 p-4 rounded-2xl sm:p-6 shadow-xs">
       {/* ── Header ── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-bold text-white">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">
             {title ?? 'Luyện Tập Trắc Nghiệm'}
           </h2>
-          <p className="mt-0.5 text-sm text-slate-400 dark:text-slate-300">
+          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-300">
             {questions.length} câu hỏi · Chọn đáp án rồi bấm Kiểm Tra khi hoàn thành
           </p>
         </div>
@@ -320,7 +320,7 @@ const answeredCount = questions.filter((q) => (answers[q.id] ?? []).length > 0 |
         <Progress
           value={progressPct}
           indicatorClassName="bg-[#00B8DD]"
-          className="bg-slate-800"
+          className="bg-slate-100 dark:bg-slate-800"
         />
       )}
 
@@ -332,19 +332,19 @@ const answeredCount = questions.filter((q) => (answers[q.id] ?? []).length > 0 |
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.3 }}
-            className="overflow-hidden rounded-2xl border border-slate-700 bg-slate-800/60"
+            className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60"
           >
             <div className="flex flex-col items-center gap-3 px-6 py-6 text-center sm:flex-row sm:text-left">
               <span className="text-4xl">{scoreMeta.emoji}</span>
               <div className="flex-1">
-                <p className="text-xl font-bold text-white">
+                <p className="text-xl font-bold text-slate-900 dark:text-white">
                   {score.correct}/{score.total} câu đúng &nbsp;
                   <span
                     className={cn(
                       'text-base font-semibold',
-                      scoreMeta.variant === 'success' && 'text-emerald-400',
-                      scoreMeta.variant === 'primary' && 'text-[#00B8DD]',
-                      scoreMeta.variant === 'warning' && 'text-amber-400',
+                      scoreMeta.variant === 'success' && 'text-emerald-600 dark:text-emerald-400',
+                      scoreMeta.variant === 'primary' && 'text-[#007D99] dark:text-[#00B8DD]',
+                      scoreMeta.variant === 'warning' && 'text-amber-600 dark:text-amber-400',
                     )}
                   >
                     · {scoreMeta.label}
@@ -352,7 +352,7 @@ const answeredCount = questions.filter((q) => (answers[q.id] ?? []).length > 0 |
                 </p>
                 <Progress
                   value={score.total > 0 ? (score.correct / score.total) * 100 : 0}
-                  className="mt-2 bg-slate-700"
+                  className="mt-2 bg-slate-200 dark:bg-slate-700"
                   indicatorClassName={cn(
                     scoreMeta.variant === 'success' && 'bg-emerald-500',
                     scoreMeta.variant === 'primary' && 'bg-[#00B8DD]',
@@ -365,7 +365,7 @@ const answeredCount = questions.filter((q) => (answers[q.id] ?? []).length > 0 |
                 variant="outline"
                 onClick={() => dispatch({ type: 'RESET' })}
                 leftIcon={<RotateCcw className="h-3.5 w-3.5" />}
-                className="shrink-0 border-slate-600 text-slate-300 hover:border-slate-500 hover:text-white"
+                className="shrink-0"
               >
                 Làm Lại
               </Button>
@@ -393,11 +393,11 @@ const answeredCount = questions.filter((q) => (answers[q.id] ?? []).length > 0 |
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: qIndex * 0.04 }}
-              className="overflow-hidden rounded-2xl border border-slate-700 bg-slate-800/40"
+              className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40"
             >
               {/* Question header */}
-              <div className="flex items-start gap-3 border-b border-slate-700/60 px-5 py-4">
-                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-700 text-xs font-bold text-slate-300">
+              <div className="flex items-start gap-3 border-b border-slate-200 dark:border-slate-700/60 px-5 py-4">
+                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300">
                   {qIndex + 1}
                 </span>
                 <div className="flex-1 min-w-0">
@@ -439,7 +439,7 @@ const answeredCount = questions.filter((q) => (answers[q.id] ?? []).length > 0 |
                       {question.title}
                     </p>
                   )}
-                  <div className="text-sm font-medium leading-relaxed text-slate-100">
+                  <div className="text-sm font-medium leading-relaxed text-slate-900 dark:text-slate-100">
                     <MathRenderer text={question.content} />
                   </div>
                 </div>
@@ -454,15 +454,15 @@ const answeredCount = questions.filter((q) => (answers[q.id] ?? []).length > 0 |
                       disabled={phase === 'REVIEWING'}
                       rows={4}
                       placeholder="Nhập câu trả lời của bạn tại đây..."
-                      className="w-full resize-none rounded-xl border border-slate-600 bg-slate-900 px-4 py-3 text-sm text-slate-200 outline-none placeholder:text-slate-600 focus:border-[#00B8DD] disabled:opacity-60"
+                      className="w-full resize-none rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-800 dark:text-slate-200 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:border-[#00B8DD] disabled:opacity-60"
                     />
                     {phase === 'REVIEWING' && question.sample_essay_answer && (
-                      <div className="rounded-xl border border-amber-700/40 bg-amber-900/20 px-4 py-3">
-                        <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-amber-400">
+                      <div className="rounded-xl border border-amber-300 dark:border-amber-700/40 bg-amber-50 dark:bg-amber-900/20 px-4 py-3">
+                        <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400">
                           <Lightbulb className="h-3.5 w-3.5" />
                           Đáp án mẫu
                         </p>
-                        <div className="text-sm text-amber-200">
+                        <div className="text-sm text-amber-900 dark:text-amber-200">
                           <MathRenderer text={question.sample_essay_answer} />
                         </div>
                       </div>
@@ -482,15 +482,15 @@ const answeredCount = questions.filter((q) => (answers[q.id] ?? []).length > 0 |
                           [question.id]: e.target.value,
                         }))
                       }
-                      className="w-full rounded-xl border border-slate-600 bg-slate-900 px-4 py-3 text-sm text-slate-200 outline-none placeholder:text-slate-600 focus:border-[#00B8DD] disabled:opacity-60"
+                      className="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-800 dark:text-slate-200 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:border-[#00B8DD] disabled:opacity-60"
                     />
                     {phase === 'REVIEWING' && (
-                      <div className="rounded-xl border border-amber-700/40 bg-amber-900/20 px-4 py-3">
-                        <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-amber-400">
+                      <div className="rounded-xl border border-amber-300 dark:border-amber-700/40 bg-amber-50 dark:bg-amber-900/20 px-4 py-3">
+                        <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400">
                           <Lightbulb className="h-3.5 w-3.5" />
                           Đáp án đúng
                         </p>
-                        <div className="text-sm text-amber-200">
+                        <div className="text-sm text-amber-900 dark:text-amber-200">
                           <MathRenderer
                             text={(question.answers ?? []).find((a) => a.is_answer)?.content ?? '—'}
                             inline
@@ -531,7 +531,7 @@ const answeredCount = questions.filter((q) => (answers[q.id] ?? []).length > 0 |
                       onClick={() =>
                         dispatch({ type: 'TOGGLE_EXPLAIN', questionId: question.id })
                       }
-                      className="flex items-center gap-1.5 text-xs font-medium text-[#00B8DD] hover:text-[#009BBD] transition-colors"
+                      className="flex items-center gap-1.5 text-xs font-medium text-[#007D99] dark:text-[#00B8DD] hover:text-[#009BBD] transition-colors"
                     >
                       <Lightbulb className="h-3.5 w-3.5" />
                       {isExpanded ? 'Ẩn lời giải' : 'Xem lời giải chi tiết'}
@@ -553,8 +553,8 @@ const answeredCount = questions.filter((q) => (answers[q.id] ?? []).length > 0 |
                           transition={{ duration: 0.2, ease: 'easeInOut' }}
                           className="overflow-hidden"
                         >
-                          <div className="mt-3 space-y-2 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-                            <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-[#00B8DD]">
+                          <div className="mt-3 space-y-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 p-4">
+                            <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-[#007D99] dark:text-[#00B8DD]">
                               <BookOpen className="h-3.5 w-3.5" />
                               Lời Giải Chi Tiết
                             </p>
@@ -565,19 +565,19 @@ const answeredCount = questions.filter((q) => (answers[q.id] ?? []).length > 0 |
                                   <span
                                     className={cn(
                                       'mt-0.5 h-2 w-2 shrink-0 rounded-full',
-                                      a.is_answer ? 'bg-emerald-400' : 'bg-slate-600'
+                                      a.is_answer ? 'bg-emerald-500 dark:bg-emerald-400' : 'bg-slate-400 dark:bg-slate-600'
                                     )}
                                   />
                                   <div>
                                     <span
                                       className={cn(
                                         'text-xs font-semibold',
-                                        a.is_answer ? 'text-emerald-400' : 'text-slate-400'
+                                        a.is_answer ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-400'
                                       )}
                                     >
                                       <MathRenderer text={a.content} inline />:{' '}
                                     </span>
-                                    <span className="text-xs text-slate-300">
+                                    <span className="text-xs text-slate-700 dark:text-slate-300">
                                       <MathRenderer text={a.explain || ''} inline />
                                     </span>
                                   </div>
@@ -598,12 +598,12 @@ const answeredCount = questions.filter((q) => (answers[q.id] ?? []).length > 0 |
       {/* ── Footer action ── */}
       <div className="sticky bottom-4 z-10">
         {phase === 'ANSWERING' ? (
-          <div className="flex items-center justify-between rounded-2xl border border-slate-700 bg-slate-900/95 px-5 py-3 backdrop-blur-sm shadow-xl shadow-slate-950/50">
-            <div className="flex items-center gap-2 text-sm text-slate-400">
+          <div className="flex items-center justify-between rounded-2xl border border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 px-5 py-3 backdrop-blur-sm shadow-xl">
+            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
               {canSubmit ? (
                 <>
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                  <span className="text-emerald-400">Đã chọn đủ {questions.length} câu</span>
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  <span className="text-emerald-700 dark:text-emerald-400">Đã chọn đủ {questions.length} câu</span>
                 </>
               ) : (
                 <>
@@ -622,17 +622,16 @@ const answeredCount = questions.filter((q) => (answers[q.id] ?? []).length > 0 |
             </Button>
           </div>
         ) : (
-          <div className="flex items-center justify-between rounded-2xl border border-slate-700 bg-slate-900/95 px-5 py-3 backdrop-blur-sm shadow-xl shadow-slate-950/50">
-            <p className="text-sm text-slate-400">
+          <div className="flex items-center justify-between rounded-2xl border border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 px-5 py-3 backdrop-blur-sm shadow-xl">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               Đúng{' '}
-              <span className="font-bold text-white">{score.correct}/{score.total}</span>{' '}
+              <span className="font-bold text-slate-900 dark:text-white">{score.correct}/{score.total}</span>{' '}
               câu · {score.total > 0 ? Math.round((score.correct / score.total) * 100) : 0}%
             </p>
             <Button
               variant="outline"
               onClick={() => dispatch({ type: 'RESET' })}
               leftIcon={<RotateCcw className="h-4 w-4" />}
-              className="border-slate-600 text-slate-300 hover:border-slate-500 hover:text-white"
             >
               Làm Lại Từ Đầu
             </Button>

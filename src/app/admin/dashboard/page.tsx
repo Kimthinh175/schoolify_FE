@@ -1089,7 +1089,7 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Subtab Segmented Navigation Buttons */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-100 dark:border-slate-800 no-scrollbar">
+          <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             {metricConfigs.map((config) => {
               const TabIcon = config.icon;
               const isActive = activeTabId === config.id;

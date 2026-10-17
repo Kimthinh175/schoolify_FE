@@ -743,7 +743,7 @@ export function QuestionImportModal({
                     {pdfBlobUrl ? (
                       <iframe
                         src={pdfBlobUrl}
-                        className="w-full h-full border-0 bg-white"
+                        className="w-full h-full border-0 bg-white dark:bg-slate-900"
                         title="PDF Viewer"
                       />
                     ) : (
@@ -772,7 +772,7 @@ export function QuestionImportModal({
                                 {q.img_urls && q.img_urls.length > 0 && (
                                   <div className="flex flex-wrap gap-2 py-1">
                                     {q.img_urls.map((url, imgIdx) => (
-                                      <img key={imgIdx} src={url} alt={`Ảnh ${imgIdx + 1}`} className="max-h-56 max-w-full rounded-lg border border-slate-200 shadow-sm" />
+                                      <img key={imgIdx} src={url} alt={`Ảnh ${imgIdx + 1}`} className="max-h-56 max-w-full rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm" />
                                     ))}
                                   </div>
                                 )}

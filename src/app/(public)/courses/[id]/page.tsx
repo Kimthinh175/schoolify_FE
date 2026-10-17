@@ -199,7 +199,7 @@ export default function CourseDetailPage() {
         <div className="py-2 flex flex-col items-center text-center space-y-4">
           {!isPaidSuccess ? (
             <>
-              <div className="p-3 bg-white border border-slate-200 rounded-2xl shadow-sm">
+              <div className="p-3 bg-white border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm">
                 <img
                   src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=VIETQR-COURSE-PURCHASE-DEMO"
                   alt="VietQR"
@@ -209,7 +209,7 @@ export default function CourseDetailPage() {
               <div className="w-full rounded-xl bg-slate-50 dark:bg-slate-800 p-4 text-xs space-y-1.5 text-left">
                 <div className="flex justify-between">
                   <span className="text-slate-500">Học phí thanh toán:</span>
-                  <span className="font-bold text-indigo-600 text-sm">{formatMoney(course.price)}</span>
+                  <span className="font-bold text-indigo-600 dark:text-indigo-400 text-sm">{formatMoney(course.price)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Mã đơn hàng:</span>
@@ -226,7 +226,7 @@ export default function CourseDetailPage() {
             </>
           ) : (
             <div className="py-6 flex flex-col items-center space-y-3">
-              <div className="h-16 w-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+              <div className="h-16 w-16 rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 flex items-center justify-center">
                 <CheckCircle2 className="w-10 h-10" />
               </div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">Thanh Toán Thành Công!</h3>

@@ -270,9 +270,9 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
   }, [answers, problems]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors">
       {/* Sticky Header */}
-      <header className="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-40 px-3 sm:px-6 py-2.5">
+      <header className="border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90 backdrop-blur sticky top-0 z-40 px-3 sm:px-6 py-2.5 shadow-2xs">
         <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
           {/* Left: Back & Title */}
           <div className="flex items-center gap-3 min-w-0">
@@ -288,19 +288,19 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
                   router.push('/student/practice');
                 }
               }}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition shrink-0"
+              className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0"
               title="Về cổng luyện thi"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-500/40">
                   {exam.levelLabel}
                 </span>
-                <span className="text-xs text-slate-400 font-medium">{exam.province || 'Toàn Quốc'}</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{exam.province || 'Toàn Quốc'}</span>
               </div>
-              <h1 className="text-sm sm:text-base font-bold text-slate-100 truncate">
+              <h1 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 truncate">
                 {exam.title}
               </h1>
             </div>
@@ -312,8 +312,8 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
               className={cn(
                 'flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs sm:text-sm font-mono font-bold transition',
                 secondsRemaining <= 600
-                  ? 'bg-rose-950/60 border-rose-500 text-rose-300 animate-pulse'
-                  : 'bg-slate-900 border-slate-700 text-slate-200'
+                  ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-400 dark:border-rose-500 text-rose-700 dark:text-rose-300 animate-pulse'
+                  : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200'
               )}
             >
               <Clock className="w-4 h-4 text-[#00B8DD]" />
@@ -333,7 +333,7 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
         </div>
 
         {/* Problem Navigation Bar */}
-        <div className="max-w-6xl mx-auto mt-2 pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
+        <div className="max-w-6xl mx-auto mt-2 pt-2 border-t border-slate-200 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             {problems.map((prob, idx) => {
               const isCurrent = idx === activeProblemIdx;
@@ -350,28 +350,28 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
                     'px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shrink-0',
                     isCurrent
                       ? 'bg-[#00B8DD] text-slate-950 shadow-md font-bold'
-                      : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 border border-slate-700/60'
+                      : 'bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/60'
                   )}
                 >
                   <span>Bài {prob.problemNumber}</span>
                   <span className="text-[10px] opacity-75">({prob.points}đ)</span>
                   {filledSubs > 0 && (
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" title={`Đã làm ${filledSubs}/${prob.subParts.length} ý`} />
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 shrink-0" title={`Đã làm ${filledSubs}/${prob.subParts.length} ý`} />
                   )}
                 </button>
               );
             })}
           </div>
 
-          <div className="text-xs text-slate-400 flex items-center gap-3">
+          <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-3">
             <span>
               Tiến độ:{' '}
-              <b className="text-slate-200">
+              <b className="text-slate-800 dark:text-slate-200">
                 {answeredCount}/{totalSubParts} ý
               </b>
             </span>
-            <span className="text-slate-500 hidden sm:inline">•</span>
-            <span className="text-emerald-400 text-[11px] hidden sm:inline">{lastSaved}</span>
+            <span className="text-slate-400 dark:text-slate-500 hidden sm:inline">•</span>
+            <span className="text-emerald-600 dark:text-emerald-400 text-[11px] hidden sm:inline">{lastSaved}</span>
           </div>
         </div>
       </header>
@@ -379,23 +379,23 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
       {/* Main Problem & Subparts Content */}
       <main className="flex-1 max-w-5xl mx-auto w-full p-3 sm:p-6 space-y-6">
         {/* Active Problem Overview Card */}
-        <Card className="bg-slate-900/90 border-slate-800 p-4 sm:p-6 rounded-2xl shadow-xl">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3 mb-4">
+        <Card className="bg-white dark:bg-slate-900/90 border-slate-200 dark:border-slate-800 p-4 sm:p-6 rounded-2xl shadow-sm dark:shadow-xl">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 mb-4">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge className="bg-purple-950/60 text-purple-300 border-purple-800 font-bold text-xs px-2.5 py-0.5">
+              <Badge className="bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800 font-bold text-xs px-2.5 py-0.5">
                 {activeProblem.topic}
               </Badge>
-              <h2 className="text-base sm:text-lg font-bold text-white break-words">
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white break-words">
                 <MathRenderer text={activeProblem.title} inline />
               </h2>
             </div>
-            <span className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/30">
+            <span className="text-xs font-mono font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-200 dark:border-amber-500/30">
               Thang điểm: {activeProblem.points} Điểm
             </span>
           </div>
 
           {/* Problem Statement */}
-          <div className="text-sm sm:text-base text-slate-200 leading-relaxed bg-slate-950/70 p-4 rounded-xl border border-slate-800/80 mb-6">
+          <div className="text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-950/70 p-4 rounded-xl border border-slate-200 dark:border-slate-800/80 mb-6">
             <MathRenderer content={activeProblem.content} />
           </div>
 
@@ -407,19 +407,19 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
               return (
                 <div
                   key={sub.subId}
-                  className="bg-slate-900/60 rounded-2xl border border-slate-800 p-4 sm:p-5 space-y-3 transition hover:border-slate-700"
+                  className="bg-slate-50/70 dark:bg-slate-900/60 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 sm:p-5 space-y-3 transition hover:border-slate-300 dark:hover:border-slate-700"
                 >
                   {/* Sub-part Header */}
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="w-6 h-6 rounded-lg bg-[#00B8DD]/20 text-[#00B8DD] font-bold text-xs flex items-center justify-center shrink-0">
+                      <span className="w-6 h-6 rounded-lg bg-[#00B8DD]/20 text-[#007D99] dark:text-[#00B8DD] font-bold text-xs flex items-center justify-center shrink-0">
                         {sub.subId.toUpperCase()}
                       </span>
-                      <h3 className="text-sm font-bold text-slate-100 break-words min-w-0">
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 break-words min-w-0">
                         <MathRenderer text={sub.title} inline />
                       </h3>
                     </div>
-                    <Badge variant="outline" className="text-xs text-amber-400 border-amber-500/40 shrink-0">
+                    <Badge variant="outline" className="text-xs text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-500/40 shrink-0">
                       {sub.points} Điểm
                     </Badge>
                   </div>
@@ -431,7 +431,6 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
                       onChange={(newVal) => handleAnswerChange(activeProblem.id, sub.subId, newVal)}
                       placeholder="Nhập lập luận toán học, công thức và kết luận chi tiết tại đây (hỗ trợ gõ KaTeX và bấm nút công thức)..."
                       rows={5}
-                      className="bg-slate-950 text-slate-100 border-slate-800"
                     />
                   </div>
                 </div>
@@ -440,15 +439,15 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
           </div>
 
           {/* Problem Bottom Actions */}
-          <div className="mt-6 pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+          <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
             <Button
               variant="outline"
               size="sm"
               onClick={handleGradeCurrentProblem}
               disabled={isSingleProbGrading}
-              className="border-purple-600/60 bg-purple-950/40 text-purple-300 hover:bg-purple-900/40 rounded-xl font-bold text-xs"
+              className="border-purple-300 dark:border-purple-600/60 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40 rounded-xl font-bold text-xs"
             >
-              <Sparkles className="w-3.5 h-3.5 mr-1 text-purple-400" />
+              <Sparkles className="w-3.5 h-3.5 mr-1 text-purple-600 dark:text-purple-400" />
               {isSingleProbGrading ? 'AI Đang Chấm...' : `Chấm Thử Riêng Bài ${activeProblem.problemNumber}`}
             </Button>
 
@@ -461,7 +460,7 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
                     setActiveProblemIdx((prev) => prev - 1);
                     setSingleProbResult(null);
                   }}
-                  className="border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs"
+                  className="rounded-xl text-xs"
                 >
                   Bài Trước
                 </Button>
@@ -493,17 +492,17 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
 
         {/* Instant Single Problem AI Grading Card (if triggered) */}
         {singleProbResult && (
-          <Card className="bg-slate-900/90 border-purple-800/80 p-5 rounded-2xl shadow-xl space-y-4 animate-fadeIn">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+          <Card className="bg-white dark:bg-slate-900/90 border-purple-300 dark:border-purple-800/80 p-5 rounded-2xl shadow-lg dark:shadow-xl space-y-4 animate-fadeIn">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
               <div>
-                <span className="text-xs text-purple-400 font-bold">KẾT QUẢ CHẤM THỬ AI</span>
-                <h3 className="text-base font-bold text-white">
+                <span className="text-xs text-purple-600 dark:text-purple-400 font-bold">KẾT QUẢ CHẤM THỬ AI</span>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   Bài {singleProbResult.problemNumber}: {singleProbResult.title}
                 </h3>
               </div>
               <div className="text-right">
-                <span className="text-xs text-slate-400">Điểm đạt được:</span>
-                <div className="text-lg font-mono font-bold text-amber-400">
+                <span className="text-xs text-slate-500 dark:text-slate-400">Điểm đạt được:</span>
+                <div className="text-lg font-mono font-bold text-amber-600 dark:text-amber-400">
                   {singleProbResult.pointsEarned} / {singleProbResult.maxPoints} Điểm
                 </div>
               </div>
@@ -514,11 +513,11 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
               {singleProbResult.subPartResults.map((subRes) => (
                 <div
                   key={subRes.subId}
-                  className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2 text-xs"
+                  className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2 text-xs"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2 font-bold">
-                    <span className="text-slate-200">Ý {subRes.subId.toUpperCase()}</span>
-                    <span className="text-amber-400">
+                    <span className="text-slate-800 dark:text-slate-200">Ý {subRes.subId.toUpperCase()}</span>
+                    <span className="text-amber-600 dark:text-amber-400">
                       {subRes.pointsEarned} / {subRes.maxPoints} đ
                     </span>
                   </div>
@@ -529,10 +528,10 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
                       className={cn(
                         'text-[10px] font-bold px-2 py-0.5',
                         subRes.answerMatchStatus === 'MATCHED'
-                          ? 'bg-emerald-950 text-emerald-300 border-emerald-700'
+                          ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700'
                           : subRes.answerMatchStatus === 'PARTIALLY_MATCHED'
-                          ? 'bg-amber-950 text-amber-300 border-amber-700'
-                          : 'bg-rose-950 text-rose-300 border-rose-700'
+                          ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700'
+                          : 'bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-700'
                       )}
                     >
                       Giai đoạn 1: {subRes.answerMatchNote}
@@ -541,7 +540,7 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
 
                   {/* Stage 2 Rubric Steps */}
                   <div className="space-y-1 pt-1">
-                    <div className="text-slate-400 text-[11px] font-semibold">
+                    <div className="text-slate-500 dark:text-slate-400 text-[11px] font-semibold">
                       Giai đoạn 2 - Barem tiêu chí phương pháp:
                     </div>
                     {subRes.rubricBreakdown.map((rb) => (
@@ -549,14 +548,16 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
                         key={rb.step}
                         className={cn(
                           'p-1.5 rounded flex items-center justify-between text-[11px]',
-                          rb.passed ? 'bg-emerald-950/30 text-emerald-300' : 'bg-slate-900 text-slate-400'
+                          rb.passed
+                            ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300'
+                            : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400'
                         )}
                       >
                         <span className="flex items-center gap-1.5">
                           {rb.passed ? (
-                            <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                           ) : (
-                            <AlertCircle className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                            <AlertCircle className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                           )}
                           <span>Bước {rb.step}: {rb.criterion}</span>
                         </span>
@@ -568,7 +569,7 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
                   </div>
 
                   {/* Pedagogical Teacher Feedback */}
-                  <p className="text-[11px] text-slate-300 italic pt-1 border-t border-slate-900">
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 italic pt-1 border-t border-slate-200 dark:border-slate-900">
                     💬 <b>Nhận xét AI:</b> {subRes.feedback}
                   </p>
                 </div>
@@ -578,7 +579,6 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
         )}
       </main>
 
-      {/* Full Exam Final AI Evaluation Dialog */}
       {/* Full Exam Final AI Evaluation Dialog */}
       <Dialog
         isOpen={isReportModalOpen}
@@ -591,7 +591,7 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
             <Button
               variant="outline"
               onClick={() => setIsReportModalOpen(false)}
-              className="border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs"
+              className="rounded-xl text-xs"
             >
               Xem lại bài làm
             </Button>
