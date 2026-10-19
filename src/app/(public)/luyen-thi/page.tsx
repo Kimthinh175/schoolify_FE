@@ -75,7 +75,7 @@ const PRACTICE_LEVELS_SHOWCASE = [
     name: 'Nắm Chắc Kiến Thức SGK',
     desc: 'Hệ thống hóa 100% lý thuyết, định lý và dạng bài tập cơ bản trong Sách giáo khoa chuẩn Bộ GD&ĐT.',
     badge: 'Miễn Phí • Không Cần Login',
-    badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+    badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800',
     icon: BookOpen,
     iconColor: 'text-emerald-500',
     reward: '+10 💎',
@@ -86,7 +86,7 @@ const PRACTICE_LEVELS_SHOWCASE = [
     name: 'Rèn Phản Xạ Bài Thi Học Kỳ',
     desc: 'Các dạng bài thông hiểu và vận dụng vừa sức, bám sát đề thi giữa kỳ, học kỳ và cấu trúc thi Tốt nghiệp THPT.',
     badge: 'Học Kỳ & Tốt Nghiệp',
-    badgeColor: 'bg-sky-100 text-sky-800 border-sky-300',
+    badgeColor: 'bg-sky-100 text-sky-800 border-sky-300 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800',
     icon: Award,
     iconColor: 'text-sky-500',
     reward: '+20 💎',
@@ -97,7 +97,7 @@ const PRACTICE_LEVELS_SHOWCASE = [
     name: 'Vận Dụng Cao Lấy Điểm 9 - 10',
     desc: 'Bộ câu hỏi phân loại đòi hỏi tư duy logic, kỹ thuật giải nhanh trắc nghiệm và xử lý các bẫy đề thi.',
     badge: 'Cần Đăng Nhập',
-    badgeColor: 'bg-purple-100 text-purple-800 border-purple-300',
+    badgeColor: 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800',
     icon: Flame,
     iconColor: 'text-purple-500',
     reward: '+50 💎',
@@ -108,7 +108,7 @@ const PRACTICE_LEVELS_SHOWCASE = [
     name: 'Đề Thi Tuyển Chọn Tỉnh & TP',
     desc: 'Tổng hợp đề thi chọn Học sinh giỏi cấp Tỉnh/Thành phố của Hà Nội, TP.HCM, Nam Định, Nghệ An...',
     badge: 'Cần Đăng Nhập',
-    badgeColor: 'bg-amber-100 text-amber-800 border-amber-300',
+    badgeColor: 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800',
     icon: Trophy,
     iconColor: 'text-amber-500',
     reward: '+100 💎',
@@ -119,7 +119,7 @@ const PRACTICE_LEVELS_SHOWCASE = [
     name: 'Chuyên Đề Olympic & Đội Tuyển',
     desc: 'Đỉnh cao học sinh giỏi với các chuyên đề Olympic, vòng chọn đội tuyển và đề thi HSG Quốc gia chính thức.',
     badge: 'Cần Đăng Nhập',
-    badgeColor: 'bg-rose-100 text-rose-800 border-rose-300',
+    badgeColor: 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800',
     icon: Crown,
     iconColor: 'text-rose-500',
     reward: '+200 💎',
@@ -134,7 +134,7 @@ const FOUR_STEP_WORKFLOW = [
     desc: 'Flashcard định nghĩa, sơ đồ tư duy và bảng công thức then chốt giúp ôn lại kiến thức chỉ trong 3-5 phút.',
     icon: BookOpen,
     tag: 'Ghi Nhớ Nhanh',
-    color: 'text-sky-600 bg-sky-50 border-sky-200',
+    color: 'text-sky-600 bg-sky-50 border-sky-200 dark:text-sky-400 dark:bg-sky-950/50 dark:border-sky-800',
   },
   {
     step: '02',
@@ -142,7 +142,7 @@ const FOUR_STEP_WORKFLOW = [
     desc: 'Chấm điểm tức thì sau mỗi câu, đồng hồ bấm giờ áp lực thi thật và giải thích chi tiết phương pháp làm bài.',
     icon: Zap,
     tag: 'Phản Xạ Nhanh',
-    color: 'text-amber-600 bg-amber-50 border-amber-200',
+    color: 'text-amber-600 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950/50 dark:border-amber-800',
   },
   {
     step: '03',
@@ -150,7 +150,7 @@ const FOUR_STEP_WORKFLOW = [
     desc: 'Khung soạn thảo lời giải hoàn chỉnh, đối chiếu barem điểm chi tiết của từng bước biến đổi chuẩn khảo thí.',
     icon: Award,
     tag: 'Barem Chuẩn',
-    color: 'text-purple-600 bg-purple-50 border-purple-200',
+    color: 'text-purple-600 bg-purple-50 border-purple-200 dark:text-purple-400 dark:bg-purple-950/50 dark:border-purple-800',
   },
   {
     step: '04',
@@ -158,7 +158,7 @@ const FOUR_STEP_WORKFLOW = [
     desc: 'Đề thi tổng hợp tính điểm chuẩn xác, cập nhật vào Bảng vàng thi đua và cộng thưởng kim cương 💎 vào ví.',
     icon: Trophy,
     tag: 'Đua Top Điểm',
-    color: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+    color: 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/50 dark:border-emerald-800',
   },
 ];
 
@@ -286,7 +286,7 @@ export default function LuyenThiPage() {
           </div>
 
           {/* Category Filter Tabs */}
-          <div className="overflow-x-auto no-scrollbar pt-1 pb-1">
+          <div className="pt-1 pb-1">
             <Tabs
               tabs={categoryTabs}
               activeTab={activeCategory}
@@ -354,32 +354,8 @@ export default function LuyenThiPage() {
                     </p>
                   </div>
 
-                  <div className="mt-4 pt-3.5 sm:mt-5 sm:pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
-                      <span className="flex items-center gap-1">
-                        <BookOpen className="w-3.5 h-3.5 text-[#00B8DD]" />
-                        <strong>5</strong> cấp độ
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <TrendingUp className="w-3.5 h-3.5 text-amber-500" />
-                        <strong>{subject.totalExams.toLocaleString()}</strong> đề thi
-                      </span>
-                    </div>
-
-                    {/* Levels Pills */}
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      <span className="text-[10px] px-1.5 sm:px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-200 dark:border-emerald-800 shrink-0">
-                        Cơ bản (Free)
-                      </span>
-                      <span className="text-[10px] px-1.5 sm:px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium border border-slate-200 dark:border-slate-700 shrink-0">
-                        Trung bình
-                      </span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-bold border border-amber-200 dark:border-amber-800 flex items-center gap-0.5 shrink-0">
-                        <Lock className="w-2.5 h-2.5" /> +3 HSG
-                      </span>
-                    </div>
-
-                    <div className="mt-3 flex items-center justify-end text-xs font-bold text-[#007D99] dark:text-[#00B8DD] group-hover:translate-x-1 transition-all">
+                  <div className="mt-4 pt-3.5 sm:mt-5 sm:pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end">
+                    <div className="flex items-center text-xs font-bold text-[#007D99] dark:text-[#00B8DD] group-hover:translate-x-1 transition-all">
                       <span>Vào Luyện Thử</span>
                       <ChevronRight className="w-4 h-4 ml-0.5" />
                     </div>
@@ -399,7 +375,7 @@ export default function LuyenThiPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-14">
             <motion.div {...fadeUp(0)}>
-              <Badge variant="primary" className="bg-[#00B8DD] text-slate-950 font-bold mb-3">
+              <Badge variant="primary" className="bg-[#00B8DD] text-white font-bold mb-3">
                 LỘ TRÌNH PHÂN HÓA NĂNG LỰC
               </Badge>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -469,7 +445,7 @@ export default function LuyenThiPage() {
             <motion.div {...fadeUp(0.4)}>
               <Card className="h-full p-6 border-2 border-dashed border-[#00B8DD]/40 bg-[#E6F8FC]/50 dark:bg-cyan-950/20 flex flex-col justify-between rounded-2xl">
                 <div>
-                  <div className="h-12 w-12 rounded-2xl bg-[#00B8DD] text-slate-950 flex items-center justify-center font-bold text-xl mb-4 shadow-md">
+                  <div className="h-12 w-12 rounded-2xl bg-[#00B8DD] text-white flex items-center justify-center font-bold text-xl mb-4 shadow-md">
                     💎
                   </div>
                   <span className="text-xs font-bold uppercase tracking-wider text-[#007D99] dark:text-[#00B8DD]">
@@ -495,7 +471,7 @@ export default function LuyenThiPage() {
                 </div>
 
                 <a href="#kho-mon-hoc" className="mt-5 pt-4 border-t border-[#00B8DD]/20">
-                  <Button size="sm" className="w-full bg-[#00B8DD] hover:bg-[#009BBD] text-slate-950 font-bold rounded-xl">
+                  <Button size="sm" className="w-full bg-[#00B8DD] hover:bg-[#009BBD] text-white font-bold rounded-xl">
                     Bắt Đầu Luyện Cấp Độ Cơ Bản Ngay
                   </Button>
                 </a>
@@ -512,7 +488,7 @@ export default function LuyenThiPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-14">
             <motion.div {...fadeUp(0)}>
-              <Badge variant="primary" className="bg-[#00B8DD] text-slate-950 font-bold mb-3">
+              <Badge variant="primary" className="bg-[#00B8DD] text-white font-bold mb-3">
                 CHUẨN SƯ PHẠM &amp; KHẢO THÍ
               </Badge>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -563,7 +539,7 @@ export default function LuyenThiPage() {
       <section id="video-gioi-thieu" className="py-14 sm:py-20 bg-slate-50/70 dark:bg-slate-900/40 border-b border-slate-100 dark:border-slate-800 transition-colors">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center space-y-6">
           <div>
-            <Badge variant="primary" className="bg-[#00B8DD] text-slate-950 font-bold mb-3">
+            <Badge variant="primary" className="bg-[#00B8DD] text-white font-bold mb-3">
               VIDEO TRẢI NGHIỆM 30 GIÂY
             </Badge>
             <h2 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -597,8 +573,8 @@ export default function LuyenThiPage() {
                 onClick={handlePlayVideo}
                 className="absolute inset-0 bg-black/35 backdrop-blur-[2px] flex flex-col items-center justify-center cursor-pointer transition-opacity group-hover:bg-black/45"
               >
-                <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 flex items-center justify-center shadow-2xl shadow-[#00B8DD]/60 transform group-hover:scale-110 transition-transform duration-200 border-2 border-white/50">
-                  <Play className="w-8 h-8 fill-slate-950 ml-1" />
+                <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-[#00B8DD] hover:bg-[#009bbd] text-white flex items-center justify-center shadow-2xl shadow-[#00B8DD]/60 transform group-hover:scale-110 transition-transform duration-200 border-2 border-white/50">
+                  <Play className="w-8 h-8 fill-white ml-1" />
                 </div>
                 <p className="text-white text-xs sm:text-sm font-black mt-3 tracking-wide drop-shadow-md">
                   Xem Video Nền Tảng (30 Giây)
@@ -616,7 +592,7 @@ export default function LuyenThiPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
             <div className="space-y-6">
-              <Badge variant="primary" className="bg-[#00B8DD] text-slate-950 font-bold">
+              <Badge variant="primary" className="bg-[#00B8DD] text-white font-bold">
                 ĐUA TOP TOÀN QUỐC &amp; ĐỔI QUÀ THỰC TẾ
               </Badge>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
@@ -630,7 +606,7 @@ export default function LuyenThiPage() {
                 <Button
                   size="lg"
                   onClick={handleLeaderboardClick}
-                  className="bg-[#00B8DD] hover:bg-[#009BBD] text-slate-950 font-black rounded-xl text-sm"
+                  className="bg-[#00B8DD] hover:bg-[#009BBD] text-white font-black rounded-xl text-sm"
                   leftIcon={<Trophy className="w-4 h-4" />}
                 >
                   Đăng Nhập Đua Top Bảng Vàng
@@ -700,7 +676,7 @@ export default function LuyenThiPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <Badge variant="primary" className="bg-[#00B8DD] text-slate-950 font-bold mb-3">
+              <Badge variant="primary" className="bg-[#00B8DD] text-white font-bold mb-3">
                 ĐỒNG HÀNH CÙNG HỌC SINH
               </Badge>
               <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -785,7 +761,7 @@ export default function LuyenThiPage() {
                   </div>
                   <Button
                     type="submit"
-                    className="w-full bg-[#00B8DD] hover:bg-[#009BBD] text-slate-950 font-bold rounded-xl shadow-md"
+                    className="w-full bg-[#00B8DD] hover:bg-[#009BBD] text-white font-bold rounded-xl shadow-md"
                     rightIcon={<Send className="w-4 h-4" />}
                   >
                     Gửi Thông Tin Nhận Lộ Trình

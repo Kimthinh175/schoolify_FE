@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/store/auth.store';
+import { GoogleLoginButton } from '@/components/features/auth/GoogleLoginButton';
 import { SchoolRole, SystemRole } from '@/types';
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -202,16 +203,11 @@ export default function SchoolLoginPage() {
 
         {/* Alternate Logins (Google Workspace) */}
         <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-          {/* Google Workspace Button */}
-          <button
-            type="button"
-            onClick={handleGoogleWorkspaceLogin}
-            disabled={isGoogleLoading}
-            className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs shadow-xs transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
-          >
-            <GoogleIcon />
-            <span>{isGoogleLoading ? 'Đang xác thực Google...' : 'Đăng nhập với Google Workspace for Education'}</span>
-          </button>
+          <GoogleLoginButton
+            role="PRINCIPAL"
+            returnUrl="/school/dashboard"
+            label="Đăng nhập với Google Workspace for Education"
+          />
         </div>
 
         {/* Switch Role Footer */}

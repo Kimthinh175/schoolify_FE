@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/store/auth.store';
+import { GoogleLoginButton } from '@/components/features/auth/GoogleLoginButton';
 import { MOCK_TEACHER_PROFILE } from '@/services/mock/data';
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -188,16 +189,11 @@ export default function TeacherLoginPage() {
 
         {/* Alternate Logins (Google) */}
         <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-          {/* Google Login Button */}
-          <button
-            type="button"
-            onClick={handleGoogleLogin}
-            disabled={isGoogleLoading}
-            className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs shadow-xs transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
-          >
-            <GoogleIcon />
-            <span>{isGoogleLoading ? 'Đang xác thực Google...' : 'Đăng nhập bằng tài khoản Google'}</span>
-          </button>
+          <GoogleLoginButton
+            role="TEACHER"
+            returnUrl="/teacher/dashboard"
+            label="Đăng nhập bằng tài khoản Google"
+          />
         </div>
 
         {/* Switch Role Footer */}

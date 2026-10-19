@@ -43,9 +43,9 @@ export function MathFormulaToolbar({
   return (
     <div className="space-y-2">
       {/* Thanh nút bấm chèn ký tự */}
-      <div className="flex flex-wrap items-center justify-between gap-1.5 p-1.5 rounded-xl bg-slate-100 border border-slate-200">
+      <div className="flex flex-wrap items-center justify-between gap-1.5 p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
         <div className="flex flex-wrap items-center gap-1">
-          <span className="text-[10px] font-bold text-slate-500 uppercase px-1.5 flex items-center gap-1">
+          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase px-1.5 flex items-center gap-1">
             <Sparkles className="w-3 h-3 text-primary" />
             {label}
           </span>
@@ -55,7 +55,7 @@ export function MathFormulaToolbar({
               type="button"
               title={item.title}
               onClick={() => onInsert(`$${item.snippet}$`)}
-              className="px-2 py-1 text-xs font-mono font-medium rounded-lg bg-white hover:bg-primary hover:text-white text-slate-700 border border-slate-200/80 shadow-2xs transition-all active:scale-95"
+              className="px-2 py-1 text-xs font-mono font-medium rounded-lg bg-white dark:bg-slate-900 hover:bg-primary hover:text-white text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 shadow-2xs transition-all active:scale-95"
             >
               {item.label}
             </button>
@@ -68,9 +68,9 @@ export function MathFormulaToolbar({
             size="sm"
             variant="ghost"
             onClick={() => setShowPreview(!showPreview)}
-            className="h-7 px-2 text-[11px] text-slate-600 hover:text-slate-900 gap-1 shrink-0 font-medium"
+            className="h-7 px-2 text-[11px] text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white gap-1 shrink-0 font-medium"
           >
-            {showPreview ? <Code className="w-3 h-3 text-slate-500" /> : <Eye className="w-3 h-3 text-primary" />}
+            {showPreview ? <Code className="w-3 h-3 text-slate-500 dark:text-slate-400" /> : <Eye className="w-3 h-3 text-primary" />}
             {showPreview ? 'Ẩn xem trước' : 'Xem trước (Live)'}
           </Button>
         )}
@@ -78,18 +78,18 @@ export function MathFormulaToolbar({
 
       {/* Khung hiển thị thực tế (Live Render) cho người dùng/học sinh */}
       {showPreview && previewContent && previewContent.trim().length > 0 && (
-        <div className="p-3 rounded-xl bg-slate-50/90 border border-slate-200 text-xs sm:text-sm text-slate-900 leading-relaxed shadow-2xs">
-          <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5 mb-2">
-            <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider flex items-center gap-1">
-              <Eye className="w-3 h-3 text-emerald-600" />
+        <div className="p-3 rounded-xl bg-slate-50/90 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-slate-100 leading-relaxed shadow-2xs">
+          <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-1.5 mb-2">
+            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+              <Eye className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
               Hiển thị thực tế (Học sinh sẽ nhìn thấy):
             </span>
-            <span className="text-[10px] text-slate-400 font-normal">
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">
               Công thức tự động render chuẩn KaTeX
             </span>
           </div>
 
-          <MathRenderer content={previewContent} className="text-slate-900 font-sans" />
+          <MathRenderer content={previewContent} className="text-slate-900 dark:text-slate-100 font-sans" />
         </div>
       )}
     </div>

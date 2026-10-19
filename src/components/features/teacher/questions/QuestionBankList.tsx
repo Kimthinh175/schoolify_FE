@@ -317,8 +317,8 @@ export function QuestionBankList({
       </div>
 
       {/* Premium / Free Filter Pills & Count */}
-      <div className="flex items-center justify-between gap-3 overflow-x-auto pb-1">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-1">
+        <div className="flex flex-wrap items-center gap-2">
           {[
             { key: 'ALL', label: `Tất cả (${banks.length})` },
             { key: 'PREMIUM', label: '⭐ Trả phí (Marketplace)' },

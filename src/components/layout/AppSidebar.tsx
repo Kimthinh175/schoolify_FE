@@ -51,7 +51,7 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['SUPER_ADMIN'],
   },
   {
-    label: 'Ngân Hàng Câu Hỏi Gốc',
+    label: 'Ngân Hàng Câu Hỏi',
     href: '/admin/questions',
     icon: <Database className="w-5 h-5" />,
     badge: 'Mới',
@@ -259,17 +259,19 @@ export function AppSidebar({ isMobileOpen, onMobileClose }: { isMobileOpen?: boo
 
   const filteredNavItems = NAV_ITEMS.filter((item) => item.roles.includes(currentRole));
 
-  const sidebarContent = (
+  const renderSidebar = (isMobile = false) => (
     <aside
       className={cn(
-        'flex flex-col border-r border-slate-200/80 bg-white dark:border-slate-800/80 dark:bg-slate-950 transition-all duration-300 h-screen sticky top-0',
-        collapsed ? 'w-20' : 'w-64'
+        'flex flex-col border-r border-slate-200/80 bg-white dark:border-slate-800/80 dark:bg-slate-950 transition-all duration-300 select-none',
+        isMobile
+          ? 'h-full w-full'
+          : cn('fixed top-0 bottom-0 left-0 z-30 h-screen', collapsed ? 'w-20' : 'w-64')
       )}
     >
       {/* Brand Header */}
-      <div className="flex h-16 items-center justify-between px-3.5 border-b border-slate-100 dark:border-slate-800">
+      <div className="flex h-16 items-center justify-between px-3.5 border-b border-slate-100 dark:border-slate-800 shrink-0">
         <Link href="/" className="flex items-center gap-2 overflow-hidden">
-          {collapsed ? (
+          {!isMobile && collapsed ? (
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs p-1">
               <img src="/logo-icon.png" alt="Schoolify" className="h-full w-full object-contain" />
             </div>
@@ -288,14 +290,23 @@ export function AppSidebar({ isMobileOpen, onMobileClose }: { isMobileOpen?: boo
             </div>
           )}
         </Link>
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="hidden md:flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-        >
-          {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-        </button>
+        {!isMobile && (
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="hidden md:flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          >
+            {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </button>
+        )}
+        {isMobile && (
+          <button
+            onClick={onMobileClose}
+            className="flex md:hidden h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+        )}
       </div>
-
 
       {/* Nav links */}
       <div className="flex-1 overflow-y-auto p-3 space-y-1.5 no-scrollbar">
@@ -310,19 +321,19 @@ export function AppSidebar({ isMobileOpen, onMobileClose }: { isMobileOpen?: boo
               key={item.href}
               href={item.href}
               onClick={onMobileClose}
-              title={collapsed ? item.label : undefined}
+              title={!isMobile && collapsed ? item.label : undefined}
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group',
                 isActive
                   ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/20 font-semibold'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/70 dark:hover:text-white',
-                collapsed && 'justify-center px-2'
+                !isMobile && collapsed && 'justify-center px-2'
               )}
             >
               <span className={cn('shrink-0', isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200')}>
                 {item.icon}
               </span>
-              {!collapsed && (
+              {(isMobile || !collapsed) && (
                 <>
                   <span className="flex-1 truncate">{item.label}</span>
                   {item.badge && (
@@ -343,16 +354,16 @@ export function AppSidebar({ isMobileOpen, onMobileClose }: { isMobileOpen?: boo
       </div>
 
       {/* Footer info / Public link */}
-      <div className="p-3 border-t border-slate-100 dark:border-slate-800">
+      <div className="p-3 border-t border-slate-100 dark:border-slate-800 shrink-0">
         <Link
           href="/"
           className={cn(
             'flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors',
-            collapsed && 'justify-center px-0'
+            !isMobile && collapsed && 'justify-center px-0'
           )}
         >
           <Sparkles className="w-4 h-4 text-amber-500" />
-          {!collapsed && <span>Về Trang Chủ Public</span>}
+          {(isMobile || !collapsed) && <span>Về Trang Chủ Public</span>}
         </Link>
       </div>
     </aside>
@@ -361,12 +372,19 @@ export function AppSidebar({ isMobileOpen, onMobileClose }: { isMobileOpen?: boo
   // Responsive Drawer for Mobile
   return (
     <>
-      <div className="hidden md:block">{sidebarContent}</div>
+      <div
+        className={cn(
+          'hidden md:block shrink-0 transition-all duration-300',
+          collapsed ? 'w-20' : 'w-64'
+        )}
+      >
+        {renderSidebar(false)}
+      </div>
       {isMobileOpen && (
         <div className="fixed inset-0 z-50 flex md:hidden">
           <div className="fixed inset-0 bg-black/50 backdrop-blur-xs" onClick={onMobileClose} />
-          <div className="relative z-50 w-72 max-w-[85vw] bg-white dark:bg-slate-950 shadow-2xl">
-            {sidebarContent}
+          <div className="relative z-50 w-72 max-w-[85vw] h-full bg-white dark:bg-slate-950 shadow-2xl">
+            {renderSidebar(true)}
           </div>
         </div>
       )}

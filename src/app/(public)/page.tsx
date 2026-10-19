@@ -61,7 +61,8 @@ export default function HomePage() {
             {...fadeUp(0.1)}
             className="text-3xl sm:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.12]"
           >
-            Bứt Phá Điểm Số Với{' '}
+            Bứt Phá Điểm Số <br />
+            Với{' '}
             <motion.span
               className="bg-gradient-to-r from-[#007D99] via-[#00A3C4] to-[#007D99] dark:from-[#00B8DD] dark:via-cyan-200 dark:to-[#00B8DD] bg-[length:200%_auto] bg-clip-text text-transparent"
               animate={{ backgroundPosition: ['0% 50%', '200% 50%'] }}
@@ -83,7 +84,7 @@ export default function HomePage() {
             <Link href="/luyen-thi" className="w-full sm:w-auto">
               <Button
                 size="lg"
-                className="w-full sm:w-auto bg-[#00B8DD] hover:bg-[#009BBD] text-slate-950 font-black text-sm sm:text-base px-7 py-5 sm:py-6 rounded-2xl shadow-lg shadow-cyan-500/25 transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-[#00B8DD] focus-visible:ring-offset-2"
+                className="w-full sm:w-auto bg-[#00B8DD] hover:bg-[#009BBD] text-white font-black text-sm sm:text-base px-7 py-5 sm:py-6 rounded-2xl shadow-lg shadow-cyan-500/25 transition-all group cursor-pointer focus-visible:ring-2 focus-visible:ring-[#00B8DD] focus-visible:ring-offset-2"
               >
                 <span>Vào Cổng Luyện Thi Ngay</span>
                 <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -454,7 +455,7 @@ export default function HomePage() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-[#00B8DD]/20 blur-3xl pointer-events-none rounded-full" />
 
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center space-y-6 relative z-10">
-          <Badge variant="primary" className="bg-[#00B8DD] text-slate-950 font-bold px-3 py-1">
+          <Badge variant="primary" className="bg-[#00B8DD] text-white font-bold px-3 py-1">
             BẮT ĐẦU NGAY HÔM NAY
           </Badge>
           <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
@@ -468,7 +469,7 @@ export default function HomePage() {
             <Link href="/luyen-thi" className="w-full sm:w-auto">
               <Button
                 size="lg"
-                className="w-full sm:w-auto bg-[#00B8DD] hover:bg-[#009fb0] text-slate-950 font-black text-sm sm:text-base px-8 py-6 rounded-2xl shadow-xl shadow-[#00B8DD]/30 transition-all group"
+                className="w-full sm:w-auto bg-[#00B8DD] hover:bg-[#009fb0] text-white font-black text-sm sm:text-base px-8 py-6 rounded-2xl shadow-xl shadow-[#00B8DD]/30 transition-all group"
               >
                 <span>Bắt Đầu Luyện Thi Miễn Phí (schoolify.top/luyen-thi)</span>
                 <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />

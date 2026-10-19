@@ -115,86 +115,86 @@ const CORE_SUBJECT_CONFIG: Record<
 > = {
   'Toán Học': {
     icon: Calculator,
-    color: 'text-indigo-600',
-    bg: 'bg-indigo-50',
-    border: 'border-indigo-200',
+    color: 'text-indigo-600 dark:text-indigo-400',
+    bg: 'bg-indigo-50 dark:bg-indigo-950/60',
+    border: 'border-indigo-200 dark:border-indigo-800',
     category: 'NATURAL',
   },
   'Vật Lý': {
     icon: Atom,
-    color: 'text-cyan-600',
-    bg: 'bg-cyan-50',
-    border: 'border-cyan-200',
+    color: 'text-cyan-600 dark:text-cyan-400',
+    bg: 'bg-cyan-50 dark:bg-cyan-950/60',
+    border: 'border-cyan-200 dark:border-cyan-800',
     category: 'NATURAL',
   },
   'Hóa Học': {
     icon: FlaskConical,
-    color: 'text-emerald-600',
-    bg: 'bg-emerald-50',
-    border: 'border-emerald-200',
+    color: 'text-emerald-600 dark:text-emerald-400',
+    bg: 'bg-emerald-50 dark:bg-emerald-950/60',
+    border: 'border-emerald-200 dark:border-emerald-800',
     category: 'NATURAL',
   },
   'Sinh Học': {
     icon: Dna,
-    color: 'text-teal-600',
-    bg: 'bg-teal-50',
-    border: 'border-teal-200',
+    color: 'text-teal-600 dark:text-teal-400',
+    bg: 'bg-teal-50 dark:bg-teal-950/60',
+    border: 'border-teal-200 dark:border-teal-800',
     category: 'NATURAL',
   },
   'Tiếng Anh': {
     icon: Globe2,
-    color: 'text-violet-600',
-    bg: 'bg-violet-50',
-    border: 'border-violet-200',
+    color: 'text-violet-600 dark:text-violet-400',
+    bg: 'bg-violet-50 dark:bg-violet-950/60',
+    border: 'border-violet-200 dark:border-violet-800',
     category: 'LANGUAGE',
   },
   'Lịch Sử': {
     icon: Landmark,
-    color: 'text-amber-600',
-    bg: 'bg-amber-50',
-    border: 'border-amber-200',
+    color: 'text-amber-600 dark:text-amber-400',
+    bg: 'bg-amber-50 dark:bg-amber-950/60',
+    border: 'border-amber-200 dark:border-amber-800',
     category: 'SOCIAL',
   },
   'Địa Lý': {
     icon: Compass,
-    color: 'text-orange-600',
-    bg: 'bg-orange-50',
-    border: 'border-orange-200',
+    color: 'text-orange-600 dark:text-orange-400',
+    bg: 'bg-orange-50 dark:bg-orange-950/60',
+    border: 'border-orange-200 dark:border-orange-800',
     category: 'SOCIAL',
   },
   'Ngữ Văn': {
     icon: BookOpen,
-    color: 'text-rose-600',
-    bg: 'bg-rose-50',
-    border: 'border-rose-200',
+    color: 'text-rose-600 dark:text-rose-400',
+    bg: 'bg-rose-50 dark:bg-rose-950/60',
+    border: 'border-rose-200 dark:border-rose-800',
     category: 'SOCIAL',
   },
   'GDKT & Pháp Luật': {
     icon: Scale,
-    color: 'text-sky-600',
-    bg: 'bg-sky-50',
-    border: 'border-sky-200',
+    color: 'text-sky-600 dark:text-sky-400',
+    bg: 'bg-sky-50 dark:bg-sky-950/60',
+    border: 'border-sky-200 dark:border-sky-800',
     category: 'SOCIAL',
   },
   'Tin Học': {
     icon: Laptop,
-    color: 'text-blue-600',
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
+    color: 'text-blue-600 dark:text-blue-400',
+    bg: 'bg-blue-50 dark:bg-blue-950/60',
+    border: 'border-blue-200 dark:border-blue-800',
     category: 'NATURAL',
   },
   'Công Nghệ': {
     icon: Wrench,
-    color: 'text-amber-700',
-    bg: 'bg-amber-50',
-    border: 'border-amber-200',
+    color: 'text-amber-700 dark:text-amber-400',
+    bg: 'bg-amber-50 dark:bg-amber-950/60',
+    border: 'border-amber-200 dark:border-amber-800',
     category: 'NATURAL',
   },
   'Khoa Học Tự Nhiên': {
     icon: Microscope,
-    color: 'text-purple-600',
-    bg: 'bg-purple-50',
-    border: 'border-purple-200',
+    color: 'text-purple-600 dark:text-purple-400',
+    bg: 'bg-purple-50 dark:bg-purple-950/60',
+    border: 'border-purple-200 dark:border-purple-800',
     category: 'NATURAL',
   },
 };
@@ -222,7 +222,7 @@ export default function AdminQuestionsPage() {
   const [bugReports, setBugReports] = React.useState<QuestionBugReport[]>([]);
   const [isBugReportsOpen, setIsBugReportsOpen] = React.useState(false);
 
-  // Khởi tạo và đọc báo cáo sai sót từ localStorage
+  // Khởi tạo và đọc báo cáo sai sót + câu hỏi AI mới sinh từ DB
   React.useEffect(() => {
     try {
       const stored = localStorage.getItem('schoolify_question_bug_reports');
@@ -235,6 +235,19 @@ export default function AdminQuestionsPage() {
     } catch {
       setBugReports(DEFAULT_BUG_REPORTS);
     }
+
+    fetch('/api/db/generatedQuestions', { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json?.success && Array.isArray(json.data) && json.data.length > 0) {
+          setQuestions((prev) => {
+            const existingIds = new Set(prev.map((q) => q.id));
+            const newItems = (json.data as Question[]).filter((q) => !existingIds.has(q.id));
+            return [...newItems, ...prev];
+          });
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const handleResolveBugReport = (reportId: string) => {
@@ -432,27 +445,27 @@ export default function AdminQuestionsPage() {
   return (
     <div className="space-y-6">
       {/* Header & Quick Actions */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-1 border-b border-slate-100">
-        <div className="max-w-2xl">
+      <div className="flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+        <div className="min-w-0 max-w-3xl">
           <Badge variant="outline" className="mb-2 bg-primary/10 text-primary border-primary/20">
             <Database className="w-3.5 h-3.5 mr-1" />
             Master Question Bank
           </Badge>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
             Ngân Hàng Câu Hỏi Gốc (Toàn Sàn)
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             Kho dữ liệu trung tâm chuẩn hóa các câu hỏi theo môn học, mức độ nhận thức Bloom và chuyên đề kiến thức.
           </p>
         </div>
 
-        {/* Nút thao tác nhanh trên desktop */}
-        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0">
+        {/* Nút thao tác nhanh trên desktop & laptop */}
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
             variant="outline"
             onClick={() => setIsBugReportsOpen(true)}
-            className="border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs gap-1.5 font-semibold shadow-xs whitespace-nowrap relative"
+            className="border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-900 dark:text-amber-300 text-xs gap-1.5 font-semibold shadow-xs whitespace-nowrap relative"
           >
             <AlertTriangle className="w-4 h-4 text-amber-600" />
             Báo cáo từ HS
@@ -465,15 +478,22 @@ export default function AdminQuestionsPage() {
 
           <ImportGuidelineModal triggerText="Hướng dẫn & File mẫu" />
 
-          <Link href="/admin/questions/import">
-            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5 font-medium shadow-xs whitespace-nowrap">
+          <Link href="/admin/questions/import?mode=ai-docx">
+            <Button className="bg-[#00B8DD] hover:bg-[#00B8DD]/90 text-white text-xs gap-1.5 font-semibold shadow-xs">
+              <Sparkles className="w-4 h-4" />
+              AI Quét Đề (.DOCX) & Sinh Câu Hỏi
+            </Button>
+          </Link>
+
+          <Link href="/admin/questions/import?mode=raw">
+            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5 font-medium shadow-xs">
               <FileSpreadsheet className="w-4 h-4" />
               Import Excel / Word
             </Button>
           </Link>
 
           <Link href="/admin/questions/create">
-            <Button className="bg-primary hover:bg-primary/90 text-white text-xs gap-1.5 font-semibold shadow-xs whitespace-nowrap">
+            <Button className="bg-primary hover:bg-primary/90 text-white text-xs gap-1.5 font-semibold shadow-xs">
               <Plus className="w-4 h-4" />
               Soạn câu hỏi mới
             </Button>
@@ -579,9 +599,9 @@ export default function AdminQuestionsPage() {
             {filteredSubjects.map((sub) => {
               const cfg = CORE_SUBJECT_CONFIG[sub.name] || {
                 icon: BookMarked,
-                color: 'text-slate-600',
-                bg: 'bg-slate-50',
-                border: 'border-slate-200',
+                color: 'text-slate-600 dark:text-slate-400',
+                bg: 'bg-slate-50 dark:bg-slate-800/60',
+                border: 'border-slate-200 dark:border-slate-700',
               };
               const IconComp = cfg.icon;
               const hasQuestions = sub.total > 0;
@@ -703,7 +723,7 @@ export default function AdminQuestionsPage() {
           </div>
 
           {filteredSubjects.length === 0 && (
-            <div className="text-center py-12 p-6 rounded-2xl bg-white border border-slate-200 text-slate-400 text-xs shadow-xs">
+            <div className="text-center py-12 p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-400 text-xs shadow-xs">
               Không tìm thấy môn học nào phù hợp với bộ lọc hiện tại.
             </div>
           )}
@@ -717,8 +737,8 @@ export default function AdminQuestionsPage() {
         <div className="space-y-4">
           {/* Breadcrumb quay lại khi đang lọc theo môn từ Hub */}
           {selectedSubject !== 'ALL' && (
-            <div className="flex items-center justify-between p-3 rounded-xl bg-primary/5 border border-primary/20">
-              <div className="flex items-center gap-2 text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-primary/5 dark:bg-primary/10 border border-primary/20">
+              <div className="flex flex-wrap items-center gap-2 text-xs">
                 <Button
                   size="sm"
                   variant="ghost"
@@ -729,7 +749,7 @@ export default function AdminQuestionsPage() {
                   Danh sách môn học
                 </Button>
                 <span className="text-slate-400">/</span>
-                <span className="text-slate-700 font-semibold">
+                <span className="text-slate-700 dark:text-slate-300 font-semibold">
                   Môn đang chọn:{' '}
                   <strong className="text-primary font-bold">{selectedSubject}</strong> (
                   {filteredQuestions.length} câu)
@@ -740,7 +760,7 @@ export default function AdminQuestionsPage() {
                 size="sm"
                 variant="outline"
                 onClick={() => setSelectedSubject('ALL')}
-                className="h-7 text-[11px] text-slate-600 border-slate-200 hover:bg-white"
+                className="h-7 text-[11px] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800"
               >
                 Hiển thị tất cả môn
               </Button>
@@ -748,7 +768,7 @@ export default function AdminQuestionsPage() {
           )}
 
           {/* BỘ LỌC ĐA TIÊU CHÍ (Nằm trên 1 hàng ngang ở Desktop) */}
-          <Card className="p-3.5 sm:p-4 bg-white border border-slate-200/80 shadow-xs">
+          <Card className="p-3.5 sm:p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
             <div className="flex flex-col lg:flex-row lg:items-center gap-2.5">
               {/* Ô tìm kiếm */}
               <div className="relative flex-1 min-w-[200px]">
@@ -760,7 +780,7 @@ export default function AdminQuestionsPage() {
                     setSearch(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="pl-9 h-9 bg-slate-50 border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white"
+                  className="pl-9 h-9 bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white dark:focus:bg-slate-900"
                 />
               </div>
 
@@ -773,7 +793,7 @@ export default function AdminQuestionsPage() {
                     setSelectedSubject(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="h-9 bg-slate-50 border border-slate-200 text-xs rounded-xl px-2.5 py-1.5 text-slate-700 focus:outline-none focus:border-primary focus:bg-white font-medium lg:w-36"
+                  className="h-9 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-2.5 py-1.5 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 font-medium lg:w-36"
                 >
                   <option value="ALL">Tất cả môn học</option>
                   {Object.keys(CORE_SUBJECT_CONFIG).map((sub) => (
@@ -790,7 +810,7 @@ export default function AdminQuestionsPage() {
                     setSelectedGrade(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="h-9 bg-slate-50 border border-slate-200 text-xs rounded-xl px-2.5 py-1.5 text-slate-700 focus:outline-none focus:border-primary focus:bg-white font-medium lg:w-32"
+                  className="h-9 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-2.5 py-1.5 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 font-medium lg:w-32"
                 >
                   <option value="ALL">Mọi khối lớp</option>
                   <optgroup label="THPT">
@@ -820,7 +840,7 @@ export default function AdminQuestionsPage() {
                     setSelectedDifficulty(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="h-9 bg-slate-50 border border-slate-200 text-xs rounded-xl px-2.5 py-1.5 text-slate-700 focus:outline-none focus:border-primary focus:bg-white font-medium lg:w-36"
+                  className="h-9 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-2.5 py-1.5 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 font-medium lg:w-36"
                 >
                   <option value="ALL">Mọi độ khó</option>
                   <option value="RECOGNITION">Nhận biết</option>
@@ -836,7 +856,7 @@ export default function AdminQuestionsPage() {
                     setSelectedType(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="h-9 bg-slate-50 border border-slate-200 text-xs rounded-xl px-2.5 py-1.5 text-slate-700 focus:outline-none focus:border-primary focus:bg-white font-medium lg:w-44"
+                  className="h-9 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-2.5 py-1.5 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 font-medium lg:w-44"
                 >
                   <option value="ALL">Mọi định dạng</option>
                   <option value="SINGLE_CHOICE">Trắc nghiệm 1 đáp án</option>
@@ -856,7 +876,7 @@ export default function AdminQuestionsPage() {
                     size="sm"
                     variant="ghost"
                     onClick={handleResetFilters}
-                    className="col-span-2 sm:col-span-3 lg:col-span-1 text-xs text-slate-500 hover:text-slate-900 gap-1 h-9 px-2.5 shrink-0 whitespace-nowrap"
+                    className="col-span-2 sm:col-span-3 lg:col-span-1 text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white gap-1 h-9 px-2.5 shrink-0 whitespace-nowrap"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Đặt lại</span>
@@ -869,7 +889,7 @@ export default function AdminQuestionsPage() {
           {/* Danh Sách Câu Hỏi (Đã phân trang 10 câu/trang) */}
           <div className="space-y-3">
             {filteredQuestions.length === 0 ? (
-              <div className="text-center py-12 p-6 rounded-2xl bg-white border border-slate-200 text-slate-400 text-xs shadow-xs">
+              <div className="text-center py-12 p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-400 text-xs shadow-xs">
                 Không tìm thấy câu hỏi nào phù hợp với bộ lọc hiện tại.
               </div>
             ) : (
@@ -1017,7 +1037,7 @@ export default function AdminQuestionsPage() {
           isOpen={Boolean(editingQuestion)}
           onClose={() => setEditingQuestion(null)}
           title={
-            <div className="flex items-center gap-2 text-base font-bold text-slate-900">
+            <div className="flex items-center gap-2 text-base font-bold text-slate-900 dark:text-white">
               <Pencil className="w-4 h-4 text-primary" />
               Chỉnh Sửa Câu Hỏi - {editingQuestion.title || editingQuestion.id}
             </div>
@@ -1030,7 +1050,7 @@ export default function AdminQuestionsPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setEditingQuestion(null)}
-                className="text-xs border-slate-200"
+                className="text-xs border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
               >
                 Hủy bỏ
               </Button>
@@ -1047,15 +1067,15 @@ export default function AdminQuestionsPage() {
         >
           <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
             {/* Phân loại & Metadata */}
-            <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 p-3 bg-slate-50 dark:bg-slate-950/60 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
               <div>
-                <label className="font-semibold text-slate-600 block mb-1">Môn học:</label>
+                <label className="font-semibold text-slate-600 dark:text-slate-300 block mb-1">Môn học:</label>
                 <select
                   value={editingQuestion.subject || 'Toán học'}
                   onChange={(e) =>
                     setEditingQuestion({ ...editingQuestion, subject: e.target.value })
                   }
-                  className="w-full bg-white border border-slate-200 rounded-lg p-2 font-medium"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-2 font-medium text-slate-800 dark:text-slate-100"
                 >
                   {Object.keys(CORE_SUBJECT_CONFIG).map((sub) => (
                     <option key={sub} value={sub}>
@@ -1066,13 +1086,13 @@ export default function AdminQuestionsPage() {
               </div>
 
               <div>
-                <label className="font-semibold text-slate-600 block mb-1">Khối lớp:</label>
+                <label className="font-semibold text-slate-600 dark:text-slate-300 block mb-1">Khối lớp:</label>
                 <select
                   value={String(editingQuestion.grade_level || '12')}
                   onChange={(e) =>
                     setEditingQuestion({ ...editingQuestion, grade_level: e.target.value })
                   }
-                  className="w-full bg-white border border-slate-200 rounded-lg p-2 font-medium"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-2 font-medium text-slate-800 dark:text-slate-100"
                 >
                   <optgroup label="THPT">
                     <option value="12">Lớp 12</option>
@@ -1096,7 +1116,7 @@ export default function AdminQuestionsPage() {
               </div>
 
               <div>
-                <label className="font-semibold text-slate-600 block mb-1">Mức độ nhận thức:</label>
+                <label className="font-semibold text-slate-600 dark:text-slate-300 block mb-1">Mức độ nhận thức:</label>
                 <select
                   value={editingQuestion.difficulty || 'UNDERSTANDING'}
                   onChange={(e) =>
@@ -1105,7 +1125,7 @@ export default function AdminQuestionsPage() {
                       difficulty: e.target.value as DifficultyLevel,
                     })
                   }
-                  className="w-full bg-white border border-slate-200 rounded-lg p-2 font-medium"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-2 font-medium text-slate-800 dark:text-slate-100"
                 >
                   <option value="RECOGNITION">Nhận biết</option>
                   <option value="UNDERSTANDING">Thông hiểu</option>
@@ -1115,19 +1135,19 @@ export default function AdminQuestionsPage() {
               </div>
 
               <div>
-                <label className="font-semibold text-slate-600 block mb-1">Chương / Chuyên đề:</label>
+                <label className="font-semibold text-slate-600 dark:text-slate-300 block mb-1">Chương / Chuyên đề:</label>
                 <Input
                   value={editingQuestion.chapter || ''}
                   onChange={(e) =>
                     setEditingQuestion({ ...editingQuestion, chapter: e.target.value })
                   }
                   placeholder="Ví dụ: Khảo sát hàm số"
-                  className="h-8.5 bg-white border-slate-200 text-xs"
+                  className="h-8.5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white"
                 />
               </div>
 
               <div>
-                <label className="font-semibold text-slate-600 block mb-1">Điểm số:</label>
+                <label className="font-semibold text-slate-600 dark:text-slate-300 block mb-1">Điểm số:</label>
                 <Input
                   type="number"
                   step="0.05"
@@ -1138,7 +1158,7 @@ export default function AdminQuestionsPage() {
                       points: parseFloat(e.target.value) || 0.25,
                     })
                   }
-                  className="h-8.5 bg-white border-slate-200 text-xs"
+                  className="h-8.5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white"
                 />
               </div>
             </div>
@@ -1146,7 +1166,7 @@ export default function AdminQuestionsPage() {
             {/* Nội dung câu hỏi + Thanh ký tự Toán */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-900">Nội dung câu hỏi:</label>
+                <label className="text-xs font-bold text-slate-900 dark:text-white">Nội dung câu hỏi:</label>
                 <span className="text-[11px] text-slate-400">
                   Công thức bọc trong <code className="text-primary font-bold">$...$</code>
                 </span>
@@ -1173,14 +1193,14 @@ export default function AdminQuestionsPage() {
                 onChange={(e) =>
                   setEditingQuestion({ ...editingQuestion, content: e.target.value })
                 }
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs sm:text-sm text-slate-900 focus:outline-none focus:border-primary focus:bg-white font-sans"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 font-sans"
               />
             </div>
 
             {/* Hình ảnh minh họa */}
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+            <div className="p-3 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                   <ImageIcon className="w-3.5 h-3.5 text-primary" />
                   Ảnh minh họa cho câu hỏi:
                 </span>
@@ -1191,7 +1211,7 @@ export default function AdminQuestionsPage() {
                     onClick={() =>
                       setEditingQuestion({ ...editingQuestion, image_url: undefined })
                     }
-                    className="h-6 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2 gap-1"
+                    className="h-6 text-xs text-rose-600 dark:text-rose-400 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 px-2 gap-1"
                   >
                     <Trash2 className="w-3 h-3" />
                     Xóa ảnh
@@ -1200,7 +1220,7 @@ export default function AdminQuestionsPage() {
               </div>
 
               {editingQuestion.image_url ? (
-                <div className="p-2 bg-white rounded-lg border border-slate-200 w-fit">
+                <div className="p-2 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 w-fit">
                   <img
                     src={editingQuestion.image_url}
                     alt="Minh họa"
@@ -1231,7 +1251,7 @@ export default function AdminQuestionsPage() {
                         }
                       }}
                     />
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 shadow-2xs whitespace-nowrap shrink-0">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-2xs whitespace-nowrap shrink-0">
                       <UploadCloud className="w-3.5 h-3.5 text-primary" />
                       Tải ảnh lên từ thiết bị
                     </span>
@@ -1239,7 +1259,7 @@ export default function AdminQuestionsPage() {
 
                   <Input
                     placeholder="Hoặc dán URL ảnh tại đây..."
-                    className="h-8.5 text-xs bg-white border-slate-200 flex-1 min-w-0"
+                    className="h-8.5 text-xs bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white flex-1 min-w-0"
                     onBlur={(e) => {
                       const val = e.target.value.trim();
                       if (val) {
@@ -1258,7 +1278,7 @@ export default function AdminQuestionsPage() {
             {/* Các phương án trả lời */}
             {editingQuestion.answers && editingQuestion.answers.length > 0 && (
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-900 block">
+                <label className="text-xs font-bold text-slate-900 dark:text-white block">
                   Các phương án trả lời (Click chữ cái để đánh dấu đáp án đúng):
                 </label>
                 <div className="space-y-2">
@@ -1281,7 +1301,7 @@ export default function AdminQuestionsPage() {
                         }}
                         className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 transition-all ${ans.is_answer
                           ? 'bg-emerald-600 text-white shadow-xs'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
                           }`}
                       >
                         {ans.label || String.fromCharCode(65 + aIdx)}
@@ -1297,7 +1317,7 @@ export default function AdminQuestionsPage() {
                             answers: nextAnswers,
                           });
                         }}
-                        className="h-8.5 bg-slate-50 border-slate-200 text-xs text-slate-900 flex-1 focus:bg-white"
+                        className="h-8.5 bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white flex-1 focus:bg-white dark:focus:bg-slate-900"
                         placeholder={`Nội dung phương án ${ans.label}...`}
                       />
                     </div>
@@ -1307,9 +1327,9 @@ export default function AdminQuestionsPage() {
             )}
 
             {/* Lời giải chi tiết (Nâng cấp toàn diện với Toolbar Toán & Live Preview) */}
-            <div className="space-y-2 pt-2 border-t border-slate-100">
+            <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-900 block">
+                <label className="text-xs font-bold text-slate-900 dark:text-white block">
                   Lời giải chi tiết:
                 </label>
                 <span className="text-[11px] text-slate-400">
@@ -1340,7 +1360,7 @@ export default function AdminQuestionsPage() {
                   setEditingQuestion({ ...editingQuestion, explain: e.target.value })
                 }
                 placeholder="Nhập hướng dẫn giải, các bước giải hoặc phương pháp chi tiết..."
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 focus:outline-none focus:border-primary focus:bg-white font-sans"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 font-sans"
               />
             </div>
           </div>

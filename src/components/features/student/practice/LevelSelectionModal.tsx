@@ -100,12 +100,12 @@ const DURATION_OPTIONS: DurationOption[] = [
 ];
 
 const LEVEL_ICONS: Record<PracticeLevel, React.ReactNode> = {
-  BASIC: <BookOpen className="w-5 h-5 text-emerald-500" />,
-  MEDIUM: <Award className="w-5 h-5 text-sky-500" />,
-  ADVANCED: <Flame className="w-5 h-5 text-purple-500" />,
-  PROVINCIAL_EXCELLENT: <Trophy className="w-5 h-5 text-amber-500" />,
-  NATIONAL_EXCELLENT: <Crown className="w-5 h-5 text-rose-500" />,
-  ASSESSMENT: <Sparkles className="w-5 h-5 text-[#00B8DD]" />,
+  BASIC: <BookOpen className="w-5 h-5" />,
+  MEDIUM: <Award className="w-5 h-5" />,
+  ADVANCED: <Flame className="w-5 h-5" />,
+  PROVINCIAL_EXCELLENT: <Trophy className="w-5 h-5" />,
+  NATIONAL_EXCELLENT: <Crown className="w-5 h-5" />,
+  ASSESSMENT: <Sparkles className="w-5 h-5" />,
 };
 
 export function LevelSelectionModal({
@@ -231,7 +231,7 @@ export function LevelSelectionModal({
       badge: 'Chẩn Đoán Nhanh',
       tagline: 'Phân tích trình độ học tập',
       description: 'Bài kiểm tra chẩn đoán năng lực 15 phút.',
-      badgeColor: 'bg-sky-100 text-[#007D99] border-sky-300',
+      badgeColor: 'bg-sky-100 text-[#007D99] border-sky-300 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800',
       gradient: 'from-[#00B8DD] to-indigo-600',
       pointsReward: 30,
       totalExams: 1,
@@ -339,7 +339,7 @@ export function LevelSelectionModal({
         isOpen={isOpen}
         onClose={onClose}
         maxWidth="5xl"
-        className="w-full sm:w-[940px] md:w-[980px] lg:w-[1020px] max-w-[96vw] h-[88vh] sm:h-[700px] max-h-[720px]"
+        className="w-full sm:w-[860px] md:w-[900px] lg:w-[940px] max-w-[95vw] h-auto max-h-[82vh] md:max-h-[78vh] lg:max-h-[74vh] p-4 sm:p-5"
         title={
           <div className="flex items-center gap-3">
             <div
@@ -411,9 +411,9 @@ export function LevelSelectionModal({
                           className={cn(
                             'h-7 sm:h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 transition-all select-none px-2 sm:px-3 gap-1.5',
                             isCurrent
-                              ? 'bg-[#00B8DD] text-slate-950 ring-4 ring-[#00B8DD]/25 shadow-md shadow-[#00B8DD]/30 scale-102'
+                              ? 'bg-[#00B8DD] text-white ring-4 ring-[#00B8DD]/25 shadow-md shadow-[#00B8DD]/30 scale-102'
                               : isReached
-                              ? 'bg-[#00B8DD] text-slate-950 shadow-xs'
+                              ? 'bg-[#00B8DD] text-white shadow-xs'
                               : isUnlocked
                               ? 'bg-white dark:bg-slate-900 border-2 border-[#00B8DD]/70 text-[#007D99] dark:text-[#00B8DD]'
                               : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700',
@@ -570,7 +570,7 @@ export function LevelSelectionModal({
                       <button
                         type="button"
                         onClick={handleGoForward}
-                        className="px-2.5 py-1 rounded-xl bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold flex items-center gap-1 transition-all cursor-pointer text-xs shadow-2xs hover:scale-102 active:scale-98"
+                        className="px-2.5 py-1 rounded-xl bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold flex items-center gap-1 transition-all cursor-pointer text-xs shadow-2xs hover:scale-102 active:scale-98"
                         title="Kế tiếp (bước đã mở)"
                       >
                         Kế tiếp
@@ -589,10 +589,10 @@ export function LevelSelectionModal({
           {/* STEP 1: CHỌN CẤP ĐỘ                                                       */}
           {/* ========================================================================= */}
           {currentStep === 'LEVEL' && (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-2.5">
               {/* 0. Trạng thái năng lực đã xác định (nếu đã login và đã có kết quả đánh giá) */}
               {effectiveIsLoggedIn && hasAssessedCompetency && (
-                <div className="p-3.5 rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/70 dark:bg-emerald-950/30 flex items-center justify-between gap-3 text-xs">
+                <div className="p-2.5 sm:p-3 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/70 dark:bg-emerald-950/30 flex items-center justify-between gap-3 text-xs">
                   <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 min-w-0">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                     <span className="truncate">
@@ -615,14 +615,14 @@ export function LevelSelectionModal({
                 <div
                   onClick={handleSelectAssessment}
                   className={cn(
-                    'p-4 sm:p-5 rounded-2xl border transition-all flex items-center justify-between gap-4 cursor-pointer group relative overflow-hidden',
+                    'p-3 sm:p-3.5 rounded-xl border transition-all flex items-center justify-between gap-3 cursor-pointer group relative overflow-hidden',
                     'border-[#00B8DD]/50 hover:border-[#00B8DD] hover:shadow-lg hover:shadow-[#00B8DD]/10',
                     'bg-gradient-to-r from-[#00B8DD]/[0.08] via-sky-50/60 to-indigo-50/40 dark:from-[#00B8DD]/15 dark:via-slate-900 dark:to-indigo-950/20'
                   )}
                 >
-                  <div className="flex items-center gap-4 min-w-0 flex-1">
-                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[#00B8DD] to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-[#00B8DD]/25 group-hover:scale-105 transition-transform">
-                      <Sparkles className="w-6 h-6 text-white" />
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-gradient-to-br from-[#00B8DD] to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-[#00B8DD]/25 group-hover:scale-105 transition-transform">
+                      <Sparkles className="w-5 h-5 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -634,7 +634,7 @@ export function LevelSelectionModal({
                           Chẩn Đoán Nhanh
                         </span>
                       </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed sm:line-clamp-none line-clamp-2">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed line-clamp-1 sm:line-clamp-2">
                         Làm bài test ngắn 15 phút để AI chẩn đoán trình độ và gợi ý lộ trình luyện thi chuẩn xác nhất.
                       </p>
                     </div>
@@ -653,64 +653,28 @@ export function LevelSelectionModal({
               {/* 1 -> 5: Danh Sách Cấp Độ Mục Tiêu (Cơ Bản -> HSG Quốc Gia) */}
               {PRACTICE_LEVELS.map((level) => {
                 const icon = LEVEL_ICONS[level.id];
-                const isFree = level.id === 'BASIC' || level.id === 'MEDIUM';
 
                 return (
                   <div
                     key={level.id}
                     onClick={() => handleSelectLevel(level)}
-                    className={cn(
-                      'p-4 sm:p-4.5 rounded-2xl border transition-all flex items-center justify-between gap-4 cursor-pointer group',
-                      'hover:border-[#00B8DD] hover:shadow-md bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800',
-                      !effectiveIsLoggedIn && !isFree && 'hover:border-amber-400'
-                    )}
+                    className="p-2.5 sm:p-3 rounded-xl border transition-all flex items-center justify-between gap-3 cursor-pointer group bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-[#00B8DD] hover:shadow-md"
                   >
-                    <div className="flex items-center gap-4 min-w-0 flex-1">
-                      <div className="h-11 w-11 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="h-9 w-9 sm:h-9.5 sm:w-9.5 rounded-xl bg-[#00B8DD]/10 text-[#007D99] dark:text-[#00B8DD] flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-[#00B8DD] group-hover:text-white transition-all">
                         {icon}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white group-hover:text-[#00B8DD] transition-colors">
-                            {level.name}
-                          </h4>
-                          <span
-                            className={cn(
-                              'text-[10px] font-bold px-2.5 py-0.5 rounded-full border shrink-0',
-                              level.badgeColor
-                            )}
-                          >
-                            {level.badge}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed sm:line-clamp-none line-clamp-2">
+                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-[#00B8DD] transition-colors">
+                          {level.name}
+                        </h4>
+                        <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed line-clamp-1 sm:line-clamp-2">
                           {level.description}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      {isFree ? (
-                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          Luyện Thử
-                        </span>
-                      ) : level.id === 'PROVINCIAL_EXCELLENT' || level.id === 'NATIONAL_EXCELLENT' ? (
-                        <span className="text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
-                          <Trophy className="w-3.5 h-3.5 text-amber-500" />
-                          Xem Đề HSG
-                        </span>
-                      ) : effectiveIsLoggedIn ? (
-                        <span className="text-xs font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
-                          <Flame className="w-3.5 h-3.5 text-purple-500" />
-                          Luyện Ngay
-                        </span>
-                      ) : (
-                        <span className="text-xs font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
-                          <Lock className="w-3.5 h-3.5 text-amber-500" />
-                          Cần Login
-                        </span>
-                      )}
+                    <div className="flex items-center shrink-0">
                       <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#00B8DD] group-hover:translate-x-1 transition-all" />
                     </div>
                   </div>
@@ -807,7 +771,7 @@ export function LevelSelectionModal({
                             onClose();
                             router.push(targetUrl);
                           }}
-                          className="bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold rounded-xl text-xs px-4 shadow-md shadow-[#00B8DD]/20"
+                          className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold rounded-xl text-xs px-4 shadow-md shadow-[#00B8DD]/20"
                           rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
                         >
                           Vào Phòng Thi Ngay
@@ -870,7 +834,7 @@ export function LevelSelectionModal({
           {/* ========================================================================= */}
           {currentStep === 'GRADE' && (
             <div className="space-y-4">
-              {isAssessmentMode ? (
+              {isAssessmentMode && (
                 <div className="p-3.5 rounded-2xl bg-gradient-to-r from-sky-50 to-indigo-50/60 dark:from-sky-950/40 dark:to-indigo-950/20 border border-sky-200 dark:border-sky-800 text-xs text-sky-900 dark:text-sky-200 flex items-center gap-3">
                   <div className="h-8 w-8 rounded-xl bg-[#00B8DD]/20 text-[#007D99] dark:text-[#00B8DD] flex items-center justify-center shrink-0">
                     <Sparkles className="w-4 h-4 text-[#00B8DD]" />
@@ -879,11 +843,6 @@ export function LevelSelectionModal({
                     <span className="font-bold">Đánh Giá Năng Lực Môn {subject.name}:</span> Chọn khối lớp bạn đang học để hệ thống cấp đề kiểm tra chẩn đoán 15 phút (10 câu hỏi bao quát chương trình).
                   </div>
                 </div>
-              ) : (
-                <p className="text-xs text-slate-500">
-                  Chọn lớp học bạn muốn luyện đề. Bộ đề mẫu chuẩn GDPT 2018 hiện đã sẵn sàng tại{' '}
-                  <strong className="text-[#007D99] dark:text-[#00B8DD]">Lớp 12</strong>.
-                </p>
               )}
 
               {/* Group THPT (10, 11, 12) */}
@@ -894,7 +853,6 @@ export function LevelSelectionModal({
                 <div className="grid grid-cols-3 gap-3">
                   {[10, 11, 12].map((g) => {
                     const isSelected = selectedGrade === g;
-                    const isDemo = g === 12;
 
                     return (
                       <div
@@ -910,11 +868,6 @@ export function LevelSelectionModal({
                         <span className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-[#00B8DD] transition-colors">
                           Lớp {g}
                         </span>
-                        {isDemo && (
-                          <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black text-[9px] shadow-2xs">
-                            ⭐ Demo
-                          </span>
-                        )}
                       </div>
                     );
                   })}
@@ -1030,21 +983,13 @@ export function LevelSelectionModal({
                           <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white group-hover:text-[#00B8DD] transition-colors">
                             {ch.name}
                           </h4>
-                          {ch.isDemoReady && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400 shrink-0 border border-emerald-300">
-                              Đủ 3 dạng đề ⭐
-                            </span>
-                          )}
                         </div>
                         <p className="text-xs text-slate-500 leading-relaxed sm:line-clamp-none line-clamp-2">
                           {ch.description}
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-2.5 shrink-0">
-                        <span className="text-xs text-slate-400 font-medium">
-                          {ch.examCount} đề
-                        </span>
+                      <div className="flex items-center shrink-0">
                         <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#00B8DD] group-hover:translate-x-1 transition-all" />
                       </div>
                     </div>
@@ -1204,7 +1149,7 @@ export function LevelSelectionModal({
                         className={cn(
                           'px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer',
                           quizCount === num
-                            ? 'bg-[#00B8DD] text-slate-950 shadow-xs'
+                            ? 'bg-[#00B8DD] text-white shadow-xs'
                             : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-[#00B8DD]'
                         )}
                       >
@@ -1260,7 +1205,7 @@ export function LevelSelectionModal({
                         className={cn(
                           'px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer',
                           essayCount === num
-                            ? 'bg-[#00B8DD] text-slate-950 shadow-xs'
+                            ? 'bg-[#00B8DD] text-white shadow-xs'
                             : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-[#00B8DD]'
                         )}
                       >
@@ -1321,7 +1266,7 @@ export function LevelSelectionModal({
                             className={cn(
                               'px-2 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer',
                               quizCount === num
-                                ? 'bg-[#00B8DD] text-slate-950'
+                                ? 'bg-[#00B8DD] text-white'
                                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-[#00B8DD]'
                             )}
                           >
@@ -1367,7 +1312,7 @@ export function LevelSelectionModal({
                             className={cn(
                               'px-2 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer',
                               essayCount === num
-                                ? 'bg-[#00B8DD] text-slate-950'
+                                ? 'bg-[#00B8DD] text-white'
                                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-[#00B8DD]'
                             )}
                           >
@@ -1404,7 +1349,7 @@ export function LevelSelectionModal({
                     setMaxStepReached((prev) => Math.max(prev, 5));
                     setCurrentStep('DURATION');
                   }}
-                  className="bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-black rounded-xl text-sm shadow-lg shadow-[#00B8DD]/25 shrink-0"
+                  className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-black rounded-xl text-sm shadow-lg shadow-[#00B8DD]/25 shrink-0"
                   rightIcon={<ArrowRight className="w-4 h-4" />}
                 >
                   Tiếp Tục: Chọn Thời Gian ➔
@@ -1439,18 +1384,15 @@ export function LevelSelectionModal({
                     >
                       <div>
                         <div className="flex items-center justify-between gap-1 mb-2">
-                          <span className={cn('text-[10px] font-black px-2 py-0.5 rounded-full border', opt.badgeColor)}>
-                            {opt.badge}
-                          </span>
+                          <div className="text-base sm:text-lg font-black text-slate-900 dark:text-white group-hover:text-[#00B8DD] transition-colors flex items-center gap-1.5">
+                            <Clock className="w-4 h-4 text-[#00B8DD]" />
+                            {opt.label}
+                          </div>
                           {isSelected && (
-                            <div className="w-5 h-5 rounded-full bg-[#00B8DD] text-slate-950 flex items-center justify-center shrink-0">
+                            <div className="w-5 h-5 rounded-full bg-[#00B8DD] text-white flex items-center justify-center shrink-0">
                               <Check className="w-3 h-3 stroke-[3]" />
                             </div>
                           )}
-                        </div>
-                        <div className="text-base sm:text-lg font-black text-slate-900 dark:text-white group-hover:text-[#00B8DD] transition-colors flex items-center gap-1.5 mt-1">
-                          <Clock className="w-4 h-4 text-[#00B8DD]" />
-                          {opt.label}
                         </div>
                         <p className="text-[11px] text-slate-500 mt-1 leading-snug line-clamp-3">
                           {opt.desc}
@@ -1462,60 +1404,6 @@ export function LevelSelectionModal({
                     </div>
                   );
                 })}
-              </div>
-
-              {/* Đề Xuất Lộ Trình & Khóa Học Bổ Trợ Sau Khi Thiết Lập Ma Trận */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-sky-50/70 via-indigo-50/50 to-emerald-50/50 dark:from-slate-900 dark:via-indigo-950/20 dark:to-slate-900 border border-[#00B8DD]/30 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-[#00B8DD]" />
-                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
-                      Đề Xuất Bổ Trợ Dành Cho Bạn Theo Ma Trận Đã Chọn
-                    </h4>
-                  </div>
-                  <span className="text-[10px] font-bold text-slate-500">Cá nhân hóa theo môn {subject.name}</span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-                  {/* Card 1: Bài viết trọng tâm */}
-                  <div className="p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 space-y-1">
-                    <span className="text-[10px] font-bold text-sky-600 dark:text-sky-400 flex items-center gap-1">
-                      <BookOpen className="w-3 h-3" /> Cẩm Nang Ôn Thi
-                    </span>
-                    <h5 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
-                      Bí quyết giải nhanh trắc nghiệm 30s môn {subject.name}
-                    </h5>
-                    <p className="text-[10px] text-slate-500 line-clamp-2">
-                      Sơ đồ tư duy và công thức then chốt giúp ôn lại kiến thức cốt lõi chỉ trong 3 phút.
-                    </p>
-                  </div>
-
-                  {/* Card 2: Khóa học bổ trợ */}
-                  <div className="p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 space-y-1">
-                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                      <Award className="w-3 h-3" /> Khóa Học Video Bổ Trợ
-                    </span>
-                    <h5 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
-                      Chuyên đề củng cố kiến thức hổng {subject.name}
-                    </h5>
-                    <p className="text-[10px] text-slate-500 line-clamp-2">
-                      Giảng viên đối tác • 18 video bài giảng • Học thử miễn phí không áp lực.
-                    </p>
-                  </div>
-
-                  {/* Card 3: Lộ trình rèn luyện */}
-                  <div className="p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 space-y-1">
-                    <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1">
-                      <Trophy className="w-3 h-3" /> Lộ Trình Mục Tiêu
-                    </span>
-                    <h5 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
-                      Mục tiêu 8.5+ Điểm Thi Học Kỳ & THPT
-                    </h5>
-                    <p className="text-[10px] text-slate-500 line-clamp-2">
-                      Cấp độ: {selectedLevel.name} • Thi &gt; 8.5 nhận +1đ, đạt 10 nhận +2đ thưởng 💎.
-                    </p>
-                  </div>
-                </div>
               </div>
 
               {/* Ready summary bar & Start exam button */}
@@ -1535,7 +1423,7 @@ export function LevelSelectionModal({
 
                 <Button
                   onClick={handleStartExam}
-                  className="bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-black rounded-xl text-sm shadow-lg shadow-[#00B8DD]/25 shrink-0"
+                  className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-black rounded-xl text-sm shadow-lg shadow-[#00B8DD]/25 shrink-0"
                   rightIcon={<ArrowRight className="w-4 h-4" />}
                 >
                   Vào Phòng Thi Ngay

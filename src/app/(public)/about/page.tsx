@@ -69,7 +69,7 @@ export default function AboutPage() {
       {/* ── HERO SECTION ── */}
       <div className="text-center max-w-3xl mx-auto space-y-4">
         <motion.div {...fadeUp(0)}>
-          <Badge variant="primary" className="bg-[#00B8DD] text-slate-950 font-bold mb-3">
+          <Badge variant="primary" className="bg-[#00B8DD] text-white font-bold mb-3">
             VỀ CHÚNG TÔI • SCHOOLIFY VIỆT NAM
           </Badge>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
@@ -136,7 +136,7 @@ export default function AboutPage() {
           <Card className="p-6 sm:p-8 rounded-3xl bg-slate-900 text-white border-slate-800 shadow-2xl relative overflow-hidden space-y-6">
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#00B8DD]/20 blur-3xl rounded-full pointer-events-none" />
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-2xl bg-[#00B8DD] flex items-center justify-center text-slate-950 font-black">
+              <div className="h-10 w-10 rounded-2xl bg-[#00B8DD] flex items-center justify-center text-white font-black">
                 <ShieldCheck className="w-5 h-5" />
               </div>
               <div>
@@ -158,7 +158,7 @@ export default function AboutPage() {
       {/* ── 4 CORE PILLARS ── */}
       <div className="space-y-8">
         <div className="text-center max-w-2xl mx-auto space-y-3">
-          <Badge variant="primary" className="bg-[#00B8DD] text-slate-950 font-bold">
+          <Badge variant="primary" className="bg-[#00B8DD] text-white font-bold">
             TRỤ CỘT CÔNG NGHỆ
           </Badge>
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
@@ -204,7 +204,7 @@ export default function AboutPage() {
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
           <Link href="/#kho-mon-hoc">
-            <Button className="bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-black rounded-xl px-6" rightIcon={<ArrowRight className="w-4 h-4" />}>
+            <Button className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-black rounded-xl px-6" rightIcon={<ArrowRight className="w-4 h-4" />}>
               Bắt Đầu Luyện Đề Miễn Phí
             </Button>
           </Link>

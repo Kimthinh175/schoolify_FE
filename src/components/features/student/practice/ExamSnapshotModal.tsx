@@ -53,7 +53,7 @@ export function ExamSnapshotModal({ isOpen, onClose, snapshot }: ExamSnapshotMod
       footer={
         <Button
           onClick={onClose}
-          className="bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold px-6 rounded-xl cursor-pointer"
+          className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold px-6 rounded-xl cursor-pointer"
         >
           Đóng
         </Button>
@@ -98,7 +98,7 @@ export function ExamSnapshotModal({ isOpen, onClose, snapshot }: ExamSnapshotMod
             className={cn(
               'px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5',
               activeTab === 'ORIGINAL'
-                ? 'bg-[#00B8DD] text-slate-950 shadow-md shadow-[#00B8DD]/20'
+                ? 'bg-[#00B8DD] text-white shadow-md shadow-[#00B8DD]/20'
                 : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
             )}
           >
@@ -112,7 +112,7 @@ export function ExamSnapshotModal({ isOpen, onClose, snapshot }: ExamSnapshotMod
               className={cn(
                 'px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5',
                 activeTab === 'REMEDIATION'
-                  ? 'bg-[#00B8DD] text-slate-950 shadow-md shadow-[#00B8DD]/20'
+                  ? 'bg-[#00B8DD] text-white shadow-md shadow-[#00B8DD]/20'
                   : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
               )}
             >

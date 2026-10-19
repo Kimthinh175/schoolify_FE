@@ -200,8 +200,8 @@ export function InlineCorrectionTable({
   return (
     <div className="space-y-4">
       {/* Thanh công cụ thống kê & Bộ lọc */}
-      <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-white border border-slate-200/80 shadow-xs">
-        <div className="flex items-center gap-2">
+      <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             size="sm"
             variant={filterMode === 'ALL' ? 'default' : 'outline'}
@@ -209,7 +209,7 @@ export function InlineCorrectionTable({
             className={`text-xs ${
               filterMode === 'ALL'
                 ? 'bg-primary text-white'
-                : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             Tất cả ({totalCount})
@@ -230,7 +230,7 @@ export function InlineCorrectionTable({
             className={`text-xs gap-1.5 ${
               filterMode === 'VALID'
                 ? 'bg-emerald-600 text-white'
-                : 'text-emerald-700 border-emerald-200 bg-emerald-50 hover:bg-emerald-100'
+                : 'text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50'
             }`}
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
@@ -238,12 +238,12 @@ export function InlineCorrectionTable({
           </Button>
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
           <Button
             size="sm"
             variant="ghost"
             onClick={onReset}
-            className="text-slate-500 hover:text-slate-800 text-xs gap-1"
+            className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 text-xs gap-1"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             Nhập file khác
@@ -271,53 +271,53 @@ export function InlineCorrectionTable({
               key={q.id}
               className={`p-5 transition-all shadow-xs ${
                 q.hasError
-                  ? 'bg-rose-50/40 border-rose-300 ring-1 ring-rose-200'
-                  : 'bg-white border-slate-200/90'
+                  ? 'bg-rose-50/40 dark:bg-rose-950/30 border-rose-300 dark:border-rose-800 ring-1 ring-rose-200 dark:ring-rose-900'
+                  : 'bg-white dark:bg-slate-900 border-slate-200/90 dark:border-slate-800'
               }`}
             >
               {/* Header câu hỏi: Trạng thái Hợp lệ/Lỗi ở bên trái nhận diện, Nút Bỏ câu ở ngoài cùng bên phải */}
-              <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-100 mb-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800 mb-3">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold text-sm text-slate-900">
+                  <span className="font-bold text-sm text-slate-900 dark:text-white">
                     Câu #{q.originalIndex}
                   </span>
 
                   {/* Trạng thái lỗi / Hợp lệ: Đặt ngay cạnh số thứ tự câu hỏi */}
                   {q.hasError ? (
-                    <Badge className="bg-red-100 text-red-700 border-red-200 text-[11px] gap-1 font-semibold">
-                      <AlertTriangle className="w-3 h-3 text-red-600" />
+                    <Badge className="bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800 text-[11px] gap-1 font-semibold">
+                      <AlertTriangle className="w-3 h-3 text-red-600 dark:text-red-400" />
                       {q.errorReason || 'Có lỗi định dạng'}
                     </Badge>
                   ) : (
-                    <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-[11px] gap-1 font-semibold">
-                      <Check className="w-3 h-3 text-emerald-600" />
+                    <Badge className="bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 text-[11px] gap-1 font-semibold">
+                      <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                       Hợp lệ
                     </Badge>
                   )}
 
                   <Badge
                     variant="outline"
-                    className="text-[10px] bg-slate-100 text-slate-700 border-slate-200 font-medium"
+                    className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 font-medium"
                   >
                     {q.type}
                   </Badge>
                   <Badge
                     variant="outline"
-                    className="text-[10px] text-amber-700 bg-amber-50 border-amber-200 font-medium"
+                    className="text-[10px] text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800 font-medium"
                   >
                     {q.chapter || 'Chương chung'}
                   </Badge>
                 </div>
 
                 {/* Nhóm nút hành động: Nút Bỏ câu nằm ngoài cùng bên phải */}
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
                   {/* Selector Độ khó nhanh */}
                   <select
                     value={q.difficulty || 'UNDERSTANDING'}
                     onChange={(e) =>
                       handleChangeDifficulty(originalIdx, e.target.value as DifficultyLevel)
                     }
-                    className="bg-white border border-slate-200 text-xs rounded-lg px-2.5 py-1 text-slate-700 focus:outline-none focus:border-primary font-medium"
+                    className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-lg px-2.5 py-1 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-primary font-medium"
                   >
                     <option value="RECOGNITION">Nhận biết</option>
                     <option value="UNDERSTANDING">Thông hiểu</option>
@@ -330,7 +330,7 @@ export function InlineCorrectionTable({
                     size="sm"
                     variant="outline"
                     onClick={() => handleOpenEditModal(q)}
-                    className="h-7 text-xs px-2.5 gap-1 border-slate-200 hover:border-primary hover:text-primary font-medium bg-white"
+                    className="h-7 text-xs px-2.5 gap-1 border-slate-200 dark:border-slate-700 hover:border-primary hover:text-primary font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200"
                   >
                     <Pencil className="w-3 h-3" />
                     Sửa chi tiết
@@ -341,7 +341,7 @@ export function InlineCorrectionTable({
                     size="sm"
                     variant="ghost"
                     onClick={() => setQuestionToDelete(q)}
-                    className="h-7 px-2.5 text-xs text-rose-500 hover:text-rose-700 hover:bg-rose-50 gap-1 border border-rose-100 hover:border-rose-200 transition-colors"
+                    className="h-7 px-2.5 text-xs text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 gap-1 border border-rose-100 dark:border-rose-900/50 hover:border-rose-200 dark:hover:border-rose-800 transition-colors"
                     title="Bỏ câu hỏi này khỏi danh sách import"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -353,7 +353,7 @@ export function InlineCorrectionTable({
               {/* Nội dung câu hỏi (Hiển thị render KaTeX và input sửa nhanh) */}
               <div className="space-y-1.5 mb-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-slate-600">
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
                     Nội dung câu hỏi:
                   </label>
                   <span className="text-[10px] text-slate-400">
@@ -363,12 +363,12 @@ export function InlineCorrectionTable({
                 <Input
                   value={q.content}
                   onChange={(e) => handleEditContent(originalIdx, e.target.value)}
-                  className="bg-white border-slate-200 text-slate-900 text-xs focus:border-primary font-sans"
+                  className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:border-primary font-sans"
                 />
 
                 {/* Render KaTeX công thức toán ngay trên thẻ câu hỏi */}
                 {q.content.includes('$') && (
-                  <div className="p-2.5 rounded-lg bg-slate-50/80 border border-slate-200/80 text-xs text-slate-800">
+                  <div className="p-2.5 rounded-lg bg-slate-50/80 dark:bg-slate-950/80 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200">
                     <span className="text-[10px] font-bold text-slate-400 block mb-0.5">
                       Hiển thị công thức:
                     </span>
@@ -380,24 +380,24 @@ export function InlineCorrectionTable({
               {/* Hình ảnh minh họa (nếu có hoặc nút thêm ảnh nhanh) */}
               <div className="mb-3">
                 {q.image_url ? (
-                  <div className="flex items-center gap-3 p-2 bg-slate-50 border border-slate-200 rounded-xl w-fit">
+                  <div className="flex items-center gap-3 p-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl w-fit">
                     <img
                       src={q.image_url}
                       alt={`Minh họa câu #${q.originalIndex}`}
-                      className="max-h-24 rounded-lg border border-slate-200 object-contain bg-white"
+                      className="max-h-24 rounded-lg border border-slate-200 dark:border-slate-800 object-contain bg-white dark:bg-slate-900"
                     />
                     <Button
                       size="sm"
                       variant="ghost"
                       onClick={() => handleAttachImage(originalIdx, null)}
-                      className="text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 h-7 px-2 gap-1"
+                      className="text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 h-7 px-2 gap-1"
                     >
                       <Trash2 className="w-3 h-3" />
                       Gỡ ảnh
                     </Button>
                   </div>
                 ) : (
-                  <label className="cursor-pointer inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-primary transition-colors py-1 shrink-0">
+                  <label className="cursor-pointer inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-primary transition-colors py-1 shrink-0">
                     <input
                       type="file"
                       accept="image/*"
@@ -424,7 +424,7 @@ export function InlineCorrectionTable({
               {/* Danh sách phương án & Nút chọn đáp án đúng tức thì */}
               {q.answers && q.answers.length > 0 && (
                 <div className="space-y-2">
-                  <span className="text-xs font-semibold text-slate-600">
+                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
                     Các phương án (Click vào chữ cái để chọn/bỏ đáp án đúng):
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -434,15 +434,15 @@ export function InlineCorrectionTable({
                         onClick={() => handleToggleAnswer(originalIdx, aIdx)}
                         className={`flex items-center gap-2.5 p-2.5 rounded-xl cursor-pointer border transition-all ${
                           ans.is_answer
-                            ? 'bg-emerald-50 text-emerald-900 border-emerald-300 font-semibold shadow-xs'
-                            : 'bg-slate-50 border-slate-200/80 text-slate-700 hover:border-slate-300 hover:bg-slate-100/50'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-900 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700 font-semibold shadow-xs'
+                            : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100/50 dark:hover:bg-slate-800/50'
                         }`}
                       >
                         <span
                           className={`w-5 h-5 rounded-md flex items-center justify-center text-xs font-bold shrink-0 ${
                             ans.is_answer
                               ? 'bg-emerald-600 text-white'
-                              : 'bg-slate-200 text-slate-600'
+                              : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                           }`}
                         >
                           {ans.label || String.fromCharCode(65 + aIdx)}
@@ -451,7 +451,7 @@ export function InlineCorrectionTable({
                           <MathRenderer content={ans.content} inline />
                         </div>
                         {ans.is_answer && (
-                          <Check className="w-3.5 h-3.5 ml-auto text-emerald-600 shrink-0" />
+                          <Check className="w-3.5 h-3.5 ml-auto text-emerald-600 dark:text-emerald-400 shrink-0" />
                         )}
                       </div>
                     ))}
@@ -461,8 +461,8 @@ export function InlineCorrectionTable({
 
               {/* Lời giải chi tiết nếu có */}
               {q.explain && (
-                <div className="mt-2.5 text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
-                  <span className="text-sky-700 font-semibold">Lời giải: </span>
+                <div className="mt-2.5 text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                  <span className="text-sky-700 dark:text-sky-400 font-semibold">Lời giải: </span>
                   <MathRenderer content={q.explain} inline />
                 </div>
               )}
@@ -486,7 +486,7 @@ export function InlineCorrectionTable({
           isOpen={Boolean(editingQuestion)}
           onClose={() => setEditingQuestion(null)}
           title={
-            <div className="flex items-center gap-2 text-base font-bold text-slate-900">
+            <div className="flex items-center gap-2 text-base font-bold text-slate-900 dark:text-white">
               <Pencil className="w-4 h-4 text-primary" />
               Chỉnh Sửa Chi Tiết - Câu #{editingQuestion.originalIndex}
             </div>
@@ -499,7 +499,7 @@ export function InlineCorrectionTable({
                 variant="outline"
                 size="sm"
                 onClick={() => setEditingQuestion(null)}
-                className="text-xs border-slate-200"
+                className="text-xs border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
               >
                 Hủy bỏ
               </Button>
@@ -516,9 +516,9 @@ export function InlineCorrectionTable({
         >
           <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
             {/* Phân loại & Metadata */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
               <div>
-                <label className="font-semibold text-slate-600 block mb-1">Mức độ nhận thức:</label>
+                <label className="font-semibold text-slate-600 dark:text-slate-400 block mb-1">Mức độ nhận thức:</label>
                 <select
                   value={editingQuestion.difficulty || 'UNDERSTANDING'}
                   onChange={(e) =>
@@ -527,7 +527,7 @@ export function InlineCorrectionTable({
                       difficulty: e.target.value as DifficultyLevel,
                     })
                   }
-                  className="w-full bg-white border border-slate-200 rounded-lg p-2 font-medium"
+                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-lg p-2 font-medium"
                 >
                   <option value="RECOGNITION">Nhận biết</option>
                   <option value="UNDERSTANDING">Thông hiểu</option>
@@ -537,19 +537,19 @@ export function InlineCorrectionTable({
               </div>
 
               <div>
-                <label className="font-semibold text-slate-600 block mb-1">Chương / Chuyên đề:</label>
+                <label className="font-semibold text-slate-600 dark:text-slate-400 block mb-1">Chương / Chuyên đề:</label>
                 <Input
                   value={editingQuestion.chapter || ''}
                   onChange={(e) =>
                     setEditingQuestion({ ...editingQuestion, chapter: e.target.value })
                   }
                   placeholder="Ví dụ: Khảo sát hàm số"
-                  className="h-8.5 bg-white border-slate-200 text-xs"
+                  className="h-8.5 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs"
                 />
               </div>
 
               <div>
-                <label className="font-semibold text-slate-600 block mb-1">Điểm số:</label>
+                <label className="font-semibold text-slate-600 dark:text-slate-400 block mb-1">Điểm số:</label>
                 <Input
                   type="number"
                   step="0.05"
@@ -560,7 +560,7 @@ export function InlineCorrectionTable({
                       points: parseFloat(e.target.value) || 0.25,
                     })
                   }
-                  className="h-8.5 bg-white border-slate-200 text-xs"
+                  className="h-8.5 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs"
                 />
               </div>
             </div>
@@ -568,7 +568,7 @@ export function InlineCorrectionTable({
             {/* Nội dung câu hỏi + Thanh ký tự Toán */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-900">Nội dung câu hỏi:</label>
+                <label className="text-xs font-bold text-slate-900 dark:text-white">Nội dung câu hỏi:</label>
                 <span className="text-[11px] text-slate-400">
                   Công thức bọc trong <code className="text-primary font-bold">$...$</code>
                 </span>
@@ -595,14 +595,14 @@ export function InlineCorrectionTable({
                 onChange={(e) =>
                   setEditingQuestion({ ...editingQuestion, content: e.target.value })
                 }
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs sm:text-sm text-slate-900 focus:outline-none focus:border-primary focus:bg-white font-sans"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 font-sans"
               />
             </div>
 
             {/* Hình ảnh minh họa */}
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+            <div className="p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                   <ImageIcon className="w-3.5 h-3.5 text-primary" />
                   Ảnh minh họa cho câu hỏi:
                 </span>
@@ -613,7 +613,7 @@ export function InlineCorrectionTable({
                     onClick={() =>
                       setEditingQuestion({ ...editingQuestion, image_url: undefined })
                     }
-                    className="h-6 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2 gap-1"
+                    className="h-6 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 px-2 gap-1"
                   >
                     <Trash2 className="w-3 h-3" />
                     Xóa ảnh
@@ -622,7 +622,7 @@ export function InlineCorrectionTable({
               </div>
 
               {editingQuestion.image_url ? (
-                <div className="p-2 bg-white rounded-lg border border-slate-200 w-fit">
+                <div className="p-2 bg-white dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 w-fit">
                   <img
                     src={editingQuestion.image_url}
                     alt="Minh họa"
@@ -630,7 +630,7 @@ export function InlineCorrectionTable({
                   />
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <label className="cursor-pointer shrink-0">
                     <input
                       type="file"
@@ -653,7 +653,7 @@ export function InlineCorrectionTable({
                         }
                       }}
                     />
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 shadow-2xs whitespace-nowrap shrink-0">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-2xs whitespace-nowrap shrink-0">
                       <UploadCloud className="w-3.5 h-3.5 text-primary" />
                       Tải ảnh lên từ thiết bị
                     </span>
@@ -661,7 +661,7 @@ export function InlineCorrectionTable({
 
                   <Input
                     placeholder="Hoặc dán URL ảnh tại đây..."
-                    className="h-8.5 text-xs bg-white border-slate-200 flex-1 min-w-0"
+                    className="h-8.5 text-xs bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white flex-1 min-w-[200px]"
                     onBlur={(e) => {
                       const val = e.target.value.trim();
                       if (val) {
@@ -680,7 +680,7 @@ export function InlineCorrectionTable({
             {/* Các phương án trả lời */}
             {editingQuestion.answers && editingQuestion.answers.length > 0 && (
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-900 block">
+                <label className="text-xs font-bold text-slate-900 dark:text-white block">
                   Các phương án trả lời (Click chữ cái để đánh dấu đáp án đúng):
                 </label>
                 <div className="space-y-2">
@@ -704,7 +704,7 @@ export function InlineCorrectionTable({
                         className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 transition-all ${
                           ans.is_answer
                             ? 'bg-emerald-600 text-white shadow-xs'
-                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
                         }`}
                       >
                         {ans.label || String.fromCharCode(65 + aIdx)}
@@ -720,7 +720,7 @@ export function InlineCorrectionTable({
                             answers: nextAnswers,
                           });
                         }}
-                        className="h-8.5 bg-slate-50 border-slate-200 text-xs text-slate-900 flex-1 focus:bg-white"
+                        className="h-8.5 bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white flex-1 focus:bg-white dark:focus:bg-slate-900"
                         placeholder={`Nội dung phương án ${ans.label}...`}
                       />
                     </div>
@@ -730,9 +730,9 @@ export function InlineCorrectionTable({
             )}
 
             {/* Lời giải chi tiết (Nâng cấp toàn diện với Toolbar Toán & Live Preview) */}
-            <div className="space-y-2 pt-2 border-t border-slate-100">
+            <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-900 block">
+                <label className="text-xs font-bold text-slate-900 dark:text-white block">
                   Lời giải chi tiết:
                 </label>
                 <span className="text-[11px] text-slate-400">
@@ -763,7 +763,7 @@ export function InlineCorrectionTable({
                   setEditingQuestion({ ...editingQuestion, explain: e.target.value })
                 }
                 placeholder="Nhập hướng dẫn giải, các bước giải hoặc phương pháp chi tiết..."
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 focus:outline-none focus:border-primary focus:bg-white font-sans"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 font-sans"
               />
             </div>
           </div>
@@ -776,8 +776,8 @@ export function InlineCorrectionTable({
           isOpen={Boolean(questionToDelete)}
           onClose={() => setQuestionToDelete(null)}
           title={
-            <div className="flex items-center gap-2 text-base font-bold text-rose-600">
-              <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+            <div className="flex items-center gap-2 text-base font-bold text-rose-600 dark:text-rose-400">
+              <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
               Xác Nhận Loại Bỏ Câu Hỏi
             </div>
           }
@@ -789,7 +789,7 @@ export function InlineCorrectionTable({
                 variant="outline"
                 size="sm"
                 onClick={() => setQuestionToDelete(null)}
-                className="text-xs border-slate-200"
+                className="text-xs border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
               >
                 Hủy bỏ
               </Button>
@@ -805,17 +805,17 @@ export function InlineCorrectionTable({
             </div>
           }
         >
-          <div className="p-3.5 bg-rose-50/60 rounded-xl border border-rose-200 text-xs text-slate-700 space-y-2">
-            <div className="font-bold text-rose-900 flex items-center justify-between">
+          <div className="p-3.5 bg-rose-50/60 dark:bg-rose-950/40 rounded-xl border border-rose-200 dark:border-rose-800 text-xs text-slate-700 dark:text-slate-300 space-y-2">
+            <div className="font-bold text-rose-900 dark:text-rose-200 flex items-center justify-between">
               <span>Câu #{questionToDelete.originalIndex} ({questionToDelete.type})</span>
-              <Badge variant="outline" className="text-[10px] bg-rose-100 text-rose-800 border-rose-200">
+              <Badge variant="outline" className="text-[10px] bg-rose-100 dark:bg-rose-900 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-800">
                 {questionToDelete.chapter || 'Chương chung'}
               </Badge>
             </div>
-            <div className="line-clamp-3 text-slate-600 italic bg-white p-2.5 rounded-lg border border-rose-100">
+            <div className="line-clamp-3 text-slate-600 dark:text-slate-300 italic bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-rose-100 dark:border-rose-900/50">
               &ldquo;{questionToDelete.content || '(Chưa có nội dung)'}&rdquo;
             </div>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
               Bạn có thể nhập lại câu này sau từ file nguồn nếu cần.
             </p>
           </div>

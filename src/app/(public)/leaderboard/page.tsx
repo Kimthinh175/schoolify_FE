@@ -199,7 +199,7 @@ export default function LeaderboardPage() {
       {/* ── HEADER ── */}
       <div className="text-center max-w-3xl mx-auto space-y-3">
         <motion.div {...fadeUp(0)}>
-          <Badge variant="primary" className="bg-[#00B8DD] text-slate-950 font-bold mb-2">
+          <Badge variant="primary" className="bg-[#00B8DD] text-white font-bold mb-2">
             VINH DANH HỌC SINH XUẤT SẮC TOÀN QUỐC
           </Badge>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight flex items-center justify-center gap-3">
@@ -251,7 +251,7 @@ export default function LeaderboardPage() {
                 className={cn(
                   'px-3 py-1.5 rounded-lg font-bold transition-all whitespace-nowrap cursor-pointer',
                   selectedGrade === g.val
-                    ? 'bg-[#00B8DD] text-slate-950'
+                    ? 'bg-[#00B8DD] text-white'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
                 )}
               >
@@ -312,7 +312,7 @@ export default function LeaderboardPage() {
         <motion.div {...fadeUp(0)} className="order-1 md:order-2">
           <Card className="p-7 rounded-3xl border-2 border-amber-400/80 bg-gradient-to-b from-amber-50/60 via-white to-amber-50/40 dark:from-slate-850 dark:via-slate-900 dark:to-slate-850 text-center relative overflow-hidden shadow-2xl scale-105 z-10">
             <div className="absolute top-0 inset-x-0 h-3 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400" />
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-black shadow-sm mb-3">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 text-xs font-black shadow-sm mb-3">
               <Crown className="w-4 h-4 text-amber-600 fill-amber-500" />
               QUÁN QUÂN TOÀN QUỐC 🥇
             </div>
@@ -452,7 +452,7 @@ export default function LeaderboardPage() {
           </p>
         </div>
         <Link href="/#kho-mon-hoc">
-          <Button className="bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold rounded-xl shadow-md shrink-0" rightIcon={<ArrowRight className="w-4 h-4" />}>
+          <Button className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold rounded-xl shadow-md shrink-0" rightIcon={<ArrowRight className="w-4 h-4" />}>
             Bắt Đầu Luyện Ngay
           </Button>
         </Link>

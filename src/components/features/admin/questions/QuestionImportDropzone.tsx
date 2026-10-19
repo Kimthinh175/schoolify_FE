@@ -76,8 +76,8 @@ export function QuestionImportDropzone({ onParsedComplete }: QuestionImportDropz
       onClick={() => fileInputRef.current?.click()}
       className={`border-2 border-dashed rounded-3xl p-8 sm:p-12 text-center cursor-pointer transition-all duration-200 shadow-xs ${
         isDragging
-          ? 'border-primary bg-primary/5 scale-[0.99]'
-          : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50/50'
+          ? 'border-primary bg-primary/10 dark:bg-primary/20 scale-[0.99]'
+          : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-800/50'
       }`}
     >
       <input
@@ -91,36 +91,36 @@ export function QuestionImportDropzone({ onParsedComplete }: QuestionImportDropz
       {isProcessing ? (
         <div className="flex flex-col items-center justify-center space-y-3">
           <Loader2 className="w-10 h-10 text-primary animate-spin" />
-          <div className="text-sm font-bold text-slate-800">
+          <div className="text-sm font-bold text-slate-800 dark:text-slate-100">
             Đang phân tích cú pháp: {fileName}...
           </div>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Hệ thống đang quét regex, bóc tách đáp án đúng và kiểm tra lỗi định dạng.
           </p>
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shadow-xs transition-transform group-hover:scale-105">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 dark:bg-primary/20 text-primary flex items-center justify-center shadow-xs transition-transform group-hover:scale-105">
             <UploadCloud className="w-8 h-8" />
           </div>
 
           <div className="space-y-1">
-            <h3 className="font-bold text-base sm:text-lg text-slate-900">
+            <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-white">
               Kéo thả file câu hỏi vào đây hoặc{' '}
               <span className="text-primary underline font-semibold">chọn từ máy tính</span>
             </h3>
-            <p className="text-xs sm:text-sm text-slate-500">
-              Hỗ trợ Microsoft Excel (<span className="text-emerald-600 font-semibold">.xlsx</span>) và Microsoft Word (<span className="text-sky-600 font-semibold">.docx</span>)
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+              Hỗ trợ Microsoft Excel (<span className="text-emerald-600 dark:text-emerald-400 font-semibold">.xlsx</span>) và Microsoft Word (<span className="text-sky-600 dark:text-sky-400 font-semibold">.docx</span>)
             </p>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-xs text-slate-700 font-medium border border-slate-200">
-              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-300 font-medium border border-slate-200 dark:border-slate-700">
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               Tự động nhận diện cột Excel
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-xs text-slate-700 font-medium border border-slate-200">
-              <FileText className="w-3.5 h-3.5 text-sky-600" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-300 font-medium border border-slate-200 dark:border-slate-700">
+              <FileText className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
               Tự động nhận diện <u>Gạch chân</u> & Màu đỏ Word
             </span>
           </div>

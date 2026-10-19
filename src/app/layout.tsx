@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ExamSessionGuardProvider } from "@/components/providers/ExamSessionGuardProvider";
 import { Toaster } from "sonner";
 import { CasioCalculatorWidget } from "@/components/features/calculator";
+import { AgenticChatWidget } from "@/components/features/agent/AgenticChatWidget";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -71,6 +72,7 @@ export default function RootLayout({
           <ExamSessionGuardProvider>
             {children}
             <CasioCalculatorWidget />
+            <AgenticChatWidget />
             <Toaster richColors position="top-right" closeButton />
           </ExamSessionGuardProvider>
         </ThemeProvider>

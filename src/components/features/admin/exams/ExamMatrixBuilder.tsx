@@ -332,9 +332,9 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
   return (
     <div className="space-y-6">
       {/* 1. THÔNG TIN CHUNG & QUY MÔ ĐỀ THI */}
-      <Card className="p-5 sm:p-6 bg-white border border-slate-200/80 shadow-xs space-y-4">
-        <div className="border-b border-slate-100 pb-3">
-          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+      <Card className="p-5 sm:p-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+        <div className="border-b border-slate-100 dark:border-slate-800 pb-3">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-primary" />
             1. Thông Tin Chung & Quy Mô Đề Thi
           </h3>
@@ -343,26 +343,26 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
           {/* Tiêu đề đề thi */}
           <div className="sm:col-span-2">
-            <label className="text-xs font-semibold text-slate-700 block mb-1">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
               Tiêu đề đề thi / Bài kiểm tra:
             </label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Nhập tiêu đề đề thi..."
-              className="bg-slate-50 border-slate-200 text-xs text-slate-900 focus:bg-white"
+              className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900"
             />
           </div>
 
           {/* Môn học Dropdown */}
           <div>
-            <label className="text-xs font-semibold text-slate-700 block mb-1">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
               Môn học:
             </label>
             <select
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              className="w-full h-9 bg-slate-50 border border-slate-200 text-xs rounded-xl px-2.5 py-1.5 text-slate-900 font-semibold focus:bg-white focus:outline-none focus:border-primary"
+              className="w-full h-9 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-2.5 py-1.5 text-slate-900 dark:text-white font-semibold focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:border-primary"
             >
               {AVAILABLE_SUBJECTS.map((sub) => (
                 <option key={sub} value={sub}>
@@ -374,13 +374,13 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
 
           {/* Khối lớp Dropdown */}
           <div>
-            <label className="text-xs font-semibold text-slate-700 block mb-1">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
               Khối lớp:
             </label>
             <select
               value={gradeLevel}
               onChange={(e) => setGradeLevel(e.target.value)}
-              className="w-full h-9 bg-slate-50 border border-slate-200 text-xs rounded-xl px-2.5 py-1.5 text-slate-900 font-medium focus:bg-white focus:outline-none focus:border-primary"
+              className="w-full h-9 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-2.5 py-1.5 text-slate-900 dark:text-white font-medium focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:border-primary"
             >
               <optgroup label="THPT (Cấp 3)">
                 <option value="12">Lớp 12</option>
@@ -405,7 +405,7 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
 
           {/* Tổng số câu */}
           <div>
-            <label className="text-xs font-semibold text-slate-700 block mb-1">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
               Tổng số câu hỏi:
             </label>
             <Input
@@ -417,13 +417,13 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
                 const val = parseInt(e.target.value) || 10;
                 setTotalQuestions(val);
               }}
-              className="bg-slate-50 border-slate-200 text-xs text-slate-900 focus:bg-white"
+              className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900"
             />
           </div>
 
           {/* Thời gian làm bài */}
           <div>
-            <label className="text-xs font-semibold text-slate-700 block mb-1">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
               Thời gian làm bài (Phút):
             </label>
             <Input
@@ -432,13 +432,13 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
               max={180}
               value={durationMinutes}
               onChange={(e) => setDurationMinutes(parseInt(e.target.value) || 15)}
-              className="bg-slate-50 border-slate-200 text-xs text-slate-900 focus:bg-white"
+              className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900"
             />
           </div>
 
           {/* Điểm đạt */}
           <div>
-            <label className="text-xs font-semibold text-slate-700 block mb-1">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
               Điểm đạt (Pass score):
             </label>
             <Input
@@ -448,19 +448,19 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
               max={10}
               value={passScore}
               onChange={(e) => setPassScore(parseFloat(e.target.value) || 5)}
-              className="bg-slate-50 border-slate-200 text-xs text-slate-900 focus:bg-white"
+              className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900"
             />
           </div>
 
           {/* Phân hạng tiếp cận */}
           <div>
-            <label className="text-xs font-semibold text-slate-700 block mb-1">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
               Phân hạng gói tiếp cận:
             </label>
             <select
               value={accessTier}
               onChange={(e) => setAccessTier(e.target.value as 'FREE_TRIAL' | 'PRO')}
-              className="w-full h-9 bg-slate-50 border border-slate-200 text-xs rounded-xl px-2.5 py-1.5 text-slate-800 font-medium focus:bg-white focus:outline-none focus:border-primary"
+              className="w-full h-9 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-2.5 py-1.5 text-slate-800 dark:text-white font-medium focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:border-primary"
             >
               <option value="FREE_TRIAL">🎁 Khách thi thử (Free 3 lần/ngày)</option>
               <option value="PRO">⭐ Gói Rèn Luyện (Pro Member)</option>
@@ -469,13 +469,13 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
 
           {/* Gợi ý khóa học liên quan */}
           <div className="sm:col-span-2">
-            <label className="text-xs font-semibold text-slate-700 block mb-1">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
               Khóa học gợi ý liên quan cho học sinh sau khi làm bài:
             </label>
             <select
               value={upsellCourseId}
               onChange={(e) => setUpsellCourseId(e.target.value)}
-              className="w-full h-9 bg-slate-50 border border-slate-200 text-xs rounded-xl px-2.5 py-1.5 text-slate-800 font-medium focus:bg-white focus:outline-none focus:border-primary"
+              className="w-full h-9 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-2.5 py-1.5 text-slate-800 dark:text-white font-medium focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:border-primary"
             >
               <option value="NONE">-- Không gắn khóa học gợi ý --</option>
               {MOCK_COURSES.map((c) => (
@@ -484,7 +484,7 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
                 </option>
               ))}
             </select>
-            <p className="text-[11px] text-slate-500 mt-1">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
               Khóa học này sẽ hiển thị ở trang kết quả thi để học sinh tham khảo củng cố các lỗ hổng kiến thức.
             </p>
           </div>
@@ -492,14 +492,14 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
       </Card>
 
       {/* 2. CẤU HÌNH 4 DANH MỤC CÂU HỎI (CHUẨN BỘ GD&ĐT 2025) */}
-      <Card className="p-5 sm:p-6 bg-white border border-slate-200/80 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+      <Card className="p-5 sm:p-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
           <div>
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <Layers className="w-4 h-4 text-emerald-600" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Layers className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               2. Phân Bổ 4 Danh Mục Câu Hỏi (Chuẩn Bộ GD&ĐT 2025)
             </h3>
-            <p className="text-[11px] text-slate-500 mt-0.5">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
               Cấu trúc theo chuẩn thi mới: Trắc nghiệm 4 lựa chọn, Đúng/Sai 4 ý, Trả lời ngắn, và Tự luận.
             </p>
           </div>
@@ -508,8 +508,8 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
             <Badge
               className={`text-xs font-semibold ${
                 isCategoryValid
-                  ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
-                  : 'bg-red-100 text-red-800 border-red-200'
+                  ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                  : 'bg-red-100 dark:bg-red-950/60 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800'
               }`}
             >
               Tổng số câu: {categorySum} / {totalQuestions} {isCategoryValid ? '✓' : '(Lệch)'}
@@ -531,14 +531,14 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
 
         {/* Nút chọn nhanh Preset */}
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-slate-600">Preset phân bổ mẫu:</label>
+          <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Preset phân bổ mẫu:</label>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => applyPreset('MOET_2025')}
-              className="text-xs justify-start h-9 border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/50"
+              className="text-xs justify-start h-9 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/40"
             >
               🎯 Chuẩn Bộ GD 2025
             </Button>
@@ -547,7 +547,7 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
               variant="outline"
               size="sm"
               onClick={() => applyPreset('COMPETENCY')}
-              className="text-xs justify-start h-9 border-slate-200 hover:border-sky-300 hover:bg-sky-50/50"
+              className="text-xs justify-start h-9 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-sky-300 dark:hover:border-sky-700 hover:bg-sky-50/50 dark:hover:bg-sky-950/40"
             >
               📊 Đánh giá năng lực
             </Button>
@@ -556,7 +556,7 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
               variant="outline"
               size="sm"
               onClick={() => applyPreset('MCQ_ESSAY')}
-              className="text-xs justify-start h-9 border-slate-200 hover:border-purple-300 hover:bg-purple-50/50"
+              className="text-xs justify-start h-9 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-purple-300 dark:hover:border-purple-700 hover:bg-purple-50/50 dark:hover:bg-purple-950/40"
             >
               📝 TN + Tự luận
             </Button>
@@ -565,7 +565,7 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
               variant="outline"
               size="sm"
               onClick={() => applyPreset('ONLY_MCQ')}
-              className="text-xs justify-start h-9 border-slate-200 hover:border-amber-300 hover:bg-amber-50/50"
+              className="text-xs justify-start h-9 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-amber-300 dark:hover:border-amber-700 hover:bg-amber-50/50 dark:hover:bg-amber-950/40"
             >
               ⚡ 100% Trắc nghiệm
             </Button>
@@ -575,12 +575,12 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
         {/* 4 Khối cấu hình số lượng cho 4 danh mục */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
           {/* Phần I: MCQ */}
-          <div className="p-3.5 rounded-xl border border-sky-200 bg-sky-50/50 space-y-2">
+          <div className="p-3.5 rounded-xl border border-sky-200 dark:border-sky-800/60 bg-sky-50/50 dark:bg-sky-950/30 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-sky-950">Phần I: Trắc nghiệm 4 lựa chọn</span>
-              <Badge className="bg-sky-100 text-sky-800 text-[10px] border-sky-300">0.25 đ/câu</Badge>
+              <span className="text-xs font-bold text-sky-950 dark:text-sky-200">Phần I: Trắc nghiệm 4 lựa chọn</span>
+              <Badge className="bg-sky-100 dark:bg-sky-900 text-sky-800 dark:text-sky-300 text-[10px] border-sky-300 dark:border-sky-700">0.25 đ/câu</Badge>
             </div>
-            <p className="text-[11px] text-sky-700 leading-snug">
+            <p className="text-[11px] text-sky-700 dark:text-sky-400 leading-snug">
               Chọn 1 đáp án đúng trong A, B, C, D
             </p>
             <div className="flex items-center gap-2 pt-1">
@@ -590,21 +590,21 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
                 max={totalQuestions}
                 value={mcqCount}
                 onChange={(e) => setMcqCount(parseInt(e.target.value) || 0)}
-                className="bg-white border-sky-300 text-xs font-bold text-sky-900 h-8 text-center"
+                className="bg-white dark:bg-slate-900 border-sky-300 dark:border-sky-700 text-xs font-bold text-sky-900 dark:text-sky-100 h-8 text-center"
               />
-              <span className="text-xs font-semibold text-sky-800 shrink-0">
+              <span className="text-xs font-semibold text-sky-800 dark:text-sky-300 shrink-0">
                 câu ({(mcqCount * 0.25).toFixed(2)} đ)
               </span>
             </div>
           </div>
 
           {/* Phần II: Đúng / Sai */}
-          <div className="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/50 space-y-2">
+          <div className="p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/50 dark:bg-emerald-950/30 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-emerald-950">Phần II: Đúng / Sai (4 ý)</span>
-              <Badge className="bg-emerald-100 text-emerald-800 text-[10px] border-emerald-300">1.0 đ/câu</Badge>
+              <span className="text-xs font-bold text-emerald-950 dark:text-emerald-200">Phần II: Đúng / Sai (4 ý)</span>
+              <Badge className="bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-300 text-[10px] border-emerald-300 dark:border-emerald-700">1.0 đ/câu</Badge>
             </div>
-            <p className="text-[11px] text-emerald-700 leading-snug">
+            <p className="text-[11px] text-emerald-700 dark:text-emerald-400 leading-snug">
               Lũy tiến: đúng 1 ý=0.1đ; 2 ý=0.25đ; 3 ý=0.5đ; 4 ý=1.0đ
             </p>
             <div className="flex items-center gap-2 pt-1">
@@ -614,21 +614,21 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
                 max={totalQuestions}
                 value={tfCount}
                 onChange={(e) => setTfCount(parseInt(e.target.value) || 0)}
-                className="bg-white border-emerald-300 text-xs font-bold text-emerald-900 h-8 text-center"
+                className="bg-white dark:bg-slate-900 border-emerald-300 dark:border-emerald-700 text-xs font-bold text-emerald-900 dark:text-emerald-100 h-8 text-center"
               />
-              <span className="text-xs font-semibold text-emerald-800 shrink-0">
+              <span className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 shrink-0">
                 câu ({(tfCount * 1.0).toFixed(2)} đ)
               </span>
             </div>
           </div>
 
           {/* Phần III: Trả lời ngắn */}
-          <div className="p-3.5 rounded-xl border border-amber-200 bg-amber-50/50 space-y-2">
+          <div className="p-3.5 rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/50 dark:bg-amber-950/30 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-amber-950">Phần III: Trả lời ngắn</span>
-              <Badge className="bg-amber-100 text-amber-800 text-[10px] border-amber-300">0.5 đ/câu</Badge>
+              <span className="text-xs font-bold text-amber-950 dark:text-amber-200">Phần III: Trả lời ngắn</span>
+              <Badge className="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-300 text-[10px] border-amber-300 dark:border-amber-700">0.5 đ/câu</Badge>
             </div>
-            <p className="text-[11px] text-amber-700 leading-snug">
+            <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-snug">
               Điền số / kết quả ngắn trực tiếp vào ô trống
             </p>
             <div className="flex items-center gap-2 pt-1">
@@ -638,21 +638,21 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
                 max={totalQuestions}
                 value={saCount}
                 onChange={(e) => setSaCount(parseInt(e.target.value) || 0)}
-                className="bg-white border-amber-300 text-xs font-bold text-amber-900 h-8 text-center"
+                className="bg-white dark:bg-slate-900 border-amber-300 dark:border-amber-700 text-xs font-bold text-amber-900 dark:text-amber-100 h-8 text-center"
               />
-              <span className="text-xs font-semibold text-amber-800 shrink-0">
+              <span className="text-xs font-semibold text-amber-800 dark:text-amber-300 shrink-0">
                 câu ({(saCount * 0.5).toFixed(2)} đ)
               </span>
             </div>
           </div>
 
           {/* Phần IV: Tự luận */}
-          <div className="p-3.5 rounded-xl border border-purple-200 bg-purple-50/50 space-y-2">
+          <div className="p-3.5 rounded-xl border border-purple-200 dark:border-purple-800/60 bg-purple-50/50 dark:bg-purple-950/30 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-purple-950">Phần IV: Tự luận (Barem)</span>
-              <Badge className="bg-purple-100 text-purple-800 text-[10px] border-purple-300">2.0 đ/câu</Badge>
+              <span className="text-xs font-bold text-purple-950 dark:text-purple-200">Phần IV: Tự luận (Barem)</span>
+              <Badge className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-300 text-[10px] border-purple-300 dark:border-purple-700">2.0 đ/câu</Badge>
             </div>
-            <p className="text-[11px] text-purple-700 leading-snug">
+            <p className="text-[11px] text-purple-700 dark:text-purple-400 leading-snug">
               Trình bày tự luận chấm theo Barem rubric 4 bước
             </p>
             <div className="flex items-center gap-2 pt-1">
@@ -662,9 +662,9 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
                 max={totalQuestions}
                 value={essayCount}
                 onChange={(e) => setEssayCount(parseInt(e.target.value) || 0)}
-                className="bg-white border-purple-300 text-xs font-bold text-purple-900 h-8 text-center"
+                className="bg-white dark:bg-slate-900 border-purple-300 dark:border-purple-700 text-xs font-bold text-purple-900 dark:text-purple-100 h-8 text-center"
               />
-              <span className="text-xs font-semibold text-purple-800 shrink-0">
+              <span className="text-xs font-semibold text-purple-800 dark:text-purple-300 shrink-0">
                 câu ({(essayCount * 2.0).toFixed(2)} đ)
               </span>
             </div>
@@ -673,27 +673,27 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
       </Card>
 
       {/* 3. CẤU HÌNH PHẠM VI KIẾN THỨC & CHƯƠNG HỌC */}
-      <Card className="p-5 sm:p-6 bg-white border border-slate-200/80 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+      <Card className="p-5 sm:p-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
           <div>
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <Compass className="w-4 h-4 text-indigo-600" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Compass className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
               3. Phạm Vi Kiến Thức & Tỉ Lệ Chương Học
             </h3>
-            <p className="text-[11px] text-slate-500 mt-0.5">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
               Xác định đề thi nhắm vào chuyên đề đang học, kiểm tra học kỳ, hay thi thử toàn diện.
             </p>
           </div>
 
           {/* 3 Tab chế độ */}
-          <div className="inline-flex rounded-xl bg-slate-100 p-1 text-xs font-medium">
+          <div className="inline-flex rounded-xl bg-slate-100 dark:bg-slate-800 p-1 text-xs font-medium">
             <button
               type="button"
               onClick={() => setScopeMode('CHAPTER_FOCUSED')}
               className={`px-3 py-1 rounded-lg transition-all ${
                 scopeMode === 'CHAPTER_FOCUSED'
-                  ? 'bg-white text-slate-900 shadow-2xs font-bold'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Theo Chương (Cuốn chiếu)
@@ -703,8 +703,8 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
               onClick={() => setScopeMode('SEMESTER')}
               className={`px-3 py-1 rounded-lg transition-all ${
                 scopeMode === 'SEMESTER'
-                  ? 'bg-white text-slate-900 shadow-2xs font-bold'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Thi Học Kỳ
@@ -714,8 +714,8 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
               onClick={() => setScopeMode('NATIONAL_EXAM')}
               className={`px-3 py-1 rounded-lg transition-all ${
                 scopeMode === 'NATIONAL_EXAM'
-                  ? 'bg-white text-slate-900 shadow-2xs font-bold'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Toàn Diện / THPT QG
@@ -728,15 +728,15 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
           <div className="space-y-4 pt-1">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Chọn Chương trọng tâm */}
-              <div className="space-y-2 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                <label className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                  <BookmarkCheck className="w-4 h-4 text-emerald-600" />
+              <div className="space-y-2 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                <label className="text-xs font-bold text-slate-900 dark:text-slate-200 flex items-center gap-1.5">
+                  <BookmarkCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   Chương trọng tâm (Chương mới đang học):
                 </label>
                 <select
                   value={currentChapter}
                   onChange={(e) => setCurrentChapter(e.target.value)}
-                  className="w-full h-9 bg-white border border-slate-200 text-xs rounded-xl px-2.5 py-1.5 text-slate-900 font-semibold focus:outline-none focus:border-primary shadow-2xs"
+                  className="w-full h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-2.5 py-1.5 text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-primary shadow-2xs"
                 >
                   {availableChapters.map((ch) => (
                     <option key={ch} value={ch}>
@@ -744,15 +744,15 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
                     </option>
                   ))}
                 </select>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   Đây là kiến thức chính của bài kiểm tra, sẽ chiếm đa số điểm số.
                 </p>
               </div>
 
               {/* Tỉ lệ phân bổ Cuốn chiếu */}
-              <div className="space-y-2 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+              <div className="space-y-2 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-slate-900">Tỉ lệ phân bổ số câu:</span>
+                  <span className="font-bold text-slate-900 dark:text-white">Tỉ lệ phân bổ số câu:</span>
                   <span className="font-semibold text-primary">
                     {Math.round((totalQuestions * currentChapterRatio) / 100)} câu mới /{' '}
                     {totalQuestions - Math.round((totalQuestions * currentChapterRatio) / 100)} câu cũ
@@ -760,7 +760,7 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
                 </div>
 
                 <div className="space-y-1">
-                  <div className="flex justify-between text-xs text-slate-600">
+                  <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400">
                     <span>Chương trọng tâm: <strong>{currentChapterRatio}%</strong></span>
                     <span>Chương cũ ôn tập: <strong>{prevChapterRatio}%</strong></span>
                   </div>
@@ -779,26 +779,26 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
             </div>
 
             {/* Tùy chọn cuốn chiếu kiến thức các chương cũ */}
-            <div className="space-y-3 p-4 rounded-xl bg-slate-50/70 border border-slate-200">
+            <div className="space-y-3 p-4 rounded-xl bg-slate-50/70 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800">
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={includePreviousChapters}
                     onChange={(e) => setIncludePreviousChapters(e.target.checked)}
-                    className="w-4 h-4 rounded text-primary focus:ring-primary border-slate-300"
+                    className="w-4 h-4 rounded text-primary focus:ring-primary border-slate-300 dark:border-slate-700"
                   />
-                  <span className="text-xs font-bold text-slate-900">
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-200">
                     Kết hợp câu hỏi ôn tập các chương cũ đã học (Phương pháp cuốn chiếu)
                   </span>
                 </label>
-                <Badge variant="outline" className="text-[11px] bg-white text-slate-600">
+                <Badge variant="outline" className="text-[11px] bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700">
                   {includePreviousChapters ? `${previousChapters.length} chương cũ được chọn` : 'Đã tắt'}
                 </Badge>
               </div>
 
               {includePreviousChapters && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-2 border-t border-slate-200/60">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-2 border-t border-slate-200/60 dark:border-slate-800">
                   {availableChapters
                     .filter((ch) => ch !== currentChapter)
                     .map((ch) => {
@@ -808,15 +808,15 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
                           key={ch}
                           className={`flex items-start gap-2 p-2.5 rounded-lg border text-xs cursor-pointer transition-all ${
                             isChecked
-                              ? 'bg-primary/5 border-primary/30 text-slate-900 font-medium'
-                              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                              ? 'bg-primary/5 dark:bg-primary/20 border-primary/30 text-slate-900 dark:text-white font-medium'
+                              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                           }`}
                         >
                           <input
                             type="checkbox"
                             checked={isChecked}
                             onChange={() => handleTogglePrevChapter(ch)}
-                            className="mt-0.5 rounded text-primary focus:ring-primary border-slate-300"
+                            className="mt-0.5 rounded text-primary focus:ring-primary border-slate-300 dark:border-slate-700"
                           />
                           <span className="leading-snug">{ch}</span>
                         </label>
@@ -829,8 +829,8 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
         )}
 
         {scopeMode === 'SEMESTER' && (
-          <div className="space-y-3 p-4 rounded-xl bg-slate-50 border border-slate-200">
-            <div className="text-xs font-bold text-slate-900">
+          <div className="space-y-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+            <div className="text-xs font-bold text-slate-900 dark:text-white">
               Chọn các chương học nằm trong phạm vi kiểm tra học kỳ:
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-1">
@@ -841,15 +841,15 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
                     key={ch}
                     className={`flex items-start gap-2 p-2.5 rounded-lg border text-xs cursor-pointer transition-all ${
                       isChecked
-                        ? 'bg-primary/5 border-primary/30 text-slate-900 font-medium'
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                        ? 'bg-primary/5 dark:bg-primary/20 border-primary/30 text-slate-900 dark:text-white font-medium'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   >
                     <input
                       type="checkbox"
                       checked={isChecked}
                       onChange={() => handleToggleSemesterChapter(ch)}
-                      className="mt-0.5 rounded text-primary focus:ring-primary border-slate-300"
+                      className="mt-0.5 rounded text-primary focus:ring-primary border-slate-300 dark:border-slate-700"
                     />
                     <span className="leading-snug">{ch}</span>
                   </label>
@@ -860,12 +860,12 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
         )}
 
         {scopeMode === 'NATIONAL_EXAM' && (
-          <div className="p-4 rounded-xl bg-sky-50/70 border border-sky-200 text-xs text-sky-900 space-y-1.5">
+          <div className="p-4 rounded-xl bg-sky-50/70 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/60 text-xs text-sky-900 dark:text-sky-200 space-y-1.5">
             <div className="font-bold flex items-center gap-1.5">
-              <BookOpen className="w-4 h-4 text-sky-600" />
+              <BookOpen className="w-4 h-4 text-sky-600 dark:text-sky-400" />
               Chế độ Thi Thử Tốt Nghiệp THPT & Đánh Giá Năng Lực Toàn Diện
             </div>
-            <p className="text-sky-700 leading-relaxed">
+            <p className="text-sky-700 dark:text-sky-300 leading-relaxed">
               Hệ thống sẽ tự động quét và phân bổ ngẫu nhiên câu hỏi từ tất cả các chuyên đề trong khối lớp {gradeLevel}{' '}
               để đảm bảo độ bao quát chuẩn theo cấu trúc khảo nghiệm của Bộ GD&ĐT.
             </p>
@@ -876,17 +876,17 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
       {/* 4. MA TRẬN BLOOM & 5. MÃ ĐỀ HOÁN VỊ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Ma trận Bloom */}
-        <Card className="p-5 sm:p-6 bg-white border border-slate-200/80 shadow-xs space-y-4">
+        <Card className="p-5 sm:p-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <Layers className="w-4 h-4 text-sky-600" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Layers className="w-4 h-4 text-sky-600 dark:text-sky-400" />
               4. Tỉ Lệ Độ Khó (Bloom's Taxonomy)
             </h3>
             <Badge
               className={`text-xs font-semibold ${
                 isBloomValid
-                  ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
-                  : 'bg-red-100 text-red-800 border-red-200'
+                  ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                  : 'bg-red-100 dark:bg-red-950/60 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800'
               }`}
             >
               Tổng: {bloomSum}% {isBloomValid ? '✓' : '(Cần = 100%)'}
@@ -894,7 +894,7 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
           </div>
 
           {/* Progress bar trực quan */}
-          <div className="w-full h-2.5 rounded-full bg-slate-100 flex overflow-hidden">
+          <div className="w-full h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 flex overflow-hidden">
             <div style={{ width: `${recRatio}%` }} className="bg-emerald-500" title={`Nhận biết: ${recRatio}%`} />
             <div style={{ width: `${undRatio}%` }} className="bg-sky-500" title={`Thông hiểu: ${undRatio}%`} />
             <div style={{ width: `${appRatio}%` }} className="bg-amber-500" title={`Vận dụng: ${appRatio}%`} />
@@ -903,9 +903,9 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
 
           <div className="space-y-3.5 text-xs">
             <div>
-              <div className="flex justify-between text-slate-700 mb-1 font-medium">
+              <div className="flex justify-between text-slate-700 dark:text-slate-300 mb-1 font-medium">
                 <span>Nhận biết (Dễ)</span>
-                <span className="font-bold text-slate-900">
+                <span className="font-bold text-slate-900 dark:text-white">
                   {recRatio}% ({Math.round((totalQuestions * recRatio) / 100)} câu)
                 </span>
               </div>
@@ -921,9 +921,9 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
             </div>
 
             <div>
-              <div className="flex justify-between text-slate-700 mb-1 font-medium">
+              <div className="flex justify-between text-slate-700 dark:text-slate-300 mb-1 font-medium">
                 <span>Thông hiểu (Trung bình)</span>
-                <span className="font-bold text-slate-900">
+                <span className="font-bold text-slate-900 dark:text-white">
                   {undRatio}% ({Math.round((totalQuestions * undRatio) / 100)} câu)
                 </span>
               </div>
@@ -939,9 +939,9 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
             </div>
 
             <div>
-              <div className="flex justify-between text-slate-700 mb-1 font-medium">
+              <div className="flex justify-between text-slate-700 dark:text-slate-300 mb-1 font-medium">
                 <span>Vận dụng (Khá)</span>
-                <span className="font-bold text-slate-900">
+                <span className="font-bold text-slate-900 dark:text-white">
                   {appRatio}% ({Math.round((totalQuestions * appRatio) / 100)} câu)
                 </span>
               </div>
@@ -957,9 +957,9 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
             </div>
 
             <div>
-              <div className="flex justify-between text-slate-700 mb-1 font-medium">
+              <div className="flex justify-between text-slate-700 dark:text-slate-300 mb-1 font-medium">
                 <span>Vận dụng cao (Khó)</span>
-                <span className="font-bold text-slate-900">
+                <span className="font-bold text-slate-900 dark:text-white">
                   {advRatio}% ({Math.round((totalQuestions * advRatio) / 100)} câu)
                 </span>
               </div>
@@ -977,22 +977,22 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
         </Card>
 
         {/* Cấu hình Mã đề hoán vị */}
-        <Card className="p-5 sm:p-6 bg-white border border-slate-200/80 shadow-xs space-y-4">
+        <Card className="p-5 sm:p-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <Shuffle className="w-4 h-4 text-purple-600" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Shuffle className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               5. Cấu Hình Hoán Vị Mã Đề (Variants)
             </h3>
-            <span className="text-xs text-slate-500 font-mono">Chống gian lận</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">Chống gian lận</span>
           </div>
 
           {/* Hộp giải thích nghiệp vụ khảo thí */}
-          <div className="p-3.5 rounded-xl bg-purple-50/60 border border-purple-200 text-xs text-purple-900 space-y-1.5">
-            <div className="font-bold flex items-center gap-1.5 text-purple-950">
-              <HelpCircle className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+          <div className="p-3.5 rounded-xl bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/60 text-xs text-purple-900 dark:text-purple-200 space-y-1.5">
+            <div className="font-bold flex items-center gap-1.5 text-purple-950 dark:text-purple-100">
+              <HelpCircle className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
               Quy Chuẩn Hoán Vị Khảo Thí:
             </div>
-            <p className="text-[11px] leading-relaxed text-purple-800">
+            <p className="text-[11px] leading-relaxed text-purple-800 dark:text-purple-300">
               Hệ thống xáo trộn câu hỏi <strong>độc lập trong từng Phần</strong> (Phần I, II, III, IV), đồng thời đảo 4 phương án A-B-C-D của câu hỏi trắc nghiệm, tạo bảng đối soát đáp án chính xác cho từng mã đề.
             </p>
           </div>
@@ -1000,7 +1000,7 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
           <div className="space-y-4 pt-1">
             {/* Chọn số lượng mã đề */}
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-2">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-2">
                 Số lượng mã đề cần sinh:
               </label>
               <div className="grid grid-cols-3 gap-2">
@@ -1014,7 +1014,7 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
                     className={`text-xs shadow-xs font-semibold ${
                       variantCount === count
                         ? 'bg-primary text-white'
-                        : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                        : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   >
                     {count} mã đề {count === 4 ? '(Chuẩn)' : ''}
@@ -1025,7 +1025,7 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
 
             {/* Chọn dải tiền tố mã đề */}
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-2">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-2">
                 Dải đầu số mã đề:
               </label>
               <div className="grid grid-cols-3 gap-2">
@@ -1043,7 +1043,7 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
                     className={`text-[11px] shadow-xs font-medium ${
                       variantPrefix === item.prefix
                         ? 'bg-purple-600 text-white hover:bg-purple-700'
-                        : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                        : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   >
                     {item.label}
@@ -1156,28 +1156,28 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
 
       {/* HIỂN THỊ KẾT QUẢ CÁC MÃ ĐỀ ĐÃ SINH */}
       {generatedVariants.length > 0 && activeVariant && (
-        <Card className="p-5 sm:p-6 bg-white border border-slate-200/80 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+        <Card className="p-5 sm:p-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
             <div>
-              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <FileCheck2 className="w-5 h-5 text-emerald-600" />
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <FileCheck2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 Đã Khởi Tạo Thành Công {generatedVariants.length} Mã Đề Theo Ma Trận Chuẩn 4 Danh Mục
               </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Đề thi được cấu trúc thành 4 Phần phân tách chuẩn Bộ GD&ĐT 2025: Trắc nghiệm 4 lựa chọn, Đúng/Sai, Trả lời ngắn, và Tự luận.
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() =>
                   toast.success(`Đã xuất bảng đối soát mã ${activeVariantCode} sang Excel!`)
                 }
-                className="text-xs gap-1 border-slate-200 hover:bg-slate-50 text-slate-700"
+                className="text-xs gap-1 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
               >
-                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 Xuất Excel
               </Button>
               <Button
@@ -1186,9 +1186,9 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
                 onClick={() =>
                   toast.success(`Đã xuất đề thi mã ${activeVariantCode} sang Word!`)
                 }
-                className="text-xs gap-1 border-slate-200 hover:bg-slate-50 text-slate-700"
+                className="text-xs gap-1 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
               >
-                <FileText className="w-3.5 h-3.5 text-sky-600" />
+                <FileText className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
                 Xuất Word
               </Button>
               <Button
@@ -1202,8 +1202,8 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
           </div>
 
           {/* Selector mã đề */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            <span className="text-xs font-bold text-slate-500 shrink-0 mr-1">Mã đề:</span>
+          <div className="flex flex-wrap items-center gap-2 pb-1">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0 mr-1">Mã đề:</span>
             {generatedVariants.map((v) => (
               <button
                 key={v.variant_code}
@@ -1211,7 +1211,7 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs ${
                   activeVariantCode === v.variant_code
                     ? 'bg-primary text-white shadow-primary/20'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
                 }`}
               >
                 Mã đề {v.variant_code}
@@ -1225,13 +1225,13 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
               {activeVariant.parts.map((p) => (
                 <div
                   key={p.part_number}
-                  className="p-3 rounded-xl border border-slate-200 bg-slate-50/70 text-xs space-y-1"
+                  className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 text-xs space-y-1"
                 >
-                  <div className="font-bold text-slate-900 truncate">{p.title}</div>
-                  <div className="text-[11px] text-slate-500">
-                    Số lượng: <strong className="text-slate-900">{p.questions.length} câu</strong>
+                  <div className="font-bold text-slate-900 dark:text-white truncate">{p.title}</div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Số lượng: <strong className="text-slate-900 dark:text-white">{p.questions.length} câu</strong>
                   </div>
-                  <div className="text-[11px] text-emerald-600 font-semibold">
+                  <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
                     Tổng điểm: {p.total_points} đ ({p.points_per_question} đ/câu)
                   </div>
                 </div>
@@ -1241,13 +1241,13 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
 
           <div className="space-y-4 mt-3">
             {/* Bảng Đáp án (Answer Key) */}
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
-              <div className="flex items-center justify-between text-xs font-bold text-slate-900">
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2.5">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-900 dark:text-white">
                 <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   Bảng Đối Soát Đáp Án Chuẩn (Answer Key) - Mã đề {activeVariant.variant_code}:
                 </span>
-                <span className="text-[11px] text-slate-500 font-normal">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-normal">
                   Đã hoán vị độc lập trong từng phần
                 </span>
               </div>
@@ -1256,7 +1256,7 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
                 {Object.entries(activeVariant.answer_key).map(([qKey, ans]) => (
                   <div
                     key={qKey}
-                    className="p-2 rounded-lg bg-white border border-slate-200 shadow-2xs space-y-0.5"
+                    className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs space-y-0.5"
                   >
                     <div className="text-[10px] text-slate-400 font-sans font-semibold">{qKey}</div>
                     <div className="font-bold text-primary text-[11px] truncate" title={String(ans)}>
@@ -1269,41 +1269,41 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
 
             {/* Danh sách câu hỏi của mã đề đang chọn phân theo 4 Phần */}
             <div className="space-y-3">
-              <div className="text-xs font-bold text-slate-700">
+              <div className="text-xs font-bold text-slate-700 dark:text-slate-300">
                 Xem trước danh sách câu hỏi trong mã đề {activeVariant.variant_code} ({activeVariant.questions.length} câu):
               </div>
               <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
                 {activeVariant.questions.map((q, idx) => (
                   <div
                     key={q.id || idx}
-                    className="p-3.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition-all text-xs space-y-2.5 shadow-2xs"
+                    className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 transition-all text-xs space-y-2.5 shadow-2xs"
                   >
                     {/* Header câu hỏi */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
-                      <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="font-bold text-primary">{q.title || `Câu ${idx + 1}`}</span>
                         {q.section_title && (
-                          <Badge variant="secondary" className="text-[10px] bg-slate-100 text-slate-700">
+                          <Badge variant="secondary" className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700">
                             {q.section_title.split('.')[0]}
                           </Badge>
                         )}
-                        <Badge variant="outline" className="text-[10px]">
+                        <Badge variant="outline" className="text-[10px] border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
                           {q.chapter || 'Tổng hợp'}
                         </Badge>
                       </div>
 
                       <div className="flex items-center gap-1.5">
-                        <Badge className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold">
+                        <Badge className="text-[10px] bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 font-semibold">
                           {q.points} điểm
                         </Badge>
-                        <Badge className="text-[10px] bg-slate-100 text-slate-700 border-slate-200">
+                        <Badge className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700">
                           {q.difficulty || 'UNDERSTANDING'}
                         </Badge>
                       </div>
                     </div>
 
                     {/* Nội dung câu hỏi */}
-                    <div className="text-slate-800 font-medium whitespace-pre-wrap leading-relaxed">
+                    <div className="text-slate-800 dark:text-slate-200 font-medium whitespace-pre-wrap leading-relaxed">
                       {q.content}
                     </div>
 
@@ -1315,15 +1315,15 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
                             key={ans.id}
                             className={`p-2 rounded-lg border text-xs flex items-center gap-2 ${
                               ans.is_answer
-                                ? 'bg-emerald-50/80 border-emerald-300 text-emerald-900 font-bold'
-                                : 'bg-slate-50/70 border-slate-200 text-slate-700'
+                                ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200 font-bold'
+                                : 'bg-slate-50/70 dark:bg-slate-950/70 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
                             }`}
                           >
                             <span
                               className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 ${
                                 ans.is_answer
                                   ? 'bg-emerald-600 text-white'
-                                  : 'bg-white border text-slate-600'
+                                  : 'bg-white dark:bg-slate-900 border text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                               }`}
                             >
                               {ans.label}
@@ -1340,19 +1340,19 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
                         {q.statements.map((st) => (
                           <div
                             key={st.subId}
-                            className="p-2 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between gap-2 text-xs"
+                            className="p-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 text-xs"
                           >
                             <div className="flex items-center gap-2">
-                              <span className="w-5 h-5 rounded-md bg-slate-200 text-slate-800 font-bold text-[11px] flex items-center justify-center shrink-0">
+                              <span className="w-5 h-5 rounded-md bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-[11px] flex items-center justify-center shrink-0">
                                 {st.subId}
                               </span>
-                              <span className="text-slate-800">{st.statement}</span>
+                              <span className="text-slate-800 dark:text-slate-200">{st.statement}</span>
                             </div>
                             <Badge
                               className={`text-[10px] font-bold shrink-0 ${
                                 st.isCorrect
-                                  ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                                  : 'bg-rose-100 text-rose-800 border-rose-300'
+                                  ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+                                  : 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-800'
                               }`}
                             >
                               {st.isCorrect ? '✓ ĐÚNG' : '✗ SAI'}
@@ -1364,9 +1364,9 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
 
                     {/* 3. Render Trả lời ngắn / Điền số */}
                     {q.type === 'FILL_BLANK' && (
-                      <div className="p-2.5 rounded-lg bg-amber-50/60 border border-amber-200 text-xs flex items-center justify-between gap-3">
-                        <span className="text-amber-900 font-semibold">Đáp số chuẩn học sinh cần điền:</span>
-                        <span className="font-mono font-bold text-amber-950 bg-white px-2.5 py-1 rounded border border-amber-300">
+                      <div className="p-2.5 rounded-lg bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs flex items-center justify-between gap-3">
+                        <span className="text-amber-900 dark:text-amber-200 font-semibold">Đáp số chuẩn học sinh cần điền:</span>
+                        <span className="font-mono font-bold text-amber-950 dark:text-amber-300 bg-white dark:bg-slate-900 px-2.5 py-1 rounded border border-amber-300 dark:border-amber-700">
                           {q.shortAnswerCorrect || q.answers?.[0]?.content || 'Chưa cấu hình'}
                         </span>
                       </div>
@@ -1376,18 +1376,18 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
                     {q.type === 'ESSAY' && (
                       <div className="space-y-2 pt-1">
                         {q.gradingRubric && q.gradingRubric.length > 0 && (
-                          <div className="p-2.5 rounded-lg bg-purple-50/60 border border-purple-200 text-xs space-y-1.5">
-                            <span className="font-bold text-purple-950 block">Barem chấm điểm chi tiết (Rubric):</span>
+                          <div className="p-2.5 rounded-lg bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/60 text-xs space-y-1.5">
+                            <span className="font-bold text-purple-950 dark:text-purple-200 block">Barem chấm điểm chi tiết (Rubric):</span>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                               {q.gradingRubric.map((r, rIdx) => (
                                 <div
                                   key={rIdx}
-                                  className="p-1.5 rounded bg-white border border-purple-200 text-[11px] flex items-center justify-between"
+                                  className="p-1.5 rounded bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 text-[11px] flex items-center justify-between"
                                 >
-                                  <span className="text-purple-900 font-medium">
+                                  <span className="text-purple-900 dark:text-purple-200 font-medium">
                                     {r.step}: {r.detail}
                                   </span>
-                                  <Badge className="bg-purple-100 text-purple-800 border-purple-200 text-[10px] shrink-0 ml-1">
+                                  <Badge className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800 text-[10px] shrink-0 ml-1">
                                     +{r.point}đ
                                   </Badge>
                                 </div>
@@ -1397,7 +1397,7 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
                         )}
 
                         {q.explain && (
-                          <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-700">
+                          <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-700 dark:text-slate-300">
                             <strong>Hướng dẫn giải:</strong> {q.explain}
                           </div>
                         )}

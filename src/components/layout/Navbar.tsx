@@ -41,8 +41,6 @@ const LOGIN_ROLES = [
     badge: 'Học sinh & Thí sinh',
     desc: 'Luyện đề thông minh theo ma trận, thi thử K-12, tốt nghiệp THPT, ĐGNL & HSG',
     href: '/login/student',
-    theme: 'hover:border-emerald-500/50 hover:bg-emerald-500/10 text-emerald-400 border-emerald-500/20 bg-emerald-500/10',
-    badgeTheme: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
   },
   {
     id: 'teacher',
@@ -51,8 +49,6 @@ const LOGIN_ROLES = [
     badge: 'Giáo viên & Giảng viên',
     desc: 'Tạo khóa học số, xuất bản đề thi theo ma trận, kinh doanh tài liệu & quản lý học viên',
     href: '/login/teacher',
-    theme: 'hover:border-amber-500/50 hover:bg-amber-500/10 text-amber-400 border-amber-500/20 bg-amber-500/10',
-    badgeTheme: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
   },
 ];
 
@@ -257,11 +253,11 @@ export function Navbar() {
                 >
                   <Link
                     href="/pricing"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cyan-50 hover:bg-cyan-100 dark:bg-cyan-950/40 dark:hover:bg-cyan-900/50 text-[#007D99] dark:text-[#00B8DD] font-black text-xs border border-cyan-200 dark:border-cyan-800 shadow-xs hover:scale-102 transition-all cursor-pointer"
-                    title="Số dư Kim Cương / Token Luyện Thi (Rê chuột xem cách nhận điểm)"
+                    className="inline-flex h-9 items-center gap-1.5 px-3 rounded-full bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                    title="Số dư điểm thưởng"
                   >
-                    <Gem className="w-3.5 h-3.5 text-cyan-500 fill-cyan-400 animate-pulse" />
-                    <span>{tokenBalance} 💎</span>
+                    <Gem className="w-4 h-4 shrink-0" />
+                    <span className="tabular-nums font-semibold text-slate-800 dark:text-slate-100">{tokenBalance}</span>
                   </Link>
 
                   {/* Submenu: Các cách có điểm */}
@@ -278,18 +274,17 @@ export function Navbar() {
                         <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 mb-3.5">
                           <div>
                             <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                              Ví Điểm Schoolify
+                              Số dư điểm thưởng
                             </span>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               <span className="text-2xl font-black text-slate-900 dark:text-white font-mono tracking-tight">{tokenBalance}</span>
-                              <span className="text-sm font-bold text-[#00B8DD]">Kim Cương</span>
-                              <Gem className="w-4 h-4 text-cyan-500 fill-cyan-400 shrink-0" />
+                              <Gem className="w-4 h-4 text-[#00B8DD] shrink-0" />
                             </div>
                           </div>
                           <Link
                             href="/pricing"
                             onClick={() => setPointsMenuOpen(false)}
-                            className="px-3.5 py-1.5 rounded-lg bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold text-xs shadow-xs transition-colors shrink-0"
+                            className="px-3.5 py-1.5 rounded-lg bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold text-xs shadow-xs transition-colors shrink-0"
                           >
                             Nạp Thêm
                           </Link>
@@ -316,7 +311,7 @@ export function Navbar() {
                                     Điểm danh mỗi ngày
                                   </span>
                                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-[#00B8DD]/15 text-[#007D99] dark:text-[#00B8DD] whitespace-nowrap">
-                                    +10 💎
+                                    +10 điểm
                                   </span>
                                 </div>
                                 <p className="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5 truncate">
@@ -331,7 +326,7 @@ export function Navbar() {
                                 'px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 transition-all cursor-pointer whitespace-nowrap',
                                 checkedInToday
                                   ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-default'
-                                  : 'bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 shadow-xs active:scale-95'
+                                  : 'bg-[#00B8DD] hover:bg-[#009bbd] text-white shadow-xs active:scale-95'
                               )}
                             >
                               {checkedInToday ? '✓ Đã nhận' : 'Điểm danh'}
@@ -354,7 +349,7 @@ export function Navbar() {
                                     Làm đề thi thử ma trận
                                   </span>
                                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
-                                    +20 ~ 50 💎
+                                    +20 ~ 50 điểm
                                   </span>
                                 </div>
                                 <p className="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5 truncate">
@@ -417,12 +412,11 @@ export function Navbar() {
                 >
                   <button
                     onClick={() => setUserMenuOpen((prev) => !prev)}
-                    className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-[#00B8DD] to-[#007D99] text-white font-black text-sm shadow-md shadow-[#00B8DD]/20 border-2 border-white dark:border-slate-800 ring-2 ring-[#00B8DD]/30 hover:ring-[#00B8DD] hover:scale-105 transition-all cursor-pointer focus:outline-none"
+                    className="flex items-center justify-center w-9 h-9 rounded-full bg-[#00B8DD] hover:bg-[#009bbd] text-white font-semibold text-sm border border-[#00B8DD] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00B8DD] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
                     aria-label="Quản lý trang cá nhân"
                     title={user.fullname || 'Trang cá nhân'}
                   >
                     <span>{user.fullname?.charAt(0).toUpperCase() || 'U'}</span>
-                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
                   </button>
 
                   {/* Submenu Dropdown */}
@@ -566,11 +560,11 @@ export function Navbar() {
                             className="flex items-center justify-between px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-primary transition-colors font-medium pt-1.5 border-t border-slate-100 dark:border-slate-800/80"
                           >
                             <div className="flex items-center gap-2.5">
-                              <Gem className="w-4 h-4 text-amber-500" />
-                              <span>Số dư Kim Cương</span>
+                              <Gem className="w-4 h-4 text-[#00B8DD]" />
+                              <span>Số dư điểm thưởng</span>
                             </div>
-                            <span className="font-bold text-cyan-600 dark:text-cyan-400 font-mono">
-                              {tokenBalance} 💎
+                            <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">
+                              {tokenBalance}
                             </span>
                           </Link>
                         </div>
@@ -612,10 +606,10 @@ export function Navbar() {
               <div className="flex items-center gap-1.5">
                 <Link
                   href="/pricing"
-                  className="flex items-center gap-1 px-2 py-1 rounded-full bg-cyan-50 dark:bg-cyan-950/60 text-[#007D99] dark:text-[#00B8DD] font-black text-[11px] border border-cyan-200 dark:border-cyan-800"
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200/80 dark:border-slate-700/80"
                 >
-                  <Gem className="w-3 h-3 text-cyan-500 fill-cyan-400" />
-                  <span>{tokenBalance} 💎</span>
+                  <Gem className="w-3.5 h-3.5 text-[#00B8DD] shrink-0" />
+                  <span className="tabular-nums font-bold">{tokenBalance}</span>
                 </Link>
                 <Link
                   href={
@@ -710,7 +704,7 @@ export function Navbar() {
       {/* ── LOGIN ROLE DRAWER (RIGHT SIDEBAR) ── */}
       <AnimatePresence>
         {loginDrawerOpen && (
-          <div className="fixed inset-0 z-50 overflow-hidden">
+          <div className="fixed inset-0 z-[100] overflow-hidden">
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -728,40 +722,39 @@ export function Navbar() {
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
                 transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-                className="w-screen max-w-md bg-slate-950 border-l border-slate-800/90 shadow-2xl flex flex-col justify-between"
+                className="w-screen max-w-md bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col justify-between"
               >
                 {/* Drawer Header */}
-                <div className="px-6 py-5 border-b border-slate-800/80 bg-slate-900/60">
+                <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#00B8DD] to-[#009bbd] flex items-center justify-center shadow-lg shadow-[#00B8DD]/30 border border-white/20">
-                        <LogIn className="w-5 h-5 text-white" />
+                      <div className="h-9 w-9 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300">
+                        <LogIn className="w-4 h-4" />
                       </div>
                       <div>
-                        <h2 className="text-base font-black text-white leading-tight">
+                        <h2 className="text-sm font-semibold text-slate-900 dark:text-white leading-tight">
                           Đăng Nhập Schoolify
                         </h2>
-                        <p className="text-xs text-slate-400 mt-0.5">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                           Chọn phân hệ của bạn để tiếp tục
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={() => setLoginDrawerOpen(false)}
-                      className="rounded-xl p-2 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                      className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                       aria-label="Đóng"
                     >
-                      <X className="h-5 w-5" />
+                      <X className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
 
                 {/* Drawer Body - Role Login Cards */}
                 <div className="flex-1 overflow-y-auto px-5 py-5 space-y-2.5">
-                  <div className="flex items-center justify-between mb-3 px-1">
-                    <span className="text-[11px] font-black uppercase tracking-wider text-[#00B8DD] flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                      Chọn Cổng Đăng Nhập
+                  <div className="flex items-center justify-between mb-2.5 px-0.5">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                      Chọn cổng đăng nhập
                     </span>
                   </div>
 
@@ -798,22 +791,27 @@ export function Navbar() {
                       });
                       setLoginDrawerOpen(false);
                     }}
-                    className="w-full p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-teal-500/15 to-[#00B8DD]/20 border border-emerald-500/40 hover:border-emerald-500/80 text-left transition-all hover:scale-[1.01] flex items-center justify-between cursor-pointer mb-3 shadow-md shadow-emerald-500/10"
+                    className="group w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 hover:border-[#00B8DD]/40 text-left transition-all flex items-center justify-between cursor-pointer mb-3"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
-                        <Zap className="w-5 h-5 text-amber-300 fill-amber-300" />
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-lg bg-[#00B8DD]/10 text-[#00B8DD] flex items-center justify-center shrink-0 border border-[#00B8DD]/20 group-hover:bg-[#00B8DD]/15 transition-colors">
+                        <Zap className="w-4 h-4" />
                       </div>
-                      <div>
-                        <p className="text-xs font-black text-white flex items-center gap-1.5">
-                          ⚡ Đăng Nhập Nhanh 1-Click
-                        </p>
-                        <p className="text-[11px] text-slate-300">
-                          Học sinh mẫu: Nguyễn Hoàng Minh
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 group-hover:text-[#00B8DD] transition-colors">
+                            Đăng nhập nhanh 1-Click
+                          </p>
+                          <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                            Demo
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                          Tài khoản mẫu: Nguyễn Hoàng Minh (Học sinh)
                         </p>
                       </div>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-emerald-400" />
+                    <ArrowRight className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-200 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
                   </button>
 
                   {LOGIN_ROLES.map((role) => {
@@ -823,73 +821,68 @@ export function Navbar() {
                         key={role.id}
                         href={role.href}
                         onClick={() => setLoginDrawerOpen(false)}
-                        className={cn(
-                          'group flex items-center justify-between p-4 rounded-2xl border bg-slate-900/60 transition-all duration-200 hover:scale-[1.01] block cursor-pointer',
-                          role.theme
-                        )}
+                        className="group flex items-start gap-3.5 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:border-[#00B8DD]/40 hover:bg-slate-50/70 dark:hover:bg-slate-850/80 transition-all duration-150 cursor-pointer block"
                       >
-                        <div className="flex items-start gap-3.5 min-w-0">
-                          <div className="h-11 w-11 rounded-xl flex items-center justify-center shrink-0 border border-current shadow-sm">
-                            <Icon className="w-5 h-5" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <p className="text-sm font-bold text-white group-hover:text-white truncate">
-                                {role.label}
-                              </p>
-                              <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full border', role.badgeTheme)}>
-                                {role.badge}
-                              </span>
-                            </div>
-                            <p className="text-xs text-slate-400 group-hover:text-slate-300 leading-relaxed">
-                              {role.desc}
-                            </p>
-                          </div>
-                          <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0 mt-3" />
+                        <div className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 group-hover:text-[#00B8DD] group-hover:border-[#00B8DD]/30 group-hover:bg-[#00B8DD]/5 transition-colors">
+                          <Icon className="w-5 h-5" />
                         </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 group-hover:text-[#00B8DD] transition-colors truncate">
+                              {role.label}
+                            </p>
+                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                              {role.badge}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                            {role.desc}
+                          </p>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-slate-900 dark:group-hover:text-slate-100 group-hover:translate-x-0.5 transition-all shrink-0 mt-3" />
                       </Link>
                     );
                   })}
 
                   {/* Help tip */}
-                  <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800/80 mt-4 text-xs text-slate-400 flex items-start gap-2.5">
-                    <Lock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                  <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 mt-4 text-xs text-slate-500 dark:text-slate-400 flex items-start gap-2.5">
+                    <Lock className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-semibold text-slate-300">Bạn quên mật khẩu hoặc chưa có tài khoản?</span>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
-                        Liên hệ Hotline hỗ trợ <strong className="text-white">1900 6868</strong> hoặc đăng ký tài khoản bên dưới.
+                      <span className="font-medium text-slate-700 dark:text-slate-300">Bạn quên mật khẩu hoặc chưa có tài khoản?</span>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                        Liên hệ Hotline hỗ trợ <strong className="text-slate-800 dark:text-slate-200 font-semibold">1900 6868</strong> hoặc đăng ký tài khoản bên dưới.
                       </p>
                     </div>
                   </div>
                 </div>
 
                 {/* Drawer Footer */}
-                <div className="px-6 py-5 border-t border-slate-800 bg-slate-900/80 space-y-3">
+                <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-3">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-400">Chưa có tài khoản Schoolify?</span>
+                    <span className="text-slate-500 dark:text-slate-400">Chưa có tài khoản Schoolify?</span>
                     <Link
                       href="/register"
                       onClick={() => setLoginDrawerOpen(false)}
-                      className="font-bold text-[#00B8DD] hover:underline flex items-center gap-1"
+                      className="font-semibold text-[#00B8DD] hover:underline flex items-center gap-1"
                     >
                       Đăng ký ngay <ArrowRight className="w-3 h-3" />
                     </Link>
                   </div>
-                  <Link href="/register" onClick={() => setLoginDrawerOpen(false)}>
+                  <Link href="/register" onClick={() => setLoginDrawerOpen(false)} className="block">
                     <Button
-                      className="w-full justify-center bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold shadow-lg shadow-[#00B8DD]/30 py-2.5 rounded-xl"
+                      className="w-full justify-center bg-[#00B8DD] hover:bg-[#009bbd] text-white font-medium py-2 rounded-lg transition-colors cursor-pointer"
                       rightIcon={<ArrowRight className="w-4 h-4" />}
                     >
                       Đăng Ký Tài Khoản Miễn Phí
                     </Button>
                   </Link>
-                  <div className="flex items-center justify-center gap-3 pt-1 text-[11px] text-slate-400">
-                    <span className="flex items-center gap-1 text-emerald-400">
-                      <Shield className="w-3 h-3" /> Chuẩn K-12 GDPT 2018
+                  <div className="flex items-center justify-center gap-3 pt-0.5 text-[11px] text-slate-400 dark:text-slate-500">
+                    <span className="flex items-center gap-1">
+                      <Shield className="w-3.5 h-3.5" /> Chuẩn K-12 GDPT 2018
                     </span>
-                    <span className="text-slate-700">•</span>
-                    <span className="flex items-center gap-1 text-[#00B8DD]">
-                      <UserCheck className="w-3 h-3" /> Bảo Mật An Toàn
+                    <span className="text-slate-300 dark:text-slate-700">•</span>
+                    <span className="flex items-center gap-1">
+                      <UserCheck className="w-3.5 h-3.5" /> Bảo Mật An Toàn
                     </span>
                   </div>
                 </div>

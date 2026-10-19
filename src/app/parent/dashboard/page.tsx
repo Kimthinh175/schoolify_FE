@@ -164,7 +164,7 @@ export default function ParentDashboardPage() {
               </p>
             </div>
           ) : (
-            <div className="p-4 text-center text-slate-500 bg-slate-50 rounded-2xl">
+            <div className="p-4 text-center text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/60 rounded-2xl">
               Chưa có nhận xét nào mới.
             </div>
           )}
@@ -194,7 +194,7 @@ export default function ParentDashboardPage() {
                 </Badge>
               </div>
             )) : (
-              <div className="p-4 text-center text-slate-500 bg-slate-50 rounded-2xl text-sm">
+              <div className="p-4 text-center text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/60 rounded-2xl text-sm">
                 Không có lịch học.
               </div>
             )}

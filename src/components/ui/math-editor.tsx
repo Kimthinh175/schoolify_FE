@@ -575,14 +575,14 @@ export function MathEssayEditor({
       {isToolbarOpen && viewMode === 'EDIT' && (
         <div className="bg-slate-50/70 dark:bg-slate-950/50 border-b border-slate-200/80 dark:border-slate-800 p-3 space-y-2.5">
           {/* Category Tabs */}
-          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-1 text-xs">
+          <div className="flex flex-wrap items-center gap-1.5 pb-1 text-xs">
             <button
               type="button"
               onClick={() => setActiveCategory('POPULAR')}
               className={cn(
                 'px-3 py-1 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer',
                 activeCategory === 'POPULAR'
-                  ? 'bg-[#00B8DD] text-slate-950 shadow-xs'
+                  ? 'bg-[#00B8DD] text-white shadow-xs'
                   : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-[#00B8DD]'
               )}
             >
@@ -595,7 +595,7 @@ export function MathEssayEditor({
               className={cn(
                 'px-3 py-1 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer',
                 activeCategory === 'PHYSICS'
-                  ? 'bg-[#00B8DD] text-slate-950 shadow-xs'
+                  ? 'bg-[#00B8DD] text-white shadow-xs'
                   : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-[#00B8DD]'
               )}
             >
@@ -608,7 +608,7 @@ export function MathEssayEditor({
               className={cn(
                 'px-3 py-1 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer',
                 activeCategory === 'CALCULUS'
-                  ? 'bg-[#00B8DD] text-slate-950 shadow-xs'
+                  ? 'bg-[#00B8DD] text-white shadow-xs'
                   : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-[#00B8DD]'
               )}
             >
@@ -621,7 +621,7 @@ export function MathEssayEditor({
               className={cn(
                 'px-3 py-1 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer',
                 activeCategory === 'SETS_LOGIC'
-                  ? 'bg-[#00B8DD] text-slate-950 shadow-xs'
+                  ? 'bg-[#00B8DD] text-white shadow-xs'
                   : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-[#00B8DD]'
               )}
             >
@@ -634,7 +634,7 @@ export function MathEssayEditor({
               className={cn(
                 'px-3 py-1 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer',
                 activeCategory === 'GEOMETRY'
-                  ? 'bg-[#00B8DD] text-slate-950 shadow-xs'
+                  ? 'bg-[#00B8DD] text-white shadow-xs'
                   : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-[#00B8DD]'
               )}
             >
@@ -647,7 +647,7 @@ export function MathEssayEditor({
               className={cn(
                 'px-3 py-1 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer',
                 activeCategory === 'TEMPLATES'
-                  ? 'bg-[#00B8DD] text-slate-950 shadow-xs'
+                  ? 'bg-[#00B8DD] text-white shadow-xs'
                   : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-[#00B8DD]'
               )}
             >

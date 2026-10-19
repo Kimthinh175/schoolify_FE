@@ -157,7 +157,7 @@ export function PracticeHistoryList({ showHeader = true }: PracticeHistoryListPr
             Làm thử một đề ma trận để Schoolify lưu lại kết quả và gợi ý phần cần ôn thêm cho bạn.
           </p>
           <Link href="/luyen-thi" className="inline-block">
-            <Button className="min-h-[44px] bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold rounded-xl">
+            <Button className="min-h-[44px] bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold rounded-xl">
               Vào Cổng Luyện Thi Ngay
             </Button>
           </Link>
@@ -218,7 +218,7 @@ export function PracticeHistoryList({ showHeader = true }: PracticeHistoryListPr
                           setSelectedSnapshot(snap);
                           setIsSnapshotOpen(true);
                         }}
-                        className="min-h-[44px] bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold text-xs rounded-xl cursor-pointer"
+                        className="min-h-[44px] bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold text-xs rounded-xl cursor-pointer"
                         leftIcon={<BookOpen className="w-3.5 h-3.5" />}
                       >
                         Xem Lại Đề Thi

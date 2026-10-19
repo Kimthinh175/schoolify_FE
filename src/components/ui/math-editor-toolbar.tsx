@@ -103,7 +103,7 @@ export function MathEditorToolbar({
       {/* Visual Math Toolbar Header */}
       <div className="rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 p-2.5 space-y-2">
         {/* Category Tabs */}
-        <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none">
+        <div className="flex flex-wrap items-center gap-1 pb-1">
           {MATH_SYMBOL_GROUPS.map((g) => (
             <button
               key={g.category}

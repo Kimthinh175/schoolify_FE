@@ -799,7 +799,7 @@ export default function AdminDashboardPage() {
             </Button>
           </Link>
           <Link href="/admin/users">
-            <Button size="sm" className="bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold rounded-xl text-xs gap-1.5 cursor-pointer">
+            <Button size="sm" className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold rounded-xl text-xs gap-1.5 cursor-pointer">
               <Users className="w-4 h-4" />
               <span>Quản Lý User</span>
             </Button>
@@ -1089,7 +1089,7 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Subtab Segmented Navigation Buttons */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-100 dark:border-slate-800 no-scrollbar">
+          <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             {metricConfigs.map((config) => {
               const TabIcon = config.icon;
               const isActive = activeTabId === config.id;

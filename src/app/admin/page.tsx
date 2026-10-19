@@ -200,7 +200,7 @@ export default function AdminLoginPage() {
               <div className="pt-2 flex flex-col gap-2">
                 <Button
                   onClick={() => router.push('/admin/dashboard')}
-                  className="w-full bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold py-2.5 rounded-xl shadow-md cursor-pointer"
+                  className="w-full bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold py-2.5 rounded-xl shadow-md cursor-pointer"
                 >
                   Truy Cập Dashboard Ngay
                 </Button>
@@ -295,11 +295,11 @@ export default function AdminLoginPage() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-[#00B8DD] to-[#0089a8] hover:from-[#00cbf4] hover:to-[#009dc0] text-slate-950 font-black tracking-wide py-3 rounded-xl shadow-lg shadow-[#00B8DD]/25 transition-all active:scale-[0.98] text-sm flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full bg-gradient-to-r from-[#00B8DD] to-[#0089a8] hover:from-[#00cbf4] hover:to-[#009dc0] text-white font-black tracking-wide py-3 rounded-xl shadow-lg shadow-[#00B8DD]/25 transition-all active:scale-[0.98] text-sm flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {isLoading ? (
                     <>
-                      <RefreshCw className="w-4 h-4 animate-spin text-slate-950" />
+                      <RefreshCw className="w-4 h-4 animate-spin text-white" />
                       <span>Đang Xác Thực Root Key...</span>
                     </>
                   ) : (

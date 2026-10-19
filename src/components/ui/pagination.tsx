@@ -55,12 +55,12 @@ export function Pagination({
 
   return (
     <div
-      className={`flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-200/80 ${className}`}
+      className={`flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-200/80 dark:border-slate-800 ${className}`}
     >
-      <div className="text-xs text-slate-500 font-medium">
-        Hiển thị <span className="font-bold text-slate-800">{startItem}</span> -{' '}
-        <span className="font-bold text-slate-800">{endItem}</span> trên tổng số{' '}
-        <span className="font-bold text-slate-800">{totalItems}</span> dữ liệu (10 mục/trang)
+      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+        Hiển thị <span className="font-bold text-slate-800 dark:text-slate-200">{startItem}</span> -{' '}
+        <span className="font-bold text-slate-800 dark:text-slate-200">{endItem}</span> trên tổng số{' '}
+        <span className="font-bold text-slate-800 dark:text-slate-200">{totalItems}</span> dữ liệu (10 mục/trang)
       </div>
 
       <div className="flex items-center gap-1.5">
@@ -69,7 +69,7 @@ export function Pagination({
           variant="outline"
           disabled={currentPage <= 1}
           onClick={() => onPageChange(currentPage - 1)}
-          className="h-8 px-2.5 text-xs border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40"
+          className="h-8 px-2.5 text-xs border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40"
         >
           <ChevronLeft className="w-3.5 h-3.5 mr-1" />
           Trước
@@ -81,7 +81,7 @@ export function Pagination({
               return (
                 <span
                   key={`ellipsis-${idx}`}
-                  className="px-2 text-xs text-slate-400 font-mono"
+                  className="px-2 text-xs text-slate-400 dark:text-slate-500 font-mono"
                 >
                   ...
                 </span>
@@ -100,7 +100,7 @@ export function Pagination({
                 className={`h-8 w-8 p-0 text-xs font-semibold ${
                   isActive
                     ? 'bg-primary text-white shadow-xs'
-                    : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                    : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
               >
                 {pageNum}
@@ -114,7 +114,7 @@ export function Pagination({
           variant="outline"
           disabled={currentPage >= totalPages}
           onClick={() => onPageChange(currentPage + 1)}
-          className="h-8 px-2.5 text-xs border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40"
+          className="h-8 px-2.5 text-xs border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40"
         >
           Sau
           <ChevronRight className="w-3.5 h-3.5 ml-1" />

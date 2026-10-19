@@ -257,7 +257,7 @@ export default function ParentAcademicPage() {
           {MOCK_COURSES.map((course) => (
             <Card key={course.id} className="p-5 flex flex-col justify-between space-y-4">
               <div className="flex items-start gap-4">
-                <div className="h-16 w-24 rounded-xl overflow-hidden bg-slate-100 shrink-0">
+                <div className="h-16 w-24 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0">
                   <img src={course.thumbnail_url || ''} alt="" className="h-full w-full object-cover" />
                 </div>
                 <div>
@@ -269,7 +269,7 @@ export default function ParentAcademicPage() {
               <div>
                 <div className="flex justify-between text-xs font-semibold mb-1">
                   <span className="text-slate-500">Tiến độ hoàn thành:</span>
-                  <span className="text-indigo-600">65%</span>
+                  <span className="text-indigo-600 dark:text-indigo-400">65%</span>
                 </div>
                 <Progress value={65} showLabel={false} />
               </div>
