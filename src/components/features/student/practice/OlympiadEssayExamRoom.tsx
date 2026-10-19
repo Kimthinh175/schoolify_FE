@@ -324,7 +324,7 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
               size="sm"
               onClick={() => handleSubmitFullExam(false)}
               disabled={isGrading}
-              className="bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold rounded-xl px-3 sm:px-4 shadow-lg shadow-[#00B8DD]/20"
+              className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold rounded-xl px-3 sm:px-4 shadow-lg shadow-[#00B8DD]/20"
             >
               <Sparkles className="w-4 h-4 mr-1.5" />
               {isGrading ? 'AI Đang Chấm...' : 'Nộp Bài Chấm AI'}
@@ -349,7 +349,7 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
                   className={cn(
                     'px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shrink-0',
                     isCurrent
-                      ? 'bg-[#00B8DD] text-slate-950 shadow-md font-bold'
+                      ? 'bg-[#00B8DD] text-white shadow-md font-bold'
                       : 'bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/60'
                   )}
                 >
@@ -481,7 +481,7 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
                 <Button
                   size="sm"
                   onClick={() => handleSubmitFullExam(false)}
-                  className="bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold rounded-xl text-xs"
+                  className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold rounded-xl text-xs"
                 >
                   Nộp Toàn Bộ Bài Thi
                 </Button>
@@ -591,7 +591,7 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
             <Button
               variant="outline"
               onClick={() => setIsReportModalOpen(false)}
-              className="rounded-xl text-xs"
+              className="rounded-xl text-xs border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold cursor-pointer"
             >
               Xem lại bài làm
             </Button>
@@ -600,7 +600,7 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
                 await examOfflineStorage.clearActiveExamSession();
                 router.push('/student/practice');
               }}
-              className="bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold rounded-xl text-xs"
+              className="bg-gradient-to-r from-[#00B8DD] to-[#009bbd] hover:brightness-105 text-white font-bold rounded-xl text-xs shadow-sm shadow-[#00B8DD]/20 cursor-pointer"
             >
               Rời phòng thi & Lưu kết quả
             </Button>
@@ -614,20 +614,20 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center text-white mx-auto mb-2 shadow-lg shadow-amber-500/20">
                 <Trophy className="w-6 h-6" />
               </div>
-              <Badge className="bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40 text-xs px-2.5 py-0.5 mb-1 font-bold">
+              <Badge className="bg-amber-500/15 dark:bg-amber-500/25 text-amber-700 dark:text-amber-300 border-amber-500/40 text-xs px-2.5 py-0.5 mb-1 font-bold">
                 {gradingReport.rankingClassification}
               </Badge>
             </div>
 
             {/* Total Score & Feedback */}
-            <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 text-center space-y-1.5">
+            <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200/80 dark:border-slate-700/80 text-center space-y-1.5">
               <div className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">
                 Tổng Điểm Chấm Thi Chính Thức
               </div>
-              <div className="text-3xl font-black font-mono text-amber-500">
+              <div className="text-3xl font-black font-mono text-amber-600 dark:text-amber-400">
                 {gradingReport.totalScore.toFixed(1)} / {gradingReport.maxScore} Điểm
               </div>
-              <p className="text-xs text-slate-600 dark:text-slate-300 max-w-lg mx-auto pt-1 border-t border-slate-200 dark:border-slate-900 leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-300 max-w-lg mx-auto pt-1 border-t border-slate-200 dark:border-slate-800/80 leading-relaxed">
                 {gradingReport.overallTeacherComments}
               </p>
             </div>
@@ -640,13 +640,13 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
               {gradingReport.problemResults.map((pr) => (
                 <div
                   key={pr.problemId}
-                  className="bg-slate-100 dark:bg-slate-950/70 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs space-y-2"
+                  className="bg-slate-50 dark:bg-slate-800/50 p-3.5 rounded-xl border border-slate-200/70 dark:border-slate-700/70 text-xs space-y-2"
                 >
                   <div className="flex items-center justify-between font-bold">
                     <span className="text-slate-900 dark:text-slate-100">
                       Bài {pr.problemNumber}: {pr.title.split('(')[0]}
                     </span>
-                    <span className="text-amber-500 font-mono">
+                    <span className="text-amber-600 dark:text-amber-400 font-mono">
                       {pr.pointsEarned} / {pr.maxPoints} đ
                     </span>
                   </div>
@@ -671,10 +671,10 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
             </div>
 
             {/* Reward Bonus */}
-            <div className="bg-gradient-to-r from-amber-500/10 to-indigo-500/10 border border-amber-500/30 p-3 rounded-xl flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-200">
-              <Award className="w-5 h-5 text-amber-500 shrink-0" />
+            <div className="bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 p-3 rounded-xl flex items-center gap-2.5 text-xs text-amber-900 dark:text-amber-300">
+              <Award className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
               <span>
-                Thành tích đạt giải: <b className="text-amber-500">+{exam.pointsReward} Kim Cương 💎</b> đã được cộng vào tài khoản của bạn!
+                Thành tích đạt giải: <b className="text-amber-600 dark:text-amber-400 font-bold">+{exam.pointsReward} Kim Cương 💎</b> đã được cộng vào tài khoản của bạn!
               </span>
             </div>
           </div>

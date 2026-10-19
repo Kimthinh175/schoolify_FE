@@ -204,7 +204,7 @@ export function PracticeRoadmapList({
             </div>
           </div>
           <Link href="/login/student" className="shrink-0">
-            <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-xl shadow-md">
+            <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-md">
               Đăng Nhập Ngay
             </Button>
           </Link>
@@ -259,7 +259,7 @@ export function PracticeRoadmapList({
                 onClick={() => handleSubjectChange(subj.slug)}
                 className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                   selectedSubject === subj.slug
-                    ? 'bg-[#00B8DD] text-slate-950 shadow-md'
+                    ? 'bg-[#00B8DD] text-white shadow-md'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >

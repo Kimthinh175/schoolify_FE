@@ -73,7 +73,7 @@ export default function FocusLearningPlayerPage() {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <Badge variant="primary" className="text-[10px] bg-[#00B8DD] text-slate-950 font-bold">
+          <Badge variant="primary" className="text-[10px] bg-[#00B8DD] text-white font-bold">
             {completedLessons.length}/{course.total_lessons} bài hoàn thành
           </Badge>
         </div>

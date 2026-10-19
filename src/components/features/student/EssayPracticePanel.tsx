@@ -166,7 +166,7 @@ export function EssayPracticePanel({ questions, title }: EssayPracticePanelProps
                     <Button
                       onClick={() => submitAnswer(question.id)}
                       disabled={currentAnswer.trim().length === 0}
-                      className="bg-[#00B8DD] text-slate-950 font-bold hover:bg-[#009BBD]"
+                      className="bg-[#00B8DD] text-white font-bold hover:bg-[#009BBD]"
                     >
                       <Check className="mr-2 h-4 w-4" />
                       Nộp bài & Xem lời giải

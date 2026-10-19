@@ -134,7 +134,7 @@ export function StudentAccountHub() {
 
             <div className="space-y-1.5">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="primary" className="bg-[#00B8DD] text-slate-950 font-bold hover:bg-[#009BBD] text-[10px]">
+                <Badge variant="primary" className="bg-[#00B8DD] text-white font-bold hover:bg-[#009BBD] text-[10px]">
                   🎓 NGƯỜI LUYỆN THI
                 </Badge>
                 <span className="text-xs text-cyan-200 font-medium">Mã HS: HS-2026-8899</span>
@@ -234,7 +234,7 @@ export function StudentAccountHub() {
           className={cn(
             'flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer',
             activeTab === 'profile'
-              ? 'bg-[#00B8DD] text-slate-950 shadow-md shadow-[#00B8DD]/20'
+              ? 'bg-[#00B8DD] text-white shadow-md shadow-[#00B8DD]/20'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
           )}
         >
@@ -247,7 +247,7 @@ export function StudentAccountHub() {
           className={cn(
             'flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer',
             activeTab === 'exams'
-              ? 'bg-[#00B8DD] text-slate-950 shadow-md shadow-[#00B8DD]/20'
+              ? 'bg-[#00B8DD] text-white shadow-md shadow-[#00B8DD]/20'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
           )}
         >
@@ -261,7 +261,7 @@ export function StudentAccountHub() {
           className={cn(
             'flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer',
             activeTab === 'courses'
-              ? 'bg-[#00B8DD] text-slate-950 shadow-md shadow-[#00B8DD]/20'
+              ? 'bg-[#00B8DD] text-white shadow-md shadow-[#00B8DD]/20'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
           )}
         >
@@ -275,7 +275,7 @@ export function StudentAccountHub() {
           className={cn(
             'flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer',
             activeTab === 'wallet'
-              ? 'bg-[#00B8DD] text-slate-950 shadow-md shadow-[#00B8DD]/20'
+              ? 'bg-[#00B8DD] text-white shadow-md shadow-[#00B8DD]/20'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
           )}
         >
@@ -288,7 +288,7 @@ export function StudentAccountHub() {
           className={cn(
             'flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer',
             activeTab === 'security'
-              ? 'bg-[#00B8DD] text-slate-950 shadow-md shadow-[#00B8DD]/20'
+              ? 'bg-[#00B8DD] text-white shadow-md shadow-[#00B8DD]/20'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
           )}
         >
@@ -436,7 +436,7 @@ export function StudentAccountHub() {
               <div className="flex justify-end pt-2">
                 <Button
                   type="submit"
-                  className="bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold px-6 py-2.5 rounded-xl shadow-md cursor-pointer"
+                  className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold px-6 py-2.5 rounded-xl shadow-md cursor-pointer"
                   leftIcon={<Save className="w-4 h-4" />}
                 >
                   Lưu Thay Đổi Hồ Sơ
@@ -502,7 +502,7 @@ export function StudentAccountHub() {
 
                 <div className="p-4 pt-0">
                   <Link href={`/student/learn/${c.id}/l1`}>
-                    <Button className="w-full bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold text-xs py-2 rounded-xl cursor-pointer">
+                    <Button className="w-full bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold text-xs py-2 rounded-xl cursor-pointer">
                       Tiếp Tục Học Ngay
                     </Button>
                   </Link>
@@ -535,7 +535,7 @@ export function StudentAccountHub() {
               </div>
               <div className="pt-2 flex items-center gap-3">
                 <Link href="/pricing" className="flex-1">
-                  <Button className="w-full bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold text-xs rounded-xl cursor-pointer">
+                  <Button className="w-full bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold text-xs rounded-xl cursor-pointer">
                     Nạp Thêm Kim Cương
                   </Button>
                 </Link>
@@ -643,7 +643,7 @@ export function StudentAccountHub() {
 
             <Button
               type="submit"
-              className="w-full bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold py-2.5 rounded-xl cursor-pointer"
+              className="w-full bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold py-2.5 rounded-xl cursor-pointer"
             >
               Cập Nhật Mật Khẩu Mới
             </Button>

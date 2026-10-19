@@ -87,7 +87,7 @@ export default function CoursesMarketplacePage() {
                   onClick={() => setActiveLevel(lvl.id)}
                   className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                     activeLevel === lvl.id
-                      ? 'bg-[#00B8DD] text-slate-950 font-bold shadow-xs'
+                      ? 'bg-[#00B8DD] text-white font-bold shadow-xs'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
                   }`}
                 >
@@ -141,7 +141,7 @@ export default function CoursesMarketplacePage() {
                 
                 {/* Price Tag */}
                 <div className="absolute top-3 right-3">
-                  <Badge variant="primary" className="bg-[#00B8DD] text-slate-950 font-black text-xs shadow-md">
+                  <Badge variant="primary" className="bg-[#00B8DD] text-white font-black text-xs shadow-md">
                     {formatMoney(course.price)}
                   </Badge>
                 </div>
@@ -194,7 +194,7 @@ export default function CoursesMarketplacePage() {
                   {/* Action Button */}
                   <Link href={`/courses/${course.id}`}>
                     <Button
-                      className="w-full justify-center bg-[#E6F8FC] hover:bg-[#00B8DD] hover:text-slate-950 text-[#007D99] dark:bg-slate-800 dark:hover:bg-[#00B8DD] dark:hover:text-slate-950 dark:text-cyan-400 font-bold text-xs transition-all"
+                      className="w-full justify-center bg-[#E6F8FC] hover:bg-[#00B8DD] hover:text-white text-[#007D99] dark:bg-slate-800 dark:hover:bg-[#00B8DD] dark:hover:text-white dark:text-cyan-400 font-bold text-xs transition-all"
                       variant="ghost"
                       rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
                     >

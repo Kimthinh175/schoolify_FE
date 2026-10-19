@@ -618,7 +618,7 @@ export function CodingExamRoom({ exam }: CodingExamRoomProps) {
             <Button
               size="sm"
               onClick={() => setIsFinalSubmitOpen(true)}
-              className="bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold rounded-xl px-3 sm:px-4 shadow-lg shadow-[#00B8DD]/20"
+              className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold rounded-xl px-3 sm:px-4 shadow-lg shadow-[#00B8DD]/20"
             >
               <Send className="w-4 h-4 mr-1.5" />
               Nộp Toàn Bộ Bài
@@ -642,7 +642,7 @@ export function CodingExamRoom({ exam }: CodingExamRoomProps) {
                   className={cn(
                     'px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shrink-0',
                     isCurrent
-                      ? 'bg-[#00B8DD] text-slate-950 shadow-md font-bold'
+                      ? 'bg-[#00B8DD] text-white shadow-md font-bold'
                       : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 border border-slate-700/60'
                   )}
                 >
@@ -684,7 +684,7 @@ export function CodingExamRoom({ exam }: CodingExamRoomProps) {
           onClick={() => setMobileTab('problem')}
           className={cn(
             'flex-1 py-1.5 text-xs font-semibold rounded-md transition text-center',
-            mobileTab === 'problem' ? 'bg-[#00B8DD] text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
+            mobileTab === 'problem' ? 'bg-[#00B8DD] text-white font-bold' : 'text-slate-400 hover:text-white'
           )}
         >
           1. Đề Bài & Ví Dụ
@@ -693,7 +693,7 @@ export function CodingExamRoom({ exam }: CodingExamRoomProps) {
           onClick={() => setMobileTab('editor')}
           className={cn(
             'flex-1 py-1.5 text-xs font-semibold rounded-md transition text-center',
-            mobileTab === 'editor' ? 'bg-[#00B8DD] text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
+            mobileTab === 'editor' ? 'bg-[#00B8DD] text-white font-bold' : 'text-slate-400 hover:text-white'
           )}
         >
           2. Trình Soạn Thảo ({currentLang.toUpperCase()})
@@ -702,7 +702,7 @@ export function CodingExamRoom({ exam }: CodingExamRoomProps) {
           onClick={() => setMobileTab('console')}
           className={cn(
             'flex-1 py-1.5 text-xs font-semibold rounded-md transition text-center',
-            mobileTab === 'console' ? 'bg-[#00B8DD] text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
+            mobileTab === 'console' ? 'bg-[#00B8DD] text-white font-bold' : 'text-slate-400 hover:text-white'
           )}
         >
           3. Kết Quả & AI Review
@@ -856,7 +856,7 @@ export function CodingExamRoom({ exam }: CodingExamRoomProps) {
                       className={cn(
                         'px-2.5 py-1 text-xs font-bold rounded-lg transition',
                         currentLang === lang.id
-                          ? 'bg-[#00B8DD] text-slate-950 shadow'
+                          ? 'bg-[#00B8DD] text-white shadow'
                           : 'text-slate-400 hover:text-white'
                       )}
                     >
@@ -1203,7 +1203,7 @@ export function CodingExamRoom({ exam }: CodingExamRoomProps) {
             <Button
               variant="outline"
               onClick={() => setIsFinalSubmitOpen(false)}
-              className="border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs"
+              className="border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-xs font-semibold cursor-pointer"
             >
               Tiếp tục chỉnh sửa
             </Button>
@@ -1212,7 +1212,7 @@ export function CodingExamRoom({ exam }: CodingExamRoomProps) {
                 await examOfflineStorage.clearActiveExamSession();
                 router.push('/student/practice');
               }}
-              className="bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold rounded-xl text-xs"
+              className="bg-gradient-to-r from-[#00B8DD] to-[#009bbd] hover:brightness-105 text-white font-bold rounded-xl text-xs shadow-sm shadow-[#00B8DD]/20 cursor-pointer"
             >
               Rời phòng thi & Lưu kết quả
             </Button>
@@ -1221,7 +1221,7 @@ export function CodingExamRoom({ exam }: CodingExamRoomProps) {
       >
         <div className="space-y-4">
           <div className="text-center py-2">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center mx-auto mb-2">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/15 dark:bg-amber-500/25 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center justify-center mx-auto mb-2 shadow-xs">
               <Trophy className="w-6 h-6" />
             </div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white">Điểm Bài Thi Học Sinh Giỏi</h3>
@@ -1234,7 +1234,7 @@ export function CodingExamRoom({ exam }: CodingExamRoomProps) {
               return (
                 <div
                   key={prob.id}
-                  className="p-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs"
+                  className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between text-xs"
                 >
                   <div>
                     <div className="font-bold text-slate-800 dark:text-slate-200">
@@ -1253,20 +1253,20 @@ export function CodingExamRoom({ exam }: CodingExamRoomProps) {
               );
             })}
 
-            <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-500/10 to-indigo-500/10 border border-amber-500/30 flex items-center justify-between mt-3">
+            <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-500/10 via-sky-500/5 to-indigo-500/10 border border-amber-500/30 flex items-center justify-between mt-3">
               <span className="font-bold text-sm text-slate-800 dark:text-slate-100">Tổng điểm HSG đạt được:</span>
-              <span className="text-lg font-mono font-black text-amber-500">
+              <span className="text-lg font-mono font-black text-amber-600 dark:text-amber-400">
                 {totalExamEarned.toFixed(1)} / {exam.totalPoints} Điểm
               </span>
             </div>
           </div>
 
           {/* Reward */}
-          <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-700 dark:text-slate-300 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+          <div className="bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-xl p-3 text-xs text-amber-900 dark:text-amber-300 flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
             <span>
               Thưởng thành tích:{' '}
-              <b className="text-amber-500">+{exam.pointsReward} Kim Cương 💎</b> đã được cộng vào tài khoản của bạn!
+              <b className="text-amber-600 dark:text-amber-400 font-bold">+{exam.pointsReward} Kim Cương 💎</b> đã được cộng vào tài khoản của bạn!
             </span>
           </div>
         </div>

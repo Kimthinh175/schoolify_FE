@@ -71,7 +71,7 @@ export default function ProfileSettingsPage() {
               />
               <button
                 type="button"
-                className="absolute bottom-0 right-0 p-2 rounded-full bg-[#00B8DD] text-slate-950 hover:bg-[#009BBD] transition-all shadow-md cursor-pointer"
+                className="absolute bottom-0 right-0 p-2 rounded-full bg-[#00B8DD] text-white hover:bg-[#009BBD] transition-all shadow-md cursor-pointer"
                 title="Đổi ảnh đại diện"
               >
                 <Camera className="w-4 h-4" />
@@ -81,7 +81,7 @@ export default function ProfileSettingsPage() {
             <div className="text-center sm:text-left space-y-1.5 flex-1">
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">{fullname}</h3>
-                <Badge variant="primary" className="bg-[#00B8DD] text-slate-950 font-bold text-[10px]">
+                <Badge variant="primary" className="bg-[#00B8DD] text-white font-bold text-[10px]">
                   {getRoleLabel(currentRole)}
                 </Badge>
               </div>
@@ -172,7 +172,7 @@ export default function ProfileSettingsPage() {
           <Button
             type="submit"
             variant="primary"
-            className="bg-[#00B8DD] hover:bg-[#009BBD] text-slate-950 font-bold px-6"
+            className="bg-[#00B8DD] hover:bg-[#009BBD] text-white font-bold px-6"
             leftIcon={<Save className="w-4 h-4" />}
           >
             Lưu Thay Đổi Hồ Sơ

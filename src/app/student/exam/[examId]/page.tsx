@@ -75,7 +75,7 @@ export default function OnlineExamRunnerPage() {
             🎉 Bạn nhận được +50 Điểm thưởng chuyên cần!
           </div>
           <Link href="/student/dashboard" className="block">
-            <Button className="w-full justify-center bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold">Về Góc Học Tập</Button>
+            <Button className="w-full justify-center bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold">Về Góc Học Tập</Button>
           </Link>
         </Card>
       </div>
@@ -118,7 +118,7 @@ export default function OnlineExamRunnerPage() {
               variant="primary"
               size="sm"
               leftIcon={<Send className="w-4 h-4" />}
-              className="bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold"
+              className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold"
             >
               Nộp Bài
             </Button>
@@ -193,18 +193,43 @@ export default function OnlineExamRunnerPage() {
       <Dialog
         isOpen={isSubmitModalOpen}
         onClose={() => setIsSubmitModalOpen(false)}
-        title="Xác Nhận Nộp Bài Thi"
-        description="Bạn đã hoàn thành đủ 4/4 câu hỏi. Bạn có chắc chắn muốn nộp bài ngay bây giờ?"
+        title={
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-2xl bg-[#00B8DD]/10 dark:bg-[#00B8DD]/20 border border-[#00B8DD]/30 text-[#007D99] dark:text-[#00B8DD] flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-5 h-5 text-[#00B8DD]" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">
+                Xác Nhận Nộp Bài Thi
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-normal mt-0.5">
+                Bạn đã hoàn thành đủ {exam?.questions?.length || 0}/{exam?.questions?.length || 0} câu hỏi
+              </p>
+            </div>
+          </div>
+        }
       >
         <div className="space-y-4 py-2">
-          <p className="text-xs text-slate-500">
-            Sau khi nộp bài, hệ thống sẽ tự động chấm điểm phần trắc nghiệm và gửi bài tự luận tới thầy cô bộ môn.
-          </p>
-          <div className="flex justify-end gap-3 pt-2">
-            <Button variant="ghost" onClick={() => setIsSubmitModalOpen(false)}>
+          <div className="p-3.5 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-3 text-xs text-emerald-900 dark:text-emerald-300">
+            <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span>
+              Sau khi nộp bài, hệ thống sẽ tự động chấm điểm phần trắc nghiệm và chuyển bài tự luận tới giáo viên bộ môn.
+            </span>
+          </div>
+
+          <div className="flex items-center justify-end gap-2.5 pt-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsSubmitModalOpen(false)}
+              className="rounded-xl border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold px-4 cursor-pointer text-xs sm:text-sm"
+            >
               Xem Lại Bài
             </Button>
-            <Button variant="primary" onClick={handleSubmitExam}>
+            <Button
+              onClick={handleSubmitExam}
+              className="bg-gradient-to-r from-[#00B8DD] to-[#009bbd] hover:brightness-105 text-white font-bold rounded-xl px-5 shadow-sm shadow-[#00B8DD]/20 cursor-pointer text-xs sm:text-sm flex items-center gap-1.5"
+            >
+              <CheckCircle2 className="w-4 h-4" />
               Xác Nhận Nộp
             </Button>
           </div>

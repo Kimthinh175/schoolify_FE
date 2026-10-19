@@ -218,7 +218,7 @@ export default function ForumPage() {
       {/* ── HEADER ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-200 dark:border-slate-800 pb-8">
         <div className="space-y-2 max-w-2xl">
-          <Badge variant="primary" className="bg-[#00B8DD] text-slate-950 font-bold mb-1">
+          <Badge variant="primary" className="bg-[#00B8DD] text-white font-bold mb-1">
             CỘNG ĐỒNG HỌC TẬP K-12
           </Badge>
           <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -232,7 +232,7 @@ export default function ForumPage() {
         {/* Action Button */}
         <Button
           onClick={() => setIsNewPostModalOpen(true)}
-          className="bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold rounded-xl shadow-lg shadow-[#00B8DD]/20 shrink-0 self-start md:self-auto"
+          className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold rounded-xl shadow-lg shadow-[#00B8DD]/20 shrink-0 self-start md:self-auto"
           leftIcon={<PlusCircle className="w-4 h-4" />}
         >
           Đặt Câu Hỏi Mới
@@ -250,7 +250,7 @@ export default function ForumPage() {
               className={cn(
                 'px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer',
                 selectedSubject === s
-                  ? 'bg-[#00B8DD] text-slate-950 shadow-sm'
+                  ? 'bg-[#00B8DD] text-white shadow-sm'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               )}
             >
@@ -555,7 +555,7 @@ export default function ForumPage() {
             </Button>
             <Button
               type="submit"
-              className="bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold rounded-xl"
+              className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold rounded-xl"
             >
               Đăng Câu Hỏi
             </Button>

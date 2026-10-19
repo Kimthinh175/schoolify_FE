@@ -80,7 +80,7 @@ export const CASIO_MODELS: Record<CasioModel, CasioModelConfig> = {
       opKey: 'rounded-full aspect-square bg-[#1e293b] hover:bg-[#334155] text-cyan-400 border-[#334155] shadow-[0_2px_0_#0f172a] active:translate-y-[1.5px] active:shadow-none font-bold',
       delKey: 'rounded-full aspect-square bg-[#7f1d1d] hover:bg-[#991b1b] text-white border-[#991b1b] shadow-[0_2px_0_#450a0a] active:translate-y-[1.5px] active:shadow-none font-bold',
       acKey: 'rounded-full aspect-square bg-[#7f1d1d] hover:bg-[#991b1b] text-white border-[#991b1b] shadow-[0_2px_0_#450a0a] active:translate-y-[1.5px] active:shadow-none font-bold',
-      equalsKey: 'rounded-full aspect-square bg-cyan-500 hover:bg-cyan-400 text-slate-950 border-cyan-300 shadow-[0_2px_0_#0891b2] active:translate-y-[1.5px] active:shadow-none font-black',
+      equalsKey: 'rounded-full aspect-square bg-cyan-500 hover:bg-cyan-400 text-white border-cyan-300 shadow-[0_2px_0_#0891b2] active:translate-y-[1.5px] active:shadow-none font-black',
       shiftKey: 'rounded-full aspect-square bg-[#0f172a] hover:bg-[#1e293b] text-[#facc15] border-[#1e293b] shadow-[0_2px_0_#020617] active:translate-y-[1.5px] active:shadow-none font-bold',
       alphaKey: 'rounded-full aspect-square bg-[#0f172a] hover:bg-[#1e293b] text-[#fb7185] border-[#1e293b] shadow-[0_2px_0_#020617] active:translate-y-[1.5px] active:shadow-none font-bold',
     },

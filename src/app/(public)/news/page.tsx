@@ -137,7 +137,7 @@ export default function NewsPage() {
       {/* ── HEADER ── */}
       <div className="text-center max-w-3xl mx-auto space-y-4">
         <motion.div {...fadeUp(0)}>
-          <Badge variant="primary" className="bg-[#00B8DD] text-slate-950 font-bold mb-3">
+          <Badge variant="primary" className="bg-[#00B8DD] text-white font-bold mb-3">
             TIN TỨC &amp; HOẠT ĐỘNG GIÁO DỤC
           </Badge>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -159,7 +159,7 @@ export default function NewsPage() {
               className={cn(
                 'px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer',
                 activeCategory === cat
-                  ? 'bg-[#00B8DD] text-slate-950 shadow-sm'
+                  ? 'bg-[#00B8DD] text-white shadow-sm'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               )}
             >
@@ -192,7 +192,7 @@ export default function NewsPage() {
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
               <div className="absolute top-4 left-4">
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#00B8DD] text-slate-950 shadow-md">
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#00B8DD] text-white shadow-md">
                   Tiêu Điểm Nổi Bật ⭐
                 </span>
               </div>

@@ -499,7 +499,7 @@ export default function StudentPracticeWorkspacePage() {
                 {/* DẠNG 1 */}
                 <Card className="bg-slate-50 dark:bg-slate-950/90 border-slate-200 dark:border-slate-800 p-5 rounded-xl space-y-4">
                   <div className="flex items-center justify-between">
-                    <Badge variant="primary" className="text-[11px] bg-[#00B8DD] text-slate-950 font-bold">
+                    <Badge variant="primary" className="text-[11px] bg-[#00B8DD] text-white font-bold">
                       DẠNG 1: Tính giá trị lượng giác khi biết một giá trị lượng giác cho trước
                     </Badge>
                   </div>
@@ -535,7 +535,7 @@ export default function StudentPracticeWorkspacePage() {
                 {/* DẠNG 2 */}
                 <Card className="bg-slate-50 dark:bg-slate-950/90 border-slate-200 dark:border-slate-800 p-5 rounded-xl space-y-4">
                   <div className="flex items-center justify-between">
-                    <Badge variant="primary" className="text-[11px] bg-[#00B8DD] text-slate-950 font-bold">
+                    <Badge variant="primary" className="text-[11px] bg-[#00B8DD] text-white font-bold">
                       DẠNG 2: Rút gọn biểu thức lượng giác & Chứng minh đẳng thức
                     </Badge>
                   </div>

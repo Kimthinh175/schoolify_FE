@@ -184,7 +184,7 @@ function AnswerOption({ answer, index, isSelected, isMulti, phase, onSelect }: A
         className={cn(
           'mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-bold transition-colors',
           phase === 'ANSWERING' && !isSelected && 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300',
-          phase === 'ANSWERING' && isSelected && 'bg-[#00B8DD] text-slate-950 font-black',
+          phase === 'ANSWERING' && isSelected && 'bg-[#00B8DD] text-white font-black',
           isCorrect && 'bg-emerald-500 text-white',
           isWrong && 'bg-rose-500 text-white',
           isCorrectNotPicked && 'bg-emerald-600/60 text-white',

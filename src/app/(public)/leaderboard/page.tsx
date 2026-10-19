@@ -199,7 +199,7 @@ export default function LeaderboardPage() {
       {/* ── HEADER ── */}
       <div className="text-center max-w-3xl mx-auto space-y-3">
         <motion.div {...fadeUp(0)}>
-          <Badge variant="primary" className="bg-[#00B8DD] text-slate-950 font-bold mb-2">
+          <Badge variant="primary" className="bg-[#00B8DD] text-white font-bold mb-2">
             VINH DANH HỌC SINH XUẤT SẮC TOÀN QUỐC
           </Badge>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight flex items-center justify-center gap-3">
@@ -251,7 +251,7 @@ export default function LeaderboardPage() {
                 className={cn(
                   'px-3 py-1.5 rounded-lg font-bold transition-all whitespace-nowrap cursor-pointer',
                   selectedGrade === g.val
-                    ? 'bg-[#00B8DD] text-slate-950'
+                    ? 'bg-[#00B8DD] text-white'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
                 )}
               >
@@ -452,7 +452,7 @@ export default function LeaderboardPage() {
           </p>
         </div>
         <Link href="/#kho-mon-hoc">
-          <Button className="bg-[#00B8DD] hover:bg-[#009bbd] text-slate-950 font-bold rounded-xl shadow-md shrink-0" rightIcon={<ArrowRight className="w-4 h-4" />}>
+          <Button className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold rounded-xl shadow-md shrink-0" rightIcon={<ArrowRight className="w-4 h-4" />}>
             Bắt Đầu Luyện Ngay
           </Button>
         </Link>

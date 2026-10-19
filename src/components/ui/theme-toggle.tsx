@@ -39,7 +39,7 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
     return (
       <div
         className={cn(
-          'p-2 sm:px-2.5 sm:py-1.5 rounded-xl border border-slate-200/80 bg-slate-100 text-slate-400 dark:border-slate-800 dark:bg-slate-900',
+          'inline-flex h-9 min-w-9 items-center justify-center rounded-full border border-slate-200 bg-white px-2.5 text-slate-400 dark:border-slate-700 dark:bg-slate-900',
           className
         )}
       >
@@ -60,9 +60,9 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
       type="button"
       onClick={handleCycleTheme}
       className={cn(
-        'relative inline-flex items-center gap-1.5 p-2 sm:px-2.5 sm:py-1.5 rounded-xl border transition-all cursor-pointer shadow-2xs select-none',
-        'bg-white hover:bg-slate-100 border-slate-200/80 text-slate-700',
-        'dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-750 dark:text-slate-200',
+        'relative inline-flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-full border px-2.5 transition-colors cursor-pointer select-none',
+        'bg-white hover:bg-slate-50 border-slate-200 text-slate-600',
+        'dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700 dark:text-slate-300',
         'active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00B8DD]',
         className
       )}
@@ -76,15 +76,9 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
         transition={{ duration: 0.2, ease: 'easeOut' }}
         className="relative flex items-center justify-center shrink-0"
       >
-        {theme === 'light' && (
-          <Sun className="w-4 h-4 text-amber-500 fill-amber-500/20" />
-        )}
-        {theme === 'dark' && (
-          <Moon className="w-4 h-4 text-indigo-400 fill-indigo-400/20" />
-        )}
-        {theme === 'system' && (
-          <SunMoon className="w-4 h-4 text-[#00B8DD]" />
-        )}
+        {theme === 'light' && <Sun className="w-4 h-4" />}
+        {theme === 'dark' && <Moon className="w-4 h-4" />}
+        {theme === 'system' && <SunMoon className="w-4 h-4" />}
       </motion.span>
 
       {showLabel && (
