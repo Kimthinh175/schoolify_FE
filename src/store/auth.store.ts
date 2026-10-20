@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { User, SchoolRole, SystemRole, SchoolMember } from '@/types';
+import { User, SchoolRole, SystemRole } from '@/types';
 
 interface AuthStoreState {
   user: User | null;
@@ -15,6 +15,7 @@ interface AuthStoreState {
   // Actions
   login: (user: User, token: string, role?: SchoolRole | SystemRole, schoolId?: string) => void;
   logout: () => void;
+  fetchMe: () => Promise<User | null>;
   setRole: (role: SchoolRole | SystemRole) => void;
   setSchool: (schoolId: string, schoolName: string) => void;
   updateUser: (userPartial: Partial<User>) => void;
@@ -30,19 +31,34 @@ export const useAuthStore = create<AuthStoreState>()(
       currentSchool: null,
       isAuthenticated: false,
 
-      login: (user, token, role, schoolId) =>
+      login: (user, token, role, schoolId) => {
+        const resolvedRole: SchoolRole | SystemRole =
+          role ||
+          (user.role === 'SUPER_ADMIN'
+            ? 'SUPER_ADMIN'
+            : (user as any).teacher_profile
+              ? 'TEACHER'
+              : 'STUDENT');
+
         set({
           user,
           token,
-          currentRole: role || (user.role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : 'STUDENT'),
+          currentRole: resolvedRole,
           currentSchoolId: schoolId || (user.school_memberships?.[0]?.school_id ?? null),
           currentSchool: user.school_memberships?.[0]
-            ? { id: user.school_memberships[0].school_id, name: user.school_memberships[0].school_name || 'Trường học' }
+            ? {
+                id: user.school_memberships[0].school_id,
+                name: user.school_memberships[0].school_name || 'Trường học',
+              }
             : null,
           isAuthenticated: true,
-        }),
+        });
+      },
 
-      logout: () =>
+      logout: () => {
+        if (typeof window !== 'undefined') {
+          fetch('/api/v1/auth/logout', { method: 'POST' }).catch(() => {});
+        }
         set({
           user: null,
           token: null,
@@ -50,7 +66,30 @@ export const useAuthStore = create<AuthStoreState>()(
           currentSchoolId: null,
           currentSchool: null,
           isAuthenticated: false,
-        }),
+        });
+      },
+
+      fetchMe: async () => {
+        const { token, isAuthenticated } = get();
+        if (!isAuthenticated && !token) return null;
+        try {
+          const res = await fetch('/api/v1/auth/me', {
+            method: 'GET',
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          });
+          if (!res.ok) return null;
+          const data = await res.json();
+          if (data?.user) {
+            const current = get().user;
+            const merged = { ...current, ...data.user };
+            set({ user: merged });
+            return merged;
+          }
+          return null;
+        } catch {
+          return null;
+        }
+      },
 
       setRole: (role) => set({ currentRole: role }),
 

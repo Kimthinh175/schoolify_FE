@@ -4,6 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { Question, DifficultyLevel } from '@/types/exam';
 import { INITIAL_MASTER_QUESTIONS } from '@/services/mock/master-questions';
+import { questionBankService } from '@/services/question-bank.service';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -236,6 +237,20 @@ export default function AdminQuestionsPage() {
       setBugReports(DEFAULT_BUG_REPORTS);
     }
 
+    // 1. Tải toàn bộ câu hỏi từ PostgreSQL (GET /api/v1/exams/questions)
+    questionBankService
+      .fetchPostgresQuestions({ page: 1, limit: 1000 })
+      .then((res) => {
+        if (res.items.length > 0) {
+          setQuestions((prev) => {
+            const pgIds = new Set(res.items.map((q) => q.id));
+            const remainingMock = prev.filter((q) => !pgIds.has(q.id));
+            return [...res.items, ...remainingMock];
+          });
+        }
+      })
+      .catch(() => {});
+
     fetch('/api/db/generatedQuestions', { cache: 'no-store' })
       .then((res) => res.json())
       .then((json) => {
@@ -406,7 +421,8 @@ export default function AdminQuestionsPage() {
   };
 
   const handleDelete = (id: string) => {
-    setQuestions(questions.filter((q) => q.id !== id));
+    setQuestions((prev) => prev.filter((q) => q.id !== id));
+    questionBankService.deletePostgresQuestion(id).catch(() => {});
     toast.success('Đã xóa câu hỏi khỏi ngân hàng!');
   };
 
@@ -431,6 +447,7 @@ export default function AdminQuestionsPage() {
       prev.map((q) => (q.id === editingQuestion.id ? editingQuestion : q))
     );
 
+    questionBankService.updatePostgresQuestion(editingQuestion.id, editingQuestion).catch(() => {});
     setEditingQuestion(null);
     toast.success('Đã lưu cập nhật câu hỏi thành công!');
   };

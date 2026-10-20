@@ -13,9 +13,7 @@ import {
   ArrowRight,
   Shield,
   LogIn,
-  Baby,
   UserCheck,
-  School,
   Lock,
   Gem,
   LogOut,
@@ -24,12 +22,13 @@ import {
   Award,
   CreditCard,
   CalendarCheck,
-  Zap,
+  History,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth.store';
+import { examPointsService, ExamPointLogItem } from '@/services/exam-points.service';
 import { toast } from 'sonner';
 
 // 2 vai trò đăng nhập chính của nền tảng: Người Luyện Thi & Người Bán Khóa Học
@@ -53,7 +52,7 @@ const LOGIN_ROLES = [
 ];
 
 export function Navbar() {
-  const { user, isAuthenticated, login, logout, currentRole } = useAuthStore();
+  const { user, isAuthenticated, logout, fetchMe, currentRole } = useAuthStore();
   const isTeacher = currentRole === 'TEACHER' || !!user?.teacher_profile;
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [loginDrawerOpen, setLoginDrawerOpen] = React.useState(false);
@@ -63,6 +62,7 @@ export function Navbar() {
   const [pointsMenuOpen, setPointsMenuOpen] = React.useState(false);
   const pointsMenuTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const [checkedInToday, setCheckedInToday] = React.useState(false);
+  const [recentPointLogs, setRecentPointLogs] = React.useState<ExamPointLogItem[]>([]);
 
   const [scrolled, setScrolled] = React.useState(false);
   const pathname = usePathname();
@@ -89,52 +89,68 @@ export function Navbar() {
     }, 200);
   };
 
-  const [tokenBalance, setTokenBalance] = React.useState<number>(250);
+  const [tokenBalance, setTokenBalance] = React.useState<number>(9);
 
   React.useEffect(() => {
-    const updateBalance = () => {
-      try {
-        const stored = localStorage.getItem('schoolify_user_tokens');
-        if (stored) {
-          setTokenBalance(Number(stored));
-        } else {
-          localStorage.setItem('schoolify_user_tokens', '250');
-        }
-      } catch {}
-    };
+    if (isAuthenticated) {
+      fetchMe().catch(() => { });
+    }
+  }, [isAuthenticated, fetchMe]);
 
-    updateBalance();
-    window.addEventListener('tokens-updated', updateBalance);
-    window.addEventListener('storage', updateBalance);
-    return () => {
-      window.removeEventListener('tokens-updated', updateBalance);
-      window.removeEventListener('storage', updateBalance);
-    };
-  }, []);
-
-  React.useEffect(() => {
-    try {
-      const lastCheckin = localStorage.getItem('schoolify_last_checkin');
-      const today = new Date().toDateString();
-      if (lastCheckin === today) {
+  const loadPointsFromBackend = React.useCallback(async () => {
+    const balanceData = await examPointsService.getBalance(user?.id);
+    if (balanceData && typeof balanceData.currentPoints === 'number') {
+      setTokenBalance(balanceData.currentPoints);
+      setRecentPointLogs(balanceData.recentLogs || []);
+      const todayKey = new Date().toISOString().slice(0, 10);
+      const claimedManualKey = `schoolify_checkin_${user?.id || 'guest'}_${todayKey}`;
+      if (typeof window !== 'undefined' && localStorage.getItem(claimedManualKey) === '1') {
         setCheckedInToday(true);
+      } else {
+        setCheckedInToday(false);
       }
-    } catch {}
-  }, []);
+    }
+  }, [user?.id]);
 
-  const handleCheckin = (e: React.MouseEvent) => {
+  React.useEffect(() => {
+    loadPointsFromBackend();
+
+    const handleTokensUpdated = (e: Event) => {
+      const customEvt = e as CustomEvent<{ points?: number }>;
+      if (typeof customEvt?.detail?.points === 'number') {
+        setTokenBalance(customEvt.detail.points);
+      }
+      loadPointsFromBackend();
+    };
+
+    window.addEventListener('tokens-updated', handleTokensUpdated);
+    return () => {
+      window.removeEventListener('tokens-updated', handleTokensUpdated);
+    };
+  }, [loadPointsFromBackend]);
+
+  const handleCheckin = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (checkedInToday) return;
     try {
-      const today = new Date().toDateString();
-      localStorage.setItem('schoolify_last_checkin', today);
-      setCheckedInToday(true);
-      const newBalance = tokenBalance + 10;
-      setTokenBalance(newBalance);
-      localStorage.setItem('schoolify_user_tokens', String(newBalance));
-      window.dispatchEvent(new Event('tokens-updated'));
-    } catch {}
+      const res = await examPointsService.claimDailyPoints({
+        userId: user?.id,
+        forceReset: true,
+      });
+      if (res?.success && res?.data) {
+        setCheckedInToday(true);
+        setTokenBalance(res.data.currentPoints);
+        const todayKey = new Date().toISOString().slice(0, 10);
+        localStorage.setItem(`schoolify_checkin_${user?.id || 'guest'}_${todayKey}`, '1');
+        toast.success('Điểm danh thành công!', {
+          description: res.message || `Số dư điểm năng lượng làm đề: ${res.data.currentPoints} điểm.`,
+        });
+        loadPointsFromBackend();
+      }
+    } catch {
+      toast.error('Không thể điểm danh lúc này. Vui lòng thử lại.');
+    }
   };
 
   React.useEffect(() => {
@@ -206,7 +222,7 @@ export function Navbar() {
             />
           </Link>
 
-          {/* ── Desktop Navigation Links (Không viền, gạch dưới tab đang chọn) ── */}
+          {/* ── Desktop Navigation Links ── */}
           <nav className="hidden md:flex items-center gap-1 sm:gap-1.5 lg:gap-2 h-full">
             {navLinks.map((item) => {
               const isActive =
@@ -240,170 +256,177 @@ export function Navbar() {
 
           {/* ── Desktop Right CTAs ── */}
           <div className="hidden md:flex items-center gap-2.5">
-            {/* Theme Toggle Button */}
             <ThemeToggle />
+
+            {/* Diamond / Exam Energy Points Badge (Luôn hiển thị cho cả Học sinh & Khách) */}
+            <div
+              className="relative"
+              onMouseEnter={handlePointsMenuEnter}
+              onMouseLeave={handlePointsMenuLeave}
+            >
+              <Link
+                href="/student/rewards"
+                className="inline-flex h-9 items-center gap-1.5 px-3 rounded-full bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                title="Số dư điểm năng lượng làm đề"
+              >
+                <Gem className="w-4 h-4 text-[#00B8DD] shrink-0" />
+                <span className="tabular-nums font-bold text-slate-800 dark:text-slate-100">{tokenBalance}</span>
+              </Link>
+
+              {/* Submenu: Điểm thưởng & Lịch sử */}
+              <AnimatePresence>
+                {pointsMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 6, scale: 0.96 }}
+                    transition={{ duration: 0.15, ease: 'easeOut' }}
+                    className="absolute right-0 top-full mt-2 w-[420px] max-w-[calc(100vw-24px)] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-900/15 dark:shadow-black/60 p-4 z-50 text-slate-800 dark:text-slate-100"
+                  >
+                    {/* Header: Số dư hiện tại */}
+                    <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 mb-3.5">
+                      <div>
+                        <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                          Số dư điểm làm đề hôm nay (PostgreSQL)
+                        </span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="text-2xl font-black text-slate-900 dark:text-white font-mono tracking-tight">{tokenBalance}</span>
+                          <Gem className="w-4 h-4 text-[#00B8DD] shrink-0" />
+                          <span className="text-[10px] text-slate-400 font-semibold">/ 9đ mỗi ngày</span>
+                        </div>
+                      </div>
+                      <Link
+                        href="/pricing"
+                        onClick={() => setPointsMenuOpen(false)}
+                        className="px-3.5 py-1.5 rounded-lg bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold text-xs shadow-xs transition-colors shrink-0"
+                      >
+                        Nâng Cấp PRO
+                      </Link>
+                    </div>
+
+                    {/* Quy tắc tiêu điểm & nhận điểm */}
+                    <div className="px-1 mb-1.5">
+                      <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                        Điểm Danh &amp; Quy Tắc Điểm Làm Đề
+                      </span>
+                    </div>
+
+                    <div className="space-y-1">
+                      {/* 1. Điểm danh nhận 9 điểm/ngày */}
+                      <div className="p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-9 h-9 rounded-xl bg-[#00B8DD]/10 text-[#00B8DD] flex items-center justify-center shrink-0">
+                            <CalendarCheck className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-900 dark:text-white text-xs whitespace-nowrap">
+                                Điểm danh nhận 9đ hôm nay
+                              </span>
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-[#00B8DD]/15 text-[#007D99] dark:text-[#00B8DD] whitespace-nowrap">
+                                9 điểm/ngày
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5 truncate">
+                              Đủ làm 3 đề Cơ bản (-3đ), 2 Trung bình (-4đ), 1 Giỏi (-9đ)
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={handleCheckin}
+                          disabled={checkedInToday}
+                          className={cn(
+                            'px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 transition-all cursor-pointer whitespace-nowrap',
+                            checkedInToday
+                              ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-default'
+                              : 'bg-[#00B8DD] hover:bg-[#009bbd] text-white shadow-xs active:scale-95'
+                          )}
+                        >
+                          {checkedInToday ? '✓ Đã nhận' : 'Nhận 9đ'}
+                        </button>
+                      </div>
+
+                      {/* 2. Làm đề thi đạt điểm cao */}
+                      <Link
+                        href="/luyen-thi"
+                        onClick={() => setPointsMenuOpen(false)}
+                        className="group p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors flex items-center justify-between gap-3 block"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 group-hover:text-[#00B8DD] group-hover:bg-[#00B8DD]/10 flex items-center justify-center shrink-0 transition-colors">
+                            <Award className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-900 dark:text-white text-xs group-hover:text-[#00B8DD] transition-colors whitespace-nowrap">
+                                Thưởng điểm khi đạt 8.5+
+                              </span>
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                                +1đ ~ +2đ
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5 truncate">
+                              &lt;5đ: -1đ | 5-8.5đ: 0đ | 8.5-9.9đ: +1đ | 10đ: +2đ
+                            </p>
+                          </div>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#00B8DD] group-hover:translate-x-0.5 transition-all shrink-0" />
+                      </Link>
+                    </div>
+
+                    {/* Lịch sử biến động điểm gần nhất */}
+                    {recentPointLogs.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 space-y-1.5">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1 block">
+                          Lịch sử biến động gần nhất
+                        </span>
+                        <div className="max-h-28 overflow-y-auto space-y-1 pr-1">
+                          {recentPointLogs.slice(0, 3).map((log) => (
+                            <div
+                              key={log.id}
+                              className="flex items-center justify-between text-[11px] px-2 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/50"
+                            >
+                              <span className="truncate text-slate-600 dark:text-slate-300 pr-2">
+                                {log.note || log.examTitle || log.actionType}
+                              </span>
+                              <span
+                                className={cn(
+                                  'font-mono font-bold shrink-0',
+                                  log.pointsDelta > 0
+                                    ? 'text-emerald-600 dark:text-emerald-400'
+                                    : log.pointsDelta < 0
+                                      ? 'text-rose-600 dark:text-rose-400'
+                                      : 'text-slate-500'
+                                )}
+                              >
+                                {log.pointsDelta > 0 ? `+${log.pointsDelta}` : log.pointsDelta}đ
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Footer: Xem lịch sử & Cửa hàng đổi quà */}
+                    <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs px-1">
+                      <span className="text-slate-400 flex items-center gap-1">
+                        <History className="w-3.5 h-3.5" /> Chi tiết điểm &amp; lịch sử
+                      </span>
+                      <Link
+                        href="/student/rewards"
+                        onClick={() => setPointsMenuOpen(false)}
+                        className="text-[#00B8DD] hover:underline font-bold flex items-center gap-1 transition-colors"
+                      >
+                        Xem lịch sử &amp; Đổi quà <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {isAuthenticated && user ? (
               <div className="flex items-center gap-2.5">
-                {/* Diamond / Token Badge with Hover Submenu */}
-                <div
-                  className="relative"
-                  onMouseEnter={handlePointsMenuEnter}
-                  onMouseLeave={handlePointsMenuLeave}
-                >
-                  <Link
-                    href="/pricing"
-                    className="inline-flex h-9 items-center gap-1.5 px-3 rounded-full bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
-                    title="Số dư điểm thưởng"
-                  >
-                    <Gem className="w-4 h-4 shrink-0" />
-                    <span className="tabular-nums font-semibold text-slate-800 dark:text-slate-100">{tokenBalance}</span>
-                  </Link>
-
-                  {/* Submenu: Các cách có điểm */}
-                  <AnimatePresence>
-                    {pointsMenuOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 6, scale: 0.96 }}
-                        transition={{ duration: 0.15, ease: 'easeOut' }}
-                        className="absolute right-0 top-full mt-2 w-[420px] max-w-[calc(100vw-24px)] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-900/15 dark:shadow-black/60 p-4 z-50 text-slate-800 dark:text-slate-100"
-                      >
-                        {/* Header: Số dư hiện tại */}
-                        <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 mb-3.5">
-                          <div>
-                            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                              Số dư điểm thưởng
-                            </span>
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className="text-2xl font-black text-slate-900 dark:text-white font-mono tracking-tight">{tokenBalance}</span>
-                              <Gem className="w-4 h-4 text-[#00B8DD] shrink-0" />
-                            </div>
-                          </div>
-                          <Link
-                            href="/pricing"
-                            onClick={() => setPointsMenuOpen(false)}
-                            className="px-3.5 py-1.5 rounded-lg bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold text-xs shadow-xs transition-colors shrink-0"
-                          >
-                            Nạp Thêm
-                          </Link>
-                        </div>
-
-                        {/* Title: Cách có điểm */}
-                        <div className="px-1 mb-1.5">
-                          <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                            Các Cách Có Điểm
-                          </span>
-                        </div>
-
-                        {/* 3 Cách có điểm */}
-                        <div className="space-y-1">
-                          {/* 1. Điểm danh */}
-                          <div className="p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-9 h-9 rounded-xl bg-[#00B8DD]/10 text-[#00B8DD] flex items-center justify-center shrink-0">
-                                <CalendarCheck className="w-4 h-4" />
-                              </div>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-bold text-slate-900 dark:text-white text-xs whitespace-nowrap">
-                                    Điểm danh mỗi ngày
-                                  </span>
-                                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-[#00B8DD]/15 text-[#007D99] dark:text-[#00B8DD] whitespace-nowrap">
-                                    +10 điểm
-                                  </span>
-                                </div>
-                                <p className="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5 truncate">
-                                  Vào app học tập nhận ngay điểm thưởng
-                                </p>
-                              </div>
-                            </div>
-                            <button
-                              onClick={handleCheckin}
-                              disabled={checkedInToday}
-                              className={cn(
-                                'px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 transition-all cursor-pointer whitespace-nowrap',
-                                checkedInToday
-                                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-default'
-                                  : 'bg-[#00B8DD] hover:bg-[#009bbd] text-white shadow-xs active:scale-95'
-                              )}
-                            >
-                              {checkedInToday ? '✓ Đã nhận' : 'Điểm danh'}
-                            </button>
-                          </div>
-
-                          {/* 2. Làm đề thi */}
-                          <Link
-                            href="/luyen-thi"
-                            onClick={() => setPointsMenuOpen(false)}
-                            className="group p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors flex items-center justify-between gap-3 block"
-                          >
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 group-hover:text-[#00B8DD] group-hover:bg-[#00B8DD]/10 flex items-center justify-center shrink-0 transition-colors">
-                                <Award className="w-4 h-4" />
-                              </div>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-bold text-slate-900 dark:text-white text-xs group-hover:text-[#00B8DD] transition-colors whitespace-nowrap">
-                                    Làm đề thi thử ma trận
-                                  </span>
-                                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
-                                    +20 ~ 50 điểm
-                                  </span>
-                                </div>
-                                <p className="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5 truncate">
-                                  Đạt điểm cao trong các đề thi phân tầng
-                                </p>
-                              </div>
-                            </div>
-                            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#00B8DD] group-hover:translate-x-0.5 transition-all shrink-0" />
-                          </Link>
-
-                          {/* 3. Mua thêm điểm */}
-                          <Link
-                            href="/pricing"
-                            onClick={() => setPointsMenuOpen(false)}
-                            className="group p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors flex items-center justify-between gap-3 block"
-                          >
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 group-hover:text-[#00B8DD] group-hover:bg-[#00B8DD]/10 flex items-center justify-center shrink-0 transition-colors">
-                                <CreditCard className="w-4 h-4" />
-                              </div>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-bold text-slate-900 dark:text-white text-xs group-hover:text-[#00B8DD] transition-colors whitespace-nowrap">
-                                    Mua thêm Kim Cương
-                                  </span>
-                                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 whitespace-nowrap">
-                                    Gói từ 50K
-                                  </span>
-                                </div>
-                                <p className="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5 truncate">
-                                  Nạp nhanh qua VietQR, nhận lượt thi VIP
-                                </p>
-                              </div>
-                            </div>
-                            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#00B8DD] group-hover:translate-x-0.5 transition-all shrink-0" />
-                          </Link>
-                        </div>
-
-                        {/* Footer: Cửa hàng đổi quà */}
-                        <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs px-1">
-                          <span className="text-slate-400">Muốn dùng điểm đổi quà?</span>
-                          <Link
-                            href="/student/rewards"
-                            onClick={() => setPointsMenuOpen(false)}
-                            className="text-[#00B8DD] hover:underline font-bold flex items-center gap-1 transition-colors"
-                          >
-                            Cửa hàng đổi quà <ArrowRight className="w-3.5 h-3.5" />
-                          </Link>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
                 {/* User Avatar with Hover Submenu */}
                 <div
                   className="relative"
@@ -446,8 +469,8 @@ export function Navbar() {
                                 {user.role === 'SUPER_ADMIN'
                                   ? 'Super Admin'
                                   : isTeacher
-                                  ? 'Người Bán Khóa Học'
-                                  : 'Người Luyện Thi'}
+                                    ? 'Người Bán Khóa Học'
+                                    : 'Người Luyện Thi'}
                               </span>
                             </div>
                           </div>
@@ -479,7 +502,7 @@ export function Navbar() {
                                 className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-primary transition-colors font-medium"
                               >
                                 <BookOpen className="w-4 h-4 text-amber-500" />
-                                <span>Khóa Học & Bộ Đề Của Tôi</span>
+                                <span>Khóa Học &amp; Bộ Đề Của Tôi</span>
                               </Link>
                               <Link
                                 href="/teacher/revenue"
@@ -487,7 +510,7 @@ export function Navbar() {
                                 className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-primary transition-colors font-medium"
                               >
                                 <CreditCard className="w-4 h-4 text-emerald-500" />
-                                <span>Doanh Thu & Ví Tiền</span>
+                                <span>Doanh Thu &amp; Ví Tiền</span>
                               </Link>
                             </>
                           ) : user.role === 'SUPER_ADMIN' ? (
@@ -549,22 +572,22 @@ export function Navbar() {
                                 className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-primary transition-colors font-medium"
                               >
                                 <Award className="w-4 h-4 text-amber-500" />
-                                <span>Lịch Sử Luyện Thi & Điểm Số</span>
+                                <span>Lịch Sử Luyện Thi &amp; Điểm Số</span>
                               </Link>
                             </>
                           )}
 
                           <Link
-                            href="/pricing"
+                            href="/student/rewards"
                             onClick={() => setUserMenuOpen(false)}
                             className="flex items-center justify-between px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-primary transition-colors font-medium pt-1.5 border-t border-slate-100 dark:border-slate-800/80"
                           >
                             <div className="flex items-center gap-2.5">
                               <Gem className="w-4 h-4 text-[#00B8DD]" />
-                              <span>Số dư điểm thưởng</span>
+                              <span>Điểm năng lượng làm đề</span>
                             </div>
                             <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">
-                              {tokenBalance}
+                              {tokenBalance}đ
                             </span>
                           </Link>
                         </div>
@@ -575,6 +598,7 @@ export function Navbar() {
                             onClick={() => {
                               setUserMenuOpen(false);
                               logout();
+                              toast.success('Đã đăng xuất khỏi hệ thống.');
                             }}
                             className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-semibold text-xs w-full transition-colors cursor-pointer"
                           >
@@ -602,30 +626,27 @@ export function Navbar() {
           {/* ── Mobile Hamburger & Theme ── */}
           <div className="flex items-center gap-2 md:hidden">
             <ThemeToggle />
+            <Link
+              href="/student/rewards"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200/80 dark:border-slate-700/80"
+            >
+              <Gem className="w-3.5 h-3.5 text-[#00B8DD] shrink-0" />
+              <span className="tabular-nums font-bold">{tokenBalance}</span>
+            </Link>
             {isAuthenticated && user ? (
-              <div className="flex items-center gap-1.5">
-                <Link
-                  href="/pricing"
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200/80 dark:border-slate-700/80"
-                >
-                  <Gem className="w-3.5 h-3.5 text-[#00B8DD] shrink-0" />
-                  <span className="tabular-nums font-bold">{tokenBalance}</span>
-                </Link>
-                <Link
-                  href={
-                    user.role === 'SUPER_ADMIN'
-                      ? '/admin/dashboard'
-                      : isTeacher
+              <Link
+                href={
+                  user.role === 'SUPER_ADMIN'
+                    ? '/admin/dashboard'
+                    : isTeacher
                       ? '/teacher/dashboard'
                       : '/student'
-                  }
-                  className="w-8 h-8 rounded-full bg-gradient-to-br from-[#00B8DD] to-[#007D99] text-white flex items-center justify-center font-black text-xs shadow-xs"
-                >
-                  {user.fullname?.charAt(0).toUpperCase() || 'U'}
-                </Link>
-              </div>
+                }
+                className="w-8 h-8 rounded-full bg-gradient-to-br from-[#00B8DD] to-[#007D99] text-white flex items-center justify-center font-black text-xs shadow-xs"
+              >
+                {user.fullname?.charAt(0).toUpperCase() || 'U'}
+              </Link>
             ) : (
-              /* Mobile Login icon button */
               <button
                 onClick={() => setLoginDrawerOpen(true)}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
@@ -656,7 +677,6 @@ export function Navbar() {
               className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 pt-4 pb-6 md:hidden shadow-lg"
             >
               <div className="flex flex-col space-y-4">
-                {/* Navigation Links */}
                 <div className="space-y-1">
                   {navLinks.map((item) => {
                     const isActive =
@@ -682,19 +702,20 @@ export function Navbar() {
                   })}
                 </div>
 
-                {/* Action Buttons */}
-                <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-2.5">
-                  <button
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      setLoginDrawerOpen(true);
-                    }}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm text-slate-800 dark:text-slate-100 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
-                  >
-                    <LogIn className="w-4 h-4 text-[#00B8DD]" />
-                    <span>Đăng Nhập</span>
-                  </button>
-                </div>
+                {!isAuthenticated && (
+                  <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-2.5">
+                    <button
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setLoginDrawerOpen(true);
+                      }}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm text-slate-800 dark:text-slate-100 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                    >
+                      <LogIn className="w-4 h-4 text-[#00B8DD]" />
+                      <span>Đăng Nhập</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
@@ -705,7 +726,6 @@ export function Navbar() {
       <AnimatePresence>
         {loginDrawerOpen && (
           <div className="fixed inset-0 z-[100] overflow-hidden">
-            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -715,7 +735,6 @@ export function Navbar() {
               className="absolute inset-0 bg-black/70 backdrop-blur-xs"
             />
 
-            {/* Right Drawer Panel */}
             <div className="fixed inset-y-0 right-0 flex max-w-full pl-10">
               <motion.div
                 initial={{ x: '100%' }}
@@ -724,7 +743,6 @@ export function Navbar() {
                 transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
                 className="w-screen max-w-md bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col justify-between"
               >
-                {/* Drawer Header */}
                 <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -758,62 +776,6 @@ export function Navbar() {
                     </span>
                   </div>
 
-                  {/* Quick 1-Click Demo Login */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      login(
-                        {
-                          id: 'usr-student-01',
-                          fullname: 'Nguyễn Hoàng Minh',
-                          email: 'student.minh@schoolify.edu.vn',
-                          role: 'USER',
-                          status: true,
-                          created_at: new Date().toISOString(),
-                          updated_at: new Date().toISOString(),
-                          school_memberships: [
-                            {
-                              id: 'mem-01',
-                              user_id: 'usr-student-01',
-                              school_id: 'sch-01',
-                              school_name: 'THPT Chuyên Công Nghệ Schoolify',
-                              role: 'STUDENT',
-                              joined_at: new Date().toISOString(),
-                            },
-                          ],
-                        },
-                        'mock-student-token',
-                        'STUDENT',
-                        'sch-01'
-                      );
-                      toast.success('Đăng nhập thành công!', {
-                        description: 'Chào mừng Nguyễn Hoàng Minh (HS-2026)',
-                      });
-                      setLoginDrawerOpen(false);
-                    }}
-                    className="group w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 hover:border-[#00B8DD]/40 text-left transition-all flex items-center justify-between cursor-pointer mb-3"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 rounded-lg bg-[#00B8DD]/10 text-[#00B8DD] flex items-center justify-center shrink-0 border border-[#00B8DD]/20 group-hover:bg-[#00B8DD]/15 transition-colors">
-                        <Zap className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 group-hover:text-[#00B8DD] transition-colors">
-                            Đăng nhập nhanh 1-Click
-                          </p>
-                          <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                            Demo
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                          Tài khoản mẫu: Nguyễn Hoàng Minh (Học sinh)
-                        </p>
-                      </div>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-200 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
-                  </button>
-
                   {LOGIN_ROLES.map((role) => {
                     const Icon = role.icon;
                     return (
@@ -844,7 +806,6 @@ export function Navbar() {
                     );
                   })}
 
-                  {/* Help tip */}
                   <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 mt-4 text-xs text-slate-500 dark:text-slate-400 flex items-start gap-2.5">
                     <Lock className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
                     <div>

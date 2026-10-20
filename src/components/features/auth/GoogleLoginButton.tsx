@@ -4,11 +4,11 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
 import { toast } from 'sonner';
-import { CheckCircle2, ShieldCheck, X, Sparkles, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 const GOOGLE_CLIENT_ID =
   process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
-  '353464933030-gs4nius9ik1kikb6meq9acigl5kju766.apps.googleusercontent.com';
+  '511595808378-ibkrl21ad899r4dmd2v7pit5ejhalgg6.apps.googleusercontent.com';
 
 export interface GoogleLoginButtonProps {
   role?: 'STUDENT' | 'TEACHER' | 'PARENT' | 'PRINCIPAL';
@@ -40,52 +40,6 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-const PRESET_GOOGLE_ACCOUNTS = {
-  STUDENT: [
-    {
-      name: 'Lê Bảo Nam',
-      email: 'nam.le.student@gmail.com',
-      googleId: 'google-sub-student-10928374',
-      avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=NamLe',
-      badge: 'Học Sinh Khối 12',
-    },
-    {
-      name: 'Nguyễn Ngọc Khánh Vy',
-      email: 'khanhvy.nguyen12a1@gmail.com',
-      googleId: 'google-sub-student-99887766',
-      avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=KhanhVy',
-      badge: 'Đội Tuyển HSG',
-    },
-  ],
-  TEACHER: [
-    {
-      name: 'ThS. Trần Thị Mai',
-      email: 'mai.tran.teacher@gmail.com',
-      googleId: 'google-sub-teacher-20394857',
-      avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=MaiTran',
-      badge: 'Giáo Viên Toán THPT',
-    },
-  ],
-  PARENT: [
-    {
-      name: 'Phụ huynh Lê Văn Hùng',
-      email: 'hung.le.parent@gmail.com',
-      googleId: 'google-sub-parent-56473829',
-      avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=HungLe',
-      badge: 'Phụ Huynh Học Sinh',
-    },
-  ],
-  PRINCIPAL: [
-    {
-      name: 'TS. Lê Đức Anh',
-      email: 'principal.ducanh@gmail.com',
-      googleId: 'google-sub-principal-88776655',
-      avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=DucAnh',
-      badge: 'Ban Giám Hiệu (Workspace)',
-    },
-  ],
-};
-
 export function GoogleLoginButton({
   role = 'STUDENT',
   returnUrl,
@@ -95,88 +49,48 @@ export function GoogleLoginButton({
   const router = useRouter();
   const { login } = useAuthStore();
   const [isLoading, setIsLoading] = React.useState(false);
-  const [showAccountChooser, setShowAccountChooser] = React.useState(false);
-  const [customEmail, setCustomEmail] = React.useState('');
-  const [customName, setCustomName] = React.useState('');
+  const [gsiReady, setGsiReady] = React.useState(false);
 
-  // Nạp script Google Identity Services (GSI) chuẩn
+  // Nạp script Google Identity Services (GSI) chính thức từ Google
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
-    const existing = document.getElementById('google-gsi-client-script');
-    if (!existing) {
-      const script = document.createElement('script');
-      script.id = 'google-gsi-client-script';
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      document.head.appendChild(script);
+    if ((window as any).google?.accounts?.oauth2) {
+      setGsiReady(true);
+      return;
     }
+    const existing = document.getElementById('google-gsi-client-script') as HTMLScriptElement | null;
+    if (existing) {
+      existing.addEventListener('load', () => setGsiReady(true));
+      return;
+    }
+    const script = document.createElement('script');
+    script.id = 'google-gsi-client-script';
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => setGsiReady(true);
+    document.head.appendChild(script);
   }, []);
 
   const defaultRedirect = React.useMemo(() => {
     if (returnUrl) return returnUrl;
-    switch (role) {
-      case 'TEACHER':
-        return '/teacher/dashboard';
-      case 'PARENT':
-        return '/parent/dashboard';
-      case 'PRINCIPAL':
-        return '/school/dashboard';
-      case 'STUDENT':
-      default:
-        return '/luyen-thi';
-    }
+    return role === 'TEACHER' ? '/teacher/dashboard' : '/luyen-thi';
   }, [role, returnUrl]);
 
   const authenticateWithBackend = async (payload: {
     idToken?: string;
-    email?: string;
-    name?: string;
-    googleId?: string;
-    avatarUrl?: string;
+    accessToken?: string;
   }) => {
     setIsLoading(true);
     try {
-      const profileType =
-        role === 'TEACHER' || role === 'PRINCIPAL'
-          ? 'TEACHER'
-          : role === 'PARENT'
-            ? 'PARENT'
-            : 'STUDENT';
-
-      // Tạo JWT giả lập chuẩn cấu trúc nếu đăng nhập qua Google Account Picker
-      let idToken = payload.idToken;
-      if (!idToken && payload.email) {
-        const header = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
-        const body = btoa(
-          unescape(
-            encodeURIComponent(
-              JSON.stringify({
-                iss: 'https://accounts.google.com',
-                aud: GOOGLE_CLIENT_ID,
-                sub: payload.googleId || `google-${Date.now()}`,
-                email: payload.email,
-                email_verified: true,
-                name: payload.name,
-                picture: payload.avatarUrl,
-                iat: Math.floor(Date.now() / 1000),
-                exp: Math.floor(Date.now() / 1000) + 3600,
-              })
-            )
-          )
-        );
-        idToken = `${header}.${body}.schoolify-verified-sig`;
-      }
+      const profileType = role === 'TEACHER' ? 'TEACHER' : 'STUDENT';
 
       const res = await fetch('/api/v1/auth/google', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          idToken,
-          email: payload.email,
-          name: payload.name,
-          googleId: payload.googleId,
-          avatarUrl: payload.avatarUrl,
+          idToken: payload.idToken,
+          accessToken: payload.accessToken,
           profile_type: profileType,
         }),
       });
@@ -188,39 +102,18 @@ export function GoogleLoginButton({
       }
 
       const backendUser = data.user;
-      const jwtToken = data.accessToken || 'google-jwt-verified';
+      const jwtToken = data.accessToken || '';
 
-      login(
-        {
-          ...backendUser,
-          school_memberships:
-            backendUser.school_memberships?.length > 0
-              ? backendUser.school_memberships
-              : [
-                  {
-                    id: 'mem-google-01',
-                    user_id: backendUser.id,
-                    school_id: 'sch-01',
-                    school_name: 'THPT Chuyên Công Nghệ Schoolify',
-                    role,
-                    joined_at: new Date().toISOString(),
-                  },
-                ],
-        },
-        jwtToken,
-        role,
-        'sch-01'
-      );
+      login(backendUser, jwtToken, role);
 
-      toast.success('Đăng nhập Google OAuth2 thành công!', {
-        description: `Đã đồng bộ tài khoản ${backendUser.fullname} (${backendUser.email}) với PostgreSQL!`,
+      toast.success('Đăng nhập Google thành công!', {
+        description: `Chào mừng ${backendUser.fullname} (${backendUser.email})!`,
       });
 
-      setShowAccountChooser(false);
       router.push(defaultRedirect);
     } catch (error: any) {
       toast.error('Lỗi xác thực Google', {
-        description: error?.message || 'Vui lòng thử lại.',
+        description: error?.message || 'Vui lòng kiểm tra cấu hình Google Client ID.',
       });
     } finally {
       setIsLoading(false);
@@ -228,166 +121,58 @@ export function GoogleLoginButton({
   };
 
   const handleOpenGoogleAuth = () => {
-    // Nếu Google Identity Services One-Tap có sẵn và domain được phép, kích hoạt song song với Account Chooser
-    try {
-      const g = (window as any).google;
-      if (g?.accounts?.id) {
-        g.accounts.id.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-          callback: (response: any) => {
-            if (response?.credential) {
-              authenticateWithBackend({ idToken: response.credential });
-            }
-          },
-        });
-      }
-    } catch {
-      // ignore GSI domain warning on localhost
+    const g = (window as any).google;
+    if (!g?.accounts?.oauth2) {
+      toast.error('Đang tải thư viện Google Sign-In', {
+        description: 'Vui lòng đợi 1-2 giây rồi bấm lại hoặc kiểm tra kết nối mạng.',
+      });
+      return;
     }
-    setShowAccountChooser(true);
+
+    try {
+      const tokenClient = g.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: 'openid email profile',
+        prompt: 'select_account',
+        callback: (tokenResponse: any) => {
+          if (tokenResponse?.error) {
+            toast.error('Đã hủy hoặc lỗi đăng nhập Google', {
+              description: tokenResponse.error_description || tokenResponse.error,
+            });
+            return;
+          }
+          if (tokenResponse?.access_token) {
+            authenticateWithBackend({ accessToken: tokenResponse.access_token });
+          }
+        },
+      });
+
+      tokenClient.requestAccessToken();
+    } catch (err: any) {
+      toast.error('Không thể mở cửa sổ Google Sign-In', {
+        description: err?.message || 'Vui lòng kiểm tra NEXT_PUBLIC_GOOGLE_CLIENT_ID.',
+      });
+    }
   };
 
-  const accounts = PRESET_GOOGLE_ACCOUNTS[role] || PRESET_GOOGLE_ACCOUNTS.STUDENT;
-
   return (
-    <>
-      <button
-        type="button"
-        onClick={handleOpenGoogleAuth}
-        disabled={isLoading}
-        className={
-          className ||
-          'w-full flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs shadow-xs transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer disabled:opacity-60'
-        }
-      >
-        {isLoading ? <Loader2 className="w-4 h-4 animate-spin text-[#00B8DD]" /> : <GoogleIcon />}
-        <span>{isLoading ? 'Đang xác thực Google OAuth2...' : label}</span>
-      </button>
-
-      {showAccountChooser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
-            {/* Header chuẩn Google OAuth2 */}
-            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <GoogleIcon width={20} height={20} />
-                <div>
-                  <p className="text-xs font-black text-slate-900 dark:text-white">
-                    Đăng nhập bằng Google
-                  </p>
-                  <p className="text-[10px] text-slate-500 font-mono truncate max-w-[230px]">
-                    Client ID: {GOOGLE_CLIENT_ID.slice(0, 18)}...
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowAccountChooser(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <div className="space-y-1">
-                <h3 className="text-base font-black text-slate-900 dark:text-white">
-                  Chọn một tài khoản Google
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Để tiếp tục tới <span className="font-bold text-[#00B8DD]">Schoolify Education</span> (Đồng bộ PostgreSQL Real-time)
-                </p>
-              </div>
-
-              {/* Danh sách tài khoản Google có sẵn */}
-              <div className="space-y-2">
-                {accounts.map((acc) => (
-                  <button
-                    key={acc.email}
-                    type="button"
-                    disabled={isLoading}
-                    onClick={() =>
-                      authenticateWithBackend({
-                        email: acc.email,
-                        name: acc.name,
-                        googleId: acc.googleId,
-                        avatarUrl: acc.avatarUrl,
-                      })
-                    }
-                    className="w-full flex items-center justify-between gap-3 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 hover:border-[#00B8DD] hover:bg-[#00B8DD]/5 transition-all text-left cursor-pointer group"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <img
-                        src={acc.avatarUrl}
-                        alt={acc.name}
-                        className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shrink-0"
-                      />
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-[#00B8DD] truncate">
-                          {acc.name}
-                        </p>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                          {acc.email}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
-                      {acc.badge}
-                    </span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Nhập tài khoản Gmail bất kỳ */}
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
-                <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-[#00B8DD]" />
-                  <span>Hoặc sử dụng tài khoản Gmail khác của bạn:</span>
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <input
-                    type="text"
-                    value={customName}
-                    onChange={(e) => setCustomName(e.target.value)}
-                    placeholder="Họ và tên (VD: Trần Bảo)"
-                    className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#00B8DD]"
-                  />
-                  <input
-                    type="email"
-                    value={customEmail}
-                    onChange={(e) => setCustomEmail(e.target.value)}
-                    placeholder="email@gmail.com"
-                    className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#00B8DD]"
-                  />
-                </div>
-                <button
-                  type="button"
-                  disabled={!customEmail.includes('@') || isLoading}
-                  onClick={() =>
-                    authenticateWithBackend({
-                      email: customEmail.trim(),
-                      name: customName.trim() || customEmail.split('@')[0],
-                      googleId: `google-custom-${Date.now()}`,
-                    })
-                  }
-                  className="w-full py-2.5 px-4 rounded-xl bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold text-xs transition-all disabled:opacity-40 cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Xác thực & Tạo tài khoản Google trên PostgreSQL</span>
-                </button>
-              </div>
-
-              <div className="pt-2 flex items-center justify-between text-[10px] text-slate-400">
-                <span className="flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                  OAuth2 Verified • JWT HTTP-Only Cookie
-                </span>
-                <span>POST /api/v1/auth/google</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+    <button
+      type="button"
+      onClick={handleOpenGoogleAuth}
+      disabled={isLoading}
+      className={
+        className ||
+        'w-full flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs shadow-xs transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer disabled:opacity-60'
+      }
+    >
+      {isLoading ? <Loader2 className="w-4 h-4 animate-spin text-[#00B8DD]" /> : <GoogleIcon />}
+      <span>
+        {isLoading
+          ? 'Đang xác thực với Google...'
+          : gsiReady
+            ? label
+            : 'Đang kết nối Google...'}
+      </span>
+    </button>
   );
 }

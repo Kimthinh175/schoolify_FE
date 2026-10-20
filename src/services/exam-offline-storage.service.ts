@@ -50,9 +50,6 @@ const LOCAL_STORAGE_LOCK_KEY = 'schoolify_active_exam_lock';
 class ExamOfflineStorageService {
   private dbPromise: Promise<IDBDatabase | null> | null = null;
 
-  /**
-   * Mở kết nối IndexedDB (hỗ trợ graceful fallback nếu IndexedDB bị vô hiệu hóa)
-   */
   private getDb(): Promise<IDBDatabase | null> {
     if (typeof window === 'undefined' || !window.indexedDB) {
       return Promise.resolve(null);
@@ -91,9 +88,6 @@ class ExamOfflineStorageService {
     return this.dbPromise;
   }
 
-  /**
-   * Đồng bộ khóa nhanh vào LocalStorage (cho các kiểm tra route guard đồng bộ tức thì)
-   */
   private updateLocalLock(session: ActiveExamSession | null) {
     if (typeof window === 'undefined') return;
     try {
@@ -116,9 +110,6 @@ class ExamOfflineStorageService {
     }
   }
 
-  /**
-   * Kiểm tra nhanh khóa phiên thi từ LocalStorage (0ms latency cho router)
-   */
   public getFastSyncActiveLock(): {
     isActive: boolean;
     sessionId: string;
@@ -142,9 +133,6 @@ class ExamOfflineStorageService {
     return null;
   }
 
-  /**
-   * Khởi tạo hoặc tiếp tục một phiên thi
-   */
   public async startExamSession(params: {
     examId: string;
     examType: ExamSessionType;
@@ -156,7 +144,6 @@ class ExamOfflineStorageService {
   }): Promise<ActiveExamSession> {
     const existing = await this.getActiveExamSession();
 
-    // Nếu đã có phiên thi đang làm đúng bài này, tiếp tục phiên cũ và GIỮ NGUYÊN BỘ ĐỀ
     if (existing && existing.examId === params.examId && existing.status === 'IN_PROGRESS') {
       existing.roomUrl = params.roomUrl;
       if (!existing.examPackage && params.examPackage) {
@@ -167,7 +154,6 @@ class ExamOfflineStorageService {
       return existing;
     }
 
-    // Nếu chưa có hoặc khác bài thi, tạo phiên mới
     const now = Date.now();
     const durationSeconds = Math.max(60, params.durationMinutes * 60);
     const targetEndTime = now + durationSeconds * 1000;
@@ -187,18 +173,16 @@ class ExamOfflineStorageService {
       examPackage: params.examPackage,
     };
 
+    // Xóa mọi phiên cũ trước khi lưu phiên mới để đảm bảo chỉ có duy nhất 1 phiên trong IndexedDB
+    await this.clearActiveExamSession();
     await this.saveSessionToDb(newSession);
     this.updateLocalLock(newSession);
     return newSession;
   }
 
-  /**
-   * Lấy phiên thi đang hoạt động từ IndexedDB
-   */
   public async getActiveExamSession(): Promise<ActiveExamSession | null> {
     const db = await this.getDb();
     if (!db) {
-      // Fallback lấy từ localStorage
       const lock = this.getFastSyncActiveLock();
       if (!lock) return null;
       return {
@@ -237,9 +221,6 @@ class ExamOfflineStorageService {
     });
   }
 
-  /**
-   * Lưu phiên vào IndexedDB
-   */
   private async saveSessionToDb(session: ActiveExamSession): Promise<void> {
     const db = await this.getDb();
     if (!db) return;
@@ -257,9 +238,6 @@ class ExamOfflineStorageService {
     });
   }
 
-  /**
-   * Cập nhật bản nháp câu trả lời theo thời gian thực vào IndexedDB (Debounced từ UI)
-   */
   public async updateDraftAnswers(answers: Record<string, any>): Promise<void> {
     const session = await this.getActiveExamSession();
     if (!session || session.status !== 'IN_PROGRESS') return;
@@ -273,16 +251,16 @@ class ExamOfflineStorageService {
     await this.saveSessionToDb(session);
   }
 
-  /**
-   * Hoàn thành bài thi và xếp vào hàng đợi nộp bài Offline (nếu mất mạng hoặc nộp thành công)
-   */
   public async completeAndQueueSubmission(params: {
     answers: Record<string, any>;
     timeSpentSeconds: number;
     isAutoSubmit: boolean;
   }): Promise<OfflineSubmission | null> {
     const session = await this.getActiveExamSession();
-    if (!session) return null;
+    if (!session) {
+      await this.clearActiveExamSession();
+      return null;
+    }
 
     const submissionId = `sub-${session.examId}-${Date.now()}`;
     const submission: OfflineSubmission = {
@@ -300,7 +278,6 @@ class ExamOfflineStorageService {
       attempts: 0,
     };
 
-    // Lưu vào hàng đợi pending_submissions
     const db = await this.getDb();
     if (db) {
       await new Promise<void>((resolve, reject) => {
@@ -316,21 +293,12 @@ class ExamOfflineStorageService {
       });
     }
 
-    // Đánh dấu session đã hoàn thành để GIẢI PHÓNG KHÓA ĐIỀU HƯỚNG
-    session.status = 'SUBMITTED_OFFLINE';
-    session.answers = params.answers;
-    session.updatedAt = Date.now();
-    await this.saveSessionToDb(session);
-
-    // Gỡ bỏ lock LocalStorage ngay lập tức
-    this.updateLocalLock(null);
+    // Xóa sạch toàn bộ khóa phiên thi trong LocalStorage và IndexedDB ngay lập tức khi nộp bài
+    await this.clearActiveExamSession();
 
     return submission;
   }
 
-  /**
-   * Xóa hoàn toàn phiên thi đang hoạt động (khi học sinh rời phòng thi sau khi xem kết quả)
-   */
   public async clearActiveExamSession(): Promise<void> {
     this.updateLocalLock(null);
     const db = await this.getDb();
@@ -349,9 +317,6 @@ class ExamOfflineStorageService {
     });
   }
 
-  /**
-   * Lấy toàn bộ danh sách bài nộp đang chờ đồng bộ (PENDING)
-   */
   public async getPendingSubmissions(): Promise<OfflineSubmission[]> {
     const db = await this.getDb();
     if (!db) return [];
@@ -374,9 +339,6 @@ class ExamOfflineStorageService {
     });
   }
 
-  /**
-   * Đánh dấu một bài nộp đã được đồng bộ lên máy chủ thành công
-   */
   public async markSubmissionSynced(submissionId: string): Promise<void> {
     const db = await this.getDb();
     if (!db) return;
@@ -404,9 +366,6 @@ class ExamOfflineStorageService {
     });
   }
 
-  /**
-   * Đồng bộ toàn bộ bài thi offline lên máy chủ (gọi khi có mạng)
-   */
   public async syncPendingSubmissions(): Promise<{ syncedCount: number; errors: any[] }> {
     if (typeof window === 'undefined' || !navigator.onLine) {
       return { syncedCount: 0, errors: [] };
@@ -418,9 +377,42 @@ class ExamOfflineStorageService {
     let syncedCount = 0;
     const errors: any[] = [];
 
+    // 1. Ưu tiên đồng bộ hàng loạt lên PostgreSQL qua POST /api/v1/exams/sync-offline
+    try {
+      const beRes = await fetch('/api/v1/exams/sync-offline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          submissions: pending.map((item) => ({
+            id: item.id,
+            sessionId: item.sessionId,
+            examId: item.examId,
+            examTitle: item.examTitle,
+            timeSpentSeconds: item.timeSpentSeconds,
+            answers: item.answers,
+            submittedAt: new Date(item.submittedAt).toISOString(),
+          })),
+        }),
+      });
+      if (beRes.ok) {
+        const json = await beRes.json().catch(() => null);
+        const syncedIds: string[] = Array.isArray(json?.syncedIds)
+          ? json.syncedIds
+          : pending.map((p) => p.id);
+        for (const sid of syncedIds) {
+          await this.markSubmissionSynced(sid);
+          syncedCount++;
+        }
+        if (syncedCount === pending.length) {
+          return { syncedCount, errors };
+        }
+      }
+    } catch {
+      // Fallback xuống json-db nếu BE tạm thời chưa kết nối
+    }
+
     for (const item of pending) {
       try {
-        // Gửi lên collection offlineSubmissions thông qua API json-db
         const res = await fetch('/api/db/offlineSubmissions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
