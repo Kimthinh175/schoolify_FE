@@ -23,7 +23,7 @@ export default function StudentExamsPage() {
         </div>
         <Link href="/luyen-thi" className="shrink-0">
           <Button
-            className="min-h-[44px] bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs px-4 rounded-xl cursor-pointer"
+            className="min-h-[44px] bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold shadow-md shadow-[#00B8DD]/25 text-xs px-4 rounded-xl cursor-pointer"
             rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
           >
             Luyện Đề Mới Ngay

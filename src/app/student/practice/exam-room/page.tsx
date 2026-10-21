@@ -60,6 +60,7 @@ import { CodingExamRoom } from '@/components/features/student/practice/CodingExa
 import { OlympiadEssayExamRoom } from '@/components/features/student/practice/OlympiadEssayExamRoom';
 import { getOlympiadExamById, getOlympiadExamsBySubject } from '@/services/mock/olympiad-exams';
 import { examOfflineStorage } from '@/services/exam-offline-storage.service';
+import { examPointsService } from '@/services/exam-points.service';
 import { toast } from 'sonner';
 
 function renderDifficultyBadge(difficulty?: QuestionDifficulty, isDark = false) {
@@ -422,7 +423,7 @@ function StandardExamRoomContent() {
 
   // 1. Khởi tạo / Khôi phục phiên thi từ IndexedDB & Đếm giờ thực ngầm (Wall-Clock)
   React.useEffect(() => {
-    if (attemptTokenParam) return; // Nếu đang ở chế độ xem kết quả qua token thì không mở phiên thi mới!
+    if (attemptTokenParam || isSubmitted) return; // Nếu đang ở chế độ xem kết quả hoặc đã nộp bài thì không mở phiên thi mới!
     let isMounted = true;
     const currentUrl = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
 
@@ -489,6 +490,7 @@ function StandardExamRoomContent() {
   const handleSubmitExam = async (isAutoSubmit = false) => {
     setIsSubmitted(true);
     setIsSubmitModalOpen(false);
+    await examOfflineStorage.clearActiveExamSession();
 
     if (typeof window !== 'undefined') {
       try {
@@ -1106,9 +1108,59 @@ function StandardExamRoomContent() {
     }
   };
 
-  // Xử lý cộng/trừ điểm thưởng Token khi nộp bài thi
+  // Trừ điểm năng lượng khi bắt đầu mở đề thi (PostgreSQL: Cơ bản -3đ, TB -4đ, Giỏi -9đ)
+  React.useEffect(() => {
+    if (attemptTokenParam || isSubmitted || isAssessment) return;
+    const deductedKey = `schoolify_started_pts_${exam.id}`;
+    if (typeof window !== 'undefined' && sessionStorage.getItem(deductedKey) === '1') {
+      return;
+    }
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(deductedKey, '1');
+    }
+    examPointsService
+      .startExamWithPoints({
+        userId: user?.id,
+        level: levelParam,
+        examTitle: exam.title,
+        subjectSlug,
+        grade: gradeParam,
+        chapterId: chapterParam,
+      })
+      .then((res) => {
+        if (res?.ok && res?.message) {
+          toast.info('Đã kích hoạt phiên làm đề', { description: res.message });
+        } else if (!res?.ok && res?.message) {
+          toast.warning('Thông báo điểm năng lượng', { description: res.message });
+        }
+      })
+      .catch(() => {});
+  }, [attemptTokenParam, isSubmitted, isAssessment, exam.id, exam.title, user?.id, levelParam, subjectSlug, gradeParam, chapterParam]);
+
+  // Xử lý cộng/trừ điểm thưởng Token khi nộp bài thi (PostgreSQL)
   React.useEffect(() => {
     if (isSubmitted && examResult && !hasProcessedRewardRef.current) {
+      hasProcessedRewardRef.current = true;
+      const deductedKey = `schoolify_started_pts_${exam.id}`;
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem(deductedKey);
+      }
+      examPointsService
+        .settleSubmissionPoints({
+          userId: user?.id,
+          score: examResult.finalScore,
+          level: levelParam,
+          examTitle: exam.title,
+        })
+        .then((res) => {
+          if (res?.message) {
+            toast.success('Đã cập nhật điểm năng lượng làm đề!', {
+              description: res.message,
+            });
+          }
+        })
+        .catch(() => {});
+      if (false) {
       hasProcessedRewardRef.current = true;
 
       let currentBalance = 250;
@@ -1121,13 +1173,14 @@ function StandardExamRoomContent() {
         }
       } catch {}
 
-      const newBalance = Math.max(0, currentBalance + examResult.rewardPoints);
+      const newBalance = Math.max(0, currentBalance + (examResult?.rewardPoints || 0));
       try {
         localStorage.setItem('schoolify_user_tokens', String(newBalance));
         window.dispatchEvent(new Event('tokens-updated'));
       } catch {}
     }
-  }, [isSubmitted, examResult]);
+      }
+  }, [isSubmitted, examResult, exam.id, exam.title, user?.id, levelParam]);
 
   // Lưu kết quả đánh giá năng lực nếu đây là bài thi chẩn đoán (ASSESSMENT)
   React.useEffect(() => {

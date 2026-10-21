@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
+import { catalogService } from '@/services/catalog.service';
 import { cn } from '@/lib/utils';
 
 const fadeUp = (delay = 0) => ({
@@ -184,8 +185,56 @@ export default function LeaderboardPage() {
   const [timeframe, setTimeframe] = React.useState<'WEEK' | 'MONTH' | 'ALL'>('WEEK');
   const [selectedGrade, setSelectedGrade] = React.useState<number | 'ALL'>('ALL');
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [top3Students, setTop3Students] = React.useState<LeaderboardUser[]>(TOP_3_STUDENTS);
+  const [leaderboardList, setLeaderboardList] = React.useState<LeaderboardUser[]>(LEADERBOARD_LIST);
 
-  const filteredList = LEADERBOARD_LIST.filter((u) => {
+  React.useEffect(() => {
+    catalogService
+      .getLeaderboard()
+      .then((entries) => {
+        if (entries.length > 0) {
+          const mapped: LeaderboardUser[] = entries.map((e, idx) => ({
+            rank: idx + 1,
+            name: e.fullname || 'Học sinh Schoolify',
+            avatar:
+              e.avatarUrl ||
+              TOP_3_STUDENTS[idx]?.avatar ||
+              LEADERBOARD_LIST[idx]?.avatar ||
+              'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=160&auto=format&fit=crop&q=80',
+            school: e.schoolName || 'THPT Chuyên Schoolify',
+            province: 'Toàn Quốc',
+            grade: Number(e.grade || e.gradeLevel || 12),
+            streak: Number(e.streakDays || 15),
+            examsCompleted: Number(e.totalExams || 1),
+            points: Number(e.points || 100) * 10 + Number(e.totalExams || 0) * 50,
+            diamonds: Number(e.points || 100),
+            badgeTitle:
+              idx === 0
+                ? 'Đại Cao Thủ K-12 ⭐'
+                : idx === 1
+                  ? 'Chiến Thần Tự Luận 🌟'
+                  : idx === 2
+                    ? 'Bậc Thầy Giải Tốc Độ ⚡'
+                    : 'Học Sinh Xuất Sắc',
+          }));
+
+          const combined = [...mapped];
+          const fallbackPool = [...TOP_3_STUDENTS, ...LEADERBOARD_LIST];
+          for (const fb of fallbackPool) {
+            if (combined.length >= 10) break;
+            if (!combined.some((c) => c.name.toLowerCase() === fb.name.toLowerCase())) {
+              combined.push({ ...fb, rank: combined.length + 1 });
+            }
+          }
+
+          setTop3Students(combined.slice(0, 3));
+          setLeaderboardList(combined.slice(3));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const filteredList = leaderboardList.filter((u) => {
     const matchesGrade = selectedGrade === 'ALL' || u.grade === selectedGrade;
     const matchesSearch =
       u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -283,26 +332,26 @@ export default function LeaderboardPage() {
               🥈 HẠNG 2 • HUY CHƯƠNG BẠC
             </div>
             <div className="relative mx-auto w-20 h-20 mb-3">
-              <Avatar src={TOP_3_STUDENTS[1].avatar} alt={TOP_3_STUDENTS[1].name} size="lg" className="border-4 border-slate-300 shadow-md" />
+              <Avatar src={top3Students[1].avatar} alt={top3Students[1].name} size="lg" className="border-4 border-slate-300 shadow-md" />
               <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-slate-300 text-slate-950 font-black text-xs flex items-center justify-center shadow">
                 2
               </span>
             </div>
             <h3 className="text-base font-black text-slate-900 dark:text-white">
-              {TOP_3_STUDENTS[1].name}
+              {top3Students[1].name}
             </h3>
             <p className="text-xs text-slate-500 truncate mt-0.5">
-              {TOP_3_STUDENTS[1].school}
+              {top3Students[1].school}
             </p>
             <div className="mt-4 p-3 rounded-2xl bg-slate-50 dark:bg-slate-850 flex items-center justify-around text-xs">
               <div>
                 <span className="text-[10px] text-slate-400 block">Điểm Tích Lũy</span>
-                <strong className="text-slate-900 dark:text-white font-mono font-bold">{TOP_3_STUDENTS[1].points}</strong>
+                <strong className="text-slate-900 dark:text-white font-mono font-bold">{top3Students[1].points}</strong>
               </div>
               <div className="h-6 w-px bg-slate-200 dark:bg-slate-800" />
               <div>
                 <span className="text-[10px] text-slate-400 block">Kim Cương</span>
-                <strong className="text-[#007D99] dark:text-[#00B8DD] font-bold">+{TOP_3_STUDENTS[1].diamonds} 💎</strong>
+                <strong className="text-[#007D99] dark:text-[#00B8DD] font-bold">+{top3Students[1].diamonds} 💎</strong>
               </div>
             </div>
           </Card>
@@ -317,26 +366,26 @@ export default function LeaderboardPage() {
               QUÁN QUÂN TOÀN QUỐC 🥇
             </div>
             <div className="relative mx-auto w-24 h-24 mb-3">
-              <Avatar src={TOP_3_STUDENTS[0].avatar} alt={TOP_3_STUDENTS[0].name} size="lg" className="w-24 h-24 border-4 border-amber-400 shadow-xl" />
+              <Avatar src={top3Students[0].avatar} alt={top3Students[0].name} size="lg" className="w-24 h-24 border-4 border-amber-400 shadow-xl" />
               <span className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-amber-400 text-slate-950 font-black text-sm flex items-center justify-center shadow-lg border-2 border-white">
                 1
               </span>
             </div>
             <h3 className="text-lg font-black text-slate-900 dark:text-white">
-              {TOP_3_STUDENTS[0].name}
+              {top3Students[0].name}
             </h3>
             <p className="text-xs text-slate-500 truncate mt-0.5">
-              {TOP_3_STUDENTS[0].school} • {TOP_3_STUDENTS[0].province}
+              {top3Students[0].school} • {top3Students[0].province}
             </p>
             <div className="mt-4 p-3.5 rounded-2xl bg-amber-100/60 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 flex items-center justify-around text-xs">
               <div>
                 <span className="text-[10px] text-amber-800 dark:text-amber-300 block font-semibold">Điểm Tích Lũy</span>
-                <strong className="text-slate-950 dark:text-white font-mono font-black text-sm">{TOP_3_STUDENTS[0].points}</strong>
+                <strong className="text-slate-950 dark:text-white font-mono font-black text-sm">{top3Students[0].points}</strong>
               </div>
               <div className="h-7 w-px bg-amber-300 dark:bg-amber-800" />
               <div>
                 <span className="text-[10px] text-amber-800 dark:text-amber-300 block font-semibold">Kim Cương Thưởng</span>
-                <strong className="text-[#007D99] dark:text-[#00B8DD] font-black text-sm">+{TOP_3_STUDENTS[0].diamonds} 💎</strong>
+                <strong className="text-[#007D99] dark:text-[#00B8DD] font-black text-sm">+{top3Students[0].diamonds} 💎</strong>
               </div>
             </div>
           </Card>
@@ -350,26 +399,26 @@ export default function LeaderboardPage() {
               🥉 HẠNG 3 • HUY CHƯƠNG ĐỒNG
             </div>
             <div className="relative mx-auto w-20 h-20 mb-3">
-              <Avatar src={TOP_3_STUDENTS[2].avatar} alt={TOP_3_STUDENTS[2].name} size="lg" className="border-4 border-amber-600/70 shadow-md" />
+              <Avatar src={top3Students[2].avatar} alt={top3Students[2].name} size="lg" className="border-4 border-amber-600/70 shadow-md" />
               <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-amber-700 text-white font-black text-xs flex items-center justify-center shadow">
                 3
               </span>
             </div>
             <h3 className="text-base font-black text-slate-900 dark:text-white">
-              {TOP_3_STUDENTS[2].name}
+              {top3Students[2].name}
             </h3>
             <p className="text-xs text-slate-500 truncate mt-0.5">
-              {TOP_3_STUDENTS[2].school}
+              {top3Students[2].school}
             </p>
             <div className="mt-4 p-3 rounded-2xl bg-slate-50 dark:bg-slate-850 flex items-center justify-around text-xs">
               <div>
                 <span className="text-[10px] text-slate-400 block">Điểm Tích Lũy</span>
-                <strong className="text-slate-900 dark:text-white font-mono font-bold">{TOP_3_STUDENTS[2].points}</strong>
+                <strong className="text-slate-900 dark:text-white font-mono font-bold">{top3Students[2].points}</strong>
               </div>
               <div className="h-6 w-px bg-slate-200 dark:bg-slate-800" />
               <div>
                 <span className="text-[10px] text-slate-400 block">Kim Cương</span>
-                <strong className="text-[#007D99] dark:text-[#00B8DD] font-bold">+{TOP_3_STUDENTS[2].diamonds} 💎</strong>
+                <strong className="text-[#007D99] dark:text-[#00B8DD] font-bold">+{top3Students[2].diamonds} 💎</strong>
               </div>
             </div>
           </Card>

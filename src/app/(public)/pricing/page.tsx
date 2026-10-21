@@ -41,6 +41,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog } from '@/components/ui/dialog';
 import { MOCK_PACKAGES } from '@/services/mock/data';
+import { catalogService } from '@/services/catalog.service';
+import { useAuthStore } from '@/store/auth.store';
 import { SubscriptionPackage } from '@/types';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -275,7 +277,20 @@ export default function PricingPage() {
   const [isYearly, setIsYearly] = React.useState(false);
 
   // State Modal thanh toán
+  const { user } = useAuthStore();
+  const [schoolPackages, setSchoolPackages] = React.useState<SubscriptionPackage[]>(MOCK_PACKAGES);
+  const [activeOrderId, setActiveOrderId] = React.useState<string | null>(null);
+  const [vietQrTransferCode, setVietQrTransferCode] = React.useState<string>('');
   const [selectedStudentPkg, setSelectedStudentPkg] = React.useState<StudentPackage | null>(null);
+
+  React.useEffect(() => {
+    catalogService
+      .getPackages()
+      .then((pkgs) => {
+        if (pkgs.length > 0) setSchoolPackages(pkgs);
+      })
+      .catch(() => {});
+  }, []);
   const [selectedSchoolPkg, setSelectedSchoolPkg] = React.useState<SubscriptionPackage | null>(null);
   const [isPaidSuccess, setIsPaidSuccess] = React.useState(false);
   const [awardedBonus, setAwardedBonus] = React.useState<number>(0);
@@ -297,7 +312,10 @@ export default function PricingPage() {
   };
 
   // Xử lý xác nhận thanh toán thành công
-  const handleConfirmPayment = () => {
+  const handleConfirmPayment = async () => {
+    if (activeOrderId) {
+      await catalogService.confirmOrderPayment(activeOrderId).catch(() => {});
+    }
     setIsPaidSuccess(true);
 
     // Tính toán số điểm thưởng được tặng ngay
@@ -603,6 +621,22 @@ export default function PricingPage() {
                         toast.info('Bạn đang sử dụng gói Tân Binh Miễn Phí của Schoolify!');
                       } else {
                         setSelectedStudentPkg(pkg);
+                        const amount = isYearly ? pkg.priceYearly * 12 : pkg.priceMonthly;
+                        catalogService
+                          .createOrder({
+                            userId: user?.id,
+                            email: user?.email,
+                            packageName: `${pkg.name} (${isYearly ? '1 Năm' : '1 Tháng'})`,
+                            amount,
+                            billingCycle: isYearly ? 'YEARLY' : 'MONTHLY',
+                          })
+                          .then((res) => {
+                            if (res?.order?.id) {
+                              setActiveOrderId(res.order.id);
+                              setVietQrTransferCode(res.vietQrPayload?.transferContent || '');
+                            }
+                          })
+                          .catch(() => {});
                       }
                     }}
                     variant={isPopular ? 'primary' : 'outline'}
@@ -998,7 +1032,7 @@ export default function PricingPage() {
       ======================================================== */}
       {audienceTab === 'SCHOOL' && (
         <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch">
-          {MOCK_PACKAGES.map((pkg) => {
+          {schoolPackages.map((pkg) => {
             const isPopular = pkg.id === 'pkg-growth';
             const calculatedPrice = isYearly ? pkg.price * 12 * 0.8 : pkg.price;
 
@@ -1062,7 +1096,26 @@ export default function PricingPage() {
                 </div>
 
                 <Button
-                  onClick={() => setSelectedSchoolPkg(pkg)}
+                  onClick={() => {
+                    setSelectedSchoolPkg(pkg);
+                    const amount = isYearly ? pkg.price * 12 * 0.8 : pkg.price;
+                    catalogService
+                      .createOrder({
+                        userId: user?.id,
+                        email: user?.email,
+                        packageId: pkg.id,
+                        packageName: pkg.name,
+                        amount,
+                        billingCycle: isYearly ? 'YEARLY' : 'MONTHLY',
+                      })
+                      .then((res) => {
+                        if (res?.order?.id) {
+                          setActiveOrderId(res.order.id);
+                          setVietQrTransferCode(res.vietQrPayload?.transferContent || '');
+                        }
+                      })
+                      .catch(() => {});
+                  }}
                   variant={isPopular ? 'primary' : 'outline'}
                   className={cn(
                     'w-full justify-center h-12 text-sm font-bold rounded-xl cursor-pointer',
