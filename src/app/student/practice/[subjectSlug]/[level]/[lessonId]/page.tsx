@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft,
-  Gem,
   BookOpen,
   CheckCircle2,
   HelpCircle,
@@ -38,7 +37,8 @@ import { Card } from '@/components/ui/card';
 import { Tabs } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { getCurriculum, SubjectCurriculum } from '@/services/mock/curriculumData';
-import { MathEssayEditor } from '@/components/ui/math-editor';
+import { SubjectEssayEditor } from '@/components/features/student/practice/SubjectEssayEditor';
+import { NgocIcon } from '@/components/ui/point-icons';
 
 // Helper function to turn slug to human friendly title
 function formatSlug(slug: string | string[] | undefined): string {
@@ -252,7 +252,7 @@ export default function StudentPracticeWorkspacePage() {
           {/* Right: Diamond Reward Header Widget */}
           <div className="flex items-center gap-3 self-end sm:self-auto">
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-inner">
-              <Gem className="w-4 h-4 text-[#00B8DD] animate-pulse" />
+              <NgocIcon className="w-4 h-4 animate-pulse" />
               <span className="text-sm font-bold text-[#007D99] dark:text-cyan-200">{diamondBalance} 💎</span>
             </div>
 
@@ -724,7 +724,7 @@ export default function StudentPracticeWorkspacePage() {
                   </h2>
                 </div>
                 <Badge variant="outline" className="text-amber-600 dark:text-amber-400 border-amber-500/30">
-                  Thưởng 30 💎
+                  Thưởng 30 <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat />
                 </Badge>
               </div>
 
@@ -737,16 +737,10 @@ export default function StudentPracticeWorkspacePage() {
               </div>
 
               <div className="space-y-2">
-                <MathEssayEditor
+                <SubjectEssayEditor
+                  subjectSlug={typeof subjectSlug === 'string' ? subjectSlug : 'toan-hoc'}
                   value={essayAnswer}
                   onChange={setEssayAnswer}
-                  label={
-                    <span className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
-                      <FileText className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                      Trình Bày Lời Giải Tự Luận
-                    </span>
-                  }
-                  placeholder="Ghi chi tiết các bước biến đổi, điều kiện nghiệm và họ nghiệm tìm được..."
                   rows={6}
                 />
               </div>
@@ -886,7 +880,7 @@ export default function StudentPracticeWorkspacePage() {
                       Chúc mừng! Bạn đạt 9/10 Điểm
                     </h3>
                     <p className="text-xs text-slate-600 dark:text-slate-300">
-                      Bạn vừa nhận thành công <strong className="text-amber-600 dark:text-yellow-400">+100 Kim Cương 💎</strong> thưởng từ bài kiểm tra.
+                      Bạn vừa nhận thành công <strong className="text-amber-600 dark:text-yellow-400">+100 Ngọc Tri Thức 💎</strong> thưởng từ bài kiểm tra.
                     </p>
                   </Card>
                 )}

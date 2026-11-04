@@ -7,7 +7,6 @@ import {
   Award,
   CalendarCheck,
   History,
-  Gem,
   TrendingUp,
   TrendingDown,
   Search,
@@ -24,6 +23,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Dialog } from '@/components/ui/dialog';
 import { Pagination } from '@/components/ui/pagination';
+import { Skeleton } from '@/components/ui/skeleton';
 import { MOCK_STORE_ITEMS } from '@/services/mock/data';
 import { StoreItem } from '@/types';
 import { useAuthStore } from '@/store/auth.store';
@@ -36,6 +36,8 @@ import {
 import { catalogService } from '@/services/catalog.service';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { NgocIcon } from '@/components/ui/point-icons';
+import { AdminPointsEditModal } from '@/components/features/admin/AdminPointsEditModal';
 
 const STORE_ITEMS_PER_PAGE = 6;
 const HISTORY_ITEMS_PER_PAGE = 8;
@@ -71,7 +73,13 @@ const ACTION_TYPE_LABELS: Record<string, { label: string; variant: 'success' | '
 };
 
 export default function StudentRewardsStorePage() {
-  const { user } = useAuthStore();
+  const { user, currentRole } = useAuthStore();
+  const isAdmin =
+    user?.role === 'SUPER_ADMIN' ||
+    (user?.role as string) === 'ADMIN' ||
+    (currentRole as string) === 'ADMIN' ||
+    currentRole === 'SUPER_ADMIN';
+  const [adminModalOpen, setAdminModalOpen] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState<'STORE' | 'HISTORY' | 'QUOTA'>('STORE');
 
   // Số dư điểm & trạng thái điểm danh
@@ -148,7 +156,7 @@ export default function StudentRewardsStorePage() {
         toast.warning('Hôm nay bạn đã điểm danh rồi!', {
           description:
             res.message ||
-            'Mỗi ngày hệ thống chỉ cấp 9 Kim Cương (💎) 1 lần. Vui lòng quay lại vào ngày mai nhé!',
+            'Mỗi ngày hệ thống chỉ cấp 9 Ngọc Tri Thức (💎) 1 lần. Vui lòng quay lại vào ngày mai nhé!',
         });
         return;
       }
@@ -156,7 +164,7 @@ export default function StudentRewardsStorePage() {
       if (res?.success && res?.data) {
         setPoints(res.data.currentPoints);
         setAlreadyClaimedToday(true);
-        toast.success('Điểm danh nhận 9 Kim Cương thành công!', {
+        toast.success('Điểm danh nhận 9 Ngọc Tri Thức thành công!', {
           description: res.message,
         });
         await loadAllData();
@@ -280,10 +288,10 @@ export default function StudentRewardsStorePage() {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-200/80 dark:border-slate-800">
         <div className="min-w-0">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-            Cửa Hàng Đổi Quà &amp; Kim Cương
+            Cửa Hàng Đổi Quà &amp; Ngọc Tri Thức
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Mỗi ngày điểm danh nhận 9 Kim Cương (💎), làm bài đạt 8.5+ tích lũy thêm để đổi Voucher, Huy hiệu và Quà tặng.
+            Mỗi ngày điểm danh nhận 9 Ngọc Tri Thức (<NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat />), làm bài đạt 8.5+ tích lũy thêm để đổi Voucher, Huy hiệu và Quà tặng.
           </p>
         </div>
 
@@ -314,20 +322,37 @@ export default function StudentRewardsStorePage() {
               )
             }
           >
-            {alreadyClaimedToday ? 'Đã điểm danh hôm nay (9đ)' : 'Điểm danh nhận 9đ hôm nay'}
+            {alreadyClaimedToday ? 'Đã điểm danh hôm nay (+9 tia)' : 'Điểm danh nhận 9 Tia Sáng hôm nay'}
           </Button>
         </div>
       </div>
 
       {/* 4 Thẻ Thống Kê Tổng Quan Gọn Nhẹ */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+        <Card
+          onDoubleClick={(e) => {
+            if (isAdmin) {
+              e.preventDefault();
+              setAdminModalOpen(true);
+            }
+          }}
+          className={cn(
+            "p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs select-none",
+            isAdmin && "cursor-pointer hover:border-amber-400 hover:ring-2 hover:ring-amber-400/20"
+          )}
+          title={isAdmin ? "⚡ Quản trị viên: Nhấn đúp (2 lần) để chỉnh sửa điểm" : undefined}
+          data-testid="rewards-points-card"
+        >
           <div className="text-xs font-semibold text-primary dark:text-[#00B8DD]">
-            Số dư Kim Cương hiện tại
+            Số dư Ngọc Tri Thức hiện tại
           </div>
           <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1 flex items-center gap-1.5">
-            <span>{isLoading ? '...' : `${points}`}</span>
-            <Gem className="w-5 h-5 text-primary fill-primary/20" />
+            {isLoading ? (
+              <Skeleton className="h-8 w-16 my-0.5 inline-block" />
+            ) : (
+              <span>{points}</span>
+            )}
+            <NgocIcon className="w-5 h-5" />
           </div>
           <div className="text-[11px] text-slate-400 mt-0.5">
             {alreadyClaimedToday ? 'Đã điểm danh nhận 9 💎 hôm nay' : 'Cấp cố định 9 💎 / ngày'}
@@ -339,8 +364,14 @@ export default function StudentRewardsStorePage() {
             Quà đủ điểm đổi ngay
           </div>
           <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-            {affordableCount}{' '}
-            <span className="text-xs font-medium text-slate-400">/ {storeItems.length} phần quà</span>
+            {isLoading ? (
+              <Skeleton className="h-8 w-24 my-0.5 inline-block" />
+            ) : (
+              <>
+                {affordableCount}{' '}
+                <span className="text-xs font-medium text-slate-400">/ {storeItems.length} phần quà</span>
+              </>
+            )}
           </div>
           <div className="text-[11px] text-slate-400 mt-0.5">
             Voucher, Huy hiệu &amp; Học liệu PDF
@@ -352,8 +383,14 @@ export default function StudentRewardsStorePage() {
             Số lượt làm đề khả dụng
           </div>
           <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-            {basicQuota} đề{' '}
-            <span className="text-xs font-medium text-slate-400">(Cơ bản)</span>
+            {isLoading ? (
+              <Skeleton className="h-8 w-28 my-0.5 inline-block" />
+            ) : (
+              <>
+                {basicQuota} đề{' '}
+                <span className="text-xs font-medium text-slate-400">(Cơ bản)</span>
+              </>
+            )}
           </div>
           <div className="text-[11px] text-slate-400 mt-0.5">
             Hoặc {mediumQuota} đề TB (-4đ) • {advQuota} đề Giỏi (-9đ)
@@ -510,7 +547,27 @@ export default function StudentRewardsStorePage() {
           </Card>
 
           {/* Danh sách Card Quà Tặng Gọn Đẹp */}
-          {paginatedStoreItems.length === 0 ? (
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from({ length: 6 }).map((_, idx) => (
+                <Card
+                  key={idx}
+                  className="p-0 overflow-hidden bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 animate-pulse"
+                >
+                  <div className="h-36 w-full bg-slate-200 dark:bg-slate-800" />
+                  <div className="p-4 space-y-2.5">
+                    <div className="h-4 w-3/4 bg-slate-200 dark:bg-slate-800 rounded" />
+                    <div className="h-3 w-full bg-slate-200 dark:bg-slate-800 rounded" />
+                    <div className="h-3 w-2/3 bg-slate-200 dark:bg-slate-800 rounded" />
+                  </div>
+                  <div className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/40 dark:bg-slate-900/40">
+                    <div className="h-3 w-20 bg-slate-200 dark:bg-slate-800 rounded" />
+                    <div className="h-8 w-24 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : paginatedStoreItems.length === 0 ? (
             <Card className="p-10 text-center text-xs text-slate-400 border border-slate-200/80 dark:border-slate-800">
               Không tìm thấy phần thưởng nào phù hợp với bộ lọc hiện tại.
             </Card>
@@ -543,8 +600,8 @@ export default function StudentRewardsStorePage() {
                         </div>
                         <div className="absolute top-2.5 right-2.5">
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-900/85 text-cyan-300 font-bold text-xs shadow-sm backdrop-blur-xs">
-                            <Gem className="w-3.5 h-3.5 text-cyan-400 fill-cyan-400/30" />
-                            {item.points_required} 💎
+                            <NgocIcon className="w-3.5 h-3.5" />
+                            {item.points_required} <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat />
                           </span>
                         </div>
                       </div>
@@ -660,7 +717,19 @@ export default function StudentRewardsStorePage() {
           </Card>
 
           <Card className="p-0 overflow-hidden bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
-            {paginatedHistoryItems.length === 0 ? (
+            {isLoading ? (
+              <div className="p-4 space-y-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between gap-4 py-3 border-b border-slate-100 dark:border-slate-800/80 last:border-b-0 animate-pulse">
+                    <div className="h-4 w-28 bg-slate-200 dark:bg-slate-800 rounded" />
+                    <div className="h-5 w-24 bg-slate-200 dark:bg-slate-800 rounded-full" />
+                    <div className="h-4 flex-1 bg-slate-200 dark:bg-slate-800 rounded hidden sm:block" />
+                    <div className="h-4 w-12 bg-slate-200 dark:bg-slate-800 rounded" />
+                    <div className="h-4 w-16 bg-slate-200 dark:bg-slate-800 rounded" />
+                  </div>
+                ))}
+              </div>
+            ) : paginatedHistoryItems.length === 0 ? (
               <div className="py-10 text-center text-xs text-slate-400">
                 Không có bản ghi giao dịch điểm nào phù hợp.
               </div>
@@ -697,7 +766,7 @@ export default function StudentRewardsStorePage() {
                             </Badge>
                           </td>
                           <td className="py-3 px-4 text-slate-700 dark:text-slate-300 max-w-md">
-                            {log.note || log.examTitle || 'Giao dịch điểm năng lượng'}
+                            {log.note || log.examTitle || 'Giao dịch Tia Sáng'}
                           </td>
                           <td className="py-3 px-4 text-center font-mono text-slate-500">
                             {log.pointsBefore}đ
@@ -750,16 +819,36 @@ export default function StudentRewardsStorePage() {
       {/* ===================================================================== */}
       {activeTab === 'QUOTA' && (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              {
-                key: 'BASIC',
-                title: 'Đề Cấp Độ Cơ Bản',
-                desc: 'Ôn tập kiến thức nền tảng SGK (Nhận biết & Thông hiểu).',
-                cost: 3,
-                available: basicQuota,
-                canStart: points >= 3,
-              },
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Card
+                  key={i}
+                  className="p-5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 animate-pulse space-y-4"
+                >
+                  <div className="space-y-2">
+                    <div className="h-5 w-1/2 bg-slate-200 dark:bg-slate-800 rounded" />
+                    <div className="h-3 w-5/6 bg-slate-200 dark:bg-slate-800 rounded" />
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 space-y-2">
+                    <div className="h-4 w-1/3 bg-slate-200 dark:bg-slate-800 rounded" />
+                    <div className="h-6 w-1/2 bg-slate-200 dark:bg-slate-800 rounded" />
+                  </div>
+                  <div className="h-9 w-full bg-slate-200 dark:bg-slate-800 rounded-xl" />
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                {
+                  key: 'BASIC',
+                  title: 'Đề Cấp Độ Cơ Bản',
+                  desc: 'Ôn tập kiến thức nền tảng SGK (Nhận biết & Thông hiểu).',
+                  cost: 3,
+                  available: basicQuota,
+                  canStart: points >= 3,
+                },
               {
                 key: 'MEDIUM',
                 title: 'Đề Cấp Độ Trung Bình',
@@ -807,6 +896,7 @@ export default function StudentRewardsStorePage() {
               </Card>
             ))}
           </div>
+          )}
         </div>
       )}
 
@@ -865,6 +955,21 @@ export default function StudentRewardsStorePage() {
           </div>
         </div>
       </Dialog>
+
+      {/* Admin Points Edit Modal (Nhấn đúp 2 lần vào số điểm để mở) */}
+      {isAdmin && (
+        <AdminPointsEditModal
+          isOpen={adminModalOpen}
+          onClose={() => setAdminModalOpen(false)}
+          currentTokenBalance={balanceData?.currentPoints ?? 9}
+          currentDiamondsBalance={points}
+          userId={user?.id}
+          onUpdated={async (newPoints, newDiamonds) => {
+            setPoints(newDiamonds);
+            await loadAllData();
+          }}
+        />
+      )}
     </div>
   );
 }

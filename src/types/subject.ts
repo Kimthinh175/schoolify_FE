@@ -14,7 +14,7 @@ export interface LevelDetail {
   description: string;
   badgeColor: string;
   gradient: string;
-  pointsReward: number; // 💎 Kim cương thưởng
+  pointsReward: number; // 💎 Ngọc Tri Thức thưởng
   totalExams: number;
 }
 
@@ -29,9 +29,11 @@ export interface K12Subject {
   borderColor: string;
   badgeBg: string;
   totalExams: number;
+  totalQuestions?: number;
   completedExams?: number;
   description: string;
   category: 'NATURAL' | 'SOCIAL' | 'LANGUAGE' | 'TECH';
+  status?: 'ACTIVE' | 'PENDING';
 }
 
 export interface PracticeExamItem {

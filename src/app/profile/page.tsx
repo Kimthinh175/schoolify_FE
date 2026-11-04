@@ -69,9 +69,29 @@ const GRADE_LEVELS = [
   'Lớp 12',
 ];
 
+import { StudentAccountSkeleton } from '@/components/skeletons/page-skeletons';
+
 export default function ProfileSettingsPage() {
   const router = useRouter();
   const { user, currentRole, updateUser, fetchMe } = useAuthStore();
+  const [isMounted, setIsMounted] = React.useState(false);
+  const [authHydrated, setAuthHydrated] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+    if (useAuthStore.persist?.hasHydrated?.()) {
+      setAuthHydrated(true);
+    } else {
+      const unsub = useAuthStore.persist?.onFinishHydration?.(() => {
+        setAuthHydrated(true);
+      });
+      const timer = setTimeout(() => setAuthHydrated(true), 200);
+      return () => {
+        unsub?.();
+        clearTimeout(timer);
+      };
+    }
+  }, []);
 
   React.useEffect(() => {
     if (currentRole === 'STUDENT') {
@@ -101,14 +121,16 @@ export default function ProfileSettingsPage() {
       setPhone(user.phone || '');
       setAvatarUrl(
         user.avatar_url ||
-          'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80'
+          (user as any)?.avatarUrl ||
+          (user as any)?.avatar ||
+          ''
       );
       const studentGrade =
         (user as any)?.student_profile?.grade_level ||
         (user as any)?.gradeLevel ||
         'Lớp 12';
       setGradeLevel(studentGrade);
-      setCustomAvatarInput(user.avatar_url || '');
+      setCustomAvatarInput(user.avatar_url || (user as any)?.avatarUrl || (user as any)?.avatar || '');
     }
   }, [user]);
 
@@ -168,6 +190,10 @@ export default function ProfileSettingsPage() {
         return 'Người Dùng Schoolify';
     }
   };
+
+  if (!isMounted || (!authHydrated && !user)) {
+    return <StudentAccountSkeleton />;
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-12">

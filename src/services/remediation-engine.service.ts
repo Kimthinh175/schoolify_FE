@@ -217,14 +217,51 @@ export function generateQuestionVariant(original: ExamQuestion, indexInExam: num
 }
 
 /**
- * Sinh trọn vẹn gói đề thi khắc phục lỗi sai từ danh sách câu hỏi làm sai
+ * Sinh trọn vẹn gói đề thi khắc phục lỗi sai từ danh sách câu hỏi làm sai.
+ * Luôn đảm bảo sinh đủ đúng 5 câu hỏi luyện bù biến thể chuẩn 100%.
  */
 export function generateRemediationExamPackage(
   wrongQuestions: ExamQuestion[],
   baseExam: PracticeExamPackage
 ): PracticeExamPackage {
-  const variantQuestions = wrongQuestions.map((q, idx) => generateQuestionVariant(q, idx + 1));
-  const totalPoints = variantQuestions.reduce((sum, q) => sum + (q.score || 1), 0);
+  // 1. Lấy danh sách câu hỏi làm cơ sở sinh biến thể
+  let sourceQuestions = [...wrongQuestions];
+
+  // Nếu không có câu sai (ví dụ đạt điểm tuyệt đối nhưng vẫn muốn luyện bù), lấy từ đề gốc
+  if (sourceQuestions.length === 0 && baseExam.questions.length > 0) {
+    sourceQuestions = baseExam.questions.slice(0, 5);
+  }
+
+  // 2. Sinh biến thể từ các câu sai trước
+  const variantQuestions = sourceQuestions.map((q, idx) => generateQuestionVariant(q, idx + 1));
+
+  // 3. Đảm bảo luôn đủ 5 câu luyện bù theo đúng chuẩn cam kết trên giao diện ("Luyện bù ngay 5 câu")
+  const TARGET_COUNT = 5;
+  if (variantQuestions.length < TARGET_COUNT && baseExam.questions.length > 0) {
+    const existingIds = new Set(sourceQuestions.map((q) => q.id));
+    const extraCandidates = baseExam.questions.filter((q) => !existingIds.has(q.id));
+
+    let candidateIdx = 0;
+    while (variantQuestions.length < TARGET_COUNT) {
+      const sourceQ =
+        extraCandidates[candidateIdx] ||
+        sourceQuestions[variantQuestions.length % (sourceQuestions.length || 1)] ||
+        baseExam.questions[0];
+
+      if (sourceQ) {
+        variantQuestions.push(
+          generateQuestionVariant(sourceQ, variantQuestions.length + 1)
+        );
+      } else {
+        break;
+      }
+      candidateIdx++;
+    }
+  }
+
+  // Giới hạn đúng 5 câu nếu danh sách ban đầu nhiều hơn 5 câu
+  const finalQuestions = variantQuestions.slice(0, TARGET_COUNT);
+  const totalPoints = finalQuestions.reduce((sum, q) => sum + (q.score || 1), 0);
 
   return {
     id: `remediation_${baseExam.id}_${Date.now()}`,
@@ -235,9 +272,9 @@ export function generateRemediationExamPackage(
     chapterId: baseExam.chapterId,
     chapterName: baseExam.chapterName,
     format: baseExam.format,
-    title: `Đề Khắc Phục Lỗi Sai: ${baseExam.title}`,
-    durationMinutes: Math.max(5, Math.min(30, variantQuestions.length * 3)),
+    title: `Đề Khắc Phục Lỗi Sai (5 câu): ${baseExam.title}`,
+    durationMinutes: Math.max(5, Math.min(30, finalQuestions.length * 3)),
     totalPoints: Math.round(totalPoints * 10) / 10 || 10,
-    questions: variantQuestions,
+    questions: finalQuestions,
   };
 }

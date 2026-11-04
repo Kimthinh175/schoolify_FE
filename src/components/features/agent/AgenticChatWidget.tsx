@@ -15,9 +15,32 @@ import {
   Maximize2,
   ArrowRight,
   Loader2,
+  Smile,
+  RotateCcw,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { SchoolifyRobot } from './SchoolifyRobot';
+import { SchoolifyRobot, type RobotEmotion } from './SchoolifyRobot';
+import { clampEmotionDuration, isRobotEmotion } from '@/lib/robot-emotions';
+import { NgocIcon } from '@/components/ui/point-icons';
+import { AgentChatMessageContent } from './AgentChatMessageContent';
+import { OutOfPointsModal } from '@/components/features/student/practice/OutOfPointsModal';
+import { getCachedPointsBalance } from '@/services/exam-points.service';
+
+export const ROBOT_EMOTIONS: { id: RobotEmotion; label: string; icon: string; desc: string }[] = [
+  { id: 'default', label: 'Mặc định', icon: '🤖', desc: 'Chế độ chờ tương tác' },
+  { id: 'happy', label: 'Vui vẻ', icon: '😄', desc: 'Mắt cong cười híp, má hồng' },
+  { id: 'excited', label: 'Phấn khích', icon: '🤩', desc: 'Mắt nheo > < reo hò' },
+  { id: 'wink', label: 'Nháy mắt', icon: '😉', desc: 'Nháy mắt, sao lấp lánh ✨' },
+  { id: 'thinking', label: 'Suy nghĩ', icon: '🤔', desc: 'Chống cằm, dấu hỏi ?' },
+  { id: 'idea', label: 'Ý tưởng', icon: '💡', desc: 'Bóng đèn phát sáng, vẫy tay' },
+  { id: 'love', label: 'Yêu thích', icon: '😍', desc: 'Mắt trái tim, ôm cằm ❤️' },
+  { id: 'celebrate', label: 'Ăn mừng', icon: '🎉', desc: 'Giơ tay reo hò, confetti' },
+  { id: 'sad', label: 'Buồn bã', icon: '🥺', desc: 'Mắt rũ, giọt nước mắt 💧' },
+  { id: 'angry', label: 'Tức giận', icon: '😤', desc: 'Mắt xếch, gân giận đỏ 💢' },
+  { id: 'sleeping', label: 'Đi ngủ', icon: '😴', desc: 'Mắt nhắm thư thái, z z Z 💤' },
+  { id: 'surprised', label: 'Kinh ngạc', icon: '😲', desc: 'Mắt tròn xoe O O, há hốc' },
+  { id: 'stunned', label: 'Distorted Face', icon: '🥴', desc: 'Mắt phình to méo mó, mặt biến dạng' },
+];
 
 interface ClientToolAction {
   type:
@@ -36,30 +59,52 @@ interface ChatMessage {
   content: string;
   timestamp: string;
   actions?: ClientToolAction[];
+  pointUsage?: {
+    tokensUsed: number;
+    pointsDeducted: number;
+    remainingDiamonds: number;
+    hasDiscount?: boolean;
+    activePackage?: string;
+  };
+  isError?: boolean;
 }
 
-const QUICK_PROMPTS = [
-  {
-    label: '🏫 Nền tảng Schoolify là gì?',
-    prompt: 'Nền tảng Schoolify là gì và có những tính năng nào?',
-  },
-  {
-    label: '🎯 Tạo đề Toán 12 khó',
-    prompt: 'Tạo đề Toán lớp 12 mức độ khó 10 câu',
-  },
-  {
-    label: '💡 Gợi ý cực trị',
-    prompt: 'Gợi ý bước giải bài toán cực trị hàm số bậc 3',
-  },
-  {
-    label: '📄 Quét đề Word .docx',
-    prompt: 'Mở công cụ quét đề thi file word docx sinh câu hỏi',
-  },
-  {
-    label: '💳 Gói Pro & Bảng giá',
-    prompt: 'Tư vấn gói đăng ký Pro luyện đề không giới hạn',
-  },
+const STARTER_SUGGESTIONS = [
+  '🏫 Nền tảng Schoolify là gì?',
+  '📐 Công thức nghiệm bậc hai',
+  '🎯 Tạo đề Toán 12 khó 10 câu',
+  '💡 Gợi ý bước giải cực trị',
+  '💳 Gói học sinh 50k & 100k',
 ];
+
+const SESSION_KEY = 'schoolify_chat_session_key';
+
+const WELCOME_MESSAGE: ChatMessage = {
+  id: 'welcome-msg',
+  role: 'assistant',
+  content:
+    'Chào bạn! Tớ là **Trợ lý AI Schoolify** 🤖✨\n\nTớ có thể đồng hành cùng bạn:\n1. 🏫 **Tìm hiểu nền tảng Schoolify**: Khám phá hệ thống luyện thi K-12 thích ứng.\n2. 🎯 **Tạo đề thi thích ứng theo ma trận**: Ví dụ *"Tạo đề Toán 12 mức độ khó 10 câu"*.\n3. 💡 **Gợi mở Socratic từng bước**: Giúp bạn tự tư duy giải quyết bài toán khó.\n4. 💳 **Tư vấn gói học Pro & Bảng giá**: Lựa chọn gói luyện thi phù hợp.\n\nBạn cần hỗ trợ gì cứ nhắn cho tớ nhé!',
+  timestamp: 'Vừa xong',
+  actions: [
+    {
+      type: 'NAVIGATE_PAGE',
+      payload: {
+        path: '/luyen-thi',
+        label: 'Khám Phá Cổng Luyện Thi K-12',
+      },
+    },
+    {
+      type: 'CONFIGURE_EXAM_MATRIX',
+      payload: {
+        subject: 'Toán học',
+        grade: 12,
+        bloomRatio: { NHAN_BIET: 30, THONG_HIEU: 40, VAN_DUNG: 20, VAN_DUNG_CAO: 10 },
+        durationMinutes: 25,
+        totalQuestions: 10,
+      },
+    },
+  ],
+};
 
 export function AgenticChatWidget() {
   const router = useRouter();
@@ -73,6 +118,21 @@ export function AgenticChatWidget() {
       pathname?.startsWith('/teacher')
   );
   const [isBubbleDismissed, setIsBubbleDismissed] = React.useState(isManagementRoute);
+  const [emotion, setEmotion] = React.useState<RobotEmotion>('default');
+  const [showEmotionPicker, setShowEmotionPicker] = React.useState(false);
+  const [showShowcaseModal, setShowShowcaseModal] = React.useState(false);
+  const emotionTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const triggerTemporaryEmotion = React.useCallback(
+    (newEmotion: RobotEmotion, durationMs = 3500, fallbackEmotion: RobotEmotion = 'default') => {
+      if (emotionTimerRef.current) clearTimeout(emotionTimerRef.current);
+      setEmotion(newEmotion);
+      emotionTimerRef.current = setTimeout(() => {
+        setEmotion(fallbackEmotion);
+      }, durationMs);
+    },
+    []
+  );
 
   // Vừa vào trang hiện 5s tự tắt bóng thoại
   React.useEffect(() => {
@@ -172,6 +232,7 @@ export function AgenticChatWidget() {
       drag.moved = true;
       setIsDragging(true);
       setIsBubbleDismissed(true);
+      setEmotion('surprised');
     }
     const { dx, dy } = clampDelta(e.clientX - drag.lastX, e.clientY - drag.lastY);
     drag.lastX = e.clientX;
@@ -188,6 +249,7 @@ export function AgenticChatWidget() {
     if (drag?.moved) {
       suppressClickRef.current = true;
       setIsDragging(false);
+      triggerTemporaryEmotion('happy', 2000);
       setOffset((current) => {
         try {
           localStorage.setItem(POS_KEY, JSON.stringify(current));
@@ -200,37 +262,63 @@ export function AgenticChatWidget() {
   };
 
   // Chat state
+  const [sessionId, setSessionId] = React.useState<string>('');
   const [input, setInput] = React.useState('');
   const [isSending, setIsSending] = React.useState(false);
   const [executingActionIdx, setExecutingActionIdx] = React.useState<string | null>(null);
-  const [messages, setMessages] = React.useState<ChatMessage[]>([
-    {
-      id: 'welcome-msg',
-      role: 'assistant',
-      content:
-        'Chào bạn! Tớ là **Trợ lý AI Schoolify** 🤖✨\n\nTớ có thể đồng hành cùng bạn:\n1. 🏫 **Tìm hiểu nền tảng Schoolify**: Khám phá hệ thống luyện thi K-12 thích ứng.\n2. 🎯 **Tạo đề thi thích ứng theo ma trận**: Ví dụ *"Tạo đề Toán 12 mức độ khó 10 câu"*.\n3. 💡 **Gợi mở Socratic từng bước**: Giúp bạn tự tư duy giải quyết bài toán khó.\n4. 💳 **Tư vấn gói học Pro & Bảng giá**: Lựa chọn gói luyện thi phù hợp.\n\nBạn cần hỗ trợ gì cứ nhắn cho tớ nhé!',
-      timestamp: 'Vừa xong',
-      actions: [
-        {
-          type: 'NAVIGATE_PAGE',
-          payload: {
-            path: '/luyen-thi',
-            label: 'Khám Phá Cổng Luyện Thi K-12',
-          },
-        },
-        {
-          type: 'CONFIGURE_EXAM_MATRIX',
-          payload: {
-            subject: 'Toán học',
-            grade: 12,
-            bloomRatio: { NHAN_BIET: 30, THONG_HIEU: 40, VAN_DUNG: 20, VAN_DUNG_CAO: 10 },
-            durationMinutes: 25,
-            totalQuestions: 10,
-          },
-        },
-      ],
-    },
-  ]);
+  const [suggestions, setSuggestions] = React.useState<string[]>(STARTER_SUGGESTIONS);
+  const [messages, setMessages] = React.useState<ChatMessage[]>([WELCOME_MESSAGE]);
+
+  // Khôi phục Session Cache từ Postgres DB khi mở ứng dụng (Chuẩn cho-cong-nghe)
+  React.useEffect(() => {
+    let curSession = '';
+    try {
+      curSession = localStorage.getItem(SESSION_KEY) || '';
+      if (!curSession) {
+        curSession = `sess-scl-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+        localStorage.setItem(SESSION_KEY, curSession);
+      }
+      setSessionId(curSession);
+
+      fetch(`/api/v1/agent/chat/session/${encodeURIComponent(curSession)}`)
+        .then((r) => r.json())
+        .then((res) => {
+          const history = res?.data?.messages;
+          if (Array.isArray(history) && history.length > 0) {
+            const sanitized = history.map((m: any, idx: number) => ({
+              ...m,
+              id: m.id ? String(m.id) : `hist-${idx}-${Date.now()}`,
+              timestamp: m.timestamp || 'Trước đây',
+            }));
+            setMessages(sanitized);
+            const lastMsg = history[history.length - 1];
+            if (Array.isArray(lastMsg?.suggestions) && lastMsg.suggestions.length > 0) {
+              setSuggestions(lastMsg.suggestions);
+            }
+          }
+        })
+        .catch(() => {});
+    } catch {}
+  }, []);
+
+  const handleStartNewChat = async () => {
+    if (sessionId) {
+      fetch(`/api/v1/agent/chat/session/${encodeURIComponent(sessionId)}`, {
+        method: 'DELETE',
+      }).catch(() => {});
+    }
+    const newSess = `sess-scl-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    try {
+      localStorage.setItem(SESSION_KEY, newSess);
+    } catch {}
+    setSessionId(newSess);
+    setMessages([WELCOME_MESSAGE]);
+    setSuggestions(STARTER_SUGGESTIONS);
+    setEmotion('happy');
+    toast.success('Đã bắt đầu cuộc trò chuyện mới! 🚀', {
+      description: 'Ngữ cảnh và lịch sử cũ đã được lưu trữ an toàn trong hệ thống.',
+    });
+  };
 
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
@@ -238,69 +326,180 @@ export function AgenticChatWidget() {
     if (isOpen) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, isOpen]);
+  }, [messages, isOpen, isSending]);
 
-  const sendMessage = async (textToSend?: string) => {
-    const query = (textToSend ?? input).trim();
-    if (!query || isSending) return;
+  const sendMessage = React.useCallback(
+    async (textToSend?: string, customQuestionContext?: Record<string, any>) => {
+      const query = (textToSend ?? input).trim();
+      if (!query || isSending) return;
 
-    const userMsg: ChatMessage = {
-      id: `usr-${Date.now()}`,
-      role: 'user',
-      content: query,
-      timestamp: new Date().toLocaleTimeString('vi-VN', {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
-    if (!textToSend) setInput('');
-    setIsSending(true);
-
-    try {
-      const res = await fetch('/api/v1/agent/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: query,
-          currentUrl: pathname || '/',
-          subject: 'toan-hoc',
-          grade: 12,
-        }),
-      });
-
-      const json = await res.json();
-      const payload = json?.data || json;
-
-      const aiMsg: ChatMessage = {
-        id: `ai-${Date.now()}`,
-        role: 'assistant',
-        content:
-          payload?.message ||
-          'Tớ đã ghi nhận yêu cầu của bạn. Bạn hãy xem gợi ý thao tác bên dưới nhé!',
+      const userMsg: ChatMessage = {
+        id: `usr-${Date.now()}`,
+        role: 'user',
+        content: query,
         timestamp: new Date().toLocaleTimeString('vi-VN', {
           hour: '2-digit',
           minute: '2-digit',
         }),
-        actions: Array.isArray(payload?.actions) ? payload.actions : [],
       };
 
-      setMessages((prev) => [...prev, aiMsg]);
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `err-${Date.now()}`,
+      setMessages((prev) => [...prev, userMsg]);
+      if (!textToSend) setInput('');
+      setIsSending(true);
+      setEmotion('thinking');
+
+      let effectiveUserId = 'usr-student-01';
+      try {
+        const raw =
+          typeof window !== 'undefined' ? window.localStorage.getItem('schoolify-auth-storage') : null;
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          effectiveUserId = parsed?.state?.user?.id || 'usr-student-01';
+        }
+      } catch {}
+
+      // Multi-turn context memory: truyền 10 tin nhắn gần nhất
+      const historyContext = messages.slice(-10).map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
+
+      try {
+        const res = await fetch('/api/v1/agent/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': effectiveUserId,
+          },
+          body: JSON.stringify({
+            sessionId,
+            userId: effectiveUserId,
+            message: query,
+            history: historyContext,
+            currentUrl: pathname || '/',
+            subject: customQuestionContext?.subjectSlug || 'toan-hoc',
+            grade: customQuestionContext?.grade || 12,
+            questionContext: customQuestionContext,
+          }),
+        });
+
+        const json = await res.json();
+
+        // Xử lý khi học sinh không đủ Ngọc Tri Thức
+        if (!json?.success && json?.errorCode === 'INSUFFICIENT_XIN_POINTS') {
+          const errAiMsg: ChatMessage = {
+            id: `ai-err-${Date.now()}`,
+            role: 'assistant',
+            content: json.message || 'Bạn không đủ Ngọc Tri Thức (💎) để hỏi Gia sư AI.',
+            timestamp: new Date().toLocaleTimeString('vi-VN', {
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
+            isError: true,
+            actions: [
+              {
+                type: 'NAVIGATE',
+                payload: {
+                  url: '/student/practice',
+                  label: '🎯 Luyện đề để cày Ngọc Tri Thức miễn phí (> 8.5đ)',
+                },
+              },
+              {
+                type: 'NAVIGATE',
+                payload: { url: '/pricing', label: '💳 Nâng cấp Gói học sinh (50k / 100k)' },
+              },
+            ],
+          };
+          setMessages((prev) => [...prev, errAiMsg]);
+          triggerTemporaryEmotion('sad', 4000);
+          return;
+        }
+
+        const payload = json?.data || json;
+        const pointUsage = json?.pointUsage || payload?.pointUsage;
+
+        if (pointUsage && typeof pointUsage.remainingDiamonds === 'number') {
+          try {
+            window.localStorage.setItem('schoolify_user_diamonds', String(pointUsage.remainingDiamonds));
+            window.dispatchEvent(
+              new CustomEvent('tokens-updated', { detail: { diamonds: pointUsage.remainingDiamonds } })
+            );
+          } catch {}
+        }
+
+        const actions = Array.isArray(payload?.actions) ? payload.actions : [];
+        const aiMsg: ChatMessage = {
+          id: `ai-${Date.now()}`,
           role: 'assistant',
-          content: 'Hiện không kết nối được dịch vụ Trợ lý AI. Bạn vui lòng thử lại sau giây lát nhé!',
-          timestamp: 'Vừa xong',
-        },
-      ]);
-    } finally {
-      setIsSending(false);
-    }
-  };
+          content:
+            payload?.message ||
+            'Tớ đã ghi nhận yêu cầu của bạn. Bạn hãy xem gợi ý thao tác bên dưới nhé!',
+          timestamp: new Date().toLocaleTimeString('vi-VN', {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+          actions,
+          pointUsage,
+        };
+
+        setMessages((prev) => [...prev, aiMsg]);
+        if (Array.isArray(payload?.suggestions) && payload.suggestions.length > 0) {
+          setSuggestions(payload.suggestions);
+        }
+        // Ưu tiên biểu cảm BE gửi kèm; thiếu/không hợp lệ thì tự suy luận
+        if (isRobotEmotion(payload?.emotion)) {
+          triggerTemporaryEmotion(payload.emotion, clampEmotionDuration(payload?.emotionDurationMs));
+        } else if (actions.length > 0) {
+          triggerTemporaryEmotion('idea', 4000);
+        } else {
+          triggerTemporaryEmotion('happy', 3500);
+        }
+      } catch {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `err-${Date.now()}`,
+            role: 'assistant',
+            content: 'Hiện không kết nối được dịch vụ Trợ lý AI. Bạn vui lòng thử lại sau giây lát nhé!',
+            timestamp: 'Vừa xong',
+            isError: true,
+          },
+        ]);
+        triggerTemporaryEmotion('sad', 4000);
+      } finally {
+        setIsSending(false);
+      }
+    },
+    [input, isSending, messages, pathname, sessionId, triggerTemporaryEmotion]
+  );
+
+  // Lắng nghe sự kiện từ phòng luyện thi "💡 Hỏi Gia Sư AI câu này" (Context-Aware Socratic Tutor)
+  React.useEffect(() => {
+    const handleAskAiTutor = (e: Event) => {
+      const customEvent = e as CustomEvent<Record<string, any>>;
+      const detail = customEvent.detail || {};
+      setIsOpen(true);
+      setIsBubbleDismissed(true);
+      setEmotion('idea');
+      const promptText =
+        detail.prompt ||
+        `💡 Gợi mở Socratic câu "${detail.title || 'hiện tại'}" [${detail.topicTag || 'Chuyên đề'}]`;
+      sendMessage(promptText, detail);
+    };
+
+    window.addEventListener('schoolify:ask-ai-tutor', handleAskAiTutor);
+    return () => window.removeEventListener('schoolify:ask-ai-tutor', handleAskAiTutor);
+  }, [sendMessage]);
+
+  const [outOfPointsModal, setOutOfPointsModal] = React.useState<{
+    isOpen: boolean;
+    currentPoints: number;
+    requiredPoints: number;
+  }>({
+    isOpen: false,
+    currentPoints: 0,
+    requiredPoints: 3,
+  });
 
   /**
    * Thực thi Client Tool Action trực tiếp trên giao diện FE
@@ -309,6 +508,16 @@ export function AgenticChatWidget() {
     setExecutingActionIdx(actionKey);
     try {
       if (action.type === 'CONFIGURE_EXAM_MATRIX') {
+        const cachedPts = getCachedPointsBalance();
+        if (cachedPts !== null && cachedPts < 3) {
+          setOutOfPointsModal({
+            isOpen: true,
+            currentPoints: Math.max(0, cachedPts),
+            requiredPoints: 3,
+          });
+          return;
+        }
+
         const {
           subject = 'Toán học',
           grade = 12,
@@ -331,7 +540,26 @@ export function AgenticChatWidget() {
           }),
         });
 
-        const data = await res.json();
+        const data = await res.json().catch(() => null);
+        if (!res.ok) {
+          if (data?.errorCode === 'INSUFFICIENT_EXAM_POINTS' || res.status === 400) {
+            toast.error('Không đủ Tia Sáng tạo đề thi!', {
+              description:
+                data?.message ||
+                'Bạn đã hết Tia Sáng hôm nay. Hãy nâng cấp gói học sinh để tiếp tục luyện đề!',
+              action: {
+                label: 'Nâng cấp gói',
+                onClick: () => router.push('/pricing'),
+              },
+            });
+            return;
+          }
+          toast.error('Không thể tạo đề thi ma trận', {
+            description: data?.message || 'Vui lòng thử lại sau',
+          });
+          return;
+        }
+
         const generatedCount = data?.data?.questions?.length || totalQuestions;
 
         toast.success(`Đã khởi tạo đề ${subject} Khối ${grade} (${generatedCount} câu)!`, {
@@ -365,11 +593,12 @@ export function AgenticChatWidget() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end gap-3">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex flex-col items-end gap-3">
       {/* Nút Floating mở Chatbox: Mascot Robot HTML/CSS & Bóng Thoại Chào Mừng */}
       {!isOpen && (
         <div
           ref={launcherRef}
+          data-chat-launcher
           style={{ transform: `translate3d(${offset.x}px, ${offset.y}px, 0)` }}
           className="relative flex flex-col sm:flex-row items-end sm:items-center gap-2.5 sm:gap-3"
         >
@@ -436,10 +665,21 @@ export function AgenticChatWidget() {
           {/* Linh vật Robot: bấm để mở chat, nhấn giữ và kéo để di chuyển */}
           <button
             type="button"
+            data-chat-robot
             onPointerDown={handleDragStart}
             onPointerMove={handleDragMove}
             onPointerUp={handleDragEnd}
             onPointerCancel={handleDragEnd}
+            onPointerEnter={() => {
+              if (!isDragging && emotion === 'default') {
+                setEmotion('wink');
+              }
+            }}
+            onPointerLeave={() => {
+              if (!isDragging && emotion === 'wink') {
+                setEmotion('default');
+              }
+            }}
             onClick={() => {
               if (suppressClickRef.current) {
                 suppressClickRef.current = false;
@@ -447,6 +687,7 @@ export function AgenticChatWidget() {
               }
               setIsOpen(true);
               setIsBubbleDismissed(false);
+              triggerTemporaryEmotion('excited', 2200);
             }}
             aria-label="Mở Trợ lý AI Schoolify (nhấn giữ và kéo để di chuyển)"
             title="Bấm để hỏi gia sư AI · Kéo để di chuyển"
@@ -454,21 +695,43 @@ export function AgenticChatWidget() {
             className={`relative flex flex-col items-center group select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00B8DD] focus-visible:ring-offset-2 rounded-2xl shrink-0 ${
               isDragging
                 ? 'cursor-grabbing scale-105'
-                : 'cursor-grab transition-transform hover:scale-105'
+                : 'cursor-grab animate-sf-robot-drift hover:[animation-play-state:paused] transition-transform hover:scale-105'
             }`}
           >
             <SchoolifyRobot
               size="lg"
+              emotion={emotion}
               isFloating={!isDragging}
-              showLabel
-              labelText="Hỏi gia sư AI"
             />
           </button>
         </div>
       )}
 
-      {/* Khung Chatbox */}
+      {/* Khung Chatbox + Robot đứng bên cạnh */}
       {isOpen && (
+        <div data-chat-open className="flex items-end gap-2 lg:gap-3 animate-in fade-in slide-in-from-bottom-5 zoom-in-95 duration-300 ease-out">
+          {/* Robot đứng cạnh khung chat (ẩn trên màn hẹp để không tràn ngang) */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsOpen(false);
+              setShowEmotionPicker(false);
+            }}
+            onPointerEnter={() => {
+              if (emotion === 'default') setEmotion('wink');
+            }}
+            onPointerLeave={() => {
+              if (emotion === 'wink') setEmotion('default');
+            }}
+            aria-label="Thu gọn Trợ lý AI Schoolify"
+            title="Bấm để thu gọn khung chat"
+            className={`${
+              isExpanded ? 'hidden lg:flex' : 'hidden md:flex'
+            } relative flex-col items-center shrink-0 select-none rounded-2xl cursor-pointer transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00B8DD] focus-visible:ring-offset-2 animate-in fade-in slide-in-from-right-4 duration-300`}
+          >
+            <SchoolifyRobot size="lg" emotion={emotion} isFloating />
+          </button>
+
         <div
           className={`flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden transition-all duration-200 ${
             isExpanded
@@ -479,9 +742,14 @@ export function AgenticChatWidget() {
           {/* Header */}
           <div className="px-4 py-3 bg-gradient-to-r from-slate-900 via-[#090D16] to-slate-900 text-white flex items-center justify-between gap-2 border-b border-slate-800 shrink-0">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="relative shrink-0">
-                <SchoolifyRobot size="md" statusBadge />
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowEmotionPicker(!showEmotionPicker)}
+                className="relative shrink-0 p-0.5 rounded-xl hover:ring-2 hover:ring-[#00B8DD]/50 transition-all cursor-pointer"
+                title="Bấm để mở bảng 12 cảm xúc AI"
+              >
+                <SchoolifyRobot size="md" statusBadge emotion={emotion} />
+              </button>
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <h3 className="text-xs sm:text-sm font-black tracking-tight truncate flex items-center gap-1">
@@ -492,13 +760,37 @@ export function AgenticChatWidget() {
                     Đang hoạt động
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-400 truncate">
-                  Bạn đồng hành học tập K-12 • Phản hồi 24/7
+                <p className="text-[10px] text-slate-400 truncate flex items-center gap-1">
+                  <span>Trạng thái:</span>
+                  <span className="text-[#5CE1FF] font-semibold">
+                    {ROBOT_EMOTIONS.find((e) => e.id === emotion)?.icon}{' '}
+                    {ROBOT_EMOTIONS.find((e) => e.id === emotion)?.label}
+                  </span>
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                onClick={handleStartNewChat}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-[#5CE1FF] hover:bg-slate-800 transition-colors cursor-pointer"
+                title="Bắt đầu đoạn chat mới (Làm mới phiên)"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowEmotionPicker(!showEmotionPicker)}
+                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                  showEmotionPicker
+                    ? 'text-[#00B8DD] bg-slate-800'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                }`}
+                title="Chọn cảm xúc Robot AI (13 trạng thái)"
+              >
+                <Smile className="w-4 h-4" />
+              </button>
               <button
                 type="button"
                 onClick={() => setIsExpanded(!isExpanded)}
@@ -522,11 +814,56 @@ export function AgenticChatWidget() {
             </div>
           </div>
 
+          {/* Menu chọn 13 Cảm Xúc Lõi AI (Showcase) */}
+          {showEmotionPicker && (
+            <div className="p-3 bg-slate-900 border-b border-slate-800 animate-in fade-in slide-in-from-top-2 duration-200 shrink-0">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-bold text-slate-200 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  13 Trạng Thái Cảm Xúc Lõi AI
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowShowcaseModal(true)}
+                  className="px-2 py-0.5 rounded-md bg-[#00B8DD]/20 hover:bg-[#00B8DD]/30 text-[#5CE1FF] text-[10px] font-bold border border-[#00B8DD]/40 transition-all cursor-pointer flex items-center gap-1"
+                >
+                  <span>Xem lưới biểu cảm</span>
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
+              <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
+                {ROBOT_EMOTIONS.map((emo) => (
+                  <button
+                    key={emo.id}
+                    type="button"
+                    onClick={() => {
+                      setEmotion(emo.id);
+                      toast.success(`Đã chuyển cảm xúc AI: ${emo.icon} ${emo.label}`, {
+                        description: emo.desc,
+                      });
+                    }}
+                    className={`flex flex-col items-center justify-center p-1.5 rounded-xl border text-center transition-all cursor-pointer ${
+                      emotion === emo.id
+                        ? 'bg-[#00B8DD]/25 border-[#00B8DD] text-[#5CE1FF] ring-1 ring-[#00B8DD]/50'
+                        : 'bg-slate-800/80 hover:bg-slate-800 border-slate-700/60 text-slate-300'
+                    }`}
+                    title={emo.desc}
+                  >
+                    <span className="text-base sm:text-lg mb-0.5">{emo.icon}</span>
+                    <span className="text-[10px] font-bold tracking-tight truncate w-full">
+                      {emo.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Danh sách tin nhắn */}
           <div className="flex-1 overflow-y-auto p-3.5 space-y-3.5 bg-slate-50/50 dark:bg-slate-950/40">
-            {messages.map((msg) => (
+            {messages.map((msg, idx) => (
               <div
-                key={msg.id}
+                key={msg.id ? `${msg.id}-${idx}` : `chat-msg-${idx}`}
                 className={`flex flex-col ${
                   msg.role === 'user' ? 'items-end' : 'items-start'
                 }`}
@@ -544,7 +881,16 @@ export function AgenticChatWidget() {
                 >
                   {msg.role === 'assistant' && (
                     <div className="shrink-0 mt-0.5">
-                      <SchoolifyRobot size="sm" />
+                      <SchoolifyRobot
+                        size="sm"
+                        emotion={
+                          msg.isError
+                            ? 'sad'
+                            : msg.actions && msg.actions.length > 0
+                            ? 'idea'
+                            : 'happy'
+                        }
+                      />
                     </div>
                   )}
                   <div
@@ -554,7 +900,27 @@ export function AgenticChatWidget() {
                         : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 border border-slate-200/80 dark:border-slate-800 rounded-bl-xs shadow-xs max-w-[90%]'
                     }`}
                   >
-                    <div className="whitespace-pre-line break-words">{msg.content}</div>
+                    <AgentChatMessageContent content={msg.content} role={msg.role} />
+
+                    {/* Badge trừ Ngọc Tri Thức & Token tiêu thụ */}
+                    {msg.pointUsage && (
+                      <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-1.5 text-[10px]">
+                        <span className="inline-flex items-center gap-1 font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-200/60 dark:border-amber-800/40">
+                          <span>
+                            <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat /> {msg.pointUsage.pointsDeducted > 0 ? '-' : ''}
+                            {msg.pointUsage.pointsDeducted} Ngọc Tri Thức
+                          </span>
+                          {msg.pointUsage.hasDiscount && (
+                            <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-extrabold bg-emerald-100/70 dark:bg-emerald-900/60 px-1 rounded">
+                              -50% VIP
+                            </span>
+                          )}
+                        </span>
+                        <span className="text-slate-400 font-medium">
+                          ({msg.pointUsage.tokensUsed.toLocaleString('vi-VN')} tokens) • Còn {msg.pointUsage.remainingDiamonds} <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat />
+                        </span>
+                      </div>
+                    )}
 
                     {/* Danh sách Client Tool Actions đính kèm */}
                     {msg.actions && msg.actions.length > 0 && (
@@ -653,6 +1019,22 @@ export function AgenticChatWidget() {
                               );
                             }
 
+                            if (act.type === 'NAVIGATE') {
+                              return (
+                                <button
+                                  key={actionKey}
+                                  type="button"
+                                  onClick={() => router.push(act.payload?.url || '/')}
+                                  className="w-full p-2.5 rounded-xl bg-gradient-to-r from-cyan-500/10 to-amber-500/10 hover:from-cyan-500/20 hover:to-amber-500/20 border border-cyan-500/40 text-left transition-all cursor-pointer flex items-center justify-between gap-2"
+                                >
+                                  <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                                    {act.payload?.label || 'Chuyển trang'}
+                                  </span>
+                                  <ArrowRight className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
+                                </button>
+                              );
+                            }
+
                             return (
                               <button
                                 key={actionKey}
@@ -672,25 +1054,54 @@ export function AgenticChatWidget() {
                 </div>
               </div>
             ))}
+            {/* Trạng thái AI đang suy nghĩ (Thinking State Animation) */}
+            {isSending && (
+              <div className="flex flex-col items-start animate-in fade-in duration-200">
+                <div className="mb-1 text-[10px] text-slate-400 px-1 select-none">
+                  Đang phân tích...
+                </div>
+                <div className="flex items-start gap-2 w-full justify-start">
+                  <div className="shrink-0 mt-0.5">
+                    <SchoolifyRobot size="sm" emotion="thinking" />
+                  </div>
+                  <div className="rounded-2xl px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-bl-xs shadow-xs">
+                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                      <span>Schoolify AI đang tư duy</span>
+                      <span className="flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#00B8DD] animate-bounce [animation-delay:-0.3s]" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#00B8DD] animate-bounce [animation-delay:-0.15s]" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#00B8DD] animate-bounce" />
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Danh sách Gợi ý nhanh (flex-wrap, không scroll ngang) */}
-          <div className="px-3 py-2 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 shrink-0">
-            <div className="flex flex-wrap gap-1.5">
-              {QUICK_PROMPTS.map((q) => (
-                <button
-                  key={q.label}
-                  type="button"
-                  disabled={isSending}
-                  onClick={() => sendMessage(q.prompt)}
-                  className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-[#00B8DD]/15 dark:bg-slate-800 dark:hover:bg-[#00B8DD]/20 text-slate-700 dark:text-slate-300 hover:text-[#007D99] dark:hover:text-[#00B8DD] text-[11px] font-semibold transition-all cursor-pointer shrink-0"
-                >
-                  {q.label}
-                </button>
-              ))}
+          {/* Danh sách Gợi ý ngữ cảnh thông minh (Dynamic Contextual Suggestions) - flex-wrap, không scroll ngang */}
+          {suggestions.length > 0 && (
+            <div className="px-3 py-2 bg-slate-50/80 dark:bg-slate-900/90 border-t border-slate-100 dark:border-slate-800 shrink-0">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-[#00B8DD]" />
+                  <span>Gợi ý:</span>
+                </span>
+                {suggestions.map((sug, idx) => (
+                  <button
+                    key={`${sug}-${idx}`}
+                    type="button"
+                    disabled={isSending}
+                    onClick={() => sendMessage(sug)}
+                    className="px-2.5 py-1 rounded-full bg-white dark:bg-slate-800 hover:bg-[#00B8DD]/15 dark:hover:bg-[#00B8DD]/25 text-slate-700 dark:text-slate-200 hover:text-[#007D99] dark:hover:text-[#5CE1FF] text-[11px] font-semibold border border-slate-200/80 dark:border-slate-700/80 shadow-2xs transition-all cursor-pointer shrink-0 disabled:opacity-50"
+                  >
+                    {sug}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Ô nhập câu hỏi */}
           <form
@@ -720,7 +1131,93 @@ export function AgenticChatWidget() {
             </button>
           </form>
         </div>
+        </div>
       )}
+
+      {/* Modal Showcase Bảng Lưới 12 Biểu Cảm Hologram */}
+      {showShowcaseModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-4xl max-h-[90vh] flex flex-col bg-[#090D16] border border-[#00B8DD]/30 rounded-3xl shadow-2xl overflow-hidden text-white">
+            {/* Header Modal */}
+            <div className="px-5 py-4 bg-gradient-to-r from-slate-900 via-[#0A101D] to-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
+              <div>
+                <h2 className="text-sm sm:text-base font-black tracking-tight text-white flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <span>Bộ Sưu Tập Biểu Cảm Robot Schoolify (13 Trạng Thái)</span>
+                </h2>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Thiết kế Vector SVG Hologram lơ lửng với 13 sắc thái cảm xúc sống động
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowShowcaseModal(false)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                title="Đóng bảng mẫu"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Grid 12 Biểu Cảm (3x4 responsive, flex-wrap, no horizontal scroll) */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 pb-8">
+                {ROBOT_EMOTIONS.map((emo) => (
+                  <div
+                    key={emo.id}
+                    className={`flex flex-col items-center justify-between p-3.5 rounded-2xl border transition-all ${
+                      emotion === emo.id
+                        ? 'bg-slate-900/90 border-[#00B8DD] ring-2 ring-[#00B8DD]/40 shadow-lg shadow-[#00B8DD]/10'
+                        : 'bg-slate-900/50 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900/80'
+                    }`}
+                  >
+                    <div className="w-full flex items-center justify-center py-2 min-h-[140px]">
+                      <SchoolifyRobot size="lg" emotion={emo.id} isFloating />
+                    </div>
+                    <div className="w-full text-center mt-2 border-t border-slate-800/80 pt-2.5">
+                      <div className="flex items-center justify-center gap-1 text-sm font-bold text-slate-100">
+                        <span>{emo.icon}</span>
+                        <span>{emo.label}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-2">
+                        {emo.desc}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEmotion(emo.id);
+                          toast.success(`Đã chọn cảm xúc: ${emo.icon} ${emo.label}`);
+                          setShowShowcaseModal(false);
+                        }}
+                        className={`mt-2.5 w-full py-1.5 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                          emotion === emo.id
+                            ? 'bg-[#00B8DD] text-white shadow-xs'
+                            : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+                        }`}
+                      >
+                        {emotion === emo.id ? 'Đang kích hoạt' : 'Chọn cảm xúc'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <OutOfPointsModal
+        isOpen={outOfPointsModal.isOpen}
+        onClose={() => setOutOfPointsModal((prev) => ({ ...prev, isOpen: false }))}
+        currentPoints={outOfPointsModal.currentPoints}
+        requiredPoints={outOfPointsModal.requiredPoints}
+        levelLabel="Tạo đề AI"
+        onNavigatePricing={() => {
+          setOutOfPointsModal((prev) => ({ ...prev, isOpen: false }));
+          setIsOpen(false);
+          router.push('/pricing');
+        }}
+      />
     </div>
   );
 }

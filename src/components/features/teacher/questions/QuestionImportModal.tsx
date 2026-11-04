@@ -192,6 +192,38 @@ export function QuestionImportModal({
     }
   };
 
+  const validateQuestionItem = (
+    qType: any,
+    content: string,
+    answers: { is_correct: boolean; content?: string }[],
+    qRef?: Partial<ParsedQuestionItem>
+  ): { isValid: boolean; errors: string[] } => {
+    if (!content || !content.trim()) {
+      return { isValid: false, errors: ['Nội dung câu hỏi không được để trống'] };
+    }
+    if (qType === 'ESSAY' || qType === 'GROUP_QUESTIONS') {
+      return { isValid: true, errors: [] };
+    }
+    if (qType === 'FILL_BLANK') {
+      const hasVal = Boolean(qRef?.shortAnswerCorrect?.trim() || answers.some((a) => a.content?.trim()));
+      return { isValid: hasVal, errors: hasVal ? [] : ['Chưa nhập đáp số / kết quả đúng'] };
+    }
+    if (qType === 'MATCHING') {
+      const hasPairs = (qRef?.matching_pairs && qRef.matching_pairs.length >= 2) || answers.length >= 2;
+      return { isValid: hasPairs, errors: hasPairs ? [] : ['Cần ít nhất 2 cặp ghép nối'] };
+    }
+    if (qType === 'ORDERING') {
+      const hasItems = (qRef?.ordering_items && qRef.ordering_items.length >= 2) || answers.length >= 2;
+      return { isValid: hasItems, errors: hasItems ? [] : ['Cần ít nhất 2 bước cần sắp xếp'] };
+    }
+    if (qType === 'CLOZE_DROPDOWN') {
+      const hasBlanks = (qRef?.cloze_blanks && qRef.cloze_blanks.length > 0) || content.includes('[') || answers.length > 0;
+      return { isValid: hasBlanks, errors: hasBlanks ? [] : ['Cần ít nhất 1 ô đục lỗ [từ_đúng*|từ_sai]'] };
+    }
+    const hasCorrect = answers.some((a) => a.is_correct);
+    return { isValid: hasCorrect, errors: hasCorrect ? [] : ['Chưa chọn đáp án đúng'] };
+  };
+
   const handleChangeQuestionType = (tempId: string, newType: any) => {
     setParsedQuestions((prev) =>
       prev.map((q) => {
@@ -207,14 +239,13 @@ export function QuestionImportModal({
             return { ...a, is_correct: false };
           });
         }
-        const hasCorrect = updatedAns.some((a) => a.is_correct);
-        const isValid = newType === 'ESSAY' ? true : hasCorrect;
+        const { isValid, errors } = validateQuestionItem(newType, q.content, updatedAns, q);
         return {
           ...q,
           question_type: newType,
           answers: updatedAns,
           is_valid: isValid,
-          validation_errors: isValid ? [] : ['Chưa chọn đáp án đúng'],
+          validation_errors: errors,
         };
       })
     );
@@ -228,13 +259,12 @@ export function QuestionImportModal({
           ...a,
           is_correct: i === ansIndex ? !a.is_correct : q.question_type === 'SINGLE_CHOICE' ? false : a.is_correct,
         }));
-        const hasCorrect = updatedAns.some((a) => a.is_correct);
-        const isValid = q.question_type === 'ESSAY' ? true : hasCorrect;
+        const { isValid, errors } = validateQuestionItem(q.question_type, q.content, updatedAns, q);
         return {
           ...q,
           answers: updatedAns,
           is_valid: isValid,
-          validation_errors: isValid ? [] : ['Chưa chọn đáp án đúng'],
+          validation_errors: errors,
         };
       })
     );
@@ -846,8 +876,13 @@ export function QuestionImportModal({
                               >
                                 <option value="SINGLE_CHOICE">Trắc nghiệm 1 đáp án</option>
                                 <option value="MULTIPLE_CHOICE">Trắc nghiệm nhiều đáp án</option>
-                                <option value="TRUE_FALSE">Câu hỏi Đúng / Sai</option>
+                                <option value="TRUE_FALSE">Đúng / Sai đa mệnh đề (2025)</option>
+                                <option value="FILL_BLANK">Điền số / Trả lời ngắn</option>
                                 <option value="ESSAY">Câu hỏi Tự luận</option>
+                                <option value="GROUP_QUESTIONS">Chùm câu hỏi (Ngữ liệu)</option>
+                                <option value="MATCHING">Nối cặp tương ứng</option>
+                                <option value="ORDERING">Sắp xếp theo thứ tự</option>
+                                <option value="CLOZE_DROPDOWN">Đục lỗ chọn từ (Inline)</option>
                               </select>
                               {!q.is_valid && (
                                 <span className="text-xs font-bold text-rose-600 flex items-center gap-1">
@@ -1042,10 +1077,85 @@ export function QuestionImportModal({
                                 </div>
                               )}
 
-                              {/* Danh sách đáp án hoặc Chú thích Tự luận */}
+                              {/* Hiển thị chi tiết theo từng loại câu hỏi */}
                               {q.question_type === 'ESSAY' ? (
-                                <div className="p-2.5 rounded-xl bg-slate-100/70 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-400 flex items-center gap-2 font-medium">
-                                  <span>ℹ️ <strong>Chế độ Tự luận:</strong> {q.answers.length > 0 ? `Đã tạm ẩn ${q.answers.length} lựa chọn trắc nghiệm. Đổi lại Trắc nghiệm để hiển thị lại.` : 'Câu hỏi tự luận không yêu cầu đáp án lựa chọn.'}</span>
+                                <div className="p-2.5 rounded-xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 text-[11px] text-purple-900 dark:text-purple-300 space-y-1">
+                                  <div className="font-bold flex items-center gap-1.5">
+                                    <span>📝 Chế độ Tự luận / Barem chấm điểm</span>
+                                  </div>
+                                  <p className="text-slate-600 dark:text-slate-300">
+                                    {q.sample_essay_answer || 'Không yêu cầu đáp án trắc nghiệm. Học sinh nộp bài viết hoặc file ảnh.'}
+                                  </p>
+                                </div>
+                              ) : q.question_type === 'GROUP_QUESTIONS' ? (
+                                <div className="p-2.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-[11px] text-amber-900 dark:text-amber-300 space-y-1">
+                                  <div className="font-bold flex items-center gap-1.5">
+                                    <span>📚 Chùm câu hỏi / Ngữ liệu đọc hiểu chung</span>
+                                  </div>
+                                  <p className="text-slate-600 dark:text-slate-300">
+                                    {q.sub_questions && q.sub_questions.length > 0
+                                      ? `Bao gồm ${q.sub_questions.length} câu hỏi con đi kèm theo nhóm này.`
+                                      : 'Đoạn văn bản/hình ảnh này sẽ làm ngữ liệu nền cho các câu hỏi con.'}
+                                  </p>
+                                </div>
+                              ) : q.question_type === 'FILL_BLANK' ? (
+                                <div className="p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-900 dark:text-emerald-300 flex items-center justify-between">
+                                  <span className="font-bold">🎯 Đáp số / Kết quả ngắn chuẩn:</span>
+                                  <Badge className="bg-emerald-600 text-white font-mono text-xs">
+                                    {q.shortAnswerCorrect || (q.answers[0] && q.answers[0].content) || '(Chưa nhập)'}
+                                  </Badge>
+                                </div>
+                              ) : q.question_type === 'MATCHING' && q.matching_pairs && q.matching_pairs.length > 0 ? (
+                                <div className="space-y-1.5 pt-1">
+                                  <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                                    Các cặp ghép nối ({q.matching_pairs.length} cặp):
+                                  </span>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    {q.matching_pairs.map((p, pIdx) => (
+                                      <div key={p.id || pIdx} className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs flex items-center justify-between gap-2">
+                                        <span className="font-medium text-slate-800 dark:text-slate-200">{p.left_text}</span>
+                                        <span className="text-primary font-bold">⇄</span>
+                                        <span className="text-slate-600 dark:text-slate-400 text-right">{p.right_text}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ) : q.question_type === 'ORDERING' && q.ordering_items && q.ordering_items.length > 0 ? (
+                                <div className="space-y-1.5 pt-1">
+                                  <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                                    Thứ tự sắp xếp chuẩn:
+                                  </span>
+                                  <div className="flex flex-wrap gap-2">
+                                    {[...q.ordering_items]
+                                      .sort((a, b) => a.correct_order - b.correct_order)
+                                      .map((it, itIdx) => (
+                                        <Badge key={it.id || itIdx} variant="outline" className="px-2.5 py-1 text-xs gap-1.5 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
+                                          <span className="w-4 h-4 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">
+                                            {it.correct_order}
+                                          </span>
+                                          <span>{it.content}</span>
+                                        </Badge>
+                                      ))}
+                                  </div>
+                                </div>
+                              ) : q.question_type === 'CLOZE_DROPDOWN' && q.cloze_blanks && q.cloze_blanks.length > 0 ? (
+                                <div className="space-y-1.5 pt-1">
+                                  <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                                    Các ô đục lỗ ({q.cloze_blanks.length} ô):
+                                  </span>
+                                  <div className="flex flex-wrap gap-2">
+                                    {q.cloze_blanks.map((b) => (
+                                      <div key={b.id} className="p-2 rounded-lg bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 text-xs">
+                                        <span className="font-bold text-sky-900 dark:text-sky-300">Ô {b.index}: </span>
+                                        <span className="text-emerald-700 dark:text-emerald-400 font-bold underline mr-1">
+                                          {b.correct_answer}
+                                        </span>
+                                        <span className="text-slate-500 text-[10px]">
+                                          (Tùy chọn: {b.options.join(', ')})
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
                                 </div>
                               ) : (
                                 q.answers.length > 0 && (

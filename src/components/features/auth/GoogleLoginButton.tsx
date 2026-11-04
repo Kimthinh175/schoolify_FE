@@ -5,16 +5,18 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { isAuthPopup, initAuthPopupSession, notifyAuthSuccessAndKillPopup } from '@/lib/auth-popup';
 
 const GOOGLE_CLIENT_ID =
   process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
-  '511595808378-ibkrl21ad899r4dmd2v7pit5ejhalgg6.apps.googleusercontent.com';
+  '353464933030-gs4nius9ik1kikb6meq9acigl5kju766.apps.googleusercontent.com';
 
 export interface GoogleLoginButtonProps {
   role?: 'STUDENT' | 'TEACHER' | 'PARENT' | 'PRINCIPAL';
   returnUrl?: string;
   label?: string;
   className?: string;
+  onSuccess?: () => void;
 }
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -45,6 +47,7 @@ export function GoogleLoginButton({
   returnUrl,
   label = 'Đăng nhập bằng tài khoản Google',
   className,
+  onSuccess,
 }: GoogleLoginButtonProps) {
   const router = useRouter();
   const { login } = useAuthStore();
@@ -54,6 +57,7 @@ export function GoogleLoginButton({
   // Nạp script Google Identity Services (GSI) chính thức từ Google
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
+    initAuthPopupSession();
     if ((window as any).google?.accounts?.oauth2) {
       setGsiReady(true);
       return;
@@ -106,11 +110,32 @@ export function GoogleLoginButton({
 
       login(backendUser, jwtToken, role);
 
+      // Nếu đang trong subtab/popup: phát tín hiệu về tab cha và KILL ngay lập tức (không hiện toast trùng bên trong subtab)
+      const killed = notifyAuthSuccessAndKillPopup({
+        user: backendUser,
+        token: jwtToken,
+        role,
+      });
+
+      if (killed) {
+        if (onSuccess) {
+          try {
+            onSuccess();
+          } catch (e) {}
+        }
+        return;
+      }
+
       toast.success('Đăng nhập Google thành công!', {
+        id: 'schoolify-auth-success',
         description: `Chào mừng ${backendUser.fullname} (${backendUser.email})!`,
       });
 
-      router.push(defaultRedirect);
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.push(defaultRedirect);
+      }
     } catch (error: any) {
       toast.error('Lỗi xác thực Google', {
         description: error?.message || 'Vui lòng kiểm tra cấu hình Google Client ID.',

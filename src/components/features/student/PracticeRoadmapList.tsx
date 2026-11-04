@@ -2,29 +2,23 @@
 
 import * as React from 'react';
 import { RequireLoginModal } from '@/components/features/auth/RequireLoginModal';
+import { PendingSubjectModal } from '@/components/features/student/practice/PendingSubjectModal';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  BookOpen,
-  CheckCircle2,
-  FileText,
-  Clock,
-  Gem,
-  Sparkles,
-  ChevronRight,
-  Lock,
-  Play,
-  Award,
-  Filter,
-  BarChart3,
-  Check,
-  Star,
   ArrowRight,
+  BookOpen,
+  Check,
+  CheckCircle2,
+  Clock,
+  FileText,
+  Lock,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { NgocIcon } from '@/components/ui/point-icons';
 
 export interface LessonRoadmapItem {
   id: string;
@@ -42,12 +36,20 @@ export interface LessonRoadmapItem {
   };
 }
 
-export const MOCK_SUBJECTS = [
-  { slug: 'toan-hoc', name: 'Toán Học', icon: '📐', count: 12 },
-  { slug: 'vat-ly', name: 'Vật Lý', icon: '⚡', count: 10 },
-  { slug: 'hoa-hoc', name: 'Hóa Học', icon: '🧪', count: 10 },
-  { slug: 'tieng-anh', name: 'Tiếng Anh', icon: '🇬🇧', count: 15 },
-  { slug: 'ngu-van', name: 'Ngữ Văn', icon: '📚', count: 8 },
+export const MOCK_SUBJECTS: {
+  slug: string;
+  name: string;
+  icon: string;
+  count: number;
+  status: 'ACTIVE' | 'PENDING';
+}[] = [
+  { slug: 'toan-hoc', name: 'Toán Học', icon: '📐', count: 180, status: 'ACTIVE' },
+  { slug: 'tin-hoc', name: 'Tin Học', icon: '💻', count: 90, status: 'ACTIVE' },
+  { slug: 'vat-ly', name: 'Vật Lý', icon: '⚡', count: 10, status: 'PENDING' },
+  { slug: 'hoa-hoc', name: 'Hóa Học', icon: '🧪', count: 10, status: 'PENDING' },
+  { slug: 'tieng-anh', name: 'Tiếng Anh', icon: '🇬🇧', count: 15, status: 'PENDING' },
+  { slug: 'ngu-van', name: 'Ngữ Văn', icon: '📚', count: 8, status: 'PENDING' },
+  { slug: 'sinh-hoc', name: 'Sinh Học', icon: '🧬', count: 8, status: 'PENDING' },
 ];
 
 export const MOCK_LEVELS = [
@@ -59,6 +61,84 @@ export const MOCK_LEVELS = [
   { slug: 'lop-10', name: 'Lớp 10', isFree: true },
   { slug: 'lop-11', name: 'Lớp 11', isFree: true },
   { slug: 'lop-12', name: 'Lớp 12', isFree: true },
+];
+
+export const MOCK_TIN_ROADMAP_LESSONS: LessonRoadmapItem[] = [
+  {
+    id: 'tin-lesson-01',
+    number: 'Bài 01',
+    title: 'Biến, Kiểu Dữ Liệu & Nhập Xuất Chuẩn Python',
+    description: 'Nắm vững các kiểu dữ liệu int, float, str, toán tử số học, điều kiện if/else và ép kiểu.',
+    progressPercent: 100,
+    rewardDiamonds: 50,
+    status: 'COMPLETED',
+    badges: {
+      theory: { completed: true, label: 'Đã học' },
+      quiz: { completed: true, score: '3/3', total: 3 },
+      essay: { completed: true, label: 'Đã nộp' },
+      exam: { completed: true, score: '10/10' },
+    },
+  },
+  {
+    id: 'tin-lesson-02',
+    number: 'Bài 02',
+    title: 'Vòng Lặp For/While & Xử Lý Mảng 1 Chiều',
+    description: 'Kỹ thuật duyệt danh sách, tìm giá trị lớn nhất/nhỏ nhất, sắp xếp nổi bọt và cộng dồn mảng.',
+    progressPercent: 70,
+    rewardDiamonds: 50,
+    status: 'IN_PROGRESS',
+    badges: {
+      theory: { completed: true, label: 'Đã học' },
+      quiz: { completed: true, score: '4/5', total: 5 },
+      essay: { completed: true, label: 'Đã nộp' },
+      exam: { completed: false, locked: false },
+    },
+  },
+  {
+    id: 'tin-lesson-03',
+    number: 'Bài 03',
+    title: 'Hàm, Đệ Quy & Thuật Toán Tìm Kiếm Nhị Phân',
+    description: 'Tổ chức chương trình dạng module hàm, bài toán đệ quy kinh điển và tìm kiếm nhị phân O(log N).',
+    progressPercent: 20,
+    rewardDiamonds: 50,
+    status: 'IN_PROGRESS',
+    badges: {
+      theory: { completed: true, label: 'Đã học' },
+      quiz: { completed: false, score: '0/5', total: 5 },
+      essay: { completed: false, label: 'Chưa nộp' },
+      exam: { completed: false, locked: false },
+    },
+  },
+  {
+    id: 'tin-lesson-04',
+    number: 'Bài 04',
+    title: 'Quy Hoạch Động & Bài Toán Cái Túi (0/1 Knapsack)',
+    description: 'Công thức truy hồi, bảng phương án và truy vết nghiệm tối ưu trong các bài toán quy hoạch động.',
+    progressPercent: 0,
+    rewardDiamonds: 50,
+    status: 'LOCKED',
+    badges: {
+      theory: { completed: false, label: 'Chưa học' },
+      quiz: { completed: false, score: '0/5', total: 5 },
+      essay: { completed: false, label: 'Chưa nộp' },
+      exam: { completed: false, locked: true },
+    },
+  },
+  {
+    id: 'tin-lesson-05',
+    number: 'Bài 05',
+    title: 'Luyện Đề Lập Trình Thi Học Sinh Giỏi (C++ / Python)',
+    description: '3 bài toán lập trình chuẩn Olympic chấm testcase tự động với giới hạn thời gian 1.0 giây.',
+    progressPercent: 0,
+    rewardDiamonds: 100,
+    status: 'LOCKED',
+    badges: {
+      theory: { completed: false, label: 'Chưa học' },
+      quiz: { completed: false, score: '0/10', total: 10 },
+      essay: { completed: false, label: 'Chưa nộp' },
+      exam: { completed: false, locked: true },
+    },
+  },
 ];
 
 export const MOCK_ROADMAP_LESSONS: LessonRoadmapItem[] = [
@@ -144,22 +224,46 @@ interface PracticeRoadmapListProps {
   currentLevelSlug?: string;
 }
 
+import { PracticeRoadmapSkeleton } from '@/components/skeletons/page-skeletons';
+
 export function PracticeRoadmapList({
   currentSubjectSlug = 'toan-hoc',
   currentLevelSlug = 'lop-11',
 }: PracticeRoadmapListProps) {
   const router = useRouter();
+  const [isMounted, setIsMounted] = React.useState(false);
   const [selectedSubject, setSelectedSubject] = React.useState(currentSubjectSlug);
   const [selectedLevel, setSelectedLevel] = React.useState(currentLevelSlug);
   const [requireLoginOpen, setRequireLoginOpen] = React.useState(false);
   const [gatedLevelName, setGatedLevelName] = React.useState('');
+  const [isPendingModalOpen, setIsPendingModalOpen] = React.useState(false);
+  const [pendingSubjectName, setPendingSubjectName] = React.useState('Môn học');
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return <PracticeRoadmapSkeleton />;
+  }
 
   const subjectInfo =
     MOCK_SUBJECTS.find((s) => s.slug === selectedSubject) || MOCK_SUBJECTS[0];
   const levelInfo =
     MOCK_LEVELS.find((l) => l.slug === selectedLevel) || MOCK_LEVELS[1];
 
-  const handleSubjectChange = (slug: string) => {
+  const handleSubjectClick = (subj: (typeof MOCK_SUBJECTS)[0]) => {
+    if (subj.status === 'PENDING') {
+      setPendingSubjectName(subj.name);
+      setIsPendingModalOpen(true);
+      return;
+    }
+    setSelectedSubject(subj.slug);
+    router.push(`/student/practice/${subj.slug}/${selectedLevel}`);
+  };
+
+  const handlePendingModalSelect = (slug: 'toan-hoc' | 'tin-hoc') => {
+    setIsPendingModalOpen(false);
     setSelectedSubject(slug);
     router.push(`/student/practice/${slug}/${selectedLevel}`);
   };
@@ -175,73 +279,62 @@ export function PracticeRoadmapList({
     router.push(`/student/practice/${selectedSubject}/${slug}`);
   };
 
-  const totalLessons = MOCK_ROADMAP_LESSONS.length;
-  const completedLessonsCount = MOCK_ROADMAP_LESSONS.filter(
+  const currentLessons =
+    selectedSubject === 'tin-hoc' ? MOCK_TIN_ROADMAP_LESSONS : MOCK_ROADMAP_LESSONS;
+  const totalLessons = currentLessons.length;
+  const completedLessonsCount = currentLessons.filter(
     (l) => l.status === 'COMPLETED'
   ).length;
   const overallProgress = Math.round(
-    (MOCK_ROADMAP_LESSONS.reduce((acc, curr) => acc + curr.progressPercent, 0) /
+    (currentLessons.reduce((acc, curr) => acc + curr.progressPercent, 0) /
       (totalLessons * 100)) *
       100
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* GUEST TRIAL BANNER */}
       {selectedLevel === 'basic' && (
-        <div className="rounded-2xl bg-gradient-to-r from-emerald-50 via-white to-slate-50 dark:from-emerald-950/70 dark:via-slate-900 dark:to-slate-900 border border-emerald-300 dark:border-emerald-500/40 p-4 text-emerald-800 dark:text-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm dark:shadow-lg">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-500/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold text-lg shrink-0">
-              🎯
-            </div>
-            <div>
-              <span className="text-xs font-bold text-slate-900 dark:text-white block">
-                Chế Độ Khách: Đang Luyện Thử Cấp Độ Cơ Bản Miễn Phí
-              </span>
-              <span className="text-[11px] text-emerald-700 dark:text-emerald-300/80">
-                Làm trắc nghiệm và đọc lý thuyết tự do. Đăng nhập để lưu tiến độ và ghi tên vào Bảng xếp hạng thi đua.
-              </span>
-            </div>
+        <div className="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+            <span className="text-slate-700 dark:text-slate-300">
+              <strong>Chế độ xem thử:</strong> Đang làm thử cấp độ Cơ bản. Đăng nhập để lưu tiến độ và xem lại kết quả.
+            </span>
           </div>
           <Link href="/login/student" className="shrink-0">
-            <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-md">
-              Đăng Nhập Ngay
+            <Button size="sm" variant="outline" className="text-xs font-semibold rounded-lg h-8">
+              Đăng nhập ngay
             </Button>
           </Link>
         </div>
       )}
 
       {/* 1. FILTER & HEADER SECTION */}
-      <section className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm dark:shadow-2xl space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-200 dark:border-slate-800">
+      <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100 dark:border-slate-800">
           <div>
-            <div className="flex items-center gap-2 text-xs font-bold text-[#007D99] dark:text-[#00B8DD] uppercase tracking-wider mb-1">
-              <Sparkles className="w-4 h-4 text-amber-500 dark:text-amber-400" /> Lộ Trình Học Cá Nhân Hóa
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
-              <span>{subjectInfo.icon}</span> Lộ Trình Luyện Tập {subjectInfo.name} - {levelInfo.name}
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <span>{subjectInfo.icon}</span> Lộ trình bài luyện {subjectInfo.name} - {levelInfo.name}
             </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Hoàn thành từng bài luyện theo thứ tự từ Bài 01 đến Bài N để mở khóa phần thưởng Kim Cương.
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Làm lần lượt từng bài tập từ cơ bản đến nâng cao để rèn luyện kỹ năng giải đề.
             </p>
           </div>
 
           {/* Overall Progress Stats */}
-          <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shrink-0">
+          <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-950 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0">
             <div className="space-y-1">
-              <span className="text-xs text-slate-500 dark:text-slate-400 block">Tiến độ lộ trình</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Tiến độ bài học</span>
               <div className="flex items-center gap-2">
-                <span className="text-xl font-black text-[#007D99] dark:text-[#00B8DD]">{overallProgress}%</span>
+                <span className="text-lg font-bold text-slate-900 dark:text-white">{overallProgress}%</span>
                 <span className="text-xs text-slate-500 dark:text-slate-400">({completedLessonsCount}/{totalLessons} bài)</span>
               </div>
             </div>
-            <div className="h-9 w-px bg-slate-200 dark:bg-slate-800" />
-            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-3.5 py-2 rounded-xl border border-amber-200 dark:border-amber-500/20">
-              <Gem className="w-5 h-5 animate-bounce text-amber-500 dark:text-amber-400" />
-              <div>
-                <span className="text-[10px] text-amber-700 dark:text-amber-300/80 block leading-tight">Tích lũy</span>
-                <span className="text-sm font-bold text-amber-700 dark:text-amber-300">+250 💎</span>
-              </div>
+            <div className="h-8 w-px bg-slate-200 dark:bg-slate-800" />
+            <div className="text-xs">
+              <span className="text-[11px] text-slate-400 block">Tích lũy</span>
+              <span className="font-bold text-amber-600 dark:text-amber-400">+{completedLessonsCount * 50} điểm</span>
             </div>
           </div>
         </div>
@@ -249,35 +342,46 @@ export function PracticeRoadmapList({
         {/* Filters Controls */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
           {/* Subject Tabs */}
-          <div className="flex flex-wrap items-center gap-2 pb-1">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1 shrink-0 mr-1">
-              <Filter className="w-3.5 h-3.5 text-[#00B8DD]" /> Môn học:
+          <div className="flex flex-wrap items-center gap-1.5 pb-1">
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1 shrink-0 mr-1">
+              Môn học:
             </span>
-            {MOCK_SUBJECTS.map((subj) => (
-              <button
-                key={subj.slug}
-                onClick={() => handleSubjectChange(subj.slug)}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                  selectedSubject === subj.slug
-                    ? 'bg-[#00B8DD] text-white shadow-md'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <span>{subj.icon}</span>
-                <span>{subj.name}</span>
-              </button>
-            ))}
+            {MOCK_SUBJECTS.map((subj) => {
+              const isSelected = selectedSubject === subj.slug;
+              const isPending = subj.status === 'PENDING';
+              return (
+                <button
+                  key={subj.slug}
+                  onClick={() => handleSubjectClick(subj)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xs'
+                      : isPending
+                      ? 'bg-slate-100/70 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 hover:bg-slate-200/80 dark:hover:bg-slate-700/60'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  <span>{subj.icon}</span>
+                  <span>{subj.name}</span>
+                  {isPending && (
+                    <span className="text-[9px] font-normal px-1.5 py-0.2 rounded-full bg-slate-200/80 dark:bg-slate-700 text-slate-500 dark:text-slate-400">
+                      Sắp có
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           {/* Level Selector Buttons */}
-          <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0 self-start sm:self-auto">
+          <div className="flex flex-wrap items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0 self-start sm:self-auto">
             {MOCK_LEVELS.map((lvl) => (
               <button
                 key={lvl.slug}
                 onClick={() => handleLevelChange(lvl.slug)}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                   selectedLevel === lvl.slug
-                    ? 'bg-white dark:bg-slate-800 text-[#007D99] dark:text-[#00B8DD] font-bold shadow-xs'
+                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-semibold shadow-2xs'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
@@ -289,12 +393,9 @@ export function PracticeRoadmapList({
       </section>
 
       {/* 2. ROADMAP TIMELINE LIST (BÀI 01 -> BÀI N) */}
-      <section className="relative space-y-6">
-        {/* Vertical Connecting Line */}
-        <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-gradient-to-b from-indigo-500 via-slate-300 dark:via-slate-700 to-slate-200 dark:to-slate-800 hidden sm:block z-0" />
-
-        <div className="space-y-6 relative z-10">
-          {MOCK_ROADMAP_LESSONS.map((lesson, index) => {
+      <section className="relative space-y-4">
+        <div className="space-y-4 relative z-10">
+          {currentLessons.map((lesson, index) => {
             const isLocked = lesson.status === 'LOCKED';
             const isCompleted = lesson.status === 'COMPLETED';
             const targetUrl = `/student/practice/${selectedSubject}/${selectedLevel}/${lesson.id}`;
@@ -302,12 +403,12 @@ export function PracticeRoadmapList({
             return (
               <Card
                 key={lesson.id}
-                className={`p-6 rounded-3xl transition-all border ${
+                className={`p-5 sm:p-6 rounded-2xl transition-all border ${
                   isCompleted
-                    ? 'bg-white dark:bg-slate-900/80 border-emerald-300 dark:border-emerald-500/30 shadow-sm dark:shadow-lg hover:border-emerald-400 dark:hover:border-emerald-500/50'
+                    ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300'
                     : isLocked
-                    ? 'bg-slate-50/80 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800/80 opacity-75'
-                    : 'bg-white dark:bg-slate-900 border-indigo-300 dark:border-indigo-500/40 shadow-md dark:shadow-xl hover:border-indigo-400 dark:hover:border-indigo-500/70 ring-1 ring-indigo-500/10 dark:ring-indigo-500/20'
+                    ? 'bg-slate-50/70 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 opacity-75'
+                    : 'bg-white dark:bg-slate-900 border-sky-200 dark:border-sky-800/60 ring-1 ring-sky-500/10'
                 }`}
               >
                 <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
@@ -315,18 +416,18 @@ export function PracticeRoadmapList({
                   <div className="flex items-start gap-4 flex-1">
                     {/* Node Icon Circle */}
                     <div
-                      className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 font-bold text-sm shadow-md ${
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-bold text-sm ${
                         isCompleted
-                          ? 'bg-emerald-50 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-500/50 text-emerald-600 dark:text-emerald-400'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
                           : isLocked
-                          ? 'bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500'
-                          : 'bg-indigo-600 border border-indigo-400 text-white shadow-indigo-500/30'
+                          ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700'
+                          : 'bg-sky-600 text-white shadow-xs'
                       }`}
                     >
                       {isCompleted ? (
-                        <Check className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                        <Check className="w-5 h-5 text-emerald-600" />
                       ) : isLocked ? (
-                        <Lock className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+                        <Lock className="w-4 h-4 text-slate-400" />
                       ) : (
                         <span>{index + 1}</span>
                       )}
@@ -353,7 +454,7 @@ export function PracticeRoadmapList({
                           </Badge>
                         )}
                         <span className="text-xs text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1 ml-auto sm:ml-0">
-                          <Gem className="w-3.5 h-3.5" /> +{lesson.rewardDiamonds} 💎
+                          <NgocIcon className="w-3.5 h-3.5" /> +{lesson.rewardDiamonds}
                         </span>
                       </div>
 
@@ -476,6 +577,12 @@ export function PracticeRoadmapList({
         onClose={() => setRequireLoginOpen(false)}
         reason="ADVANCED_LEVEL"
         targetLevelName={gatedLevelName}
+      />
+      <PendingSubjectModal
+        isOpen={isPendingModalOpen}
+        onClose={() => setIsPendingModalOpen(false)}
+        subjectName={pendingSubjectName}
+        onSelectSubject={handlePendingModalSelect}
       />
     </div>
   );

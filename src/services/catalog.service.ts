@@ -26,6 +26,35 @@ export interface CreateOrderResult {
   };
 }
 
+export interface PayOSLinkData {
+  isLivePayOS: boolean;
+  orderCode: number;
+  amount: number;
+  description: string;
+  accountNumber: string;
+  accountName: string;
+  bin: string;
+  qrCode: string;
+  checkoutUrl?: string | null;
+  paymentLinkId?: string | null;
+  status: string;
+  error?: string | null;
+}
+
+export interface CreatePayosOrderResult {
+  order: OrderItem;
+  payos: PayOSLinkData;
+}
+
+export interface PayosOrderStatusResult {
+  status: 'PENDING' | 'PAID' | 'CANCELLED';
+  orderCode: number;
+  order?: OrderItem | null;
+  bonusPointsAwarded?: number;
+  message?: string;
+}
+
+
 export interface LeaderboardEntry {
   rank: number;
   studentId: string;
@@ -218,6 +247,49 @@ export const catalogService = {
       return null;
     }
   },
+
+  /** Tạo link thanh toán PayOS VietQR (`POST /api/v1/catalog/payos/create-payment-link`) */
+  async createPayosPaymentLink(payload: {
+    userId?: string;
+    email?: string;
+    packageId?: string;
+    packageName?: string;
+    amount?: number;
+    billingCycle?: string;
+    cancelUrl?: string;
+    returnUrl?: string;
+  }): Promise<CreatePayosOrderResult | null> {
+    try {
+      const res = await fetch('/api/v1/catalog/payos/create-payment-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) return null;
+      const json = await res.json();
+      return json?.data || null;
+    } catch (err) {
+      console.warn('[catalogService.createPayosPaymentLink] Failed:', err);
+      return null;
+    }
+  },
+
+  /** Kiểm tra trạng thái thanh toán PayOS real-time (`GET /api/v1/catalog/payos/order-status/:orderCode`) */
+  async getPayosOrderStatus(orderCode: number): Promise<PayosOrderStatusResult | null> {
+    try {
+      const res = await fetch(`/api/v1/catalog/payos/order-status/${encodeURIComponent(orderCode)}`, {
+        method: 'GET',
+        cache: 'no-store',
+      });
+      if (!res.ok) return null;
+      const json = await res.json();
+      return json?.data || null;
+    } catch (err) {
+      console.warn('[catalogService.getPayosOrderStatus] Failed:', err);
+      return null;
+    }
+  },
+
 
   /** Lấy danh sách đơn hàng từ PostgreSQL (`GET /api/v1/catalog/orders`) */
   async getOrders(): Promise<OrderItem[]> {

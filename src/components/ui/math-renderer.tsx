@@ -156,6 +156,12 @@ export function normalizeMathExpression(raw: string): string {
   res = res.replace(/≈/g, '\\approx ');
   res = res.replace(/∞/g, '\\infty ');
 
+  // Gỡ bỏ delimiter bọc ngoài nếu vô tình sót lại
+  res = res.replace(/^\\\[\s*([\s\S]*?)\s*\\\]$/, '$1');
+  res = res.replace(/^\\\(\s*([\s\S]*?)\s*\\\)$/, '$1');
+  res = res.replace(/^\$\$\s*([\s\S]*?)\s*\$\$$/, '$1');
+  res = res.replace(/^\$\s*([\s\S]*?)\s*\$$/, '$1');
+
   return res;
 }
 
@@ -176,17 +182,37 @@ export function renderKatex(expr: string, displayMode = false): string {
   }
 }
 
+const MATH_RENDER_CACHE = new Map<string, string>();
+const MAX_MATH_CACHE = 1500;
+
 /**
  * Phân tích đoạn văn bản chứa hỗn hợp giữa câu chữ tiếng Việt và công thức toán học/vật lý.
- * Hỗ trợ cả hai chế độ:
- *  1. Có bọc dấu $...$ hoặc $$...$$
- *  2. Chứa cú pháp toán độc lập như: x^2, x^3, x², x³, x^n, x_1, √(x), (a)/(b), 1\int3, \int_{1}^{3}, lim(x->1), \vec{F}, \Omega, v.v.
+ * Hỗ trợ các chế độ:
+ *  1. Bọc bởi $$...$$ hoặc \[...\] (khối công thức xuống dòng)
+ *  2. Bọc bởi $...$ hoặc \(...\) (nội dòng)
+ *  3. Môi trường LaTeX: \begin{cases}, \begin{aligned}, v.v.
+ *  4. Cú pháp toán độc lập như: x^2, x^3, x², x³, x^n, x_1, √(x), (a)/(b), 1\int3, \int_{1}^{3}, lim(x->1), \vec{F}, \Omega, v.v.
  */
 export function parseAndRenderMath(text: string): string {
   if (!text) return '';
 
+  const cached = MATH_RENDER_CACHE.get(text);
+  if (cached !== undefined) return cached;
+
   // Chuyển đổi escape newline \\n thành newline thực nếu có
-  const cleanText = text.replace(/\\n/g, '\n');
+  let cleanText = text.replace(/\\n/g, '\n');
+
+  // Chuẩn hóa display math: \[ ... \] -> $$ ... $$
+  cleanText = cleanText.replace(/\\\[([\s\S]*?)\\\]/g, '\n\n$$$$$1$$$$\n\n');
+
+  // Chuẩn hóa inline math: \( ... \) -> $ ... $
+  cleanText = cleanText.replace(/\\\(([\s\S]*?)\\\)/g, '$$$1$$');
+
+  // Chuẩn hóa môi trường độc lập như \begin{cases}...\end{cases}, \begin{aligned}...\end{aligned} nếu chưa bọc $
+  cleanText = cleanText.replace(
+    /(?<!\$)(?:\\begin\{(cases|aligned|matrix|pmatrix|bmatrix|vmatrix|gather|align)\*?\}[\s\S]*?\\end\{\1\*?\})(?!\$)/g,
+    '\n\n$$$$ $& $$$$\n\n'
+  );
 
   // Regex nhận diện công thức bọc bởi $$...$$ (khối) hoặc $...$ (nội dòng)
   const mathDelimiterRegex = /(\$\$[\s\S]*?\$\$|\$[^\$\n]+?\$)/g;
@@ -220,7 +246,7 @@ export function parseAndRenderMath(text: string): string {
   const standaloneShorthandRegex =
     /(?:[a-zA-Z0-9+\-]+\s*\\?int\s*[a-zA-Z0-9+\-]+(?:\s+[a-zA-Z0-9+\-*^_{}()\s\\]*?dx)?|\\?int(?:_\{?[^}]+\}?|\^\{?[^}]+\}?|_\{?[a-zA-Z0-9+\-]+\}?|\^\{?[a-zA-Z0-9+\-]+\}?)*(?:\s+[a-zA-Z0-9+\-*^_{}()\s\\]*?dx)?|\\?lim\s*\([^)]+\)|\\?lim_\{[^}]+\}|\\?lim\s+[a-zA-Z0-9_]+\s*(?:->|→|\\to)\s*[a-zA-Z0-9+\-∞\\_]+|(?:\\[a-zA-Z]+(?:_\{[^}]+\}|_[a-zA-Z0-9+\-]+)?(?:\^\{[^}]+\}|\^[a-zA-Z0-9+\-]+)?(?:\{[^}]*\})*)|(?:(?:\([^()]+\)|\[[^[\]]+\]|[a-zA-Z0-9α-ωΑ-Ω_]+)\s*)\^(?:\{[^}]+\}|\[[^\]]+\]|[a-zA-Z0-9+\-]+)|(?:(?:\([^()]+\)|\[[^[\]]+\]|[a-zA-Z0-9α-ωΑ-Ω_]+)\s*)[⁰¹²³⁴⁵⁶⁷⁸⁹ⁿ⁺⁻ᵃᵇˣʸᵏᵐ]+|(?:(?:\([^()]+\)|\[[^[\]]+\]|[a-zA-Z0-9α-ωΑ-Ω_]+)\s*)_(?:\{[^}]+\}|\[[^\]]+\]|[a-zA-Z0-9α-ωΑ-Ω_]+)|(?:(?:\([^()]+\)|\[[^[\]]+\]|[a-zA-Z0-9α-ωΑ-Ω_]+)\s*)[₀₁₂₃₄₅₆₇₈₉ₙᵢⱼₖₘ]+|√\([^)]+\)|√\[[^\]]+\]|\bsqrt\([^)]+\)|∛\([^)]+\)|∛\[[^\]]+\]|\([a-zA-Z0-9+\-*^_{}\s\\]+\)\s*\/\s*\([a-zA-Z0-9+\-*^_{}\s\\]+\)|\[[a-zA-Z0-9+\-*^_{}\s\\]+\]\s*\/\s*\[[a-zA-Z0-9+\-*^_{}\s\\]+\]|[A-Za-z]{1,2}⃗|\b\d+\s*Ω)/g;
 
-  return parts
+  const result = parts
     .map((part) => {
       if (part.type === 'math-block') {
         return `<div class="my-2 overflow-x-auto py-1">${renderKatex(part.content, true)}</div>`;
@@ -242,6 +268,15 @@ export function parseAndRenderMath(text: string): string {
       return textChunk;
     })
     .join('');
+
+  if (MATH_RENDER_CACHE.size >= MAX_MATH_CACHE) {
+    const keys = Array.from(MATH_RENDER_CACHE.keys()).slice(0, 300);
+    for (const key of keys) {
+      MATH_RENDER_CACHE.delete(key);
+    }
+  }
+  MATH_RENDER_CACHE.set(text, result);
+  return result;
 }
 
 export interface MathRendererProps {

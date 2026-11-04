@@ -9,6 +9,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
+import { AvatarFrame, useActiveAvatarFrame } from '@/components/ui/avatar-frame';
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useAuthStore } from '@/store/auth.store';
@@ -16,6 +17,12 @@ import { useAuthStore } from '@/store/auth.store';
 export function AppHeader({ onOpenMobileSidebar }: { onOpenMobileSidebar: () => void }) {
   const router = useRouter();
   const { user, isAuthenticated, logout, fetchMe, currentRole } = useAuthStore();
+  const { frameTier } = useActiveAvatarFrame();
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   React.useEffect(() => {
     if (isAuthenticated) {
@@ -52,46 +59,58 @@ export function AppHeader({ onOpenMobileSidebar }: { onOpenMobileSidebar: () => 
           </span>
         </button>
 
-        <DropdownMenu
-          align="right"
-          trigger={
-            <div className="flex items-center gap-2.5 py-1.5 px-2.5 rounded-xl hover:bg-slate-100/80 dark:hover:bg-slate-800/60 transition-colors">
-              <Avatar src={user?.avatar_url} alt={user?.fullname} size="sm" />
-              <div className="hidden lg:flex flex-col text-left leading-snug">
-                <span className="text-xs font-bold text-slate-900 dark:text-white">
-                  {user?.fullname || 'Tài khoản'}
-                </span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                  {user?.email}
-                </span>
-              </div>
+        {!isMounted ? (
+          <div className="flex items-center gap-2.5 py-1.5 px-2.5 rounded-xl animate-pulse">
+            <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 shrink-0" />
+            <div className="hidden lg:flex flex-col gap-1 text-left">
+              <div className="w-20 h-3 rounded bg-slate-200 dark:bg-slate-800" />
+              <div className="w-28 h-2.5 rounded bg-slate-200 dark:bg-slate-800" />
             </div>
-          }
-        >
-          <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800">
-            <p className="text-xs font-bold text-slate-900 dark:text-white">{user?.fullname}</p>
-            <p className="text-[11px] text-slate-500 truncate">{user?.email}</p>
           </div>
-          <DropdownMenuItem
-            icon={<User className="w-4 h-4 text-[#00B8DD]" />}
-            onClick={() => {
-              if (currentRole === 'STUDENT') {
-                router.push('/student');
-              } else {
-                router.push('/profile');
-              }
-            }}
+        ) : (
+          <DropdownMenu
+            align="right"
+            trigger={
+              <div className="flex items-center gap-2.5 py-1.5 px-2.5 rounded-xl hover:bg-slate-100/80 dark:hover:bg-slate-800/60 transition-colors">
+                <AvatarFrame tier={frameTier} size="sm" showBadge={false}>
+                  <Avatar src={user?.avatar_url || (user as any)?.avatarUrl || (user as any)?.avatar} alt={user?.fullname} size="sm" />
+                </AvatarFrame>
+                <div className="hidden lg:flex flex-col text-left leading-snug">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">
+                    {user?.fullname || 'Tài khoản'}
+                  </span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {user?.email}
+                  </span>
+                </div>
+              </div>
+            }
           >
-            Tài khoản cá nhân
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            icon={<LogOut className="w-4 h-4 text-rose-500" />}
-            destructive
-            onClick={handleLogout}
-          >
-            Đăng xuất
-          </DropdownMenuItem>
-        </DropdownMenu>
+            <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800">
+              <p className="text-xs font-bold text-slate-900 dark:text-white">{user?.fullname}</p>
+              <p className="text-[11px] text-slate-500 truncate">{user?.email}</p>
+            </div>
+            <DropdownMenuItem
+              icon={<User className="w-4 h-4 text-[#00B8DD]" />}
+              onClick={() => {
+                if (currentRole === 'STUDENT') {
+                  router.push('/student');
+                } else {
+                  router.push('/profile');
+                }
+              }}
+            >
+              Tài khoản cá nhân
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              icon={<LogOut className="w-4 h-4 text-rose-500" />}
+              destructive
+              onClick={handleLogout}
+            >
+              Đăng xuất
+            </DropdownMenuItem>
+          </DropdownMenu>
+        )}
       </div>
     </header>
   );

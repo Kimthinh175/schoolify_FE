@@ -4,6 +4,7 @@ import questionsDb from '@/data/questions-db.json';
 
 export type ExamFormat = 'QUIZ' | 'ESSAY' | 'MIXED';
 export type QuestionDifficulty = 'EASY' | 'MEDIUM' | 'HARD' | 'VERY_HARD';
+export type PracticeMode = 'TOPIC' | 'MOCK_EXAM';
 
 export interface GradeItem {
   id: number;
@@ -573,6 +574,10 @@ export interface ExamQuestion {
   subjectSlug?: string;
   subjectName?: string;
   topic?: string;
+  // Hệ thống Tag 4 Trục (Đồ án Tốt nghiệp THPT Toán & Tin)
+  topicTag?: string;     // Trục 2: Chuyên đề / Dạng bài cụ thể
+  cognitiveTag?: string; // Trục 3: Mức độ nhận thức (Nhận biết | Thông hiểu | Vận dụng | Vận dụng cao)
+  trapTag?: string;      // Trục 4: Bẫy sai lầm phổ biến (Trap Tag)
   relatedChapterIds?: number[];
   isPreviousChapterReview?: boolean;
   title: string;
@@ -600,6 +605,9 @@ export interface PracticeExamPackage {
   chapterId: number;
   chapterName: string;
   format: ExamFormat;
+  practiceMode?: PracticeMode;
+  targetDifficulty?: QuestionDifficulty | 'ALL';
+  topicTagFilter?: string;
   title: string;
   durationMinutes: number;
   totalPoints: number;
@@ -1604,19 +1612,422 @@ export const MOCK_LITERATURE_QUESTIONS: ExamQuestion[] = [
   },
 ];
 
+// Bộ câu hỏi mẫu môn Tin Học K-12 (Lập trình, Thuật toán, Cấu trúc dữ liệu & CSDL)
+export const MOCK_INFORMATICS_QUESTIONS: ExamQuestion[] = [
+  {
+    id: 'tin-q-01',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'EASY',
+    grade: 12,
+    chapterId: 1,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Cú pháp Python & Kiểu dữ liệu',
+    title: 'Câu 1 (Nhận biết): Kiểu dữ liệu trong Python',
+    content: 'Trong ngôn ngữ lập trình Python, kết quả của biểu thức `type(3.14)` là gì?',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: "<class 'float'>" },
+      { key: 'B', content: "<class 'int'>" },
+      { key: 'C', content: "<class 'double'>" },
+      { key: 'D', content: "<class 'number'>" },
+    ],
+    correctChoice: 'A',
+    explanation: 'Trong Python, số thực có phần thập phân thuộc kiểu float. Do đó type(3.14) trả về <class \'float\'>. Chọn A.',
+  },
+  {
+    id: 'tin-q-02',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'MEDIUM',
+    grade: 12,
+    chapterId: 1,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Thuật toán tìm kiếm nhị phân',
+    title: 'Câu 2 (Thông hiểu): Độ phức tạp tìm kiếm nhị phân',
+    content: 'Thuật toán Tìm kiếm nhị phân (Binary Search) trên dãy đã được sắp xếp gồm $N$ phần tử có độ phức tạp thời gian trong trường hợp xấu nhất là:',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '$O(\\log N)$' },
+      { key: 'B', content: '$O(N)$' },
+      { key: 'C', content: '$O(N \\log N)$' },
+      { key: 'D', content: '$O(1)$' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Ở mỗi bước, không gian tìm kiếm giảm đi một nửa. Do đó số phép so sánh tối đa là log2(N), tương ứng độ phức tạp O(log N). Chọn A.',
+  },
+  {
+    id: 'tin-q-03',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'MEDIUM',
+    grade: 12,
+    chapterId: 1,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Đệ quy và Call Stack',
+    title: 'Câu 3 (Thông hiểu): Vấn đề tràn ngăn xếp trong đệ quy',
+    content: 'Khi một hàm đệ quy tự gọi chính nó vô hạn lần mà không chạm đến điểm dừng (Base Case), chương trình sẽ gặp lỗi ngoại lệ nào?',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: 'RecursionError: maximum recursion depth exceeded (Tràn Call Stack)' },
+      { key: 'B', content: 'ZeroDivisionError: division by zero' },
+      { key: 'C', content: 'IndexError: list index out of range' },
+      { key: 'D', content: 'KeyError: key not found in dictionary' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Mỗi lần gọi hàm đệ quy, một khung ngăn xếp (stack frame) được đẩy vào Call Stack. Không có điều kiện dừng sẽ làm đầy bộ nhớ stack, dẫn đến lỗi tràn ngăn xếp RecursionError. Chọn A.',
+  },
+  {
+    id: 'tin-q-04',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'HARD',
+    grade: 12,
+    chapterId: 2,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Cơ sở dữ liệu quan hệ SQL',
+    title: 'Câu 4 (Vận dụng): Mệnh đề SQL nhóm dữ liệu',
+    content: 'Để đếm số lượng học sinh theo từng lớp trong bảng `HocSinh`, câu lệnh SQL nào sau đây là chính xác?',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: 'SELECT Lop, COUNT(*) FROM HocSinh GROUP BY Lop;' },
+      { key: 'B', content: 'SELECT Lop, SUM(*) FROM HocSinh ORDER BY Lop;' },
+      { key: 'C', content: 'SELECT Lop, COUNT(*) FROM HocSinh WHERE COUNT(*) > 0;' },
+      { key: 'D', content: 'SELECT DISTINCT Lop FROM HocSinh GROUP BY Lop;' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Để thống kê theo nhóm, ta sử dụng mệnh đề GROUP BY kết hợp hàm tổng hợp COUNT(*). Chọn A.',
+  },
+  {
+    id: 'tin-q-05',
+    type: 'TRUE_FALSE',
+    difficulty: 'MEDIUM',
+    grade: 12,
+    chapterId: 1,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Cấu trúc dữ liệu Ngăn xếp & Hàng đợi',
+    title: 'Câu 5 (Đúng/Sai): Đặc tính của Stack và Queue',
+    content: 'Xét các phát biểu sau đây về hai cấu trúc dữ liệu cơ bản Ngăn xếp (Stack) và Hàng đợi (Queue):',
+    score: 1.0,
+    statements: [
+      {
+        subId: 'a',
+        statement: 'Ngăn xếp (Stack) hoạt động theo nguyên tắc Vào sau - Ra trước (LIFO).',
+        isCorrect: true,
+        explanation: 'Đúng. Phần tử đưa vào sau cùng sẽ được lấy ra đầu tiên.',
+      },
+      {
+        subId: 'b',
+        statement: 'Hàng đợi (Queue) hoạt động theo nguyên tắc Vào trước - Ra trước (FIFO).',
+        isCorrect: true,
+        explanation: 'Đúng. Giống như hàng người xếp hàng chờ thanh toán.',
+      },
+      {
+        subId: 'c',
+        statement: 'Thao tác đẩy phần tử (push) và lấy phần tử (pop) trên Stack đỉnh cao có độ phức tạp thời gian O(1).',
+        isCorrect: true,
+        explanation: 'Đúng. Thao tác tại đỉnh ngăn xếp chỉ mất thời gian hằng số O(1).',
+      },
+      {
+        subId: 'd',
+        statement: 'Thuật toán duyệt đồ thị theo chiều rộng (BFS) sử dụng cấu trúc dữ liệu Ngăn xếp (Stack).',
+        isCorrect: false,
+        explanation: 'Sai. Thuật toán BFS sử dụng Hàng đợi (Queue), còn DFS mới sử dụng Ngăn xếp (Stack) hoặc đệ quy.',
+      },
+    ],
+    explanation: 'Ý a đúng, ý b đúng, ý c đúng, ý d sai.',
+  },
+  {
+    id: 'tin-q-06',
+    type: 'SHORT_ANSWER',
+    difficulty: 'MEDIUM',
+    grade: 12,
+    chapterId: 1,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Tính toán giá trị Fibonacci',
+    title: 'Câu 6 (Điền đáp án): Giá trị hàm Fibonacci đệ quy',
+    content: 'Cho dãy số Fibonacci xác định bởi $F(1) = 1, F(2) = 1, F(n) = F(n-1) + F(n-2)$ với mọi $n \\ge 3$. Giá trị của số hạng thứ 7 ($F(7)$) bằng bao nhiêu?',
+    score: 1.0,
+    shortAnswerCorrect: '13',
+    explanation: 'Dãy số: F(1)=1, F(2)=1, F(3)=2, F(4)=3, F(5)=5, F(6)=8, F(7)=13. Đáp số: 13.',
+  },
+  {
+    id: 'tin-q-07',
+    type: 'SHORT_ANSWER',
+    difficulty: 'EASY',
+    grade: 12,
+    chapterId: 1,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Tính tổng phần tử chẵn',
+    title: 'Câu 7 (Điền đáp án): Tổng số chẵn trong mảng',
+    content: 'Cho mảng gồm các số nguyên: `A = [2, 7, 4, 9, 6]`. Tổng giá trị của tất cả các phần tử là số chẵn trong mảng bằng bao nhiêu?',
+    score: 1.0,
+    shortAnswerCorrect: '12',
+    explanation: 'Các phần tử chẵn là 2, 4, 6. Tổng = 2 + 4 + 6 = 12.',
+  },
+  {
+    id: 'tin-q-08',
+    type: 'ESSAY',
+    difficulty: 'HARD',
+    grade: 12,
+    chapterId: 1,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Giải thuật Euclid & Tối ưu thuật toán',
+    topicTag: 'Đệ quy & Giải thuật số học',
+    trapTag: 'Bẫy quên điều kiện dừng b == 0 trong đệ quy',
+    title: 'Câu 8 (Tự luận): Thuật toán tìm ƯCLN Euclid',
+    content: 'Trình bày ý tưởng giải thuật Euclid tìm Ước chung lớn nhất GCD(a, b) của 2 số nguyên dương. Viết hàm bằng Python hoặc C++ và phân tích độ phức tạp thuật toán.',
+    score: 2.0,
+    explanation: 'Ý tưởng: GCD(a, b) = GCD(b, a % b) với điều kiện dừng b = 0 thì GCD = a. Mã Python: def gcd(a, b): return a if b == 0 else gcd(b, a % b). Độ phức tạp thời gian theo định lý Lame là O(log(min(a, b))).',
+    gradingRubric: [
+      { step: 'Nêu đúng nguyên lý Euclid GCD(a, b) = GCD(b, a % b)', point: 0.5, detail: 'Ý tưởng toán học' },
+      { step: 'Viết đúng hàm đệ quy hoặc vòng lặp (Python/C++)', point: 1.0, detail: 'Cài đặt thuật toán' },
+      { step: 'Đánh giá chính xác độ phức tạp O(log(min(a, b)))', point: 0.5, detail: 'Phân tích thuật toán' },
+    ],
+  },
+  {
+    id: 'tin-q-09',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'HARD',
+    grade: 12,
+    chapterId: 1,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Đọc hiểu code Python & Vòng lặp',
+    topicTag: 'Truy vết vòng lặp & Mảng 1 chiều Python',
+    trapTag: 'Bẫy lệch chỉ số biên trong hàm range(start, stop)',
+    title: 'Câu 9 (Vận dụng): Truy vết kết quả đoạn chương trình Python',
+    content: 'Cho đoạn mã Python sau: `s = 0; A = [3, 5, 2, 8, 1];` với vòng lặp `for i in range(1, 4): s += A[i]`. Sau khi thực hiện xong, giá trị của biến `s` bằng bao nhiêu?',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '15' },
+      { key: 'B', content: '10' },
+      { key: 'C', content: '18' },
+      { key: 'D', content: '16' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Hàm range(1, 4) duyệt qua các chỉ số i = 1, 2, 3 (không bao gồm 4). Khi đó A[1] = 5, A[2] = 2, A[3] = 8. Tổng s = 5 + 2 + 8 = 15. Chọn A.',
+  },
+  {
+    id: 'tin-q-10',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'VERY_HARD',
+    grade: 12,
+    chapterId: 1,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Đệ quy có nhớ & Độ phức tạp thuật toán',
+    topicTag: 'Đệ quy & Tối ưu Quy hoạch động',
+    trapTag: 'Bẫy nhầm độ phức tạp hàm đệ quy phân nhánh O(2^n) với O(n^2)',
+    title: 'Câu 10 (Vận dụng cao): Phân tích số lần gọi hàm đệ quy',
+    content: 'Xét hàm Python `def f(n): return 1 if n <= 1 else f(n-1) + f(n-2)`. Để tính `f(5)`, hàm `f` được gọi tổng cộng bao nhiêu lần (tính cả lời gọi ban đầu `f(5)`)?',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '15 lần' },
+      { key: 'B', content: '9 lần' },
+      { key: 'C', content: '8 lần' },
+      { key: 'D', content: '5 lần' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Số lần gọi C(n): C(0)=1, C(1)=1, C(2)=1+C(1)+C(0)=3, C(3)=1+3+1=5, C(4)=1+5+3=9, C(5)=1+9+5=15 lần. Chọn A.',
+  },
+  {
+    id: 'tin-q-11',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'VERY_HARD',
+    grade: 12,
+    chapterId: 2,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Truy vấn SQL nâng cao (HAVING vs WHERE)',
+    topicTag: 'Truy vấn SQL & GROUP BY / HAVING',
+    trapTag: 'Bẫy dùng hàm tổng hợp AVG/COUNT trực tiếp trong mệnh đề WHERE',
+    title: 'Câu 11 (Vận dụng cao): Lọc nhóm dữ liệu bằng HAVING trong SQL',
+    content: 'Cho bảng `DiemThi(MaHS, MaLop, DiemToan)`. Câu truy vấn SQL nào trả về danh sách các lớp (`MaLop`) có điểm trung bình môn Toán từ 8.0 trở lên?',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: 'SELECT MaLop, AVG(DiemToan) FROM DiemThi GROUP BY MaLop HAVING AVG(DiemToan) >= 8.0;' },
+      { key: 'B', content: 'SELECT MaLop, AVG(DiemToan) FROM DiemThi WHERE AVG(DiemToan) >= 8.0 GROUP BY MaLop;' },
+      { key: 'C', content: 'SELECT MaLop FROM DiemThi HAVING AVG(DiemToan) >= 8.0;' },
+      { key: 'D', content: 'SELECT MaLop, COUNT(DiemToan) >= 8.0 FROM DiemThi GROUP BY MaLop;' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Mệnh đề WHERE không được chứa hàm tổng hợp (AVG, COUNT, SUM) để lọc sau khi gom nhóm. Phải dùng GROUP BY MaLop kết hợp HAVING AVG(DiemToan) >= 8.0. Chọn A.',
+  },
+  {
+    id: 'tin-q-12',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'EASY',
+    grade: 12,
+    chapterId: 3,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Trí tuệ nhân tạo (AI) & Học máy',
+    topicTag: 'Trí tuệ nhân tạo (AI) & Học máy cơ bản',
+    trapTag: 'Bẫy nhầm lẫn giữa Học có giám sát (Supervised) và Không giám sát',
+    title: 'Câu 12 (Nhận biết): Phân loại bài toán Học có giám sát',
+    content: 'Trong Học máy (Machine Learning), bài toán huấn luyện mô hình phân biệt email "Spam" và "Không Spam" dựa trên tập dữ liệu đã được gán nhãn sẵn thuộc nhóm nào?',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: 'Học có giám sát (Supervised Learning)' },
+      { key: 'B', content: 'Học không giám sát (Unsupervised Learning)' },
+      { key: 'C', content: 'Học tăng cường (Reinforcement Learning)' },
+      { key: 'D', content: 'Hệ chuyên gia tĩnh không cần dữ liệu' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Khi dữ liệu huấn luyện đã có nhãn đầu ra (Spam / Không Spam), mô hình học ánh xạ từ đầu vào sang nhãn gọi là Học có giám sát (Supervised Learning). Chọn A.',
+  },
+  {
+    id: 'tin-q-13',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'MEDIUM',
+    grade: 12,
+    chapterId: 4,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Mạng máy tính & Giao thức TCP/IP',
+    topicTag: 'Mạng máy tính & An toàn thông tin',
+    trapTag: 'Bẫy nhầm địa chỉ IPv4 không hợp lệ (octet > 255)',
+    title: 'Câu 13 (Thông hiểu): Kiểm tra tính hợp lệ của địa chỉ IPv4',
+    content: 'Trong các địa chỉ dưới đây, địa chỉ nào là một địa chỉ IPv4 hợp lệ?',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '192.168.1.254' },
+      { key: 'B', content: '192.168.256.1' },
+      { key: 'C', content: '10.0.1' },
+      { key: 'D', content: '172.16.0.1.5' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Địa chỉ IPv4 gồm 4 số nguyên (octet) cách nhau bởi dấu chấm, mỗi số nằm trong đoạn từ 0 đến 255. Do đó 192.168.1.254 hợp lệ, còn 256 vượt quá 255. Chọn A.',
+  },
+];
+
+// Hàm tự động chuẩn hóa & bổ sung Hệ thống Tag 4 Trục cho toàn bộ câu hỏi trong Ngân hàng
+const COGNITIVE_LABEL_MAP: Record<QuestionDifficulty, string> = {
+  EASY: 'Nhận biết',
+  MEDIUM: 'Thông hiểu',
+  HARD: 'Vận dụng',
+  VERY_HARD: 'Vận dụng cao',
+};
+
+function inferTopicAndTrapTags(q: ExamQuestion): { topicTag: string; trapTag: string } {
+  const slug = (q.subjectSlug || '').toLowerCase();
+  const text = `${q.title || ''} ${q.content || ''} ${q.topic || ''}`.toLowerCase();
+
+  if (slug.includes('tin')) {
+    if (text.includes('sql') || text.includes('select') || text.includes('group by') || q.chapterId === 2) {
+      return {
+        topicTag: q.topicTag || 'Truy vấn SQL & Cơ sở dữ liệu quan hệ',
+        trapTag: q.trapTag || 'Bẫy nhầm lẫn mệnh đề lọc WHERE và HAVING trong SQL',
+      };
+    }
+    if (text.includes('đệ quy') || text.includes('recursion') || text.includes('fibonacci')) {
+      return {
+        topicTag: q.topicTag || 'Đệ quy & Ngăn xếp Call Stack',
+        trapTag: q.trapTag || 'Bẫy thiếu điều kiện dừng (Base Case) gây tràn bộ nhớ Stack',
+      };
+    }
+    if (text.includes('nhị phân') || text.includes('binary') || text.includes('độ phức tạp')) {
+      return {
+        topicTag: q.topicTag || 'Thuật toán Tìm kiếm & Độ phức tạp O(log N)',
+        trapTag: q.trapTag || 'Bẫy áp dụng tìm kiếm nhị phân trên mảng chưa sắp xếp',
+      };
+    }
+    if (text.includes('ai') || text.includes('học máy') || q.chapterId === 3) {
+      return {
+        topicTag: q.topicTag || 'Trí tuệ nhân tạo (AI) & Học máy cơ bản',
+        trapTag: q.trapTag || 'Bẫy nhầm giữa dữ liệu gán nhãn và dữ liệu phân cụm',
+      };
+    }
+    if (text.includes('ip') || text.includes('mạng') || q.chapterId === 4) {
+      return {
+        topicTag: q.topicTag || 'Mạng máy tính & Giao thức TCP/IP',
+        trapTag: q.trapTag || 'Bẫy vượt ngưỡng giá trị 255 của octet địa chỉ IPv4',
+      };
+    }
+    return {
+      topicTag: q.topicTag || q.topic || 'Lập trình Python & Cấu trúc dữ liệu',
+      trapTag: q.trapTag || 'Bẫy lệch chỉ số biên vòng lặp range() và kiểu dữ liệu động',
+    };
+  }
+
+  // Mặc định môn Toán Học (Toán 10, 11, 12)
+  if (text.includes('tiệm cận')) {
+    return {
+      topicTag: q.topicTag || 'Đường tiệm cận của đồ thị hàm số',
+      trapTag: q.trapTag || 'Bẫy quên rút gọn nghiệm tử số và mẫu số trước khi kết luận tiệm cận đứng',
+    };
+  }
+  if (text.includes('cực trị') || text.includes('cực đại') || text.includes('cực tiểu')) {
+    return {
+      topicTag: q.topicTag || 'Cực trị của hàm số & Tham số m',
+      trapTag: q.trapTag || 'Bẫy kết luận cực trị khi đạo hàm y\' = 0 nhưng không đổi dấu (nghiệm bội chẵn)',
+    };
+  }
+  if (text.includes('đồng biến') || text.includes('nghịch biến') || text.includes('đơn điệu')) {
+    return {
+      topicTag: q.topicTag || 'Tính đơn điệu (Đồng biến - Nghịch biến)',
+      trapTag: q.trapTag || 'Bẫy dùng ký hiệu hợp ∪ thay vì từ "và" giữa các khoảng đơn điệu rời nhau',
+    };
+  }
+  if (text.includes('lớn nhất') || text.includes('nhỏ nhất') || text.includes('gtln') || text.includes('gtnn') || text.includes('max') || text.includes('min')) {
+    return {
+      topicTag: q.topicTag || 'Giá trị lớn nhất - Giá trị nhỏ nhất (GTLN - GTNN)',
+      trapTag: q.trapTag || 'Bẫy quên tính và so sánh giá trị hàm số tại hai đầu mút của đoạn [a; b]',
+    };
+  }
+  if (text.includes('nguyên hàm') || text.includes('tích phân') || q.chapterId === 4) {
+    return {
+      topicTag: q.topicTag || 'Nguyên hàm - Tích phân & Ứng dụng diện tích',
+      trapTag: q.trapTag || 'Bẫy quên dấu giá trị tuyệt đối |f(x)| khi tính diện tích hình phẳng',
+    };
+  }
+  if (text.includes('vectơ') || text.includes('oxyz') || text.includes('mặt phẳng') || text.includes('mặt cầu') || q.chapterId === 2 || q.chapterId === 5) {
+    return {
+      topicTag: q.topicTag || 'Hệ tọa độ không gian Oxyz & Phương trình mặt phẳng',
+      trapTag: q.trapTag || 'Bẫy nhầm dấu tọa độ tâm mặt cầu I(a; b; c) và vectơ pháp tuyến',
+    };
+  }
+  if (text.includes('xác suất') || text.includes('bayes') || q.chapterId === 6) {
+    return {
+      topicTag: q.topicTag || 'Xác suất có điều kiện & Công thức Bayes',
+      trapTag: q.trapTag || 'Bẫy nhầm không gian mẫu thu hẹp trong xác suất có điều kiện P(A|B)',
+    };
+  }
+
+  return {
+    topicTag: q.topicTag || q.topic || 'Khảo sát hàm số & Tư duy đại số',
+    trapTag: q.trapTag || 'Bẫy quên điều kiện xác định và sai dấu khi biến đổi đại số',
+  };
+}
+
+export function enrichQuestionWith4AxisTags(q: ExamQuestion): ExamQuestion {
+  const { topicTag, trapTag } = inferTopicAndTrapTags(q);
+  return {
+    ...q,
+    topicTag,
+    trapTag,
+    cognitiveTag: q.cognitiveTag || COGNITIVE_LABEL_MAP[q.difficulty] || 'Thông hiểu',
+  };
+}
+
 // Gán metadata chuẩn cho bộ câu hỏi Toán 12
 const INITIAL_MATH_QUESTIONS: ExamQuestion[] = [
   ...MOCK_EXAM_QUESTIONS_CH1.map((q) => ({
     ...q,
     subjectSlug: 'toan-hoc',
     subjectName: 'Toán Học',
-    topic: 'Ứng dụng đạo hàm & Khảo sát đồ thị',
+    topic: q.topic || 'Ứng dụng đạo hàm & Khảo sát đồ thị',
   })),
   ...MOCK_EXAM_QUESTIONS_CH2.map((q) => ({
     ...q,
     subjectSlug: 'toan-hoc',
     subjectName: 'Toán Học',
-    topic: 'Tọa độ vectơ & Không gian Oxyz',
+    topic: q.topic || 'Tọa độ vectơ & Không gian Oxyz',
   })),
 ];
 
@@ -1626,12 +2037,13 @@ const INITIAL_MATH_QUESTIONS: ExamQuestion[] = [
 const ALL_RAW_QUESTIONS: ExamQuestion[] = [
   ...(questionsDb as unknown as ExamQuestion[]),
   ...INITIAL_MATH_QUESTIONS,
+  ...MOCK_INFORMATICS_QUESTIONS,
   ...MOCK_PHYSICS_QUESTIONS,
   ...MOCK_CHEMISTRY_QUESTIONS,
   ...MOCK_ENGLISH_QUESTIONS,
   ...MOCK_BIOLOGY_QUESTIONS,
   ...MOCK_LITERATURE_QUESTIONS,
-];
+].map(enrichQuestionWith4AxisTags);
 
 const QUESTION_BANK_MAP = new Map<string, ExamQuestion>();
 for (const q of ALL_RAW_QUESTIONS) {
@@ -1652,7 +2064,7 @@ export function getSystemQuestionBank(): ExamQuestion[] {
 
       const customMap = new Map<string, ExamQuestion>();
       for (const q of customList) {
-        customMap.set(q.id, q);
+        customMap.set(q.id, enrichQuestionWith4AxisTags(q));
       }
 
       const result: ExamQuestion[] = [];
@@ -1661,7 +2073,7 @@ export function getSystemQuestionBank(): ExamQuestion[] {
       // Chèn các câu hỏi tùy biến hoặc đã được chỉnh sửa trước
       for (const q of customList) {
         if (!deletedIds.has(q.id) && !visited.has(q.id)) {
-          result.push(q);
+          result.push(enrichQuestionWith4AxisTags(q));
           visited.add(q.id);
         }
       }
@@ -1774,6 +2186,9 @@ export interface PracticeExamOptions {
   quizCount?: number;
   essayCount?: number;
   durationMinutes?: number;
+  practiceMode?: PracticeMode;
+  targetDifficulty?: QuestionDifficulty | 'ALL';
+  topicTagFilter?: string;
 }
 
 export function getPracticeExam(
@@ -1792,9 +2207,9 @@ export function getPracticeExam(
 
   const targetTotal =
     format === 'QUIZ'
-      ? opts.quizCount && opts.quizCount >= 10 && opts.quizCount <= 30
+      ? opts.quizCount && opts.quizCount >= 5 && opts.quizCount <= 50
         ? opts.quizCount
-        : opts.requestedCount && opts.requestedCount >= 10 && opts.requestedCount <= 30
+        : opts.requestedCount && opts.requestedCount >= 5 && opts.requestedCount <= 50
         ? opts.requestedCount
         : 10
       : format === 'ESSAY'
@@ -1816,26 +2231,17 @@ export function getPracticeExam(
     totalQuestions: targetTotal,
     quizCount: opts.quizCount,
     essayCount: opts.essayCount,
+    practiceMode: opts.practiceMode,
+    targetDifficulty: opts.targetDifficulty,
+    topicTagFilter: opts.topicTagFilter,
   });
 
   const duration =
-    opts.durationMinutes ||
-    (format === 'QUIZ' ? Math.max(15, Math.round(questions.length * 1.5)) : 45);
-
-  let title = '';
-  if ((level as string)?.toUpperCase() === 'ASSESSMENT') {
-    title = `Đề Khảo Thí Đánh Giá Năng Lực (${questions.length} Câu) - Lớp ${grade}`;
-  } else if (format === 'QUIZ') {
-    title = `Đề Luyện Trắc Nghiệm (${questions.length} Câu) - ${chapter.name}`;
-  } else if (format === 'ESSAY') {
-    title = `Đề Luyện Tự Luận (${questions.length} Câu) - ${chapter.name}`;
-  } else {
-    const qCount = opts.quizCount || 10;
-    const eCount = opts.essayCount || 2;
-    title = `Đề Luyện Tổng Hợp (${qCount} TN + ${eCount} TL) - ${chapter.name}`;
-  }
-
-  const totalPoints = questions.reduce((sum, q) => sum + q.score, 0);
+    typeof opts.durationMinutes === 'number' && opts.durationMinutes >= 0
+      ? opts.durationMinutes || (format === 'QUIZ' ? Math.max(10, Math.round(questions.length * 1.5)) : 45)
+      : format === 'QUIZ'
+      ? Math.max(10, Math.round(questions.length * 1.5))
+      : 45;
 
   const subjectNameMap: Record<string, string> = {
     'toan-hoc': 'Toán Học',
@@ -1855,15 +2261,43 @@ export function getPracticeExam(
     'khoa-hoc-tu-nhien': 'Khoa Học Tự Nhiên',
   };
 
+  const subjectLabel = subjectNameMap[subjectSlug] || 'Môn Học K-12';
+
+  let title = '';
+  if (opts.practiceMode === 'MOCK_EXAM') {
+    title = `Đề Thi Thử Chuẩn Cấu Trúc THPT (${questions.length} Câu) - ${subjectLabel} Lớp ${grade}`;
+  } else if (opts.practiceMode === 'TOPIC') {
+    const diffLabel =
+      opts.targetDifficulty && opts.targetDifficulty !== 'ALL'
+        ? ` [${COGNITIVE_LABEL_MAP[opts.targetDifficulty]}]`
+        : '';
+    title = `Luyện Tập Chuyên Đề (${questions.length} Câu)${diffLabel} - ${opts.topicTagFilter || chapter.name}`;
+  } else if ((level as string)?.toUpperCase() === 'ASSESSMENT') {
+    title = `Đề Khảo Thí Đánh Giá Năng Lực (${questions.length} Câu) - Lớp ${grade}`;
+  } else if (format === 'QUIZ') {
+    title = `Đề Luyện Trắc Nghiệm (${questions.length} Câu) - ${chapter.name}`;
+  } else if (format === 'ESSAY') {
+    title = `Đề Luyện Tự Luận (${questions.length} Câu) - ${chapter.name}`;
+  } else {
+    const qCount = opts.quizCount || 10;
+    const eCount = opts.essayCount || 2;
+    title = `Đề Luyện Tổng Hợp (${qCount} TN + ${eCount} TL) - ${chapter.name}`;
+  }
+
+  const totalPoints = questions.reduce((sum, q) => sum + q.score, 0);
+
   return {
     id: `exam-${subjectSlug}-${level.toLowerCase()}-g${grade}-ch${chapterId}-${format.toLowerCase()}`,
     subjectSlug,
-    subjectName: subjectNameMap[subjectSlug] || 'Môn Học K-12',
+    subjectName: subjectLabel,
     level,
     grade,
     chapterId,
-    chapterName: chapter.name,
+    chapterName: opts.practiceMode === 'MOCK_EXAM' ? `Tổng hợp toàn bộ chương trình ${subjectLabel} Lớp ${grade}` : chapter.name,
     format,
+    practiceMode: opts.practiceMode,
+    targetDifficulty: opts.targetDifficulty,
+    topicTagFilter: opts.topicTagFilter,
     title,
     durationMinutes: duration,
     totalPoints: Math.round(totalPoints * 10) / 10,

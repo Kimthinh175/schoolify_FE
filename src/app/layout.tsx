@@ -5,8 +5,7 @@ import "katex/dist/katex.min.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ExamSessionGuardProvider } from "@/components/providers/ExamSessionGuardProvider";
 import { Toaster } from "sonner";
-import { CasioCalculatorWidget } from "@/components/features/calculator";
-import { AgenticChatWidget } from "@/components/features/agent/AgenticChatWidget";
+import { GlobalFloatingWidgets } from "@/components/providers/GlobalFloatingWidgets";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -62,6 +61,15 @@ export default function RootLayout({
                   document.documentElement.classList.remove('dark');
                   document.documentElement.setAttribute('data-theme', 'light');
                 }
+                // Dọn dẹp legacy demo data khỏi localStorage của client
+                ['schoolify_question_bug_reports', 'schoolify_system_questions', 'schoolify_deleted_question_ids', 'schoolify_custom_matrix', 'schoolify_previous_chapter_ratio'].forEach(function(k) {
+                  localStorage.removeItem(k);
+                });
+
+                // Preloader session cache check for instant subsequent loads
+                if (sessionStorage.getItem('schoolify_preloader_seen') === '1') {
+                  document.documentElement.classList.add('preloader-cached');
+                }
               } catch (e) {}
             })();`,
           }}
@@ -71,8 +79,7 @@ export default function RootLayout({
         <ThemeProvider>
           <ExamSessionGuardProvider>
             {children}
-            <CasioCalculatorWidget />
-            <AgenticChatWidget />
+            <GlobalFloatingWidgets />
             <Toaster richColors position="top-right" closeButton />
           </ExamSessionGuardProvider>
         </ThemeProvider>

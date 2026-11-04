@@ -52,44 +52,7 @@ import { toast } from 'sonner';
 
 const ITEMS_PER_PAGE = 10;
 
-const DEFAULT_BUG_REPORTS: QuestionBugReport[] = [
-  {
-    id: 'rep-init-01',
-    questionId: 'mst-001',
-    questionTitle: 'Câu 1: Cho hàm số y = f(x) liên tục trên đoạn [a; b]...',
-    subjectName: 'Toán học',
-    issueType: 'KATEX_ERROR',
-    issueTypeLabel: 'Lỗi công thức KaTeX / Hiển thị',
-    description: 'Biểu thức tích phân ở dòng 2 bị thiếu dx, đề nghị ban khảo thí bổ sung để học sinh không nhầm lẫn khi làm bài.',
-    reportedAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-    studentName: 'Nguyễn Văn Minh (Lớp 12A1)',
-    status: 'PENDING',
-  },
-  {
-    id: 'rep-init-02',
-    questionId: 'mst-005',
-    questionTitle: 'Câu 5: Một con lắc lò xo dao động điều hòa với tần số f = 2 Hz...',
-    subjectName: 'Vật lí',
-    issueType: 'WRONG_ANSWER',
-    issueTypeLabel: 'Sai đáp án chuẩn',
-    description: 'Đáp án đúng phải là 4π rad/s thay vì 2π rad/s theo công thức tốc độ góc ω = 2πf.',
-    reportedAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-    studentName: 'Trần Thị Thu Thảo',
-    status: 'PENDING',
-  },
-  {
-    id: 'rep-init-03',
-    questionId: 'mst-008',
-    questionTitle: 'Câu 8: Thủy phân hoàn toàn este X trong môi trường axit...',
-    subjectName: 'Hóa học',
-    issueType: 'TYPO_CONTENT',
-    issueTypeLabel: 'Lỗi chính tả / Đề bài thiếu dữ kiện',
-    description: 'Đề bài chưa ghi rõ nồng độ H2SO4 đặc và nhiệt độ đun hồi lưu phản ứng este hóa.',
-    reportedAt: new Date(Date.now() - 86400000).toISOString(),
-    studentName: 'Lê Hoàng Nam',
-    status: 'RESOLVED',
-  },
-];
+const DEFAULT_BUG_REPORTS: QuestionBugReport[] = [];
 
 export function normalizeSubjectName(raw?: string | null): string {
   const s = (raw || '').trim();
@@ -230,11 +193,10 @@ export default function AdminQuestionsPage() {
       if (stored) {
         setBugReports(JSON.parse(stored));
       } else {
-        localStorage.setItem('schoolify_question_bug_reports', JSON.stringify(DEFAULT_BUG_REPORTS));
-        setBugReports(DEFAULT_BUG_REPORTS);
+        setBugReports([]);
       }
     } catch {
-      setBugReports(DEFAULT_BUG_REPORTS);
+      setBugReports([]);
     }
 
     // 1. Tải toàn bộ câu hỏi từ PostgreSQL (GET /api/v1/exams/questions)

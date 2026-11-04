@@ -75,7 +75,7 @@ const MOCK_NEWS: ArticleItem[] = [
   },
   {
     id: 'news-04',
-    title: 'Phát động giải đấu "Đua Top Bảng Vàng Tháng 10" với tổng giải thưởng 10.000 Kim Cương',
+    title: 'Phát động giải đấu "Đua Top Bảng Vàng Tháng 10" với tổng giải thưởng 10.000 Ngọc Tri Thức',
     excerpt:
       'Cơ hội tranh tài giữa các cao thủ khối 10, 11, 12 toàn quốc. Top 10 học sinh xuất sắc nhất tháng sẽ nhận phần thưởng hiện vật và voucher học tập giá trị.',
     category: 'Sự Kiện Schoolify',

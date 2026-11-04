@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { clampEmotionDuration, isRobotEmotion, type RobotEmotionId } from '@/lib/robot-emotions';
 
-const BE_BASE_URL = process.env.NEXT_PUBLIC_BE_URL || 'http://localhost:3001';
+const BE_BASE_URL = process.env.NEXT_PUBLIC_BE_URL || process.env.BE_URL || 'http://localhost:3005';
 
 interface ClientToolAction {
   type: string;
@@ -13,6 +14,12 @@ interface AgentResponse {
     message: string;
     actions: ClientToolAction[];
     source?: string;
+    /** Biểu cảm robot hiển thị kèm câu trả lời (xem lib/robot-emotions.ts) */
+    emotion?: RobotEmotionId;
+    /** Thời gian giữ biểu cảm (ms) trước khi về 'default' */
+    emotionDurationMs?: number;
+    /** Gợi ý ngữ cảnh tiếp theo cho học sinh */
+    suggestions?: string[];
   };
 }
 
@@ -28,6 +35,7 @@ function generateLocalAiResponse(query: string, currentUrl: string = '/'): Agent
   const norm = normalizeText(query);
   const actions: ClientToolAction[] = [];
   let message = '';
+  let emotion: RobotEmotionId = 'happy';
 
   // 1. Giới thiệu nền tảng Schoolify / Nền tảng này là gì
   if (
@@ -54,7 +62,7 @@ Schoolify xây dựng một hệ sinh thái kết nối trọn vẹn 4 nhóm ng�
    - **Luyện thi thích ứng 4 cấp độ**: Từ *Cơ bản* (bám sát SGK, chống liệt), *Trung bình* (thi học kỳ & tốt nghiệp THPT), *Nâng cao* (vận dụng cao 9-10 điểm) đến *Học sinh Giỏi (HSG Cấp Tỉnh & Quốc Gia)*.
    - **Đa dạng hình thức thi**: Trắc nghiệm 4 lựa chọn, Đúng/Sai, Điền số kết quả ngắn, Tự luận chấm AI đa tầng theo barem, và Lập trình trực tiếp trong phòng thi IDE cho môn Tin học.
    - **Đánh giá năng lực chẩn đoán**: Hệ thống phát hiện chính xác lỗ hổng kiến thức theo chuẩn phân hóa Bloom và đề xuất lộ trình khắc phục.
-   - **Góc học tập & Đổi thưởng**: Tích lũy Kim Cương 💎 từ kết quả làm bài để đổi vật phẩm và quà tặng độc quyền.
+   - **Góc học tập & Đổi thưởng**: Tích lũy Ngọc Tri Thức 💎 từ kết quả làm bài để đổi vật phẩm và quà tặng độc quyền.
 
 2. 👨‍👩‍👧 **Dành cho Phụ huynh**:
    - Theo dõi tiến độ học tập, biểu đồ năng lực Bloom theo tuần/tháng, thời khóa biểu và thanh toán học phí trực tuyến minh bạch qua VietQR.
@@ -64,6 +72,7 @@ Schoolify xây dựng một hệ sinh thái kết nối trọn vẹn 4 nhóm ng�
    - Thiết kế ma trận đề thi phân hóa Bloom, chấm bài tự luận và quản lý lớp học.
 
 Bạn muốn tớ **hướng dẫn vào phòng luyện thi thử**, **giải đáp một bài toán**, hay **tìm hiểu tính năng nào trước**, cứ nhắn cho tớ nhé! 🚀`;
+    emotion = 'excited';
 
     actions.push({
       type: 'NAVIGATE_PAGE',
@@ -81,7 +90,26 @@ Bạn muốn tớ **hướng dẫn vào phòng luyện thi thử**, **giải đ�
       },
     });
   }
-  // 2. Gợi ý phương pháp Socratic / Giải bài tập (Toán, Lý, Hóa...)
+  // 2. Giải đáp công thức Toán học / Phương trình bậc 2 / Tích phân / Đạo hàm
+  else if (
+    norm.includes('bac 2') ||
+    norm.includes('tam thuc') ||
+    norm.includes('delta') ||
+    norm.includes('viet') ||
+    (norm.includes('cong thuc') && (norm.includes('toan') || norm.includes('nghiem') || norm.includes('dao ham') || norm.includes('tich phan')))
+  ) {
+    message = `Dưới đây là **Công thức nghiệm Phương trình bậc hai** chuẩn GDPT 2018:\n\nXét phương trình bậc hai tổng quát:\n$$ ax^2 + bx + c = 0 \\quad (a \\neq 0) $$\n\nBiệt thức $\\Delta$ (Delta) được tính theo công thức:\n$$ \\Delta = b^2 - 4ac $$\n\nCác trường hợp nghiệm:\n1. **Nếu $\\Delta > 0$**: Phương trình có 2 nghiệm phân biệt:\n\\[ x_{1,2} = \\frac{-b \\pm \\sqrt{\\Delta}}{2a} \\]\n2. **Nếu $\\Delta = 0$**: Phương trình có nghiệm kép:\n$$ x_1 = x_2 = -\\frac{b}{2a} $$\n3. **Nếu $\\Delta < 0$**: Phương trình vô nghiệm trên tập số thực $\\mathbb{R}$ (hoặc có 2 nghiệm phức $x_{1,2} \\in \\mathbb{C}$).\n\n💡 **Hệ thức Vi-ét thuận**:\n$$ \\begin{cases} S = x_1 + x_2 = -\\frac{b}{a} \\\\[6pt] P = x_1 \\cdot x_2 = \\frac{c}{a} \\end{cases} $$`;
+    emotion = 'idea';
+
+    actions.push({
+      type: 'NAVIGATE_PAGE',
+      payload: {
+        path: '/student/practice',
+        label: '🎯 Luyện Đề Chuyên Đề Phương Trình Bậc Hai',
+      },
+    });
+  }
+  // 3. Gợi ý phương pháp Socratic / Giải bài tập (Toán, Lý, Hóa...)
   else if (
     norm.includes('goi y') ||
     norm.includes('chi to') ||
@@ -100,6 +128,7 @@ Bạn muốn tớ **hướng dẫn vào phòng luyện thi thử**, **giải đ�
     norm.includes('toan')
   ) {
     message = `Theo phương pháp gợi mở (**Socratic Method**), tớ sẽ không đưa ngay đáp án cuối cùng mà gợi ý từng bước tư duy để bạn tự tin giải quyết nhé:\n\n1. **Bước 1 (Xác định dữ kiện)**: Tìm tập xác định $D$ và liệt kê các giả thiết chính trong đề bài.\n2. **Bước 2 (Chọn công cụ)**: Thiết lập phương trình đạo hàm $y' = 0$ hoặc định luật liên quan để tìm các điểm tới hạn.\n3. **Bước 3 (Kiểm chứng & Kết luận)**: Lập bảng biến thiên hoặc thế điều kiện để rút ra kết quả chính xác.\n\nBạn thử tính Bước 1 và Bước 2 xem ra bao nhiêu rồi chia sẻ cho tớ nhé! 💡`;
+    emotion = 'thinking';
 
     actions.push({
       type: 'SOCRATIC_HINT',
@@ -148,6 +177,7 @@ Bạn muốn tớ **hướng dẫn vào phòng luyện thi thử**, **giải đ�
     const totalQuestions = numMatch ? Math.min(50, Math.max(5, parseInt(numMatch[1], 10))) : 10;
 
     message = `Tớ đã thiết lập sẵn **Bộ Ma Trận Đề Thi ${subject} - Khối ${grade}** cho bạn (${totalQuestions} câu chuẩn cấu trúc GDPT 2018: Nhận biết ${bloomRatio.NHAN_BIET}%, Thông hiểu ${bloomRatio.THONG_HIEU}%, Vận dụng ${bloomRatio.VAN_DUNG}%, Vận dụng cao ${bloomRatio.VAN_DUNG_CAO}%).\n\nBạn có thể bấm nút bên dưới để hệ thống tự động sinh đề và đưa bạn vào phòng thi ngay nhé! 🎯`;
+    emotion = 'idea';
 
     actions.push({
       type: 'CONFIGURE_EXAM_MATRIX',
@@ -179,6 +209,7 @@ Bạn muốn tớ **hướng dẫn vào phòng luyện thi thử**, **giải đ�
     norm.includes('scan de')
   ) {
     message = `Tớ đã sẵn sàng mở **Công cụ AI Quét Đề Thi (.docx)** cho bạn! Bạn chỉ cần tải lên file đề thi \`.docx\`, AI sẽ tự động đọc hiểu công thức Toán học, bóc tách cấu trúc kiến thức và biên soạn ngân hàng câu hỏi mới lưu vào hệ thống nhé! 📄✨`;
+    emotion = 'idea';
 
     actions.push({
       type: 'OPEN_DOCX_SCANNER',
@@ -210,6 +241,7 @@ Bạn muốn tớ **hướng dẫn vào phòng luyện thi thử**, **giải đ�
   ) {
     const targetPlan = norm.includes('vip') ? 'VIP' : 'PRO';
     message = `Schoolify cung cấp các gói đồng hành linh hoạt cho học sinh:\n\n- **Gói Cơ Bản (0đ)**: Luyện đề chuẩn SGK hàng ngày.\n- **Gói Chuyên Sâu PRO (199.000đ/tháng)**: Mở khóa trọn bộ Ma trận đề GDPT 2018, AI Gia Sư Socratic & tặng +200 Token đổi quà.\n- **Gói Toàn Diện VIP (499.000đ/năm)**: Đặc quyền 365 ngày ôn thi toàn diện, AI Quét đề Word & +1,000 Token.\n\nTớ đã chuẩn bị sẵn nút chuyển đến trang Bảng Giá để bạn tham khảo nhé! 💳`;
+    emotion = 'wink';
 
     actions.push({
       type: 'SELECT_PRICING_PLAN',
@@ -239,8 +271,9 @@ Bạn muốn tớ **hướng dẫn vào phòng luyện thi thử**, **giải đ�
     const isLeaderboard = norm.includes('xep hang') || norm.includes('bang vang');
     const targetPath = isLeaderboard ? '/leaderboard' : '/student/history';
     message = isLeaderboard
-      ? `Tớ sẽ dẫn bạn đến **Bảng Vàng Xếp Hạng** để xem thứ hạng Chuỗi Ngày Học (Streak) và điểm nỗ lực Kim Cương nhé! 🏆`
+      ? `Tớ sẽ dẫn bạn đến **Bảng Vàng Xếp Hạng** để xem thứ hạng Chuỗi Ngày Học (Streak) và điểm nỗ lực Ngọc Tri Thức nhé! 🏆`
       : `Tớ sẽ dẫn bạn đến trang **Lịch Sử Luyện Đề** để xem lại chi tiết bài làm cùng lời giải phân tích nhé! 📊`;
+    emotion = isLeaderboard ? 'celebrate' : 'happy';
 
     actions.push({
       type: 'NAVIGATE_PAGE',
@@ -250,20 +283,78 @@ Bạn muốn tớ **hướng dẫn vào phòng luyện thi thử**, **giải đ�
       },
     });
   }
-  // 7. Mặc định hội thoại thân thiện
+  // 7. Mặc định hội thoại thân thiện (tự nhiên, không văn mẫu menu)
   else {
-    message = `Chào bạn! Tớ là **Trợ lý AI Schoolify** 🤖✨.\n\nTớ có thể đồng hành cùng bạn trên nền tảng:\n- 🎯 **Tạo đề thi ma trận thích ứng K-12** (Toán, Lý, Hóa, Sinh, Tin...)\n- 💡 **Gợi mở giải bài tập theo phương pháp Socratic**\n- 🏫 **Giải đáp thắc mắc về nền tảng Schoolify**\n- 💳 **Tư vấn các gói học Pro & Bảng giá**\n\nBạn có thể hỏi tớ bất cứ điều gì hoặc bấm nút bên dưới nhé!`;
-
-    actions.push({
-      type: 'NAVIGATE_PAGE',
-      payload: {
-        path: '/luyen-thi',
-        label: 'Vào Cổng Luyện Thi K-12',
-      },
-    });
+    message = `Tớ đã ghi nhận câu hỏi của bạn! Tớ có thể đồng hành cùng bạn ôn luyện thi K-12, gợi mở các bước giải bài tập theo phương pháp Socratic, hoặc thiết lập ma trận đề thi phân hóa GDPT 2018. Bạn cần tớ hỗ trợ phần nào trước nè? 😊`;
   }
 
-  return { message, actions };
+  const suggestions = [
+    '🎯 Tạo đề Toán 12 khó',
+    '💡 Gợi ý giải bài tập Socratic',
+    '💳 Xem các gói học sinh (50k / 100k)',
+  ];
+
+  return { message, actions, emotion, emotionDurationMs: 4000, suggestions };
+}
+
+function generateSocraticQuestionTutorResponse(
+  questionContext: Record<string, any>,
+  query: string
+): AgentResponse['data'] {
+  const title = questionContext.title || 'Câu hỏi hiện tại';
+  const content = questionContext.content || '';
+  const topicTag = questionContext.topicTag || 'Chuyên đề trọng tâm';
+  const cognitiveTag = questionContext.cognitiveTag || 'Thông hiểu';
+  const trapTag =
+    questionContext.trapTag ||
+    'Cẩn thận kiểm tra kỹ điều kiện xác định và dấu biểu thức';
+  const studentChoice = questionContext.studentChoice;
+  const isSubmitted = Boolean(questionContext.isSubmitted);
+  const subjectSlug = String(questionContext.subjectSlug || 'toan-hoc');
+  const explanation = String(questionContext.explanation || '');
+
+  const isInformatics = subjectSlug.includes('tin');
+
+  // Trích lọc gợi mở Bước 1 & Bước 2 từ lời giải chuẩn mà không lộ ngay chữ cái đáp án khi đang thi
+  const cleanSteps = explanation
+    .replace(/Chọn đáp án đúng là\s*[A-D]\.?/gi, '')
+    .replace(/Vậy đáp án đúng là\s*[A-D]\.?/gi, '')
+    .trim();
+
+  const choiceStatusText = studentChoice
+    ? `Bạn đang chọn phương án **${studentChoice}**. Hãy cùng tớ kiểm chứng lại theo phương pháp **Socratic (Gợi mở tư duy)** nhé:`
+    : `Tớ sẽ đồng hành cùng bạn tháo gỡ **${title}** theo phương pháp **Socratic (Gợi mở từng bước — không chép đáp án thụ động)** nhé:`;
+
+  const stepGuidance = isInformatics
+    ? `1. **Bước 1 — Phân tích cấu trúc lệnh / truy vấn**:\n   - Đọc kỹ đoạn mã / câu lệnh trong đề: \`${content.slice(0, 120)}${content.length > 120 ? '...' : ''}\`\n   - Xác định rõ biến chạy, điều kiện dừng vòng lặp hoặc thứ tự thực thi mệnh đề (\`FROM -> WHERE -> GROUP BY -> HAVING -> SELECT\`).\n2. **Bước 2 — Chạy từng bước (Dry-run Trace)**:\n   - ${cleanSteps ? cleanSteps.slice(0, 260) : 'Viết giá trị biến qua từng vòng lặp hoặc từng lời gọi đệ quy ra nháp để tránh nhầm chỉ số.'}`
+    : `1. **Bước 1 — Xác định điều kiện & công thức cốt lõi**:\n   - Với chuyên đề **${topicTag}**, trước tiên hãy kiểm tra Tập xác định $D$ và công thức đạo hàm / nguyên hàm tương ứng.\n2. **Bước 2 — Biến đổi đại số & Khử nhiễu**:\n   - ${cleanSteps ? cleanSteps.slice(0, 260) : 'Thiết lập phương trình chính và đối chiếu dấu trên bảng biến thiên.'}`;
+
+  const postSubmitNote =
+    isSubmitted && questionContext.correctChoice
+      ? `\n\n✅ **Đối chiếu sau nộp bài**: Đáp án chuẩn của câu này là **${questionContext.correctChoice}**. Bạn hãy đối chiếu lại với **Bẫy sai lầm** ở trên để ghi nhớ dạng bài **${topicTag}** nhé!`
+      : `\n\n💬 Bạn thử nháp **Bước 1** xem kết quả trung gian ra bao nhiêu rồi tự tin chốt phương án nhé!`;
+
+  const message = `💡 **Gia Sư AI Socratic — Phân Tích Theo Ma Trận Tag 4 Chiều**\n\n- 🏷️ **Chuyên đề (Topic Tag)**: \`${topicTag}\`\n- 🧠 **Mức độ nhận thức**: \`${cognitiveTag}\`\n- ⚠️ **Cảnh báo Bẫy sai lầm (Trap Tag)**: *${trapTag}*\n\n${choiceStatusText}\n\n${stepGuidance}${postSubmitNote}`;
+
+  return {
+    message,
+    actions: [
+      {
+        type: 'SOCRATIC_HINT',
+        payload: {
+          stepIndex: 1,
+          hintTitle: `Đã kích hoạt gợi mở Socratic: ${topicTag}`,
+        },
+      },
+    ],
+    emotion: 'idea',
+    emotionDurationMs: 4500,
+    suggestions: [
+      `💡 Giải thích kỹ hơn bẫy "${trapTag}"`,
+      `🎯 Tạo đề luyện riêng chuyên đề ${topicTag}`,
+      '📐 Tóm tắt công thức trọng tâm câu này',
+    ],
+  };
 }
 
 export async function POST(req: NextRequest) {
@@ -272,17 +363,29 @@ export async function POST(req: NextRequest) {
     const query = body?.message || '';
     const currentUrl = body?.currentUrl || '/';
 
+    // Ưu tiên phản hồi tức thì nếu học sinh bấm "Hỏi Gia Sư AI câu này" kèm questionContext 4-axis Tag
+    if (body?.questionContext && typeof body.questionContext === 'object') {
+      const socraticData = generateSocraticQuestionTutorResponse(body.questionContext, query);
+      return NextResponse.json({ success: true, data: socraticData }, { status: 200 });
+    }
+
     // 1. Thử gọi sang BE nếu BE đang chạy
     try {
       const beRes = await fetch(`${BE_BASE_URL}/agent/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
-        signal: AbortSignal.timeout(6000), // Cho BE đủ thời gian xử lý AI
+        signal: AbortSignal.timeout(15000), // Cho BE đủ thời gian xử lý AI
       });
 
       if (beRes.ok) {
         const data = await beRes.json();
+        if (!data?.success && data?.errorCode === 'INSUFFICIENT_XIN_POINTS') {
+          if (typeof data.message === 'string') {
+            data.message = data.message.replace(/Điểm Xịn|Kim [Cc]ương/g, 'Ngọc Tri Thức');
+          }
+          return NextResponse.json(data, { status: 200 });
+        }
         const payload = data?.data || data;
 
         // Chuẩn hóa xưng hô sang "tớ - bạn" nếu BE trả về "thầy / em"
@@ -292,7 +395,20 @@ export async function POST(req: NextRequest) {
             .replace(/\bthầy\b/g, 'tớ')
             .replace(/\bem\b/g, 'bạn')
             .replace(/\bEm\b/g, 'Bạn')
-            .replace(/\(Zero-API-Key Hybrid Vector \+ Antigravity IPC\)/g, '🤖✨');
+            .replace(/\(Zero-API-Key Hybrid Vector \+ Antigravity IPC\)/g, '🤖✨')
+            // Đồng bộ tên điểm mới: Tia Sáng (hằng ngày) & Ngọc Tri Thức (vĩnh viễn)
+            .replace(/Điểm Xịn|Kim [Cc]ương/g, 'Ngọc Tri Thức')
+            .replace(/Điểm Free/g, 'Tia Sáng');
+        }
+
+        // Validate biểu cảm BE trả về; sai/thiếu thì bỏ để FE tự suy luận
+        if (payload && typeof payload === 'object') {
+          if (isRobotEmotion(payload.emotion)) {
+            payload.emotionDurationMs = clampEmotionDuration(payload.emotionDurationMs);
+          } else {
+            delete payload.emotion;
+            delete payload.emotionDurationMs;
+          }
         }
 
         // Nếu nội dung BE là câu chào mặc định mà câu hỏi về nền tảng -> dùng câu trả lời chuẩn Schoolify
@@ -305,10 +421,25 @@ export async function POST(req: NextRequest) {
           norm.includes('tinh nang')
         ) {
           const localData = generateLocalAiResponse(query, currentUrl);
-          return NextResponse.json({ success: true, data: localData });
+          return NextResponse.json({
+            success: true,
+            data: localData,
+            pointUsage: data?.pointUsage || payload?.pointUsage,
+          });
         }
 
-        return NextResponse.json({ success: true, data: payload }, { status: 200 });
+        return NextResponse.json({
+          success: true,
+          data: payload,
+          pointUsage: data?.pointUsage || payload?.pointUsage,
+        }, { status: 200 });
+      } else {
+        try {
+          const errData = await beRes.json();
+          if (errData?.errorCode === 'INSUFFICIENT_XIN_POINTS') {
+            return NextResponse.json(errData, { status: 200 });
+          }
+        } catch {}
       }
     } catch {
       // BE offline hoặc timeout -> rơi vào fallback thông minh cục bộ

@@ -13,6 +13,9 @@ export interface DialogProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   className?: string;
+  containerClassName?: string;
+  align?: 'center' | 'top';
+  fullscreen?: boolean;
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | 'full';
 }
 
@@ -24,6 +27,9 @@ export function Dialog({
   children,
   footer,
   className,
+  containerClassName,
+  align = 'center',
+  fullscreen = false,
   maxWidth = 'md',
 }: DialogProps) {
   React.useEffect(() => {
@@ -55,30 +61,53 @@ export function Dialog({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div
+          className={cn(
+            'fixed inset-0 z-50 flex justify-center',
+            fullscreen
+              ? 'p-0 items-stretch bg-white dark:bg-slate-950'
+              : cn(
+                  'p-0 sm:p-4',
+                  align === 'top'
+                    ? 'items-end sm:items-start sm:pt-6 md:pt-10 lg:pt-12'
+                    : 'items-end sm:items-center'
+                ),
+            containerClassName
+          )}
+        >
           {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
-          />
+          {!fullscreen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={onClose}
+              className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
+            />
+          )}
 
-          {/* Modal Panel - Mobile Drawer / Desktop Centered */}
+          {/* Modal Panel - Mobile Drawer / Desktop Centered / Fullscreen */}
           <motion.div
-            initial={{ opacity: 0, y: 40, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 40, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            role="dialog"
+            aria-modal="true"
+            initial={{ opacity: 0, scale: fullscreen ? 0.99 : 0.95, y: fullscreen ? 0 : 40 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: fullscreen ? 0.99 : 0.95, y: fullscreen ? 0 : 40 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 350 }}
             className={cn(
-              'relative z-50 w-full rounded-t-3xl sm:rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 max-h-[90vh] flex flex-col',
-              maxWidthClasses[maxWidth],
+              'relative z-50 w-full bg-white dark:bg-slate-950 flex flex-col',
+              fullscreen
+                ? 'h-full max-h-screen rounded-none border-0 p-4 sm:p-6 md:px-10 md:py-6 overflow-hidden'
+                : 'rounded-t-3xl sm:rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-2xl max-h-[90vh]',
+              !fullscreen && maxWidthClasses[maxWidth],
               className
             )}
           >
             {/* Header */}
-            <div className="flex items-start justify-between pb-3 shrink-0">
+            <div className={cn(
+              'flex items-start justify-between pb-3 shrink-0',
+              fullscreen && 'border-b border-slate-100 dark:border-slate-800/80 pb-4'
+            )}>
               <div className="flex-1 mr-3">
                 {title && (
                   typeof title === 'string' ? (
@@ -98,14 +127,20 @@ export function Dialog({
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors"
+                className={cn(
+                  'rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors',
+                  fullscreen ? 'p-2 border border-slate-200 dark:border-slate-800 text-xs font-semibold flex items-center gap-1.5' : 'p-1.5'
+                )}
               >
+                {fullscreen && <span className="hidden sm:inline text-xs font-medium text-slate-500">Đóng</span>}
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {/* Body */}
-            <div className="overflow-y-auto py-2 flex-1 pr-1">{children}</div>
+            <div className={cn('overflow-y-auto py-2 flex-1 pr-1', fullscreen && 'py-4 sm:py-6')}>
+              {children}
+            </div>
 
             {/* Footer */}
             {footer && <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3 shrink-0">{footer}</div>}

@@ -3,11 +3,42 @@ import { ExamMatrixApiPayload, ExamMatrixConfig } from '@/types/exam';
 import { generateExamsFromMatrix } from '@/services/exam-generator.service';
 import { INITIAL_MASTER_QUESTIONS } from '@/services/mock/master-questions';
 
+const BE_BASE_URL = process.env.NEXT_PUBLIC_BE_URL || process.env.BE_URL || 'http://localhost:3005';
+
 export async function POST(request: Request) {
   try {
-    const payload = (await request.json()) as ExamMatrixApiPayload;
+    const rawBody = await request.text();
+    let payload: any = {};
+    try {
+      payload = JSON.parse(rawBody);
+    } catch {}
 
-    if (!payload || !payload.matrix_blueprint || !payload.exam_info) {
+    // Nếu không phải payload ma trận legacy của admin (thiếu matrix_blueprint),
+    // chuyển tiếp trực tiếp sang NestJS Backend API /exams/matrix-generate
+    if (!payload || !payload.matrix_blueprint) {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      const auth = request.headers.get('authorization');
+      if (auth) headers['authorization'] = auth;
+      const cookie = request.headers.get('cookie');
+      if (cookie) headers['cookie'] = cookie;
+      const userId = request.headers.get('x-user-id');
+      if (userId) headers['x-user-id'] = userId;
+      const userRole = request.headers.get('x-user-role');
+      if (userRole) headers['x-user-role'] = userRole;
+
+      const beRes = await fetch(`${BE_BASE_URL}/exams/matrix-generate`, {
+        method: 'POST',
+        headers,
+        body: rawBody,
+      });
+
+      const data = await beRes.json().catch(() => null);
+      return NextResponse.json(data || { success: false, message: 'Lỗi phản hồi từ BE' }, { status: beRes.status });
+    }
+
+    if (!payload.exam_info) {
       return NextResponse.json(
         {
           success: false,

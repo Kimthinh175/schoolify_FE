@@ -8,7 +8,6 @@ import {
   Crown,
   Medal,
   Flame,
-  Gem,
   Award,
   Sparkles,
   ArrowRight,
@@ -23,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
 import { catalogService } from '@/services/catalog.service';
 import { cn } from '@/lib/utils';
+import { NgocIcon } from '@/components/ui/point-icons';
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -256,7 +256,7 @@ export default function LeaderboardPage() {
             <span>BẢNG XẾP HẠNG THI ĐUA</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            Mỗi bài thi, câu hỏi trắc nghiệm và tự luận hoàn thành trên Schoolify đều được quy đổi thành điểm kinh nghiệm và Kim Cương 💎 để vinh danh trên Bảng Vàng!
+            Mỗi bài thi, câu hỏi trắc nghiệm và tự luận hoàn thành trên Schoolify đều được quy đổi thành điểm kinh nghiệm và Ngọc Tri Thức <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat /> để vinh danh trên Bảng Vàng!
           </p>
         </motion.div>
       </div>
@@ -350,8 +350,8 @@ export default function LeaderboardPage() {
               </div>
               <div className="h-6 w-px bg-slate-200 dark:bg-slate-800" />
               <div>
-                <span className="text-[10px] text-slate-400 block">Kim Cương</span>
-                <strong className="text-[#007D99] dark:text-[#00B8DD] font-bold">+{top3Students[1].diamonds} 💎</strong>
+                <span className="text-[10px] text-slate-400 block">Ngọc Tri Thức</span>
+                <strong className="text-[#007D99] dark:text-[#00B8DD] font-bold">+{top3Students[1].diamonds} <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat /></strong>
               </div>
             </div>
           </Card>
@@ -384,8 +384,8 @@ export default function LeaderboardPage() {
               </div>
               <div className="h-7 w-px bg-amber-300 dark:bg-amber-800" />
               <div>
-                <span className="text-[10px] text-amber-800 dark:text-amber-300 block font-semibold">Kim Cương Thưởng</span>
-                <strong className="text-[#007D99] dark:text-[#00B8DD] font-black text-sm">+{top3Students[0].diamonds} 💎</strong>
+                <span className="text-[10px] text-amber-800 dark:text-amber-300 block font-semibold">Ngọc Tri Thức Thưởng</span>
+                <strong className="text-[#007D99] dark:text-[#00B8DD] font-black text-sm">+{top3Students[0].diamonds} <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat /></strong>
               </div>
             </div>
           </Card>
@@ -417,8 +417,8 @@ export default function LeaderboardPage() {
               </div>
               <div className="h-6 w-px bg-slate-200 dark:bg-slate-800" />
               <div>
-                <span className="text-[10px] text-slate-400 block">Kim Cương</span>
-                <strong className="text-[#007D99] dark:text-[#00B8DD] font-bold">+{top3Students[2].diamonds} 💎</strong>
+                <span className="text-[10px] text-slate-400 block">Ngọc Tri Thức</span>
+                <strong className="text-[#007D99] dark:text-[#00B8DD] font-bold">+{top3Students[2].diamonds} <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat /></strong>
               </div>
             </div>
           </Card>
@@ -446,7 +446,7 @@ export default function LeaderboardPage() {
                 <th className="py-3.5 px-4 hidden sm:table-cell">Trường &amp; Tỉnh Thành</th>
                 <th className="py-3.5 px-4 text-center">Chuỗi Ngày 🔥</th>
                 <th className="py-3.5 px-4 text-center hidden md:table-cell">Đề Đã Luyện</th>
-                <th className="py-3.5 px-4 text-right">Kim Cương 💎</th>
+                <th className="py-3.5 px-4 text-right">Ngọc Tri Thức <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat /></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

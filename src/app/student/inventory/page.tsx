@@ -6,44 +6,27 @@ import { CheckCircle2, Copy, ShoppingBag, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { MOCK_STORE_ITEMS } from '@/services/mock/data';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthStore } from '@/store/auth.store';
 import { catalogService } from '@/services/catalog.service';
 import { toast } from 'sonner';
 
-const DEFAULT_INVENTORY = [
-  {
-    id: 'inv-1',
-    name: 'Voucher Giảm 50% Khóa Học IELTS / Ngoại Ngữ',
-    category: 'VOUCHER',
-    code: 'IELTS50-DISCOUNT-9921',
-    points_spent: 8,
-    image: MOCK_STORE_ITEMS[0].image_url,
-    acquired_at: '2026-10-18T08:00:00Z',
-    is_used: false,
-  },
-  {
-    id: 'inv-2',
-    name: 'Huy Hiệu "Thợ Săn Điểm 10 Lượng Giác"',
-    category: 'BADGE',
-    code: 'BADGE-MATH-10',
-    points_spent: 6,
-    image: MOCK_STORE_ITEMS[1].image_url,
-    acquired_at: '2026-10-15T08:00:00Z',
-    is_used: true,
-  },
-];
-
 export default function StudentInventoryPage() {
   const { user } = useAuthStore();
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
-  const [inventoryItems, setInventoryItems] = React.useState<any[]>(DEFAULT_INVENTORY);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [inventoryItems, setInventoryItems] = React.useState<any[]>([]);
 
   React.useEffect(() => {
+    setIsLoading(true);
     catalogService.getInventory(user?.id).then((items) => {
-      if (Array.isArray(items) && items.length > 0) {
+      if (Array.isArray(items)) {
         setInventoryItems(items);
       }
+    }).catch(() => {
+      setInventoryItems([]);
+    }).finally(() => {
+      setIsLoading(false);
     });
   }, [user?.id]);
 
@@ -62,7 +45,7 @@ export default function StudentInventoryPage() {
             Túi Đồ &amp; Phần Thưởng Của Tôi
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Quản lý các mã voucher giảm giá, huy hiệu thành tích và quà tặng đã đổi từ điểm năng lượng.
+            Quản lý các mã voucher giảm giá, huy hiệu thành tích và quà tặng đã đổi từ Ngọc Tri Thức.
           </p>
         </div>
         <Link href="/student/rewards">
@@ -77,7 +60,26 @@ export default function StudentInventoryPage() {
         </Link>
       </div>
 
-      {inventoryItems.length === 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card
+              key={i}
+              className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-start gap-4 animate-pulse"
+            >
+              <div className="h-20 w-20 rounded-xl bg-slate-200 dark:bg-slate-800 shrink-0" />
+              <div className="flex-1 min-w-0 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="h-4 w-20 bg-slate-200 dark:bg-slate-800 rounded" />
+                  <div className="h-3 w-16 bg-slate-200 dark:bg-slate-800 rounded" />
+                </div>
+                <div className="h-4 w-3/4 bg-slate-200 dark:bg-slate-800 rounded" />
+                <div className="h-7 w-28 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : inventoryItems.length === 0 ? (
         <Card className="p-10 text-center space-y-3 border border-slate-200/80 dark:border-slate-800">
           <Gift className="w-8 h-8 text-slate-400 mx-auto" />
           <p className="text-xs text-slate-500">Bạn chưa đổi phần thưởng nào.</p>

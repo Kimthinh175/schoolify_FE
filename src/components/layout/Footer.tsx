@@ -29,13 +29,12 @@ const FOOTER_COLUMNS = {
   ],
   portals: [
     { label: 'Cổng Luyện Thi K-12', href: '/luyen-thi' },
-    { label: 'Super Admin Portal', href: '/admin/dashboard' },
-    { label: 'Hiệu Trưởng / Chủ Trường', href: '/school/dashboard' },
-    { label: 'Trưởng Bộ Môn (HOD)', href: '/school/curriculum-approval' },
-    { label: 'Giáo Viên & Creator', href: '/teacher/dashboard' },
-    { label: 'Giáo Vụ & Thu Ngân', href: '/school/cashier' },
-    { label: 'Học Sinh & Không Gian Học', href: '/student/dashboard' },
-    { label: 'Phụ Huynh & Sổ Liên Lạc', href: '/parent/dashboard' },
+    { label: 'Luyện Đề Toán Học', href: '/student/practice/toan-hoc/basic' },
+    { label: 'Luyện Lập Trình Tin Học', href: '/student/practice/tin-hoc/basic' },
+    { label: 'Bảng Xếp Hạng Thi Đua', href: '/leaderboard' },
+    { label: 'Giáo Viên & Creator Studio', href: '/teacher/dashboard' },
+    { label: 'Học Sinh & Hồ Sơ Luyện Tập', href: '/student' },
+    { label: 'Cửa Hàng Đổi Thưởng', href: '/student/rewards' },
   ],
 };
 

@@ -36,16 +36,18 @@ import {
   RefreshCw,
   Sliders,
   Calculator,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog } from '@/components/ui/dialog';
 import { MOCK_PACKAGES } from '@/services/mock/data';
-import { catalogService } from '@/services/catalog.service';
+import { catalogService, PayOSLinkData } from '@/services/catalog.service';
 import { useAuthStore } from '@/store/auth.store';
 import { SubscriptionPackage } from '@/types';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { NgocIcon } from '@/components/ui/point-icons';
 
 // Gói cước dành riêng cho học sinh
 interface StudentPackage {
@@ -56,7 +58,7 @@ interface StudentPackage {
   priceMonthly: number;
   priceYearly: number; // Giá tương đương / tháng khi đóng cả năm
   dailyPoints: number; // Số điểm thưởng cộng mỗi ngày
-  yearlyBonusTokens?: number; // Quà tặng Kim cương khi kích hoạt gói năm
+  yearlyBonusTokens?: number; // Quà tặng Ngọc Tri Thức khi kích hoạt gói năm
   isPopular?: boolean;
   isVip?: boolean;
   features: {
@@ -73,103 +75,103 @@ const STUDENT_PACKAGES: StudentPackage[] = [
     id: 'student-free',
     name: 'Tân Binh',
     badge: 'Khởi Động Miễn Phí',
-    tagline: 'Khảo sát năng lực ban đầu, làm quen với phương pháp luyện thi thông minh.',
+    tagline: 'Làm quen phương pháp luyện thi thông minh, cày Ngọc Tri Thức miễn phí từ bài thi.',
     priceMonthly: 0,
     priceYearly: 0,
-    dailyPoints: 5,
+    dailyPoints: 0,
     features: [
-      { text: '+5 💎 Điểm thưởng mỗi ngày khi điểm danh', isPoints: true },
-      { text: '10 lượt hỏi Gia Sư AI / tháng (Giải thích câu hỏi)', isAi: true },
-      { text: '3 đề thi thử chuẩn cấu trúc GDPT 2018 / tháng' },
-      { text: 'Luyện tập trắc nghiệm 4 lựa chọn cơ bản' },
-      { text: 'Xem lại kết quả & lịch sử thi khảo sát' },
+      { text: '✨ 9 Tia Sáng mỗi ngày để tạo & làm đề thi (reset 00:00)', isPoints: true },
+      { text: '💎 Cày Ngọc Tri Thức miễn phí khi làm đề >= 8.5 điểm (+2 đến +20 💎/bài)', isPoints: true },
+      { text: 'Làm được 3 đề Cơ bản hoặc 2 đề Trung bình mỗi ngày' },
+      { text: 'Luyện tập trắc nghiệm 4 lựa chọn chuẩn ma trận GDPT 2018' },
+      { text: 'Xem lại kết quả & lời giải chi tiết sau khi nộp bài' },
       { text: 'Đua top Bảng xếp hạng tuần cùng cộng đồng' },
     ],
     ctaText: 'Đang Sử Dụng Miễn Phí',
   },
   {
     id: 'student-pro',
-    name: 'Chiến Binh Pro',
+    name: 'Gói Bứt Phá (50k)',
     badge: '🔥 Phổ Biến Nhất • Bứt Phá 8+',
     tagline: 'Luyện thi chuyên sâu toàn diện, bứt phá từ 6-7 lên 8-9 điểm vững chắc.',
-    priceMonthly: 99000,
-    priceYearly: 79000,
-    dailyPoints: 50,
-    yearlyBonusTokens: 500,
+    priceMonthly: 50000,
+    priceYearly: 40000,
+    dailyPoints: 5,
+    yearlyBonusTokens: 200,
     isPopular: true,
     features: [
-      { text: '+50 💎 Điểm thưởng MỖI NGÀY tự động vào ví (1.500 💎/tháng)', isPoints: true, highlight: true },
-      { text: 'Gia Sư AI Giải Đề 24/7 Không Giới Hạn (Hướng dẫn từng bước & gỡ bẫy)', isAi: true, highlight: true },
-      { text: 'Sinh Đề Thi AI Chuẩn Ma Trận 2025 Không Giới Hạn (4 Danh mục Bộ GD&ĐT)', isAi: true, highlight: true },
-      { text: 'Radar AI Quét Lỗ Hổng Kiến Thức & Gợi ý bài tập khắc phục tức thì', isAi: true },
-      { text: 'Luyện đề đủ 4 phần: Trắc nghiệm, Đúng/Sai, Điền số & Tự luận' },
-      { text: 'x2 Tốc độ nhận EXP & Điểm thưởng đua top Schoolify Store', isPoints: true },
-      { text: 'Tải PDF Đề thi & Lời giải chi tiết KaTeX chuẩn đẹp' },
+      { text: '💎 +5 Ngọc Tri Thức MỖI NGÀY tự động tích lũy vĩnh viễn (150 💎/tháng)', isPoints: true },
+      { text: '✨ +9 Tia Sáng thêm mỗi ngày (Tổng 18 Tia Sáng / ngày)', isPoints: true },
+      { text: 'Đủ làm 6 đề Cơ bản hoặc 4 đề Trung bình hoặc 2 đề Giỏi mỗi ngày' },
+      { text: '💎 Cày thêm Ngọc Tri Thức cực nhanh khi làm đề đạt >= 8.5đ (+2 đến +20 💎/bài)', isPoints: true },
+      { text: 'Gia Sư AI Giải Đề 24/7 (Phí chỉ từ 0.5 💎/lần hỏi theo token)', isAi: true },
+      { text: 'Sinh Đề Thi AI Chuẩn Ma Trận 2025 theo 4 Danh mục Bộ GD&ĐT', isAi: true },
+      { text: 'Đổi quà vật phẩm hấp dẫn trong Schoolify Store', isPoints: true },
       { text: '100% Không quảng cáo & Phòng thi tập trung chuyên sâu' },
     ],
-    ctaText: 'Nâng Cấp Gói Pro Ngay',
+    ctaText: 'Nâng Cấp Gói 50k Ngay',
   },
   {
     id: 'student-vip',
-    name: 'Thủ Khoa VIP',
-    badge: '👑 Mục Tiêu 9+ • Top 1% Thủ Khoa',
+    name: 'Gói Thủ Khoa VIP (100k)',
+    badge: '👑 Mục Tiêu 9+ • Thủ Khoa VIP',
     tagline: 'Chinh phục Top 1% Thủ khoa, ĐGNL ĐHQG, ĐGTD Bách Khoa và giải HSG.',
-    priceMonthly: 189000,
-    priceYearly: 149000,
-    dailyPoints: 150,
-    yearlyBonusTokens: 1000,
+    priceMonthly: 100000,
+    priceYearly: 80000,
+    dailyPoints: 10,
+    yearlyBonusTokens: 500,
     isVip: true,
     features: [
-      { text: '+150 💎 Điểm thưởng MỖI NGÀY (4.500 💎/tháng) + Tặng ngay 1.000 💎', isPoints: true, highlight: true },
-      { text: 'AI Suy Luận Sâu (Deep-Reasoning AI): Giải câu Vận Dụng Cao & mẹo Casio', isAi: true, highlight: true },
-      { text: 'Kho Đề Độc Quyền VIP: ĐGNL ĐHQG Hà Nội/HCM, ĐGTD Bách Khoa & HSG', highlight: true },
-      { text: 'Lộ Trình AI Tự Động Cá Nhân Hóa Ôn Nước Rút Từng Ngày', isAi: true },
-      { text: 'Chấm Tự Luận Bằng AI & Barem Bảng Điểm 4 Phần Chuẩn Bộ', isAi: true },
+      { text: '💎 +10 Ngọc Tri Thức MỖI NGÀY tự động tích lũy vĩnh viễn (300 💎/tháng)', isPoints: true },
+      { text: '✨ +20 Tia Sáng thêm mỗi ngày (Tổng 29 Tia Sáng / ngày - Luyện thả ga)', isPoints: true },
+      { text: '⚡ GIẢM 50% ĐIỂM XỊN KHI DÙNG GIA SƯ AI (Chỉ từ 0.25 💎/câu)', isAi: true },
+      { text: '💎 Cày thêm Ngọc Tri Thức tối đa khi đạt >= 8.5 điểm bài thi', isPoints: true },
+      { text: 'AI Suy Luận Sâu (Deep-Reasoning AI): Giải câu Vận Dụng Cao & mẹo Casio', isAi: true },
+      { text: 'Kho Đề Độc Quyền VIP: ĐGNL ĐHQG, ĐGTD Bách Khoa & đề HSG' },
+      { text: 'Đặc quyền đổi toàn bộ quà hiện vật độc quyền trong Schoolify Store', isPoints: true },
       { text: 'Server AI Ưu Tiên VIP (Băng thông riêng, phản hồi < 1 giây)', isAi: true },
-      { text: 'Đặc quyền đổi quà hiện vật độc quyền trong Schoolify Store', isPoints: true },
-      { text: 'Hỗ trợ học thuật 1-1 chuyên sâu từ Ban chuyên môn' },
     ],
-    ctaText: 'Trở Thành Thủ Khoa VIP',
+    ctaText: 'Trở Thành Thủ Khoa VIP (100k)',
   },
 ];
 
 // So sánh chi tiết từng tính năng
 const COMPARISON_ROWS = [
   {
-    category: '💎 Điểm & Phần Thưởng Hàng Ngày',
+    category: '💎 Hệ Thống 2 Loại Điểm & Hạn Mức',
     items: [
-      { title: 'Điểm thưởng mỗi ngày khi đăng nhập', free: '+5 💎/ngày', pro: '+50 💎/ngày', vip: '+150 💎/ngày' },
-      { title: 'Tổng điểm nhận được / tháng', free: '150 💎', pro: '1.500 💎', vip: '4.500 💎' },
-      { title: 'Thưởng nạp gói năm', free: '—', pro: '+500 💎 ngay', vip: '+1.000 💎 ngay' },
-      { title: 'Hệ số EXP Bảng xếp hạng', free: 'x1.0', pro: 'x2.0 (Nhân đôi)', vip: 'x3.0 (Nhân ba)' },
-      { title: 'Đổi quà vật phẩm Schoolify Store', free: 'Giới hạn', pro: 'Mở khóa 80%', vip: 'Toàn bộ 100%' },
+      { title: 'Tia Sáng mỗi ngày (tạo & luyện đề)', free: '9đ / ngày', pro: '18đ / ngày (x2)', vip: '29đ / ngày (x3.2)' },
+      { title: 'Cơ chế Tia Sáng', free: 'Reset 00:00 mỗi ngày', pro: 'Reset 00:00 mỗi ngày', vip: 'Reset 00:00 mỗi ngày' },
+      { title: 'Ngọc Tri Thức cấp mỗi ngày (tích lũy vĩnh viễn)', free: '0đ / ngày (cày từ bài thi)', pro: '+5 💎 / ngày', vip: '+10 💎 / ngày' },
+      { title: 'Tổng Ngọc Tri Thức tích lũy cố định / tháng', free: 'Tự cày miễn phí', pro: '150 💎 / tháng', vip: '300 💎 / tháng' },
+      { title: 'Cày Ngọc Tri Thức khi thi đạt >= 8.5 điểm', free: '✓ +2 đến +20 💎 / bài', pro: '✓ +2 đến +20 💎 / bài', vip: '✓ +2 đến +20 💎 / bài' },
+      { title: 'Thưởng nạp gói năm', free: '—', pro: '+200 💎 ngay', vip: '+500 💎 ngay' },
     ],
   },
   {
-    category: '🤖 Công Nghệ & Gia Sư AI 2026',
+    category: '🤖 Gia Sư AI & Trợ Lý Học Tập Theo Token',
     items: [
-      { title: 'Gia Sư AI Giải Đề 24/7', free: '10 lượt/tháng', pro: 'Không giới hạn', vip: 'Không giới hạn (Ưu tiên)' },
+      { title: 'Chi phí Ngọc Tri Thức khi hỏi Gia Sư AI', free: '1 💎 / 1.000 token (sàn 0.5 💎)', pro: '1 💎 / 1.000 token (sàn 0.5 💎)', vip: '⚡ GIẢM 50% (Chỉ từ 0.25 💎)' },
+      { title: 'Ưu đãi giảm 50% Điểm AI Tutor', free: '—', pro: '—', vip: '✓ Giảm 50% trọn đời gói' },
       { title: 'Mô hình AI Suy Luận Sâu (VDC)', free: '—', pro: 'Tiêu chuẩn', vip: 'Deep Reasoning VIP' },
       { title: 'Phân tích lỗi sai từng bước', free: 'Vắn tắt', pro: 'Chi tiết từng bước', vip: 'Chi tiết + Bẫy trắc nghiệm' },
       { title: 'Radar AI Quét Lỗ Hổng Kiến Thức', free: '—', pro: '✓ Đầy đủ', vip: '✓ Dự đoán điểm ĐGNL' },
-      { title: 'Tốc độ phản hồi AI Server', free: 'Bình thường', pro: 'Nhanh (2s)', vip: 'Siêu tốc (< 1s)' },
     ],
   },
   {
-    category: '📝 Đề Thi & Ma Trận Bộ GD&ĐT 2025',
+    category: '📝 Đề Thi & Luyện Tập GDPT 2018',
     items: [
-      { title: 'Số lượt thi thử / tháng', free: '3 đề/tháng', pro: 'Không giới hạn', vip: 'Không giới hạn' },
-      { title: 'Sinh đề AI theo ma trận GDPT 2018', free: '—', pro: '✓ Tự do tạo đề', vip: '✓ Tự do tạo đề VIP' },
-      { title: 'Bộ câu hỏi Đúng/Sai & Điền số', free: 'Cơ bản', pro: 'Toàn bộ ngân hàng', vip: 'Toàn bộ + Chuyên sâu' },
-      { title: 'Đề thi ĐGNL & ĐGTD Bách Khoa', free: '—', pro: '—', vip: '✓ Kho Độc Quyền VIP' },
-      { title: 'Tải PDF Đề & Lời giải KaTeX', free: '—', pro: '✓ Đầy đủ', vip: '✓ Bản In Nét Cao Cấp' },
+      { title: 'Số đề thi tối đa mỗi ngày bằng Tia Sáng', free: '3 đề Cơ bản hoặc 2 đề TB', pro: '6 đề Cơ bản hoặc 4 đề TB', vip: '9 đề Cơ bản hoặc 7 đề TB' },
+      { title: 'Sinh đề AI theo ma trận GDPT 2018', free: 'Cơ bản', pro: '✓ Tự do tạo đề', vip: '✓ Tự do tạo đề VIP' },
+      { title: 'Kho đề ĐGNL & ĐGTD Bách Khoa', free: '—', pro: '—', vip: '✓ Kho Độc Quyền VIP' },
+      { title: 'Đổi quà vật phẩm Schoolify Store', free: 'Cần cày Ngọc Tri Thức', pro: 'Mở khóa 80%', vip: 'Toàn bộ 100%' },
     ],
   },
 ];
 
 const FAQS = [
   {
-    q: 'Điểm thưởng (Kim Cương 💎) mỗi ngày dùng để làm gì?',
+    q: 'Điểm thưởng (Ngọc Tri Thức 💎) mỗi ngày dùng để làm gì?',
     a: 'Điểm thưởng được tự động cộng vào ví của bạn mỗi ngày khi đăng nhập vào Schoolify. Bạn có thể sử dụng điểm để mở khóa các bộ đề thi VIP độc quyền, mua thêm lượt tạo đề ma trận nâng cao, hoặc đổi lấy các phần quà hiện vật thực tế (balo chống gù, áo thun Thủ khoa, sổ tay công thức GDPT 2018) trong Kho Thưởng Schoolify Store.',
   },
   {
@@ -178,7 +180,7 @@ const FAQS = [
   },
   {
     q: 'Tôi có thể chuyển đổi giữa thanh toán theo Tháng và theo Năm không?',
-    a: 'Hoàn toàn được! Khi chọn thanh toán theo Năm, bạn được tiết kiệm lên tới 25% chi phí kèm quà tặng từ 500 đến 1.000 Kim Cương lập tức vào ví.',
+    a: 'Hoàn toàn được! Khi chọn thanh toán theo Năm, bạn được tiết kiệm lên tới 25% chi phí kèm quà tặng từ 500 đến 1.000 Ngọc Tri Thức lập tức vào ví.',
   },
   {
     q: 'Mô hình AI Deep-Reasoning trên gói Thủ Khoa VIP có gì đặc biệt?',
@@ -264,7 +266,7 @@ function VietQRVector({ code }: { code: string }) {
       {/* Center Schoolify Brand Gem Badge */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="w-9 h-9 rounded-xl bg-white border-2 border-[#00B8DD] shadow-md flex items-center justify-center p-1">
-          <Gem className="w-5 h-5 text-[#00B8DD] fill-[#00B8DD]" />
+          <NgocIcon className="w-5 h-5" />
         </div>
       </div>
     </div>
@@ -276,22 +278,16 @@ export default function PricingPage() {
   const [audienceTab, setAudienceTab] = React.useState<'STUDENT' | 'SCHOOL'>('STUDENT');
   const [isYearly, setIsYearly] = React.useState(false);
 
-  // State Modal thanh toán
+  // State Modal thanh toán & Cổng PayOS
   const { user } = useAuthStore();
   const [schoolPackages, setSchoolPackages] = React.useState<SubscriptionPackage[]>(MOCK_PACKAGES);
   const [activeOrderId, setActiveOrderId] = React.useState<string | null>(null);
-  const [vietQrTransferCode, setVietQrTransferCode] = React.useState<string>('');
   const [selectedStudentPkg, setSelectedStudentPkg] = React.useState<StudentPackage | null>(null);
-
-  React.useEffect(() => {
-    catalogService
-      .getPackages()
-      .then((pkgs) => {
-        if (pkgs.length > 0) setSchoolPackages(pkgs);
-      })
-      .catch(() => {});
-  }, []);
   const [selectedSchoolPkg, setSelectedSchoolPkg] = React.useState<SubscriptionPackage | null>(null);
+  const [payosData, setPayosData] = React.useState<PayOSLinkData | null>(null);
+  const [isCreatingPayment, setIsCreatingPayment] = React.useState(false);
+  const [isPollingStatus, setIsPollingStatus] = React.useState(false);
+  const pollingRef = React.useRef<NodeJS.Timeout | null>(null);
   const [isPaidSuccess, setIsPaidSuccess] = React.useState(false);
   const [awardedBonus, setAwardedBonus] = React.useState<number>(0);
   const [expandedFaq, setExpandedFaq] = React.useState<number | null>(null);
@@ -311,28 +307,51 @@ export default function PricingPage() {
     toast.success(`Đã sao chép ${label}!`);
   };
 
-  // Xử lý xác nhận thanh toán thành công
-  const handleConfirmPayment = async () => {
-    if (activeOrderId) {
-      await catalogService.confirmOrderPayment(activeOrderId).catch(() => {});
-    }
-    setIsPaidSuccess(true);
 
-    // Tính toán số điểm thưởng được tặng ngay
-    let bonusGems = 0;
-    if (selectedStudentPkg) {
-      if (selectedStudentPkg.id === 'student-pro') {
-        bonusGems = isYearly ? 500 : 50;
-      } else if (selectedStudentPkg.id === 'student-vip') {
-        bonusGems = isYearly ? 1000 : 150;
+  React.useEffect(() => {
+    catalogService
+      .getPackages()
+      .then((pkgs) => {
+        if (pkgs.length > 0) setSchoolPackages(pkgs);
+      })
+      .catch(() => {});
+  }, []);
+
+  const stopPolling = () => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+    setIsPollingStatus(false);
+  };
+
+  React.useEffect(() => {
+    return () => {
+      stopPolling();
+    };
+  }, []);
+
+  const onPaymentSuccess = (
+    studentPkg: StudentPackage | null,
+    schoolPkg: SubscriptionPackage | null,
+    pointsAwarded?: number
+  ) => {
+    setIsPaidSuccess(true);
+    let bonusGems = pointsAwarded || 0;
+    if (studentPkg) {
+      if (!bonusGems) {
+        if (studentPkg.id === 'student-pro') {
+          bonusGems = isYearly ? 500 : 50;
+        } else if (studentPkg.id === 'student-vip') {
+          bonusGems = isYearly ? 1000 : 150;
+        }
       }
 
-      // Cập nhật số dư Kim Cương trong ví ngay lập tức
       try {
-        const currentBalance = Number(localStorage.getItem('schoolify_user_tokens') || '250');
+        const currentBalance = Number(localStorage.getItem('schoolify_user_tokens') || '9');
         const newBalance = currentBalance + bonusGems;
         localStorage.setItem('schoolify_user_tokens', String(newBalance));
-        localStorage.setItem('schoolify_active_package', selectedStudentPkg.id);
+        localStorage.setItem('schoolify_active_package', studentPkg.id);
         window.dispatchEvent(new Event('tokens-updated'));
         setAwardedBonus(bonusGems);
       } catch (err) {
@@ -340,46 +359,144 @@ export default function PricingPage() {
       }
 
       toast.success(
-        `Chúc mừng! Bạn đã nâng cấp thành công gói ${selectedStudentPkg.name}. Đã cộng +${bonusGems} 💎 vào ví!`,
-        { duration: 4500 }
+        `Chúc mừng! Bạn đã nâng cấp thành công gói ${studentPkg.name}. Đã cộng +${bonusGems} 💎 vào ví!`,
+        { duration: 5000 }
       );
-    } else if (selectedSchoolPkg) {
-      toast.success(`Kích hoạt thành công gói bản quyền trường học ${selectedSchoolPkg.name}!`, { duration: 4000 });
+    } else if (schoolPkg) {
+      toast.success(`Kích hoạt thành công gói bản quyền trường học ${schoolPkg.name}!`, { duration: 5000 });
+    }
+  };
+
+  const startPolling = (
+    orderCode: number,
+    studentPkg: StudentPackage | null,
+    schoolPkg: SubscriptionPackage | null
+  ) => {
+    stopPolling();
+    setIsPollingStatus(true);
+
+    pollingRef.current = setInterval(async () => {
+      try {
+        const result = await catalogService.getPayosOrderStatus(orderCode);
+        if (result?.status === 'PAID') {
+          stopPolling();
+          onPaymentSuccess(studentPkg, schoolPkg, result.bonusPointsAwarded);
+        }
+      } catch (err) {
+        console.warn('[PayOS Polling] Error checking status:', err);
+      }
+    }, 1500);
+  };
+
+  const handleSelectStudentPlan = async (pkg: StudentPackage) => {
+    if (pkg.priceMonthly === 0) {
+      toast.info('Bạn đang sử dụng gói Tân Binh Miễn Phí của Schoolify!');
+      return;
+    }
+    setSelectedStudentPkg(pkg);
+    setSelectedSchoolPkg(null);
+    setIsPaidSuccess(false);
+    setAwardedBonus(0);
+    setIsCreatingPayment(true);
+    setPayosData(null);
+
+    const amount = isYearly ? pkg.priceYearly * 12 : pkg.priceMonthly;
+    const packageName = `${pkg.name} (${isYearly ? '1 Năm' : '1 Tháng'})`;
+
+    try {
+      const res = await catalogService.createPayosPaymentLink({
+        userId: user?.id,
+        email: user?.email,
+        packageName,
+        amount,
+        billingCycle: isYearly ? 'YEARLY' : 'MONTHLY',
+        cancelUrl: typeof window !== 'undefined' ? `${window.location.origin}/pricing` : undefined,
+        returnUrl: typeof window !== 'undefined' ? `${window.location.origin}/pricing` : undefined,
+      });
+
+      if (res?.order?.id) {
+        setActiveOrderId(res.order.id);
+      }
+      if (res?.payos) {
+        setPayosData(res.payos);
+        startPolling(res.payos.orderCode, pkg, null);
+      }
+    } catch (err) {
+      console.error('Failed to create PayOS link:', err);
+      toast.error('Không thể tạo link thanh toán PayOS. Vui lòng thử lại sau.');
+    } finally {
+      setIsCreatingPayment(false);
+    }
+  };
+
+  const handleSelectSchoolPlan = async (pkg: SubscriptionPackage) => {
+    setSelectedSchoolPkg(pkg);
+    setSelectedStudentPkg(null);
+    setIsPaidSuccess(false);
+    setAwardedBonus(0);
+    setIsCreatingPayment(true);
+    setPayosData(null);
+
+    const amount = isYearly ? Math.round(pkg.price * 12 * 0.8) : pkg.price;
+    const packageName = `${pkg.name} (${isYearly ? '1 Năm' : '1 Tháng'})`;
+
+    try {
+      const res = await catalogService.createPayosPaymentLink({
+        userId: user?.id,
+        email: user?.email,
+        packageId: pkg.id,
+        packageName,
+        amount,
+        billingCycle: isYearly ? 'YEARLY' : 'MONTHLY',
+        cancelUrl: typeof window !== 'undefined' ? `${window.location.origin}/pricing` : undefined,
+        returnUrl: typeof window !== 'undefined' ? `${window.location.origin}/pricing` : undefined,
+      });
+
+      if (res?.order?.id) {
+        setActiveOrderId(res.order.id);
+      }
+      if (res?.payos) {
+        setPayosData(res.payos);
+        startPolling(res.payos.orderCode, null, pkg);
+      }
+    } catch (err) {
+      console.error('Failed to create PayOS link:', err);
+      toast.error('Không thể tạo link thanh toán PayOS. Vui lòng thử lại sau.');
+    } finally {
+      setIsCreatingPayment(false);
+    }
+  };
+
+  // Xử lý xác nhận thanh toán thủ công (nút backup)
+  const handleConfirmPayment = async () => {
+    stopPolling();
+    if (activeOrderId) {
+      const confirmed = await catalogService.confirmOrderPayment(activeOrderId).catch(() => null);
+      onPaymentSuccess(selectedStudentPkg, selectedSchoolPkg, confirmed?.bonusPointsAwarded);
+    } else {
+      onPaymentSuccess(selectedStudentPkg, selectedSchoolPkg);
     }
   };
 
   const handleCloseModal = () => {
+    stopPolling();
     setSelectedStudentPkg(null);
     setSelectedSchoolPkg(null);
+    setPayosData(null);
     setIsPaidSuccess(false);
     setAwardedBonus(0);
   };
+
 
   return (
     <div className="relative overflow-hidden py-10 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Background Ambient Glow Lights */}
       <div className="absolute top-10 left-1/2 -translate-x-1/2 w-full max-w-5xl h-[450px] bg-gradient-to-tr from-[#00B8DD]/15 via-purple-500/10 to-amber-500/10 blur-[130px] rounded-full pointer-events-none -z-10" />
 
-      {/* Hero Header */}
+      {/* Header Selector */}
       <div className="text-center max-w-3xl mx-auto space-y-4">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-50 dark:bg-cyan-950/50 border border-cyan-200 dark:border-cyan-800 text-[#007D99] dark:text-[#00B8DD] text-xs font-bold shadow-2xs">
-          <Sparkles className="w-3.5 h-3.5 text-[#00B8DD]" />
-          <span>Kỷ Nguyên Luyện Thi Thế Hệ Mới • GDPT 2018</span>
-        </div>
-
-        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.15]">
-          Bứt Phá Điểm Số Cùng <br className="hidden sm:inline" />
-          <span className="bg-gradient-to-r from-[#00B8DD] via-indigo-500 to-amber-500 bg-clip-text text-transparent">
-            Gia Sư AI & Điểm Thưởng Hàng Ngày
-          </span>
-        </h1>
-
-        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
-          Đăng ký gói thành viên để nhận ngay <strong>+ Điểm thưởng tự động mỗi ngày</strong>, giải đề không giới hạn cùng <strong>Gia sư AI 24/7</strong> và kho đề chuẩn ma trận thi tốt nghiệp 2025.
-        </p>
-
         {/* 1. Phân Loại Đối Tượng: Học Sinh vs Trường Học */}
-        <div className="pt-4 flex justify-center">
+        <div className="flex justify-center">
           <div className="p-1.5 bg-slate-100 dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 flex flex-wrap items-center justify-center gap-1.5 shadow-inner">
             <button
               type="button"
@@ -453,20 +570,20 @@ export default function PricingPage() {
         <div className="mt-8 max-w-4xl mx-auto p-4 rounded-2xl bg-gradient-to-r from-cyan-500/10 via-indigo-500/10 to-amber-500/10 border border-[#00B8DD]/30 flex flex-wrap items-center justify-between gap-3 text-xs shadow-sm">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-10 h-10 rounded-xl bg-cyan-500/20 text-[#00B8DD] flex items-center justify-center shrink-0 font-bold shadow-inner">
-              <Gem className="w-5 h-5 text-cyan-500 fill-cyan-400 animate-pulse" />
+              <NgocIcon className="w-5 h-5 animate-pulse" />
             </div>
             <div>
               <span className="font-black text-slate-900 dark:text-white block text-sm">
                 Cơ Chế Tích Điểm Tự Động Mỗi Ngày
               </span>
               <span className="text-slate-600 dark:text-slate-400 text-xs">
-                Đăng nhập mỗi ngày để nhận đến <strong>+150 💎/ngày</strong>. Điểm tích lũy dùng mở đề VIP và đổi quà thực tế tại Store!
+                Đăng nhập mỗi ngày để nhận đến <strong>+150 <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat />/ngày</strong>. Điểm tích lũy dùng mở đề VIP và đổi quà thực tế tại Store!
               </span>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 shrink-0">
             <span className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-extrabold text-[#007D99] dark:text-[#00B8DD] text-xs shadow-xs">
-              Tích lũy đến 4.500 💎/tháng
+              Tích lũy đến 4.500 <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat />/tháng
             </span>
           </div>
         </div>
@@ -546,7 +663,7 @@ export default function PricingPage() {
                       </div>
                       {price > 0 && isYearly && (
                         <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1">
-                          Thanh toán {formatMoney(price * 12)} / năm • Tặng thêm {pkg.yearlyBonusTokens} 💎
+                          Thanh toán {formatMoney(price * 12)} / năm • Tặng thêm {pkg.yearlyBonusTokens} <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat />
                         </p>
                       )}
                     </div>
@@ -555,11 +672,11 @@ export default function PricingPage() {
                     <div className="mb-6 rounded-2xl bg-slate-50/90 dark:bg-slate-800/60 p-4 space-y-2.5 text-xs border border-slate-200/60 dark:border-slate-700/60">
                       <div className="flex items-center justify-between">
                         <span className="text-slate-500 flex items-center gap-1.5 font-medium">
-                          <Gem className="w-3.5 h-3.5 text-cyan-500 fill-cyan-400 shrink-0" />
+                          <NgocIcon className="w-3.5 h-3.5 shrink-0" />
                           Điểm cộng mỗi ngày:
                         </span>
                         <span className="font-black text-[#007D99] dark:text-[#00B8DD] bg-cyan-100/70 dark:bg-cyan-950/80 px-2 py-0.5 rounded-md">
-                          +{pkg.dailyPoints} 💎/ngày
+                          +{pkg.dailyPoints} <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat />/ngày
                         </span>
                       </div>
 
@@ -591,22 +708,10 @@ export default function PricingPage() {
                       </p>
                       {pkg.features.map((feat, fIdx) => (
                         <div key={fIdx} className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
-                          <div
-                            className={cn(
-                              'w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5',
-                              feat.highlight
-                                ? 'bg-emerald-500 text-white'
-                                : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400'
-                            )}
-                          >
+                          <div className="w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
                             <Check className="w-3 h-3 stroke-[2.5]" />
                           </div>
-                          <span
-                            className={cn(
-                              'leading-snug',
-                              feat.highlight && 'font-bold text-slate-900 dark:text-white'
-                            )}
-                          >
+                          <span className="leading-snug font-medium text-slate-800 dark:text-slate-200">
                             {feat.text}
                           </span>
                         </div>
@@ -616,29 +721,7 @@ export default function PricingPage() {
 
                   {/* CTA Button */}
                   <Button
-                    onClick={() => {
-                      if (pkg.priceMonthly === 0) {
-                        toast.info('Bạn đang sử dụng gói Tân Binh Miễn Phí của Schoolify!');
-                      } else {
-                        setSelectedStudentPkg(pkg);
-                        const amount = isYearly ? pkg.priceYearly * 12 : pkg.priceMonthly;
-                        catalogService
-                          .createOrder({
-                            userId: user?.id,
-                            email: user?.email,
-                            packageName: `${pkg.name} (${isYearly ? '1 Năm' : '1 Tháng'})`,
-                            amount,
-                            billingCycle: isYearly ? 'YEARLY' : 'MONTHLY',
-                          })
-                          .then((res) => {
-                            if (res?.order?.id) {
-                              setActiveOrderId(res.order.id);
-                              setVietQrTransferCode(res.vietQrPayload?.transferContent || '');
-                            }
-                          })
-                          .catch(() => {});
-                      }
-                    }}
+                    onClick={() => handleSelectStudentPlan(pkg)}
                     variant={isPopular ? 'primary' : 'outline'}
                     className={cn(
                       'w-full justify-center h-12 text-sm font-bold rounded-xl cursor-pointer shadow-md transition-all',
@@ -714,10 +797,10 @@ export default function PricingPage() {
                   <Flame className="w-4 h-4 text-cyan-400" />
                 </div>
                 <div className="text-2xl sm:text-3xl font-black text-white font-mono">
-                  +{(calcDays * 50 + (calcDays >= 365 ? 500 : 0)).toLocaleString()} 💎
+                  +{(calcDays * 50 + (calcDays >= 365 ? 500 : 0)).toLocaleString()} <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat />
                 </div>
                 <p className="text-[11px] text-slate-300 mt-1.5">
-                  Tích lũy tự động từ +50 💎/ngày {calcDays >= 365 ? '+ 500 💎 thưởng' : ''}.
+                  Tích lũy tự động từ +50 <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat />/ngày {calcDays >= 365 ? '+ 500 💎 thưởng' : ''}.
                 </p>
               </div>
 
@@ -728,10 +811,10 @@ export default function PricingPage() {
                   <Crown className="w-4 h-4 text-amber-400" />
                 </div>
                 <div className="text-2xl sm:text-3xl font-black text-amber-300 font-mono">
-                  +{(calcDays * 150 + (calcDays >= 365 ? 1000 : 0)).toLocaleString()} 💎
+                  +{(calcDays * 150 + (calcDays >= 365 ? 1000 : 0)).toLocaleString()} <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat />
                 </div>
                 <p className="text-[11px] text-slate-300 mt-1.5">
-                  Tích lũy từ +150 💎/ngày {calcDays >= 365 ? '+ 1.000 💎 thưởng' : ''}.
+                  Tích lũy từ +150 <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat />/ngày {calcDays >= 365 ? '+ 1.000 💎 thưởng' : ''}.
                 </p>
               </div>
 
@@ -991,7 +1074,7 @@ export default function PricingPage() {
                     </div>
 
                     <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                      Điểm thưởng 💎 không phải là con số ảo! Khi đạt mốc tích lũy, bạn có thể vào <strong>Kho Quà Store</strong> để đổi các phần thưởng thực tế:
+                      Điểm thưởng <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat /> không phải là con số ảo! Khi đạt mốc tích lũy, bạn có thể vào <strong>Kho Quà Store</strong> để đổi các phần thưởng thực tế:
                     </p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
@@ -1000,7 +1083,7 @@ export default function PricingPage() {
                           🎒
                         </div>
                         <h4 className="font-bold text-slate-900 dark:text-white">Balo Schoolify Pro</h4>
-                        <span className="text-[11px] text-slate-500 block">Đổi với 1.200 💎</span>
+                        <span className="text-[11px] text-slate-500 block">Đổi với 1.200 <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat /></span>
                       </div>
 
                       <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center space-y-1.5">
@@ -1008,7 +1091,7 @@ export default function PricingPage() {
                           👕
                         </div>
                         <h4 className="font-bold text-slate-900 dark:text-white">Áo Thun Thủ Khoa VIP</h4>
-                        <span className="text-[11px] text-slate-500 block">Đổi với 1.800 💎</span>
+                        <span className="text-[11px] text-slate-500 block">Đổi với 1.800 <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat /></span>
                       </div>
 
                       <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center space-y-1.5">
@@ -1016,7 +1099,7 @@ export default function PricingPage() {
                           📚
                         </div>
                         <h4 className="font-bold text-slate-900 dark:text-white">Sách Bộ Đề GDPT 2025</h4>
-                        <span className="text-[11px] text-slate-500 block">Đổi với 950 💎</span>
+                        <span className="text-[11px] text-slate-500 block">Đổi với 950 <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat /></span>
                       </div>
                     </div>
                   </motion.div>
@@ -1096,26 +1179,7 @@ export default function PricingPage() {
                 </div>
 
                 <Button
-                  onClick={() => {
-                    setSelectedSchoolPkg(pkg);
-                    const amount = isYearly ? pkg.price * 12 * 0.8 : pkg.price;
-                    catalogService
-                      .createOrder({
-                        userId: user?.id,
-                        email: user?.email,
-                        packageId: pkg.id,
-                        packageName: pkg.name,
-                        amount,
-                        billingCycle: isYearly ? 'YEARLY' : 'MONTHLY',
-                      })
-                      .then((res) => {
-                        if (res?.order?.id) {
-                          setActiveOrderId(res.order.id);
-                          setVietQrTransferCode(res.vietQrPayload?.transferContent || '');
-                        }
-                      })
-                      .catch(() => {});
-                  }}
+                  onClick={() => handleSelectSchoolPlan(pkg)}
                   variant={isPopular ? 'primary' : 'outline'}
                   className={cn(
                     'w-full justify-center h-12 text-sm font-bold rounded-xl cursor-pointer',
@@ -1296,31 +1360,51 @@ export default function PricingPage() {
         }
       >
         <div className="py-2 flex flex-col items-center text-center space-y-4">
-          {!isPaidSuccess ? (
+          {isCreatingPayment ? (
+            <div className="py-12 flex flex-col items-center justify-center space-y-3">
+              <Loader2 className="w-10 h-10 text-[#00B8DD] animate-spin" />
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                Đang kết nối cổng thanh toán PayOS & tạo mã VietQR...
+              </p>
+            </div>
+          ) : !isPaidSuccess ? (
             <>
               {/* Authentic VietQR Card Box */}
-              <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-lg relative flex flex-col items-center max-w-[280px] w-full">
+              <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-lg relative flex flex-col items-center max-w-[290px] w-full">
                 {/* VietQR Header */}
-                <div className="w-full flex items-center justify-between pb-2.5 mb-2 border-b border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center gap-1">
-                    <span className="text-base font-black tracking-tight text-blue-900 dark:text-blue-400">Viet</span>
-                    <span className="text-base font-black tracking-tight text-red-600 dark:text-red-500">QR</span>
+                <div className="w-full flex items-center justify-between pb-2 mb-2 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-black tracking-tight text-blue-900 dark:text-blue-400">Viet</span>
+                    <span className="text-sm font-black tracking-tight text-red-600 dark:text-red-500">QR</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 font-bold ml-1">
+                      PayOS Pro
+                    </span>
                   </div>
                   <div className="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-[10px] font-black text-blue-700 dark:text-blue-300">
                     NAPAS 247
                   </div>
                 </div>
 
-                {/* Vector SVG QR */}
-                <VietQRVector
-                  code={`VIETQR-SCHOOLIFY-${
-                    selectedStudentPkg ? selectedStudentPkg.id.toUpperCase() : selectedSchoolPkg?.id.toUpperCase()
-                  }`}
-                />
+                {/* Vector SVG / Image QR */}
+                <div className="relative w-52 h-52 bg-white p-2 rounded-2xl border border-slate-100 shadow-inner flex items-center justify-center overflow-hidden">
+                  <img
+                    src={
+                      payosData?.qrCode?.startsWith('http')
+                        ? payosData.qrCode
+                        : `https://img.vietqr.io/image/${payosData?.bin || '970422'}-${payosData?.accountNumber || '0903888899'}-compact2.png?amount=${payosData?.amount || (selectedStudentPkg ? (isYearly ? selectedStudentPkg.priceYearly * 12 : selectedStudentPkg.priceMonthly) : selectedSchoolPkg ? (isYearly ? Math.round(selectedSchoolPkg.price * 12 * 0.8) : selectedSchoolPkg.price) : 0)}&addInfo=${encodeURIComponent(payosData?.description || `SCH ${payosData?.orderCode || 'PRO'}`)}&accountName=${encodeURIComponent(payosData?.accountName || 'CONG TY CO PHAN SCHOOLIFY')}`
+                    }
+                    alt="VietQR PayOS"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
 
-                <span className="text-[10px] font-bold text-slate-500 mt-2">
-                  Quét bằng App Ngân hàng hoặc Ví MoMo/ZaloPay
-                </span>
+                <div className="flex items-center gap-2 mt-2.5 text-[11px] font-bold text-slate-500">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  <span>Tự động kích hoạt khi nhận tiền...</span>
+                </div>
               </div>
 
               {/* Thông tin chuyển khoản chi tiết */}
@@ -1335,32 +1419,46 @@ export default function PricingPage() {
                 <div className="flex justify-between items-center">
                   <span className="text-slate-500">Số tiền thanh toán:</span>
                   <span className="font-black text-indigo-600 dark:text-indigo-400 text-base font-mono">
-                    {selectedStudentPkg
-                      ? formatMoney(isYearly ? selectedStudentPkg.priceYearly * 12 : selectedStudentPkg.priceMonthly)
-                      : selectedSchoolPkg
-                      ? formatMoney(isYearly ? selectedSchoolPkg.price * 12 * 0.8 : selectedSchoolPkg.price)
-                      : 0}
+                    {formatMoney(
+                      payosData?.amount ||
+                        (selectedStudentPkg
+                          ? isYearly
+                            ? selectedStudentPkg.priceYearly * 12
+                            : selectedStudentPkg.priceMonthly
+                          : selectedSchoolPkg
+                          ? isYearly
+                            ? Math.round(selectedSchoolPkg.price * 12 * 0.8)
+                            : selectedSchoolPkg.price
+                          : 0)
+                    )}
                   </span>
                 </div>
 
                 {selectedStudentPkg && (
                   <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 p-2 rounded-lg">
                     <span className="flex items-center gap-1">
-                      <Gem className="w-3.5 h-3.5 fill-current" /> Điểm thưởng nhận ngay:
+                      <NgocIcon className="w-3.5 h-3.5" /> Điểm thưởng nhận ngay:
                     </span>
-                    <span>+{isYearly ? (selectedStudentPkg.yearlyBonusTokens || 500) : selectedStudentPkg.dailyPoints} 💎</span>
+                    <span>+{isYearly ? (selectedStudentPkg.yearlyBonusTokens || 500) : selectedStudentPkg.dailyPoints} <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat /></span>
                   </div>
                 )}
 
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-500">Số tài khoản MB Bank:</span>
+                  <span className="text-slate-500">Ngân hàng thụ hưởng:</span>
+                  <span className="font-bold text-slate-900 dark:text-white">
+                    MB Bank (Ngân hàng Quân Đội)
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500">Số tài khoản:</span>
                   <div className="flex items-center gap-1.5">
                     <span className="font-bold font-mono text-slate-900 dark:text-white bg-slate-200/60 dark:bg-slate-700/60 px-2 py-0.5 rounded">
-                      0903888899
+                      {payosData?.accountNumber || '0903888899'}
                     </span>
                     <button
                       type="button"
-                      onClick={() => handleCopy('0903888899', 'Số tài khoản')}
+                      onClick={() => handleCopy(payosData?.accountNumber || '0903888899', 'Số tài khoản')}
                       className="p-1 text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer"
                       title="Sao chép số tài khoản"
                     >
@@ -1371,22 +1469,22 @@ export default function PricingPage() {
 
                 <div className="flex justify-between items-center">
                   <span className="text-slate-500">Chủ tài khoản:</span>
-                  <span className="font-medium text-slate-900 dark:text-white">CONG TY CO PHAN SCHOOLIFY</span>
+                  <span className="font-medium text-slate-900 dark:text-white">
+                    {payosData?.accountName || 'CONG TY CO PHAN SCHOOLIFY'}
+                  </span>
                 </div>
 
                 <div className="flex justify-between items-center">
                   <span className="text-slate-500">Nội dung CK:</span>
                   <div className="flex items-center gap-1.5">
                     <span className="font-bold font-mono text-slate-900 dark:text-white bg-slate-200/60 dark:bg-slate-700/60 px-2 py-0.5 rounded">
-                      SCHOOLIFY {selectedStudentPkg ? selectedStudentPkg.id.toUpperCase() : selectedSchoolPkg?.id.toUpperCase()}
+                      {payosData?.description || `SCH ${payosData?.orderCode || 'PRO'}`}
                     </span>
                     <button
                       type="button"
                       onClick={() =>
                         handleCopy(
-                          `SCHOOLIFY ${
-                            selectedStudentPkg ? selectedStudentPkg.id.toUpperCase() : selectedSchoolPkg?.id.toUpperCase()
-                          }`,
+                          payosData?.description || `SCH ${payosData?.orderCode || 'PRO'}`,
                           'Nội dung chuyển khoản'
                         )
                       }
@@ -1399,14 +1497,44 @@ export default function PricingPage() {
                 </div>
               </div>
 
-              {/* Nút giả lập thanh toán / xác nhận */}
-              <Button
-                onClick={handleConfirmPayment}
-                className="w-full justify-center h-12 bg-[#00B8DD] hover:bg-[#009fb0] text-white font-bold rounded-xl shadow-md cursor-pointer"
-              >
-                <CheckCircle2 className="w-4 h-4 mr-2" />
-                <span>Xác Nhận Đã Chuyển Khoản Thành Công</span>
-              </Button>
+              {/* Trạng thái lắng nghe tự động (Real-time Auto-Detection) */}
+              <div className="w-full rounded-2xl bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 p-3.5 flex items-center gap-3">
+                <div className="relative flex h-3 w-3 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </div>
+                <div className="text-left flex-1 min-w-0">
+                  <p className="text-xs font-bold text-emerald-900 dark:text-emerald-200">
+                    Đang tự động nhận diện giao dịch...
+                  </p>
+                  <p className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 leading-tight mt-0.5">
+                    Hệ thống sẽ tự động kích hoạt ngay khi bạn chuyển tiền xong trên App ngân hàng. Không cần gửi ảnh biên lai!
+                  </p>
+                </div>
+              </div>
+
+              {payosData?.checkoutUrl && (
+                <a
+                  href={payosData.checkoutUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+                >
+                  <span>Mở Cổng Thanh Toán PayOS (Trình duyệt)</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              )}
+
+              {/* Nút phụ kiểm tra thủ công nếu mạng ngân hàng chậm */}
+              <div className="text-center pt-0.5">
+                <button
+                  type="button"
+                  onClick={handleConfirmPayment}
+                  className="text-[11px] text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 underline underline-offset-2 transition-colors cursor-pointer"
+                >
+                  Đã chuyển khoản xong nhưng chưa thấy cập nhật? Bấm để kiểm tra ngay
+                </button>
+              </div>
             </>
           ) : (
             <div className="py-6 flex flex-col items-center space-y-3">
@@ -1420,7 +1548,7 @@ export default function PricingPage() {
                 Tài khoản của bạn đã được nâng cấp lên <strong>{selectedStudentPkg?.name || selectedSchoolPkg?.name}</strong>.
                 {awardedBonus > 0 && (
                   <span className="block mt-1 text-emerald-600 dark:text-emerald-400 font-bold">
-                    Đã cộng trực tiếp +{awardedBonus} 💎 vào Ví Điểm của bạn!
+                    Đã cộng trực tiếp +{awardedBonus} <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat /> vào Ví Điểm của bạn!
                   </span>
                 )}
               </p>

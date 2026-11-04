@@ -114,9 +114,9 @@ export function RequireLoginModal({
           iconBg: 'bg-rose-100 dark:bg-rose-950/50 border-rose-200 dark:border-rose-800',
           badge: 'Kho Quà Tặng 💎',
           badgeVariant: 'danger' as const,
-          title: 'Đổi Thưởng Kim Cương 💎',
+          title: 'Đổi Thưởng Ngọc Tri Thức 💎',
           description:
-            'Đăng nhập để xem số kim cương tích lũy của bạn và đổi voucher học tập, sách tham khảo hoặc quà tặng hiện vật.',
+            'Đăng nhập để xem số ngọc tri thức tích lũy của bạn và đổi voucher học tập, sách tham khảo hoặc quà tặng hiện vật.',
         };
       default:
         return {
@@ -143,7 +143,7 @@ export function RequireLoginModal({
       desc: 'Báo cáo radar chỉ rõ chủ đề còn yếu để đề xuất bài tập bổ trợ cá nhân hóa.',
     },
     {
-      title: 'Tích lũy kim cương 💎 & Đua top toàn quốc',
+      title: 'Tích lũy ngọc tri thức 💎 & Đua top toàn quốc',
       desc: 'Mỗi bài luyện thi hoàn thành đều được cộng điểm và xếp hạng thi đua tuần.',
     },
   ];
@@ -218,7 +218,7 @@ export function RequireLoginModal({
               className="w-full border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-sm rounded-xl"
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
-              Đăng Nhập Bằng Email / SĐT Khác
+              Đăng Nhập Bằng OTP Hoặc Google
             </Button>
           </Link>
 

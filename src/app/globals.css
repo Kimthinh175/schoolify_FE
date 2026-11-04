@@ -32,6 +32,19 @@ html {
   width: 100% !important;
 }
 
+html.lenis,
+html.lenis body,
+.lenis.lenis-smooth,
+.lenis.lenis-smooth body {
+  height: auto !important;
+  min-height: 100% !important;
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -72,6 +85,34 @@ body {
 @keyframes cloud-drift {
   from { transform: translateX(-30vw); }
   to   { transform: translateX(130vw); }
+}
+
+@keyframes sf-robot-drift {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  20% {
+    transform: translate3d(4px, -10px, 0) rotate(1.5deg);
+  }
+  45% {
+    transform: translate3d(-3px, -18px, 0) rotate(-1.2deg);
+  }
+  70% {
+    transform: translate3d(-5px, -8px, 0) rotate(0.8deg);
+  }
+  85% {
+    transform: translate3d(2px, -3px, 0) rotate(-0.5deg);
+  }
+}
+
+.animate-sf-robot-drift {
+  animation: sf-robot-drift 4.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-sf-robot-drift {
+    animation: none;
+  }
 }
 
 /* ============================================================
@@ -160,5 +201,11 @@ body {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #00B8DD;
+}
+
+/* Compact Auth Subtab Mode: Hide Header & Footer */
+html.compact-subtab header,
+html.compact-subtab footer {
+  display: none !important;
 }
 

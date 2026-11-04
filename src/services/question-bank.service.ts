@@ -12,6 +12,7 @@ import {
   extractDocxWithMtefAndOmml,
   parseExamTextWithMathAndKeys,
 } from './parsers/mtef-math-decoder';
+import { parseExcelQuestions } from './parsers/excel-parser';
 
 const delay = (ms = 100) => new Promise((r) => setTimeout(r, ms));
 
@@ -488,6 +489,58 @@ export const questionBankService = {
   ): Promise<ParseImportResult> {
     await delay(200);
 
+    // Trường hợp 1: File Excel (.xlsx, .xls)
+    const isExcelFile = fileType === 'EXCEL' || (file && file.size > 0 && /\.(xlsx|xls)$/i.test(file.name));
+    if (isExcelFile && file && file.size > 0) {
+      try {
+        const excelResult = await parseExcelQuestions(file);
+        const parsedItems: ParsedQuestionItem[] = excelResult.allParsed.map((q, idx) => ({
+          temp_id: q.id || `temp-excel-${idx + 1}`,
+          question_type: q.type,
+          title: q.title || `Câu ${idx + 1}`,
+          content: q.content,
+          img_urls: q.img_urls,
+          explain: q.explain || '',
+          points: q.points,
+          chapter: q.chapter,
+          difficulty: q.difficulty,
+          group_code: q.groupCode,
+          is_valid: !q.hasError,
+          validation_errors: q.hasError && q.errorReason ? [q.errorReason] : [],
+          answers: (q.answers || []).map((ans) => ({
+            content: ans.content,
+            is_correct: ans.is_answer,
+            label: ans.label,
+          })),
+          matching_pairs: q.matching_pairs,
+          ordering_items: q.ordering_items,
+          cloze_blanks: q.cloze_blanks,
+          passage_content: q.passage_content,
+          sub_questions: q.sub_questions,
+          statements: q.statements,
+          shortAnswerCorrect: q.shortAnswerCorrect,
+          sample_essay_answer: q.sample_essay_answer,
+        }));
+
+        const validCount = parsedItems.filter((i) => i.is_valid).length;
+        const invalidCount = parsedItems.length - validCount;
+
+        return {
+          summary: {
+            total_parsed: parsedItems.length,
+            valid_count: validCount,
+            invalid_count: invalidCount,
+          },
+          parsed_questions: parsedItems,
+          raw_text: `Đã nạp ${parsedItems.length} câu hỏi từ bảng tính Excel (${file.name}).`,
+        };
+      } catch (err: any) {
+        console.error('Lỗi khi bóc tách file Excel:', err);
+        throw new Error(err.message || 'Không thể đọc dữ liệu từ file Excel');
+      }
+    }
+
+    // Trường hợp 2: File Word (.docx) hoặc Text dán trực tiếp
     let rawText = customText || '';
 
     if (!rawText && file && file.size > 0) {
@@ -534,10 +587,21 @@ export const questionBankService = {
         id: uid('q'),
         bank_id: bankId,
         type: item.question_type,
+        title: item.title || null,
         content: item.content,
         img_urls: item.img_urls,
         points: item.points || 1.0,
         explain: item.explain || '',
+        chapter: item.chapter || null,
+        difficulty: item.difficulty || 'UNDERSTANDING',
+        matching_pairs: item.matching_pairs,
+        ordering_items: item.ordering_items,
+        cloze_blanks: item.cloze_blanks,
+        passage_content: item.passage_content,
+        sub_questions: item.sub_questions,
+        statements: item.statements,
+        shortAnswerCorrect: item.shortAnswerCorrect,
+        sample_essay_answer: item.sample_essay_answer,
         created_at: new Date().toISOString(),
         answers: item.answers.map((ans, idx) => ({
           id: uid('ans'),
@@ -545,6 +609,7 @@ export const questionBankService = {
           content: ans.content,
           is_answer: ans.is_correct,
           order_index: idx,
+          label: ans.label,
         })),
       };
       const created = await this.createPostgresQuestion(q);

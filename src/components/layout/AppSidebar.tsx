@@ -82,58 +82,6 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['SUPER_ADMIN'],
   },
 
-  // SCHOOL ADMIN (Principal, HOD, Staff)
-  {
-    label: 'Tổng quan Trường',
-    href: '/school/dashboard',
-    icon: <LayoutDashboard className="w-5 h-5" />,
-    roles: ['PRINCIPAL', 'VICE_PRINCIPAL', 'HEAD_OF_DEPARTMENT', 'STAFF'],
-  },
-  {
-    label: 'Gói Cước & Quotas',
-    href: '/school/subscription',
-    icon: <Package className="w-5 h-5" />,
-    badge: '85%',
-    roles: ['PRINCIPAL', 'VICE_PRINCIPAL'],
-  },
-  {
-    label: 'Tổ Bộ Môn (Departments)',
-    href: '/school/departments',
-    icon: <Building2 className="w-5 h-5" />,
-    roles: ['PRINCIPAL', 'VICE_PRINCIPAL', 'HEAD_OF_DEPARTMENT'],
-  },
-  {
-    label: 'Đội Ngũ Giáo Viên',
-    href: '/school/teachers',
-    icon: <Users className="w-5 h-5" />,
-    roles: ['PRINCIPAL', 'VICE_PRINCIPAL', 'HEAD_OF_DEPARTMENT'],
-  },
-  {
-    label: 'Thẩm Định Giáo Án',
-    href: '/school/curriculum-approval',
-    icon: <BookCheck className="w-5 h-5" />,
-    badge: '3 mới',
-    roles: ['HEAD_OF_DEPARTMENT'],
-  },
-  {
-    label: 'Tuyển Sinh & Import Excel',
-    href: '/school/admissions',
-    icon: <FileSpreadsheet className="w-5 h-5" />,
-    roles: ['STAFF', 'PRINCIPAL'],
-  },
-  {
-    label: 'Xếp Lớp & Học Vụ',
-    href: '/school/classes',
-    icon: <GraduationCap className="w-5 h-5" />,
-    roles: ['STAFF', 'PRINCIPAL'],
-  },
-  {
-    label: 'Thu Ngân & In Biên Lai',
-    href: '/school/cashier',
-    icon: <DollarSign className="w-5 h-5" />,
-    roles: ['STAFF', 'PRINCIPAL'],
-  },
-
   // TEACHER & CREATOR
   {
     label: 'Bàn Làm Việc Giáo Viên',
@@ -187,9 +135,9 @@ const NAV_ITEMS: NavItem[] = [
 
   // STUDENT (Người Luyện Thi & Quản Lý Cá Nhân)
   {
-    label: 'Về Trang Luyện Thi',
-    href: '/luyen-thi',
-    icon: <Sparkles className="w-5 h-5 text-amber-500" />,
+    label: 'Cổng Luyện Thi K-12',
+    href: '/student/practice',
+    icon: <Sparkles className="w-5 h-5 text-[#00B8DD]" />,
     roles: ['STUDENT'],
   },
   {
@@ -199,15 +147,21 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['STUDENT'],
   },
   {
-    label: 'Khóa Học Của Tôi',
-    href: '/student/my-courses',
-    icon: <BookOpen className="w-5 h-5" />,
-    roles: ['STUDENT'],
-  },
-  {
     label: 'Lịch Sử Luyện Đề & Điểm',
     href: '/student/exams',
     icon: <Award className="w-5 h-5" />,
+    roles: ['STUDENT'],
+  },
+  {
+    label: 'Bảng Xếp Hạng',
+    href: '/leaderboard',
+    icon: <Award className="w-5 h-5" />,
+    roles: ['STUDENT'],
+  },
+  {
+    label: 'Khóa Học Của Tôi',
+    href: '/student/my-courses',
+    icon: <BookOpen className="w-5 h-5" />,
     roles: ['STUDENT'],
   },
   {
@@ -222,37 +176,17 @@ const NAV_ITEMS: NavItem[] = [
     icon: <Gift className="w-5 h-5" />,
     roles: ['STUDENT'],
   },
-
-  // PARENT
-  {
-    label: 'Tổng Quan Con Cái',
-    href: '/parent/dashboard',
-    icon: <LayoutDashboard className="w-5 h-5" />,
-    roles: ['PARENT'],
-  },
-  {
-    label: 'Sổ Liên Lạc (Kết Quả)',
-    href: '/parent/report',
-    icon: <GraduationCap className="w-5 h-5" />,
-    badge: 'Điểm mới',
-    roles: ['PARENT'],
-  },
-  {
-    label: 'Thời Khóa Biểu Của Con',
-    href: '/parent/timetable',
-    icon: <Calendar className="w-5 h-5" />,
-    roles: ['PARENT'],
-  },
-  {
-    label: 'Đóng Học Phí (VietQR)',
-    href: '/parent/tuition',
-    icon: <CreditCard className="w-5 h-5" />,
-    badge: '1 phiếu',
-    roles: ['PARENT'],
-  },
 ];
 
-export function AppSidebar({ isMobileOpen, onMobileClose }: { isMobileOpen?: boolean; onMobileClose?: () => void }) {
+export function AppSidebar({
+  isMobileOpen,
+  onMobileClose,
+  withNavbar = false,
+}: {
+  isMobileOpen?: boolean;
+  onMobileClose?: () => void;
+  withNavbar?: boolean;
+}) {
   const [collapsed, setCollapsed] = React.useState(false);
   const pathname = usePathname();
   const { currentRole, currentSchool } = useAuthStore();
@@ -265,48 +199,54 @@ export function AppSidebar({ isMobileOpen, onMobileClose }: { isMobileOpen?: boo
         'flex flex-col border-r border-slate-200/80 bg-white dark:border-slate-800/80 dark:bg-slate-950 transition-all duration-300 select-none',
         isMobile
           ? 'h-full w-full'
-          : cn('fixed top-0 bottom-0 left-0 z-30 h-screen', collapsed ? 'w-20' : 'w-64')
+          : cn(
+              'fixed bottom-0 left-0 z-30',
+              withNavbar ? 'top-20 h-[calc(100vh-5rem)]' : 'top-0 h-screen',
+              collapsed ? 'w-20' : 'w-64'
+            )
       )}
     >
-      {/* Brand Header */}
-      <div className="flex h-16 items-center justify-between px-3.5 border-b border-slate-100 dark:border-slate-800 shrink-0">
-        <Link href="/" className="flex items-center gap-2 overflow-hidden">
-          {!isMobile && collapsed ? (
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs p-1">
-              <img src="/logo-icon.png" alt="Schoolify" className="h-full w-full object-contain" />
-            </div>
-          ) : (
-            <div className="flex items-center">
-              <img
-                src="/schoolify-logo.png"
-                alt="Schoolify"
-                className="h-8 w-auto object-contain dark:hidden"
-              />
-              <img
-                src="/am-ban.png"
-                alt="Schoolify"
-                className="h-8 w-auto object-contain hidden dark:block"
-              />
-            </div>
+      {/* Brand Header: chỉ hiển thị khi không có Navbar hoặc khi mở mobile drawer */}
+      {(!withNavbar || isMobile) && (
+        <div className="flex h-16 items-center justify-between px-3.5 border-b border-slate-100 dark:border-slate-800 shrink-0">
+          <Link href="/" className="flex items-center gap-2 overflow-hidden">
+            {!isMobile && collapsed ? (
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs p-1">
+                <img src="/logo-icon.png" alt="Schoolify" className="h-full w-full object-contain" />
+              </div>
+            ) : (
+              <div className="flex items-center">
+                <img
+                  src="/schoolify-logo.png"
+                  alt="Schoolify"
+                  className="h-8 w-auto object-contain dark:hidden"
+                />
+                <img
+                  src="/am-ban.png"
+                  alt="Schoolify"
+                  className="h-8 w-auto object-contain hidden dark:block"
+                />
+              </div>
+            )}
+          </Link>
+          {!isMobile && (
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              className="hidden md:flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            </button>
           )}
-        </Link>
-        {!isMobile && (
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="hidden md:flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-          </button>
-        )}
-        {isMobile && (
-          <button
-            onClick={onMobileClose}
-            className="flex md:hidden h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-        )}
-      </div>
+          {isMobile && (
+            <button
+              onClick={onMobileClose}
+              className="flex md:hidden h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Nav links */}
       <div className="flex-1 overflow-y-auto p-3 space-y-1.5 no-scrollbar">
@@ -353,18 +293,28 @@ export function AppSidebar({ isMobileOpen, onMobileClose }: { isMobileOpen?: boo
         })}
       </div>
 
-      {/* Footer info / Public link */}
-      <div className="p-3 border-t border-slate-100 dark:border-slate-800 shrink-0">
+      {/* Footer info / Public link & Collapse toggle */}
+      <div className="p-3 border-t border-slate-100 dark:border-slate-800 shrink-0 flex items-center justify-between gap-1">
         <Link
           href="/"
           className={cn(
-            'flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors',
+            'flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex-1 min-w-0',
             !isMobile && collapsed && 'justify-center px-0'
           )}
         >
-          <Sparkles className="w-4 h-4 text-amber-500" />
-          {(isMobile || !collapsed) && <span>Về Trang Chủ Public</span>}
+          <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+          {(isMobile || !collapsed) && <span className="truncate">Trang Chủ Public</span>}
         </Link>
+        {withNavbar && !isMobile && (
+          <button
+            type="button"
+            onClick={() => setCollapsed(!collapsed)}
+            className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
+            title={collapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
+          >
+            {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </button>
+        )}
       </div>
     </aside>
   );

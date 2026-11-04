@@ -5,10 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Baby,
-  Lock,
   Phone,
   ArrowRight,
-  KeyRound,
   ShieldCheck,
   MessageSquare,
   CheckCircle2,
@@ -19,17 +17,20 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/store/auth.store';
 import { GoogleLoginButton } from '@/components/features/auth/GoogleLoginButton';
+import { initAuthPopupSession, notifyAuthSuccessAndKillPopup } from '@/lib/auth-popup';
 
 export default function ParentLoginPage() {
   const router = useRouter();
   const { login } = useAuthStore();
-  const [loginMethod, setLoginMethod] = React.useState<'OTP' | 'PASSWORD'>('OTP');
   const [phone, setPhone] = React.useState('0909123456');
-  const [password, setPassword] = React.useState('123456');
   const [otpCode, setOtpCode] = React.useState('');
   const [otpSent, setOtpSent] = React.useState(false);
   const [countdown, setCountdown] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    initAuthPopupSession();
+  }, []);
 
   // Countdown timer for OTP
   React.useEffect(() => {
@@ -50,32 +51,41 @@ export default function ParentLoginPage() {
     if (e) e.preventDefault();
     setIsLoading(true);
     setTimeout(() => {
+      const parentUser = {
+        id: 'usr-parent-01',
+        fullname: 'Nguyễn Văn Tuấn (Phụ huynh)',
+        email: 'parent.tuan@schoolify.edu.vn',
+        phone: phone,
+        role: 'USER' as const,
+        status: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        school_memberships: [
+          {
+            id: 'mem-01',
+            user_id: 'usr-parent-01',
+            school_id: 'sch-01',
+            school_name: 'THPT Chuyên Công Nghệ Schoolify',
+            role: 'PARENT' as const,
+            joined_at: new Date().toISOString(),
+          },
+        ],
+      };
       login(
-        {
-          id: 'usr-parent-01',
-          fullname: 'Nguyễn Văn Tuấn (Phụ huynh)',
-          email: 'parent.tuan@schoolify.edu.vn',
-          phone: phone,
-          role: 'USER',
-          status: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          school_memberships: [
-            {
-              id: 'mem-01',
-              user_id: 'usr-parent-01',
-              school_id: 'sch-01',
-              school_name: 'THPT Chuyên Công Nghệ Schoolify',
-              role: 'PARENT',
-              joined_at: new Date().toISOString(),
-            },
-          ],
-        },
+        parentUser,
         'mock-parent-token',
         'PARENT',
         'sch-01'
       );
-      router.push('/parent/dashboard');
+
+      const killed = notifyAuthSuccessAndKillPopup({
+        user: parentUser,
+        token: 'mock-parent-token',
+        role: 'PARENT',
+      });
+      if (killed) return;
+
+      router.push('/student');
     }, 400);
   };
 
@@ -95,164 +105,102 @@ export default function ParentLoginPage() {
               Đăng Nhập Phụ Huynh
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Theo dõi kết quả học tập của con & nhận thông báo từ trường
+              Đăng nhập an toàn không cần mật khẩu qua Google hoặc mã OTP
             </p>
           </div>
         </div>
 
-        {/* Method Switcher Tabs (OTP / Password) */}
-        <div className="grid grid-cols-2 p-1 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-bold">
-          <button
-            type="button"
-            onClick={() => setLoginMethod('OTP')}
-            className={`py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              loginMethod === 'OTP'
-                ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-xs'
-                : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'
-            }`}
-          >
-            <MessageSquare className="w-3.5 h-3.5" />
-            <span>Mã OTP (SMS / Zalo)</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setLoginMethod('PASSWORD')}
-            className={`py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              loginMethod === 'PASSWORD'
-                ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-xs'
-                : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'
-            }`}
-          >
-            <KeyRound className="w-3.5 h-3.5" />
-            <span>Mật Khẩu</span>
-          </button>
+        {/* Primary Action 1: Google Login */}
+        <div className="space-y-3">
+          <GoogleLoginButton
+            role="PARENT"
+            returnUrl="/student"
+            label="Tiếp tục bằng tài khoản Google (Gmail)"
+          />
+
+          {/* Divider */}
+          <div className="relative flex items-center justify-center my-3">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-200 dark:border-slate-800" />
+            </div>
+            <span className="relative px-3 bg-white dark:bg-slate-900 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+              Hoặc đăng nhập bằng mã OTP
+            </span>
+          </div>
         </div>
 
         {/* OTP Mode Form */}
-        {loginMethod === 'OTP' ? (
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                Số Điện Thoại Đã Đăng Ký Với Trường
-              </label>
-              <div className="flex gap-2">
-                <Input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="0909123456"
-                  leftIcon={<Phone className="w-4 h-4 text-rose-500" />}
-                  className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono flex-1"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={handleSendOtp}
-                  disabled={countdown > 0 || !phone}
-                  className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 text-xs font-bold transition-all disabled:opacity-50 shrink-0 cursor-pointer"
-                >
-                  {countdown > 0 ? `${countdown}s` : otpSent ? 'Gửi lại' : 'Gửi mã OTP'}
-                </button>
-              </div>
-            </div>
-
-            {otpSent && (
-              <div className="space-y-1.5 animate-in fade-in duration-200">
-                <div className="flex items-center justify-between text-xs">
-                  <label className="font-bold text-slate-700 dark:text-slate-300">
-                    Nhập Mã OTP (6 Số)
-                  </label>
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> Đã gửi (Mã mẫu: 889966)
-                  </span>
-                </div>
-                <Input
-                  type="text"
-                  maxLength={6}
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value)}
-                  placeholder="889966"
-                  leftIcon={<ShieldCheck className="w-4 h-4 text-rose-500" />}
-                  className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono text-center tracking-widest text-base font-bold"
-                  required
-                />
-              </div>
-            )}
-
-            <Button
-              type="submit"
-              isLoading={isLoading}
-              className="w-full justify-center h-11 bg-rose-500 hover:bg-rose-600 active:bg-rose-700 text-white font-black text-sm shadow-md shadow-rose-500/20 transition-all cursor-pointer"
-              rightIcon={<ArrowRight className="w-4 h-4" />}
-            >
-              Xác Nhận & Vào Sổ Liên Lạc
-            </Button>
-          </form>
-        ) : (
-          /* Password Mode Form */
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                Số Điện Thoại Phụ Huynh
-              </label>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
+              <MessageSquare className="w-3.5 h-3.5 text-rose-500" />
+              <span>Số Điện Thoại Đã Đăng Ký Với Trường</span>
+            </label>
+            <div className="flex gap-2">
               <Input
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="0909123456"
                 leftIcon={<Phone className="w-4 h-4 text-rose-500" />}
-                className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono"
+                className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono flex-1"
                 required
               />
+              <button
+                type="button"
+                onClick={handleSendOtp}
+                disabled={countdown > 0 || !phone}
+                className="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 active:bg-rose-700 text-white font-bold text-xs transition-all disabled:opacity-50 shrink-0 cursor-pointer shadow-xs"
+              >
+                {countdown > 0 ? `${countdown}s` : otpSent ? 'Gửi lại' : 'Gửi mã OTP'}
+              </button>
             </div>
+          </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Mật Khẩu
+          {otpSent ? (
+            <div className="space-y-1.5 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between text-xs">
+                <label className="font-bold text-slate-700 dark:text-slate-300">
+                  Nhập Mã OTP (6 Số)
                 </label>
-                <a href="#" className="text-[11px] text-rose-600 dark:text-rose-400 hover:underline">
-                  Quên mật khẩu?
-                </a>
+                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> Đã gửi (Mã mẫu: 889966)
+                </span>
               </div>
               <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                leftIcon={<Lock className="w-4 h-4 text-rose-500" />}
-                className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
+                type="text"
+                maxLength={6}
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value)}
+                placeholder="889966"
+                leftIcon={<ShieldCheck className="w-4 h-4 text-rose-500" />}
+                className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono text-center tracking-widest text-base font-bold"
                 required
+                autoFocus
               />
             </div>
+          ) : (
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 italic">
+              * Bấm &quot;Gửi mã OTP&quot; để nhận mã số đăng nhập bảo mật gửi tới số điện thoại của bạn.
+            </p>
+          )}
 
-            <Button
-              type="submit"
-              isLoading={isLoading}
-              className="w-full justify-center h-11 bg-rose-500 hover:bg-rose-600 active:bg-rose-700 text-white font-black text-sm shadow-md shadow-rose-500/20 transition-all cursor-pointer"
-              rightIcon={<ArrowRight className="w-4 h-4" />}
-            >
-              Vào Sổ Liên Lạc Của Con
-            </Button>
-          </form>
-        )}
-        {/* Alternate Logins (Google) */}
-        <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
-          <GoogleLoginButton
-            role="PARENT"
-            returnUrl="/parent/dashboard"
-            label="Đăng nhập Phụ huynh bằng Google"
-          />
-        </div>
+          <Button
+            type="submit"
+            isLoading={isLoading}
+            disabled={!otpSent}
+            className="w-full justify-center h-11 bg-rose-500 hover:bg-rose-600 active:bg-rose-700 text-white font-black text-sm shadow-md shadow-rose-500/20 transition-all cursor-pointer"
+            rightIcon={<ArrowRight className="w-4 h-4" />}
+          >
+            Xác Thực OTP &amp; Đăng Nhập
+          </Button>
+        </form>
 
-        {/* Switch Role Footer */}
-        <div className="text-center text-xs text-slate-500 pt-1">
-          <p>
-            Bạn thuộc phân hệ khác?{' '}
-            <Link href="/login" className="text-[#00B8DD] font-bold hover:underline">
-              Đổi vai trò đăng nhập
-            </Link>
-          </p>
+        {/* Back Link */}
+        <div className="text-center pt-2 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-500">
+          <Link href="/login" className="hover:text-[#00B8DD] transition-colors">
+            ← Quay lại chọn vai trò khác
+          </Link>
         </div>
       </Card>
     </div>

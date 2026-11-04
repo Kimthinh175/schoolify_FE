@@ -25,6 +25,164 @@
       --c-order: #06b6d4;
     }
 
+    body.light-theme {
+      --bg-dark: #f8fafc;
+      --bg-grid: #e2e8f0;
+      --panel-bg: rgba(255, 255, 255, 0.95);
+      --border-color: rgba(0, 0, 0, 0.12);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+    }
+
+    body.light-theme #viewport {
+      background-image: radial-gradient(circle, rgba(0, 0, 0, 0.12) 1px, transparent 1px);
+    }
+
+    body.light-theme .table-card {
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    body.light-theme .table-header {
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    body.light-theme .table-header:hover {
+      background: #f1f5f9;
+    }
+
+    body.light-theme .field-row:hover {
+      background: rgba(0, 0, 0, 0.04);
+    }
+
+    body.light-theme .field-type {
+      color: #64748b;
+    }
+
+    body.light-theme .field-name {
+      color: #0f172a;
+      font-weight: 600;
+    }
+
+    body.light-theme .wire-main {
+      stroke: rgba(71, 85, 105, 0.75);
+    }
+
+    body.light-theme #mark-one line,
+    body.light-theme #mark-many line {
+      stroke: #475569;
+    }
+
+    body.light-theme .cardinality-text {
+      fill: #475569;
+      font-weight: 700;
+    }
+
+    body.light-theme .rel-badge rect {
+      fill: #ffffff;
+      stroke: #94a3b8;
+    }
+
+    body.light-theme .rel-badge text {
+      fill: #1e293b;
+      font-weight: 700;
+    }
+
+    body.light-theme .tips-overlay {
+      background: rgba(255, 255, 255, 0.95);
+      color: #334155;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    }
+
+    body.light-theme .diagram-legend {
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    body.light-theme .diagram-legend div:first-child {
+      color: #0f172a !important;
+    }
+
+    body.light-theme .legend-row {
+      color: #475569;
+    }
+
+    body.light-theme .search-box {
+      background: rgba(0, 0, 0, 0.04);
+      border-color: rgba(0, 0, 0, 0.15);
+      color: #0f172a;
+    }
+
+    body.light-theme .search-box:focus {
+      background: #ffffff;
+      border-color: #6366f1;
+    }
+
+    body.light-theme .zoom-text {
+      color: #334155;
+    }
+
+    body.light-theme .tool-btn:hover {
+      background: rgba(0, 0, 0, 0.06);
+      color: #0284c7;
+    }
+
+    body.light-theme .floating-bar {
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    body.light-theme .badge-cardinality {
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid #6366f1;
+      color: #4338ca;
+    }
+
+    .theme-toggle-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .theme-toggle-btn:hover {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: #6366f1;
+      color: #818cf8;
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
+    }
+
+    body.light-theme .theme-toggle-btn {
+      background: rgba(0, 0, 0, 0.05);
+      border-color: rgba(0, 0, 0, 0.15);
+      color: #334155;
+    }
+
+    body.light-theme .theme-toggle-btn:hover {
+      background: rgba(99, 102, 241, 0.1);
+      border-color: #6366f1;
+      color: #4f46e5;
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.15);
+    }
+
+    body.clean-mode header,
+    body.clean-mode .floating-bar,
+    body.clean-mode .diagram-legend,
+    body.clean-mode .tips-overlay {
+      display: none !important;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -493,6 +651,10 @@
 
     <div class="header-actions">
       <input type="text" id="search-input" class="search-box" placeholder="Tìm tên bảng (e.g. Course)..." />
+      <button id="btn-theme-toggle-header" class="theme-toggle-btn" title="Chuyển đổi giao diện Sáng / Tối">
+        <span id="theme-icon-header">☀️</span>
+        <span id="theme-text-header">Nền sáng</span>
+      </button>
     </div>
   </header>
 
@@ -565,6 +727,11 @@
     <div class="v-divider"></div>
     <button class="tool-btn" id="btn-fit">🎯 Vừa màn hình</button>
     <button class="tool-btn" id="btn-reset-pos">🔄 Đặt lại vị trí ban đầu</button>
+    <div class="v-divider"></div>
+    <button class="tool-btn" id="btn-theme-toggle-float" title="Chuyển đổi giao diện Sáng / Tối">
+      <span id="theme-icon-float">☀️</span>
+      <span id="theme-text-float">Nền sáng</span>
+    </button>
   </div>
 
   <script>
@@ -577,7 +744,7 @@
         "name": "User",
         "group": "core",
         "x": 80,
-        "y": 100,
+        "y": 80,
         "fields": [
             {
                 "name": "id",
@@ -662,8 +829,8 @@
         "id": "SchoolMember",
         "name": "SchoolMember",
         "group": "core",
-        "x": 440,
-        "y": 60,
+        "x": 430,
+        "y": 80,
         "fields": [
             {
                 "name": "id",
@@ -706,8 +873,8 @@
         "id": "TeacherProfile",
         "name": "TeacherProfile",
         "group": "core",
-        "x": 440,
-        "y": 320,
+        "x": 430,
+        "y": 310,
         "fields": [
             {
                 "name": "id",
@@ -757,8 +924,8 @@
         "id": "StudentProfile",
         "name": "StudentProfile",
         "group": "core",
-        "x": 440,
-        "y": 580,
+        "x": 430,
+        "y": 566,
         "fields": [
             {
                 "name": "id",
@@ -802,7 +969,7 @@
         "name": "ParentProfile",
         "group": "core",
         "x": 80,
-        "y": 560,
+        "y": 722,
         "fields": [
             {
                 "name": "id",
@@ -838,8 +1005,8 @@
         "id": "ParentStudent",
         "name": "ParentStudent",
         "group": "core",
-        "x": 260,
-        "y": 800,
+        "x": 80,
+        "y": 926,
         "fields": [
             {
                 "name": "id",
@@ -883,7 +1050,7 @@
         "name": "CustomFeatureRequest",
         "group": "core",
         "x": 80,
-        "y": 780,
+        "y": 1156,
         "fields": [
             {
                 "name": "id",
@@ -940,8 +1107,8 @@
         "id": "School",
         "name": "School",
         "group": "school",
-        "x": 800,
-        "y": 60,
+        "x": 780,
+        "y": 80,
         "fields": [
             {
                 "name": "id",
@@ -1019,8 +1186,8 @@
         "id": "Department",
         "name": "Department",
         "group": "school",
-        "x": 800,
-        "y": 360,
+        "x": 780,
+        "y": 440,
         "fields": [
             {
                 "name": "id",
@@ -1070,8 +1237,8 @@
         "id": "SubscriptionPackage",
         "name": "SubscriptionPackage",
         "group": "saas",
-        "x": 80,
-        "y": 1040,
+        "x": 430,
+        "y": 796,
         "fields": [
             {
                 "name": "id",
@@ -1205,8 +1372,8 @@
         "id": "SchoolSubscription",
         "name": "SchoolSubscription",
         "group": "saas",
-        "x": 440,
-        "y": 1040,
+        "x": 430,
+        "y": 1364,
         "fields": [
             {
                 "name": "id",
@@ -1270,8 +1437,8 @@
         "id": "TeacherSubscription",
         "name": "TeacherSubscription",
         "group": "saas",
-        "x": 440,
-        "y": 1280,
+        "x": 430,
+        "y": 1672,
         "fields": [
             {
                 "name": "id",
@@ -1335,8 +1502,8 @@
         "id": "Category",
         "name": "Category",
         "group": "academic",
-        "x": 1160,
-        "y": 60,
+        "x": 1130,
+        "y": 80,
         "fields": [
             {
                 "name": "id",
@@ -1400,8 +1567,8 @@
         "id": "Course",
         "name": "Course",
         "group": "academic",
-        "x": 1160,
-        "y": 280,
+        "x": 1130,
+        "y": 388,
         "fields": [
             {
                 "name": "id",
@@ -1500,8 +1667,8 @@
         "id": "Lesson",
         "name": "Lesson",
         "group": "academic",
-        "x": 1160,
-        "y": 660,
+        "x": 1130,
+        "y": 826,
         "fields": [
             {
                 "name": "id",
@@ -1565,8 +1732,8 @@
         "id": "LessonMaterial",
         "name": "LessonMaterial",
         "group": "academic",
-        "x": 1160,
-        "y": 920,
+        "x": 1130,
+        "y": 1134,
         "fields": [
             {
                 "name": "id",
@@ -1616,8 +1783,8 @@
         "id": "Class",
         "name": "Class",
         "group": "academic",
-        "x": 800,
-        "y": 600,
+        "x": 780,
+        "y": 696,
         "fields": [
             {
                 "name": "id",
@@ -1681,8 +1848,8 @@
         "id": "ClassEnrollment",
         "name": "ClassEnrollment",
         "group": "academic",
-        "x": 800,
-        "y": 860,
+        "x": 780,
+        "y": 1004,
         "fields": [
             {
                 "name": "id",
@@ -1718,8 +1885,8 @@
         "id": "ClassCourse",
         "name": "ClassCourse",
         "group": "academic",
-        "x": 800,
-        "y": 1060,
+        "x": 780,
+        "y": 1208,
         "fields": [
             {
                 "name": "id",
@@ -1755,8 +1922,8 @@
         "id": "ClassSession",
         "name": "ClassSession",
         "group": "academic",
-        "x": 800,
-        "y": 1260,
+        "x": 780,
+        "y": 1412,
         "fields": [
             {
                 "name": "id",
@@ -1834,8 +2001,8 @@
         "id": "QuestionBank",
         "name": "QuestionBank",
         "group": "academic",
-        "x": 1540,
-        "y": 100,
+        "x": 1480,
+        "y": 80,
         "fields": [
             {
                 "name": "id",
@@ -1892,8 +2059,8 @@
         "id": "Question",
         "name": "Question",
         "group": "academic",
-        "x": 1540,
-        "y": 360,
+        "x": 1480,
+        "y": 362,
         "fields": [
             {
                 "name": "id",
@@ -1957,8 +2124,8 @@
         "id": "Answer",
         "name": "Answer",
         "group": "academic",
-        "x": 1540,
-        "y": 620,
+        "x": 1480,
+        "y": 670,
         "fields": [
             {
                 "name": "id",
@@ -2008,8 +2175,8 @@
         "id": "ExamSubmission",
         "name": "ExamSubmission",
         "group": "academic",
-        "x": 1900,
-        "y": 360,
+        "x": 1830,
+        "y": 80,
         "fields": [
             {
                 "name": "id",
@@ -2094,8 +2261,8 @@
         "id": "SubmissionAnswer",
         "name": "SubmissionAnswer",
         "group": "academic",
-        "x": 1900,
-        "y": 660,
+        "x": 1830,
+        "y": 466,
         "fields": [
             {
                 "name": "id",
@@ -2159,8 +2326,8 @@
         "id": "StudentProgress",
         "name": "StudentProgress",
         "group": "academic",
-        "x": 1540,
-        "y": 880,
+        "x": 1480,
+        "y": 926,
         "fields": [
             {
                 "name": "id",
@@ -2217,8 +2384,8 @@
         "id": "StoreItem",
         "name": "StoreItem",
         "group": "store",
-        "x": 1540,
-        "y": 1140,
+        "x": 1480,
+        "y": 1208,
         "fields": [
             {
                 "name": "id",
@@ -2317,8 +2484,8 @@
         "id": "StudentInventory",
         "name": "StudentInventory",
         "group": "store",
-        "x": 1900,
-        "y": 1140,
+        "x": 1480,
+        "y": 1646,
         "fields": [
             {
                 "name": "id",
@@ -2375,8 +2542,8 @@
         "id": "Order",
         "name": "Order",
         "group": "order",
-        "x": 800,
-        "y": 1500,
+        "x": 1830,
+        "y": 774,
         "fields": [
             {
                 "name": "id",
@@ -2468,8 +2635,8 @@
         "id": "Transaction",
         "name": "Transaction",
         "group": "order",
-        "x": 1160,
-        "y": 1500,
+        "x": 1830,
+        "y": 1186,
         "fields": [
             {
                 "name": "id",
@@ -2520,7 +2687,7 @@
         "name": "Notification",
         "group": "core",
         "x": 80,
-        "y": 360,
+        "y": 466,
         "fields": [
             {
                 "name": "id",
@@ -2848,6 +3015,87 @@
     let isPanning = false;
     let panStartX = 0;
     let panStartY = 0;
+
+    const urlParams = new URLSearchParams(window.location.search);
+
+    // -------------------------------------------------------------
+    // THEME SWITCHER (DARK / LIGHT) & LOCALSTORAGE
+    // -------------------------------------------------------------
+    function updateThemeUI(isLight) {
+      const icon = isLight ? '🌙' : '☀️';
+      const text = isLight ? 'Nền tối' : 'Nền sáng';
+      
+      const headerIcon = document.getElementById('theme-icon-header');
+      const headerText = document.getElementById('theme-text-header');
+      if (headerIcon && headerText) {
+        headerIcon.textContent = icon;
+        headerText.textContent = text;
+      }
+      
+      const floatIcon = document.getElementById('theme-icon-float');
+      const floatText = document.getElementById('theme-text-float');
+      if (floatIcon && floatText) {
+        floatIcon.textContent = icon;
+        floatText.textContent = text;
+      }
+    }
+
+    function setTheme(theme) {
+      const isLight = theme === 'light';
+      if (isLight) {
+        document.body.classList.add('light-theme');
+        try { localStorage.setItem('schoolify_erd_theme', 'light'); } catch (e) {}
+      } else {
+        document.body.classList.remove('light-theme');
+        try { localStorage.setItem('schoolify_erd_theme', 'dark'); } catch (e) {}
+      }
+      updateThemeUI(isLight);
+      if (typeof drawConnections === 'function') {
+        drawConnections();
+      }
+    }
+
+    function toggleTheme() {
+      const isLight = document.body.classList.contains('light-theme');
+      setTheme(isLight ? 'dark' : 'light');
+    }
+
+    const btnHeaderTheme = document.getElementById('btn-theme-toggle-header');
+    if (btnHeaderTheme) {
+      btnHeaderTheme.addEventListener('click', toggleTheme);
+    }
+
+    const btnFloatTheme = document.getElementById('btn-theme-toggle-float');
+    if (btnFloatTheme) {
+      btnFloatTheme.addEventListener('click', toggleTheme);
+    }
+
+    // Initialize Theme: URL param > localStorage > default dark
+    let initialTheme = 'dark';
+    try {
+      const savedTheme = localStorage.getItem('schoolify_erd_theme');
+      if (savedTheme === 'light') initialTheme = 'light';
+    } catch (e) {}
+
+    if (urlParams.get('theme') === 'light') {
+      initialTheme = 'light';
+    } else if (urlParams.get('theme') === 'dark') {
+      initialTheme = 'dark';
+    }
+
+    setTheme(initialTheme);
+    if (urlParams.has('clean') || urlParams.has('export')) {
+      document.body.classList.add('clean-mode');
+    }
+    if (urlParams.has('scale')) {
+      zoomScale = parseFloat(urlParams.get('scale'));
+    }
+    if (urlParams.has('panX')) {
+      panX = parseInt(urlParams.get('panX'), 10);
+    }
+    if (urlParams.has('panY')) {
+      panY = parseInt(urlParams.get('panY'), 10);
+    }
 
     function applyTransform() {
       canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomScale})`;

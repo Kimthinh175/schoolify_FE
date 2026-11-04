@@ -4,22 +4,14 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  Sparkles,
-  Send,
-  Clock,
-  ArrowLeft,
-  ChevronRight,
   AlertCircle,
-  HelpCircle,
+  ArrowLeft,
   Award,
-  Trophy,
   Check,
-  RotateCcw,
-  FileText,
-  Eye,
-  Layers,
-  WifiOff,
-  Database,
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  Trophy,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -39,6 +31,7 @@ import {
 import { gradeOlympiadExam, gradeSubPart } from '@/services/ai-essay-grading.service';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { NgocIcon } from '@/components/ui/point-icons';
 
 interface OlympiadEssayExamRoomProps {
   exam: OlympiadExam;
@@ -212,7 +205,7 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
       });
 
       setIsSingleProbGrading(false);
-      toast.success(`Đã hoàn tất chấm thử AI Bài ${activeProblem.problemNumber}!`);
+      toast.success(`Đã hoàn tất chấm thử Bài ${activeProblem.problemNumber}!`);
     }, 600);
   };
 
@@ -229,7 +222,7 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
     });
 
     if (typeof window !== 'undefined' && navigator.onLine) {
-      toast.info('AI Khảo Thí đang phân tích hai giai đoạn và chấm điểm toàn bộ bài thi...');
+      toast.info('Hệ thống đang đối chiếu barem và chấm điểm bài thi...');
 
       setTimeout(async () => {
         const report = gradeOlympiadExam(exam, answers);
@@ -324,10 +317,9 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
               size="sm"
               onClick={() => handleSubmitFullExam(false)}
               disabled={isGrading}
-              className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold rounded-xl px-3 sm:px-4 shadow-lg shadow-[#00B8DD]/20"
+              className="bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white font-semibold rounded-xl px-3 sm:px-4 shadow-2xs"
             >
-              <Sparkles className="w-4 h-4 mr-1.5" />
-              {isGrading ? 'AI Đang Chấm...' : 'Nộp Bài Chấm AI'}
+              {isGrading ? 'Đang chấm điểm...' : 'Nộp bài thi'}
             </Button>
           </div>
         </div>
@@ -445,10 +437,10 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
               size="sm"
               onClick={handleGradeCurrentProblem}
               disabled={isSingleProbGrading}
-              className="border-purple-300 dark:border-purple-600/60 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40 rounded-xl font-bold text-xs"
+              className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl font-semibold text-xs"
             >
-              <Sparkles className="w-3.5 h-3.5 mr-1 text-purple-600 dark:text-purple-400" />
-              {isSingleProbGrading ? 'AI Đang Chấm...' : `Chấm Thử Riêng Bài ${activeProblem.problemNumber}`}
+              <CheckCircle2 className="w-3.5 h-3.5 mr-1 text-slate-500" />
+              {isSingleProbGrading ? 'Đang chấm...' : `Chấm thử bài ${activeProblem.problemNumber}`}
             </Button>
 
             <div className="flex items-center gap-2">
@@ -481,7 +473,7 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
                 <Button
                   size="sm"
                   onClick={() => handleSubmitFullExam(false)}
-                  className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold rounded-xl text-xs"
+                  className="bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white font-semibold rounded-xl text-xs"
                 >
                   Nộp Toàn Bộ Bài Thi
                 </Button>
@@ -490,12 +482,12 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
           </div>
         </Card>
 
-        {/* Instant Single Problem AI Grading Card (if triggered) */}
+        {/* Instant Single Problem Grading Card (if triggered) */}
         {singleProbResult && (
-          <Card className="bg-white dark:bg-slate-900/90 border-purple-300 dark:border-purple-800/80 p-5 rounded-2xl shadow-lg dark:shadow-xl space-y-4 animate-fadeIn">
+          <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-xs space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
               <div>
-                <span className="text-xs text-purple-600 dark:text-purple-400 font-bold">KẾT QUẢ CHẤM THỬ AI</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">KẾT QUẢ CHẤM THỬ</span>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   Bài {singleProbResult.problemNumber}: {singleProbResult.title}
                 </h3>
@@ -570,7 +562,7 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
 
                   {/* Pedagogical Teacher Feedback */}
                   <p className="text-[11px] text-slate-600 dark:text-slate-300 italic pt-1 border-t border-slate-200 dark:border-slate-900">
-                    💬 <b>Nhận xét AI:</b> {subRes.feedback}
+                    💬 <b>Nhận xét:</b> {subRes.feedback}
                   </p>
                 </div>
               ))}
@@ -579,7 +571,7 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
         )}
       </main>
 
-      {/* Full Exam Final AI Evaluation Dialog */}
+      {/* Full Exam Final Evaluation Dialog */}
       <Dialog
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
@@ -600,7 +592,7 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
                 await examOfflineStorage.clearActiveExamSession();
                 router.push('/student/practice');
               }}
-              className="bg-gradient-to-r from-[#00B8DD] to-[#009bbd] hover:brightness-105 text-white font-bold rounded-xl text-xs shadow-sm shadow-[#00B8DD]/20 cursor-pointer"
+              className="bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white font-semibold rounded-xl text-xs px-4 py-2 cursor-pointer shadow-2xs"
             >
               Rời phòng thi & Lưu kết quả
             </Button>
@@ -611,7 +603,7 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
           <div className="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
             {/* Header badge */}
             <div className="text-center pb-2 border-b border-slate-200 dark:border-slate-800">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center text-white mx-auto mb-2 shadow-lg shadow-amber-500/20">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/15 dark:bg-amber-500/25 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center justify-center mx-auto mb-2 shadow-xs">
                 <Trophy className="w-6 h-6" />
               </div>
               <Badge className="bg-amber-500/15 dark:bg-amber-500/25 text-amber-700 dark:text-amber-300 border-amber-500/40 text-xs px-2.5 py-0.5 mb-1 font-bold">
@@ -674,7 +666,7 @@ export function OlympiadEssayExamRoom({ exam }: OlympiadEssayExamRoomProps) {
             <div className="bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 p-3 rounded-xl flex items-center gap-2.5 text-xs text-amber-900 dark:text-amber-300">
               <Award className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
               <span>
-                Thành tích đạt giải: <b className="text-amber-600 dark:text-amber-400 font-bold">+{exam.pointsReward} Kim Cương 💎</b> đã được cộng vào tài khoản của bạn!
+                Thành tích đạt giải: <b className="text-amber-600 dark:text-amber-400 font-bold">+{exam.pointsReward} Ngọc Tri Thức <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat /></b> đã được cộng vào tài khoản của bạn!
               </span>
             </div>
           </div>

@@ -4,29 +4,19 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  Code2,
-  Play,
-  Send,
-  RotateCcw,
-  CheckCircle2,
-  XCircle,
   AlertTriangle,
-  Clock,
-  Terminal,
-  Award,
-  Sparkles,
-  ChevronRight,
-  ChevronLeft,
-  FileCode,
-  Layers,
   ArrowLeft,
-  Check,
-  Zap,
-  Info,
-  ExternalLink,
-  BookOpen,
+  Award,
+  CheckCircle2,
+  Clock,
   Cpu,
+  Play,
+  RotateCcw,
+  Send,
+  Terminal,
   Trophy,
+  XCircle,
+  Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +27,7 @@ import { OlympiadExam, CodingProblem, CodingTestCase } from '@/types/olympiad';
 import { examOfflineStorage } from '@/services/exam-offline-storage.service';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { NgocIcon } from '@/components/ui/point-icons';
 
 type SupportedLang = 'cpp' | 'c' | 'python';
 
@@ -533,11 +524,11 @@ export function CodingExamRoom({ exam }: CodingExamRoomProps) {
         targetComplexity: target,
         isOptimal: isOpt,
         suggestions,
-        analysisText: `Mã nguồn ${currentLang.toUpperCase()} của bài ${activeProblem.title} đã được AI phân tích cấu trúc vòng lặp và phương pháp giải.`,
+        analysisText: `Mã nguồn ${currentLang.toUpperCase()} của bài ${activeProblem.title} đã được phân tích cấu trúc vòng lặp và phương pháp giải.`,
       });
 
       setIsAnalyzingAi(false);
-      toast.success('Đã hoàn tất phân tích tối ưu thuật toán AI');
+      toast.success('Đã hoàn tất phân tích tối ưu thuật toán');
     }, 600);
   };
 
@@ -702,10 +693,10 @@ export function CodingExamRoom({ exam }: CodingExamRoomProps) {
           onClick={() => setMobileTab('console')}
           className={cn(
             'flex-1 py-1.5 text-xs font-semibold rounded-md transition text-center',
-            mobileTab === 'console' ? 'bg-[#00B8DD] text-white font-bold' : 'text-slate-400 hover:text-white'
+            mobileTab === 'console' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-white'
           )}
         >
-          3. Kết Quả & AI Review
+          3. Kết Quả & Gợi Ý Tối Ưu
         </button>
       </div>
 
@@ -904,11 +895,11 @@ export function CodingExamRoom({ exam }: CodingExamRoomProps) {
                   variant="outline"
                   onClick={handleAnalyzeAi}
                   disabled={isAnalyzingAi}
-                  className="border-purple-600/60 bg-purple-950/40 text-purple-300 hover:bg-purple-900/40 font-bold rounded-xl text-xs h-8 px-2.5"
-                  title="AI Đánh giá tối ưu thuật toán & độ phức tạp"
+                  className="border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 font-semibold rounded-xl text-xs h-8 px-2.5"
+                  title="Đánh giá độ phức tạp & tối ưu mã nguồn"
                 >
-                  <Sparkles className="w-3.5 h-3.5 mr-1 text-purple-400" />
-                  {isAnalyzingAi ? 'Phân tích...' : 'AI Review'}
+                  <Cpu className="w-3.5 h-3.5 mr-1 text-slate-400" />
+                  {isAnalyzingAi ? 'Đang phân tích...' : 'Gợi ý tối ưu'}
                 </Button>
               </div>
             </div>
@@ -986,14 +977,14 @@ export function CodingExamRoom({ exam }: CodingExamRoomProps) {
                 <button
                   onClick={() => setActiveConsoleTab('ai')}
                   className={cn(
-                    'px-2.5 py-1 text-xs font-bold rounded-lg transition flex items-center gap-1.5',
+                    'px-2.5 py-1 text-xs font-semibold rounded-lg transition flex items-center gap-1.5',
                     activeConsoleTab === 'ai'
                       ? 'bg-slate-800 text-slate-100 border border-slate-700'
                       : 'text-slate-400 hover:text-white'
                   )}
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                  AI Tối Ưu Hóa
+                  <Cpu className="w-3.5 h-3.5 text-slate-400" />
+                  Gợi Ý Tối Ưu
                 </button>
               </div>
 
@@ -1140,39 +1131,39 @@ export function CodingExamRoom({ exam }: CodingExamRoomProps) {
                 </div>
               )}
 
-              {/* TAB 3: AI COMPLEXITY REVIEW */}
+              {/* TAB 3: COMPLEXITY REVIEW */}
               {activeConsoleTab === 'ai' && (
                 <div>
                   {isAnalyzingAi ? (
-                    <div className="py-8 text-center text-purple-300 animate-pulse space-y-2">
-                      <Sparkles className="w-6 h-6 text-purple-400 mx-auto animate-spin" />
-                      <div>Schoolify AI đang phân tích độ phức tạp thời gian & không gian...</div>
+                    <div className="py-8 text-center text-slate-400 animate-pulse space-y-2">
+                      <Cpu className="w-6 h-6 text-slate-400 mx-auto animate-spin" />
+                      <div>Đang phân tích độ phức tạp thời gian & không gian thuật toán...</div>
                     </div>
                   ) : aiAnalysis ? (
                     <div className="space-y-3 font-sans">
-                      <div className="flex flex-wrap items-center justify-between p-3 rounded-xl bg-purple-950/40 border border-purple-800/60">
+                      <div className="flex flex-wrap items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800">
                         <div>
-                          <div className="text-xs text-purple-300 font-bold">Độ phức tạp ước tính</div>
+                          <div className="text-xs text-slate-400 font-medium">Độ phức tạp ước tính</div>
                           <div className="text-lg font-mono font-bold text-white">
                             {aiAnalysis.estimatedComplexity}
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-xs text-purple-300 font-bold">Mục tiêu đề bài</div>
-                          <div className="text-lg font-mono font-bold text-amber-400">
+                          <div className="text-xs text-slate-400 font-medium">Mục tiêu đề bài</div>
+                          <div className="text-lg font-mono font-bold text-emerald-400">
                             {aiAnalysis.targetComplexity}
                           </div>
                         </div>
                       </div>
 
                       <div className="space-y-1.5">
-                        <div className="text-xs font-bold text-slate-300">Nhận xét & Hướng tối ưu thuật toán:</div>
+                        <div className="text-xs font-semibold text-slate-300">Nhận xét & Hướng tối ưu thuật toán:</div>
                         {aiAnalysis.suggestions.map((s, i) => (
                           <div
                             key={i}
                             className="text-xs text-slate-300 bg-slate-900 p-2.5 rounded-lg border border-slate-800 flex items-start gap-2"
                           >
-                            <span className="text-[#00B8DD] font-bold">💡</span>
+                            <span className="font-bold">💡</span>
                             <span>{s}</span>
                           </div>
                         ))}
@@ -1180,8 +1171,8 @@ export function CodingExamRoom({ exam }: CodingExamRoomProps) {
                     </div>
                   ) : (
                     <div className="py-8 text-center text-slate-500">
-                      Nhấn <b className="text-purple-400">"AI Review"</b> để nhận phân tích độ phức tạp Big-O
-                      và đề xuất thuật toán tối ưu điểm tuyệt đối.
+                      Nhấn <b className="text-slate-300">"Gợi ý tối ưu"</b> để nhận phân tích độ phức tạp Big-O
+                      và hướng giải thuật tối ưu.
                     </div>
                   )}
                 </div>
@@ -1212,7 +1203,7 @@ export function CodingExamRoom({ exam }: CodingExamRoomProps) {
                 await examOfflineStorage.clearActiveExamSession();
                 router.push('/student/practice');
               }}
-              className="bg-gradient-to-r from-[#00B8DD] to-[#009bbd] hover:brightness-105 text-white font-bold rounded-xl text-xs shadow-sm shadow-[#00B8DD]/20 cursor-pointer"
+              className="bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white font-semibold rounded-xl text-xs px-4 py-2 cursor-pointer shadow-2xs"
             >
               Rời phòng thi & Lưu kết quả
             </Button>
@@ -1253,20 +1244,20 @@ export function CodingExamRoom({ exam }: CodingExamRoomProps) {
               );
             })}
 
-            <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-500/10 via-sky-500/5 to-indigo-500/10 border border-amber-500/30 flex items-center justify-between mt-3">
-              <span className="font-bold text-sm text-slate-800 dark:text-slate-100">Tổng điểm HSG đạt được:</span>
-              <span className="text-lg font-mono font-black text-amber-600 dark:text-amber-400">
-                {totalExamEarned.toFixed(1)} / {exam.totalPoints} Điểm
+            <div className="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-between mt-3">
+              <span className="font-semibold text-sm text-slate-800 dark:text-slate-100">Tổng điểm đạt được:</span>
+              <span className="text-lg font-mono font-bold text-amber-600 dark:text-amber-400">
+                {totalExamEarned.toFixed(1)} / {exam.totalPoints} điểm
               </span>
             </div>
           </div>
 
           {/* Reward */}
           <div className="bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-xl p-3 text-xs text-amber-900 dark:text-amber-300 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <Award className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
             <span>
               Thưởng thành tích:{' '}
-              <b className="text-amber-600 dark:text-amber-400 font-bold">+{exam.pointsReward} Kim Cương 💎</b> đã được cộng vào tài khoản của bạn!
+              <b className="text-amber-600 dark:text-amber-400 font-bold">+{exam.pointsReward} <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat /></b> đã được cộng vào tài khoản của bạn!
             </span>
           </div>
         </div>

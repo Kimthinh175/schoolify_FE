@@ -56,6 +56,14 @@ export const LEVEL_DIFFICULTY_MATRIX: Record<
   },
 };
 
+// Ma trận chuẩn cấu trúc Đề Thi Thử THPT (40% Nhận biết - 30% Thông hiểu - 20% Vận dụng - 10% Vận dụng cao)
+export const STANDARD_MOCK_EXAM_DIFFICULTY_MATRIX: Record<QuestionDifficulty, number> = {
+  EASY: 0.4,
+  MEDIUM: 0.3,
+  HARD: 0.2,
+  VERY_HARD: 0.1,
+};
+
 // =========================================================================
 // 2. TỈ LỆ CÂU HỎI LIÊN QUAN TỚI CHƯƠNG TRƯỚC (PREVIOUS CHAPTER RATIO)
 // =========================================================================
@@ -114,6 +122,9 @@ export interface MatrixGenerationConfig {
   totalQuestions: number;
   quizCount?: number;
   essayCount?: number;
+  practiceMode?: 'TOPIC' | 'MOCK_EXAM';
+  targetDifficulty?: QuestionDifficulty | 'ALL';
+  topicTagFilter?: string;
 }
 
 export interface MatrixQuota {
@@ -130,18 +141,10 @@ export interface MatrixQuota {
 export function calculateMatrixQuota(
   totalCount: number,
   level: PracticeLevel,
-  chapterId: number
+  chapterId: number,
+  practiceMode?: 'TOPIC' | 'MOCK_EXAM',
+  targetDifficulty?: QuestionDifficulty | 'ALL'
 ): MatrixQuota {
-  const activeMatrix = getActiveMatrixConfig();
-  const diffRatios = activeMatrix[level] || LEVEL_DIFFICULTY_MATRIX[level] || LEVEL_DIFFICULTY_MATRIX.BASIC;
-  const prevRatio = getActivePreviousChapterRatio();
-
-  // Nếu là Chương 1: 100% thuộc Chương 1
-  // Nếu là Chương >= 2: tỷ lệ câu chương trước, còn lại câu chương hiện tại
-  const hasPreviousChapters = chapterId > 1;
-  const targetPrevious = hasPreviousChapters ? Math.max(1, Math.round(totalCount * prevRatio)) : 0;
-  const targetCurrent = totalCount - targetPrevious;
-
   const currentCounts: Record<QuestionDifficulty, number> = {
     EASY: 0,
     MEDIUM: 0,
@@ -154,6 +157,30 @@ export function calculateMatrixQuota(
     HARD: 0,
     VERY_HARD: 0,
   };
+
+  // Chế độ 1: Luyện tập theo chuyên đề (TOPIC) với mức độ nhận thức cụ thể
+  if (practiceMode === 'TOPIC' && targetDifficulty && targetDifficulty !== 'ALL') {
+    currentCounts[targetDifficulty] = totalCount;
+    return {
+      currentChapter: currentCounts,
+      previousChapters: prevCounts,
+      totalCurrent: totalCount,
+      totalPrevious: 0,
+    };
+  }
+
+  const activeMatrix = getActiveMatrixConfig();
+  const diffRatios =
+    practiceMode === 'MOCK_EXAM'
+      ? STANDARD_MOCK_EXAM_DIFFICULTY_MATRIX
+      : activeMatrix[level] || LEVEL_DIFFICULTY_MATRIX[level] || LEVEL_DIFFICULTY_MATRIX.BASIC;
+  const prevRatio = getActivePreviousChapterRatio();
+
+  // Nếu là MOCK_EXAM, TOPIC hoặc Chương 1: 100% nằm trong pool chính
+  // Nếu là Luyện theo chương truyền thống (Chương >= 2): tỷ lệ câu chương trước, còn lại câu chương hiện tại
+  const hasPreviousChapters = practiceMode !== 'MOCK_EXAM' && practiceMode !== 'TOPIC' && chapterId > 1;
+  const targetPrevious = hasPreviousChapters ? Math.max(1, Math.round(totalCount * prevRatio)) : 0;
+  const targetCurrent = totalCount - targetPrevious;
 
   const difficulties: QuestionDifficulty[] = ['EASY', 'MEDIUM', 'HARD', 'VERY_HARD'];
 
@@ -359,23 +386,49 @@ function sampleQuestionsForType(
   config: MatrixGenerationConfig,
   format: ExamFormat
 ): ExamQuestion[] {
-  const { totalQuestions, level, chapterId, grade, subjectSlug } = config;
-  const isAssessment = level === 'ASSESSMENT';
-  const quota = calculateMatrixQuota(totalQuestions, level, chapterId);
+  const {
+    totalQuestions,
+    level,
+    chapterId,
+    grade,
+    subjectSlug,
+    practiceMode,
+    targetDifficulty,
+    topicTagFilter,
+  } = config;
+  const isFullSubjectExam = level === 'ASSESSMENT' || practiceMode === 'MOCK_EXAM';
+  const quota = calculateMatrixQuota(
+    totalQuestions,
+    level,
+    chapterId,
+    practiceMode,
+    targetDifficulty
+  );
 
-  // ĐÁNH GIÁ NĂNG LỰC: Lấy câu hỏi trên TOÀN BỘ CÁC CHƯƠNG của môn học đó!
-  // LUYỆN TẬP THEO CHƯƠNG: Lấy câu hỏi theo chương hiện tại và các chương trước.
-  const currentChapterPool = candidateBank.filter((q) => {
+  // ĐÁNH GIÁ NĂNG LỰC hoặc THI THỬ CHUẨN CẤU TRÚC (MOCK_EXAM): Lấy câu hỏi trên TOÀN BỘ CÁC CHƯƠNG của môn học đó!
+  // LUYỆN TẬP THEO CHUYÊN ĐỀ (TOPIC): Ưu tiên lọc theo topicTagFilter và chapterId.
+  let currentChapterPool = candidateBank.filter((q) => {
     if (subjectSlug && !isSubjectMatch(q.subjectSlug || q.subjectName, subjectSlug)) return false;
-    if (grade && q.grade && q.grade !== grade) return false;
-    if (isAssessment) return true; // ĐGNL bao quát tất cả các chương trong môn
+    if (isFullSubjectExam) return true; // Thi thử / ĐGNL bao quát tất cả các chương trong môn
+    if (topicTagFilter) {
+      const normFilter = normalizeSubject(topicTagFilter);
+      const qTopic = normalizeSubject(`${q.topicTag || ''} ${q.topic || ''} ${q.title || ''}`);
+      if (qTopic.includes(normFilter)) return true;
+    }
     return q.chapterId === chapterId;
   });
+
+  // Nếu pool chương/tag quá ít câu, mở rộng sang toàn bộ môn học cùng khối hoặc cùng môn
+  if (currentChapterPool.length === 0) {
+    currentChapterPool = candidateBank.filter(
+      (q) => !subjectSlug || isSubjectMatch(q.subjectSlug || q.subjectName, subjectSlug)
+    );
+  }
 
   const prevChapterPool = candidateBank.filter((q) => {
     if (subjectSlug && !isSubjectMatch(q.subjectSlug || q.subjectName, subjectSlug)) return false;
     if (grade && q.grade && q.grade !== grade) return false;
-    if (isAssessment) return false;
+    if (isFullSubjectExam || practiceMode === 'TOPIC') return false;
     return q.chapterId < chapterId || q.isPreviousChapterReview;
   });
 
@@ -384,7 +437,7 @@ function sampleQuestionsForType(
 
   const difficulties: QuestionDifficulty[] = ['EASY', 'MEDIUM', 'HARD', 'VERY_HARD'];
 
-  // 1. Bốc câu hỏi cho Chương Hiện Tại (hoặc Toàn bộ môn đối với ĐGNL) theo từng mức độ
+  // 1. Bốc câu hỏi cho Chương Hiện Tại (hoặc Toàn bộ môn đối với ĐGNL / Thi thử) theo từng mức độ
   difficulties.forEach((diff) => {
     const needed = quota.currentChapter[diff];
     if (needed <= 0) return;
@@ -399,8 +452,34 @@ function sampleQuestionsForType(
       selectedIds.add(q.id);
     });
 
-    // Fallback trong cùng pool nếu thiếu mức độ này
-    if (taken.length < needed) {
+    // Fallback: Nếu chọn mức độ cụ thể ở TOPIC mode nhưng chương đó thiếu câu cùng mức độ, tìm câu cùng mức độ trong toàn môn trước
+    if (taken.length < needed && practiceMode === 'TOPIC' && targetDifficulty && targetDifficulty !== 'ALL') {
+      const remainingNeeded = needed - taken.length;
+      const sameDiffInSubject = shuffleArray(
+        candidateBank.filter(
+          (q) =>
+            (!subjectSlug || isSubjectMatch(q.subjectSlug || q.subjectName, subjectSlug)) &&
+            q.difficulty === diff &&
+            !selectedIds.has(q.id)
+        )
+      );
+      const diffTaken = sameDiffInSubject.slice(0, remainingNeeded);
+      diffTaken.forEach((q) => {
+        selectedQuestions.push(q);
+        selectedIds.add(q.id);
+      });
+    }
+
+    // Fallback tiếp trong cùng pool chương nếu vẫn thiếu
+    const currentTakenCount = selectedQuestions.length;
+    if (currentTakenCount < needed && practiceMode === 'TOPIC' && targetDifficulty && targetDifficulty !== 'ALL') {
+      const remainingNeeded = needed - currentTakenCount;
+      const fallbackPool = shuffleArray(currentChapterPool.filter((q) => !selectedIds.has(q.id)));
+      fallbackPool.slice(0, remainingNeeded).forEach((q) => {
+        selectedQuestions.push(q);
+        selectedIds.add(q.id);
+      });
+    } else if (taken.length < needed && (!practiceMode || practiceMode !== 'TOPIC' || targetDifficulty === 'ALL')) {
       const remainingNeeded = needed - taken.length;
       const fallbackPool = shuffleArray(
         currentChapterPool.filter((q) => !selectedIds.has(q.id))
@@ -414,7 +493,7 @@ function sampleQuestionsForType(
   });
 
   // 2. Bốc câu hỏi cho Các Chương Trước (nếu có yêu cầu)
-  if (!isAssessment && quota.totalPrevious > 0) {
+  if (!isFullSubjectExam && quota.totalPrevious > 0) {
     difficulties.forEach((diff) => {
       const needed = quota.previousChapters[diff];
       if (needed <= 0) return;

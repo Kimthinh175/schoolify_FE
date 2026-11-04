@@ -4,34 +4,30 @@ import * as React from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  Clock,
-  CheckCircle2,
   AlertCircle,
-  HelpCircle,
-  ArrowRight,
   ArrowLeft,
-  Send,
-  Sparkles,
-  RotateCcw,
-  BookOpen,
+  ArrowRight,
   Award,
-  Flag,
+  BookOpen,
+  BrainCircuit,
+  Calculator,
+  Check,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Check,
-  X,
-  FileText,
-  Gem,
-  Share2,
+  Clock,
+  Flag,
+  HelpCircle,
   Home,
-  BrainCircuit,
-  PenTool,
   ListOrdered,
-  CheckCircle,
-  Target,
-  Calculator,
   Lock,
+  PenTool,
+  RotateCcw,
+  Send,
   ShieldAlert,
+  Sparkles,
+  X,
+  Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -40,7 +36,9 @@ import { Dialog } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   getPracticeExam,
+  getSystemQuestionBank,
   PracticeExamPackage,
+  PracticeMode,
   ExamQuestion,
   ExamFormat,
   QuestionDifficulty,
@@ -48,7 +46,7 @@ import {
 import { PracticeLevel } from '@/types/subject';
 import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
-import { MathEssayEditor } from '@/components/ui/math-editor';
+import { SubjectEssayEditor } from '@/components/features/student/practice/SubjectEssayEditor';
 import { MathRenderer } from '@/components/ui/math-renderer';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Navbar } from '@/components/layout/Navbar';
@@ -58,9 +56,22 @@ import { examSnapshotService, ExamSnapshot, generateAttemptToken } from '@/servi
 import { ExamSnapshotModal } from '@/components/features/student/practice/ExamSnapshotModal';
 import { CodingExamRoom } from '@/components/features/student/practice/CodingExamRoom';
 import { OlympiadEssayExamRoom } from '@/components/features/student/practice/OlympiadEssayExamRoom';
+import {
+  createExamTimerManager,
+  ExamTimerManager,
+  formatExamTimer,
+  ExamTopBarTimerBadge,
+  ExamSideBarTimerCard,
+} from '@/components/features/student/practice/ExamTimerManager';
 import { getOlympiadExamById, getOlympiadExamsBySubject } from '@/services/mock/olympiad-exams';
 import { examOfflineStorage } from '@/services/exam-offline-storage.service';
-import { examPointsService } from '@/services/exam-points.service';
+import {
+  examPointsService,
+  getCachedPointsBalance,
+  getExamLevelCost,
+} from '@/services/exam-points.service';
+import { OutOfPointsModal } from '@/components/features/student/practice/OutOfPointsModal';
+import { studentExamsService } from '@/services/student-exams.service';
 import { toast } from 'sonner';
 
 function renderDifficultyBadge(difficulty?: QuestionDifficulty, isDark = false) {
@@ -130,10 +141,21 @@ function StandardExamRoomContent() {
   const durationParam = searchParams.get('duration') ? Number(searchParams.get('duration')) : undefined;
   const quizCountParam = searchParams.get('quizCount') ? Number(searchParams.get('quizCount')) : undefined;
   const essayCountParam = searchParams.get('essayCount') ? Number(searchParams.get('essayCount')) : undefined;
+  const practiceModeParam: PracticeMode =
+    searchParams.get('practiceMode')?.toUpperCase() === 'MOCK_EXAM' ? 'MOCK_EXAM' : 'TOPIC';
+  const difficultyParam = (searchParams.get('difficulty')?.toUpperCase() || 'ALL') as
+    | QuestionDifficulty
+    | 'ALL';
+  const topicTagParam = searchParams.get('topicTag') || undefined;
   const modeParam = searchParams.get('mode') || '';
   const isAssessment = levelParam === 'ASSESSMENT' || modeParam === 'diagnostic';
 
-  const computedExamId = `exam-${subjectSlug}-${levelParam.toLowerCase()}-g${gradeParam}-ch${chapterParam}-${formatParam.toLowerCase()}`;
+  const computedExamId = `exam-${subjectSlug}-${levelParam.toLowerCase()}-g${gradeParam}-ch${chapterParam}-${formatParam.toLowerCase()}-${practiceModeParam.toLowerCase()}-${difficultyParam.toLowerCase()}-${quizCountParam || countParam || 'def'}`;
+
+  // Submission & Confirmation modal state
+  const [isSubmitModalOpen, setIsSubmitModalOpen] = React.useState(false);
+  const [isSubmitted, setIsSubmitted] = React.useState(false);
+  const [resultActiveTab, setResultActiveTab] = React.useState<'overview' | 'gap_analysis' | 'solutions'>('overview');
 
   // Load Exam Package with persistence (chống đổi/đảo câu hỏi khi reload hoặc rời phòng thi)
   const [exam, setExam] = React.useState<PracticeExamPackage>(() => {
@@ -159,6 +181,9 @@ function StandardExamRoomContent() {
       quizCount: quizCountParam,
       essayCount: essayCountParam,
       durationMinutes: durationParam,
+      practiceMode: practiceModeParam,
+      targetDifficulty: difficultyParam,
+      topicTagFilter: topicTagParam,
     });
     if (typeof window !== 'undefined') {
       try {
@@ -168,9 +193,12 @@ function StandardExamRoomContent() {
     return fresh;
   });
 
-  // Đồng bộ đề thi khi đổi param URL (nếu có chuyển đề)
+  // Đồng bộ đề thi từ Backend NestJS API (hoặc cache localStorage/offline session)
   React.useEffect(() => {
-    if (exam.id !== computedExamId) {
+    let isCancelled = false;
+
+    const syncOrFetchExam = async () => {
+      // 1. Nếu đang có phiên thi dở dang hợp lệ, giữ nguyên phiên
       let restored: PracticeExamPackage | null = null;
       if (typeof window !== 'undefined') {
         try {
@@ -186,24 +214,73 @@ function StandardExamRoomContent() {
           }
         } catch {}
       }
+
       if (restored) {
-        setExam(restored);
-      } else {
-        const fresh = getPracticeExam(subjectSlug, levelParam, gradeParam, chapterParam, formatParam, {
-          requestedCount: countParam,
-          quizCount: quizCountParam,
-          essayCount: essayCountParam,
-          durationMinutes: durationParam,
-        });
-        setExam(fresh);
-        if (typeof window !== 'undefined') {
-          try {
-            localStorage.setItem(`schoolify_pkg_${computedExamId}`, JSON.stringify(fresh));
-          } catch {}
-        }
+        if (!isCancelled) setExam(restored);
+        return;
       }
-    }
-  }, [computedExamId, subjectSlug, levelParam, gradeParam, chapterParam, formatParam, countParam, quizCountParam, essayCountParam, durationParam]);
+
+      // 2. Nếu đã nộp bài, không sinh lại đề đè lên kết quả
+      if (isSubmitted) return;
+
+      // 3. Tải đề thi ma trận từ Backend API (kèm fallback transparent)
+      try {
+        const liveExam = await studentExamsService.generateMatrixExam({
+          subjectSlug,
+          grade: gradeParam,
+          chapterId: chapterParam,
+          totalQuestions: quizCountParam || countParam || 10,
+          durationMinutes: durationParam,
+          practiceMode: practiceModeParam,
+          targetDifficulty: difficultyParam,
+          topicTagFilter: topicTagParam,
+          level: levelParam,
+          format: formatParam,
+        });
+
+        if (!isCancelled && liveExam && Array.isArray(liveExam.questions) && liveExam.questions.length > 0) {
+          setExam(liveExam);
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.setItem(`schoolify_pkg_${computedExamId}`, JSON.stringify(liveExam));
+            } catch {}
+          }
+        }
+      } catch (err: any) {
+        if (!isCancelled && (err?.isInsufficientPoints || err?.errorCode === 'INSUFFICIENT_EXAM_POINTS')) {
+          const costInfo = getExamLevelCost(levelParam);
+          setOutOfPointsBlocked({
+            isBlocked: true,
+            currentPoints: Math.max(0, Number(err?.data?.currentPoints ?? 0)),
+            requiredPoints: Number(err?.data?.requiredPoints ?? costInfo.costPoints),
+            levelLabel: err?.data?.levelLabel || costInfo.label,
+          });
+          return;
+        }
+        console.warn('[ExamRoom] Lỗi tải đề từ backend, giữ nguyên đề hiện tại:', err);
+      }
+    };
+
+    syncOrFetchExam();
+    return () => {
+      isCancelled = true;
+    };
+  }, [
+    computedExamId,
+    subjectSlug,
+    levelParam,
+    gradeParam,
+    chapterParam,
+    formatParam,
+    countParam,
+    quizCountParam,
+    essayCountParam,
+    durationParam,
+    practiceModeParam,
+    difficultyParam,
+    topicTagParam,
+    isSubmitted,
+  ]);
 
   // Phân chia danh sách câu hỏi Trắc nghiệm và Tự luận
   const quizQuestions = React.useMemo(
@@ -220,10 +297,10 @@ function StandardExamRoomContent() {
     formatParam === 'ESSAY' ? 'essay' : 'quiz'
   );
 
-  // Timer state
+  // Timer state (Tách biệt khỏi React state của ExamRoomPage để tránh re-render toàn bộ đề thi mỗi giây)
   const totalLimitSeconds = exam.durationMinutes * 60;
-  const [secondsElapsed, setSecondsElapsed] = React.useState(0);
-  const [secondsRemaining, setSecondsRemaining] = React.useState(totalLimitSeconds);
+  const [timerManager, setTimerManager] = React.useState<ExamTimerManager | null>(null);
+  const [submittedTimeSpent, setSubmittedTimeSpent] = React.useState(0);
 
   // Student Answers State
   const [activeQuestionIdx, setActiveQuestionIdx] = React.useState(0);
@@ -316,14 +393,11 @@ function StandardExamRoomContent() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeQuestionIdx, exam.questions]);
 
-  // Submission & Confirmation modal state
-  const [isSubmitModalOpen, setIsSubmitModalOpen] = React.useState(false);
-  const [isSubmitted, setIsSubmitted] = React.useState(false);
   const [activeReviewFilter, setActiveReviewFilter] = React.useState<'ALL' | 'WRONG' | 'CORRECT'>('ALL');
   const [reportingQuestion, setReportingQuestion] = React.useState<ExamQuestion | null>(null);
 
   // Remediation & Snapshot states
-  const [showRemediationMode, setShowRemediationMode] = React.useState(false);
+  const [showRemediationMode, setShowRemediationMode] = React.useState(true);
   const [isGeneratingRemediation, setIsGeneratingRemediation] = React.useState(false);
   const [remediationGenStep, setRemediationGenStep] = React.useState('');
   const [isTakingRemediation, setIsTakingRemediation] = React.useState(false);
@@ -353,7 +427,7 @@ function StandardExamRoomContent() {
 
   // Khôi phục kết quả bài thi từ attemptToken bảo mật (hỗ trợ F5 giữ nguyên kết quả & kiểm tra quyền truy cập)
   React.useEffect(() => {
-    if (!attemptTokenParam) return;
+    if (!attemptTokenParam || isSubmitted) return;
 
     let isMounted = true;
     setIsRestoringResult(true);
@@ -404,7 +478,7 @@ function StandardExamRoomContent() {
         );
         setShortAnswers(snap.originalExam.studentAnswers.shortAnswers || {});
         setEssayAnswers(snap.originalExam.studentAnswers.essayAnswers || {});
-        setSecondsElapsed(snap.timeSpentSeconds || 0);
+        setSubmittedTimeSpent(snap.timeSpentSeconds || 0);
         setCurrentSnapshotId(snap.id);
         setCurrentAttemptToken(snap.attemptToken || attemptTokenParam);
         setIsSubmitted(true);
@@ -473,8 +547,6 @@ function StandardExamRoomContent() {
         // Tính thời gian còn lại theo Wall-Clock (chống reset khi thoát tab)
         const now = Date.now();
         const remaining = Math.max(0, Math.round((session.targetEndTime - now) / 1000));
-        setSecondsRemaining(remaining);
-        setSecondsElapsed(Math.max(0, totalLimitSeconds - remaining));
 
         if (remaining <= 0) {
           handleSubmitExam(true);
@@ -488,7 +560,13 @@ function StandardExamRoomContent() {
 
   // Submit Exam Handler với Offline Queue & Auto-Sync
   const handleSubmitExam = async (isAutoSubmit = false) => {
+    // 1. Tính toán thời gian làm bài đồng bộ trước (tối thiểu 1 giây, chống race condition 0s)
+    const elapsed = timerManager ? timerManager.getElapsed() : totalLimitSeconds;
+    const timeSpent = Math.max(1, Math.round(Number(elapsed || 1)));
+    setSubmittedTimeSpent(timeSpent);
+
     setIsSubmitted(true);
+    setResultActiveTab('overview');
     setIsSubmitModalOpen(false);
     await examOfflineStorage.clearActiveExamSession();
 
@@ -497,8 +575,6 @@ function StandardExamRoomContent() {
         localStorage.removeItem(`schoolify_pkg_${exam.id}`);
       } catch {}
     }
-
-    const timeSpent = Math.max(1, totalLimitSeconds - secondsRemaining);
     const answersPayload = {
       multipleChoices: answersDraftRef.current.multipleChoices,
       trueFalseAnswers: answersDraftRef.current.trueFalseAnswers,
@@ -515,48 +591,40 @@ function StandardExamRoomContent() {
     });
 
     if (typeof window !== 'undefined' && navigator.onLine) {
+      studentExamsService
+        .submitExamResult({
+          sessionId: exam.id,
+          examId: exam.id,
+          examTitle: exam.title,
+          subjectSlug: exam.subjectSlug,
+          grade: exam.grade,
+          chapterId: exam.chapterId,
+          timeSpentSeconds: timeSpent,
+          answers: answersPayload,
+          isAutoSubmit,
+        })
+        .catch((err) => console.warn('[handleSubmitExam] Direct BE submit skipped:', err));
+
       await examOfflineStorage.syncPendingSubmissions();
     }
     toast.success('Đã nộp bài thành công!');
   };
 
-  // 2. Live Timer Effect đếm giờ thực ngầm theo Wall-Clock
+  // 2. Live Timer Manager độc lập (không re-render toàn bộ đề thi 3000 dòng code mỗi giây)
   React.useEffect(() => {
     if (isSubmitted) return;
 
-    const interval = setInterval(() => {
-      const lock = examOfflineStorage.getFastSyncActiveLock();
-      if (lock && lock.targetEndTime) {
-        const remaining = Math.max(0, Math.round((lock.targetEndTime - Date.now()) / 1000));
-        setSecondsRemaining(remaining);
-        setSecondsElapsed(Math.max(0, totalLimitSeconds - remaining));
+    const manager = createExamTimerManager(totalLimitSeconds, () => {
+      handleSubmitExam(true);
+    });
+    setTimerManager(manager);
 
-        if (remaining <= 0) {
-          clearInterval(interval);
-          handleSubmitExam(true);
-        }
-      } else {
-        setSecondsElapsed((prev) => prev + 1);
-        setSecondsRemaining((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval);
-            handleSubmitExam(true);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
+    return () => {
+      manager.destroy();
+    };
   }, [isSubmitted, totalLimitSeconds]);
 
-  // Format Timer strings (MM:SS)
-  const formatTimer = (totalSecs: number) => {
-    const mins = Math.floor(totalSecs / 60);
-    const secs = totalSecs % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
+  const formatTimer = formatExamTimer;
 
   // Helper lưu trữ draft tự động vào IndexedDB
   const triggerDebouncedSave = (patch: Partial<typeof answersDraftRef.current>) => {
@@ -781,7 +849,7 @@ function StandardExamRoomContent() {
       correctCount: Math.round(correctCount),
       wrongCount,
       unansweredCount: exam.questions.length - answeredCount,
-      timeSpentSeconds: secondsElapsed,
+      timeSpentSeconds: submittedTimeSpent,
       diamondReward: rewardPoints,
       rewardPoints,
       rewardTier,
@@ -802,7 +870,7 @@ function StandardExamRoomContent() {
     shortAnswers,
     essayAnswers,
     answeredCount,
-    secondsElapsed,
+    submittedTimeSpent,
   ]);
 
   const hasProcessedRewardRef = React.useRef(false);
@@ -814,16 +882,46 @@ function StandardExamRoomContent() {
       } catch {}
     }
 
-    const fresh = getPracticeExam(subjectSlug, levelParam, gradeParam, chapterParam, formatParam, {
-      requestedCount: countParam,
-      quizCount: quizCountParam,
-      essayCount: essayCountParam,
-      durationMinutes: durationParam,
-    });
+    let fresh: PracticeExamPackage;
+    try {
+      fresh = await studentExamsService.generateMatrixExam({
+        subjectSlug,
+        grade: gradeParam,
+        chapterId: chapterParam,
+        totalQuestions: quizCountParam || countParam || 10,
+        durationMinutes: durationParam,
+        practiceMode: practiceModeParam,
+        targetDifficulty: difficultyParam,
+        topicTagFilter: topicTagParam,
+        level: levelParam,
+        format: formatParam,
+      });
+    } catch (err: any) {
+      if (err?.isInsufficientPoints || err?.errorCode === 'INSUFFICIENT_EXAM_POINTS') {
+        const costInfo = getExamLevelCost(levelParam);
+        setOutOfPointsBlocked({
+          isBlocked: true,
+          currentPoints: Math.max(0, Number(err?.data?.currentPoints ?? 0)),
+          requiredPoints: Number(err?.data?.requiredPoints ?? costInfo.costPoints),
+          levelLabel: err?.data?.levelLabel || costInfo.label,
+        });
+        return;
+      }
+      fresh = getPracticeExam(subjectSlug, levelParam, gradeParam, chapterParam, formatParam, {
+        requestedCount: countParam,
+        quizCount: quizCountParam,
+        essayCount: essayCountParam,
+        durationMinutes: durationParam,
+        practiceMode: practiceModeParam,
+        targetDifficulty: difficultyParam,
+        topicTagFilter: topicTagParam,
+      });
+    }
     setExam(fresh);
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem(`schoolify_pkg_${fresh.id}`, JSON.stringify(fresh));
+        sessionStorage.setItem(`schoolify_started_pts_${fresh.id}`, 'true');
       } catch {}
     }
 
@@ -844,11 +942,11 @@ function StandardExamRoomContent() {
     setEssayAnswers({});
     setFlaggedIds({});
     setActiveQuestionIdx(0);
-    setSecondsElapsed(0);
-    setSecondsRemaining(fresh.durationMinutes * 60);
+    setSubmittedTimeSpent(0);
     hasProcessedRewardRef.current = false;
     setIsSubmitted(false);
-    setShowRemediationMode(false);
+    setResultActiveTab('overview');
+    setShowRemediationMode(true);
     setIsTakingRemediation(false);
     setRemediationExam(null);
     setRemediationChoices({});
@@ -995,6 +1093,22 @@ function StandardExamRoomContent() {
 
     setTimeout(() => {
       const pkg = generateRemediationExamPackage(wrongQs, exam);
+      // Đặt thời gian làm bài vô hạn (durationMinutes = 0)
+      pkg.durationMinutes = 0;
+
+      // Lưu đề thi vào sessionStorage để chuyển sang phòng khắc phục chuyên biệt
+      try {
+        sessionStorage.setItem(
+          'schoolify_remediation_exam_data',
+          JSON.stringify({
+            remediationExam: pkg,
+            originalExam: exam,
+            snapshotId: currentSnapshotId,
+            attemptToken: attemptTokenParam,
+          })
+        );
+      } catch {}
+
       setRemediationExam(pkg);
       setRemediationChoices({});
       setRemediationTrueFalse({});
@@ -1002,16 +1116,119 @@ function StandardExamRoomContent() {
       setRemediationSubmitted(false);
       setRemediationResult(null);
       setIsGeneratingRemediation(false);
-      setIsTakingRemediation(true);
-      toast.success(`Đã chuẩn bị xong ${pkg.questions.length} câu biến thể khắc phục! Chúc bạn làm tốt.`);
 
-      setTimeout(() => {
-        const el = document.getElementById('remediation-runner-card');
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 100);
-    }, 1150);
+      toast.success(
+        `Đã tạo xong đề mới (${pkg.questions.length} câu biến thể vô hạn thời gian)! Đang chuyển bạn sang phòng thi khắc phục... 🚀`
+      );
+
+      // Chuyển ngay sang trang mới chuyên biệt cho việc khắc phục câu sai
+      router.push('/student/practice/remediation');
+    }, 950);
+  };
+
+  // Kích hoạt Gia sư AI Socratic phân tích câu hỏi hiện tại theo Ma trận Tag 4 chiều
+  const handleAskSocraticAiTutor = (q: ExamQuestion) => {
+    if (typeof window === 'undefined') return;
+    const studentChoice = multipleChoices[q.id];
+    const topicTag = q.topicTag || exam.chapterName || 'Chuyên đề trọng tâm';
+    const cognitiveTag = q.cognitiveTag || 'Thông hiểu';
+    const trapTag =
+      q.trapTag || 'Cẩn thận kiểm tra điều kiện xác định và dấu biểu thức trước khi kết luận';
+
+    window.dispatchEvent(
+      new CustomEvent('schoolify:ask-ai-tutor', {
+        detail: {
+          questionId: q.id,
+          title: q.title,
+          content: q.content,
+          choices: q.choices,
+          studentChoice,
+          correctChoice: q.correctChoice,
+          topicTag,
+          cognitiveTag,
+          trapTag,
+          explanation: q.explanation,
+          subjectSlug,
+          grade: gradeParam,
+          isSubmitted,
+          prompt: `💡 Nhờ Gia sư AI gợi mở Socratic cho câu "${q.title}" [Tag: ${topicTag}]`,
+        },
+      })
+    );
+  };
+
+  // Luyện bù ngay 5 câu trắc nghiệm đúng vào các Tag chuyên đề đang yếu (< 75%)
+  const handleStartWeakTagRemediation5Q = (weakTags: string[]) => {
+    if (!examResult) return;
+    const wrongQs = examResult.questionResults
+      .filter((r) => !r.isCorrect)
+      .map((r) => r.question);
+
+    const bank = getSystemQuestionBank().filter(
+      (q) => q.subjectSlug === subjectSlug && q.type === 'MULTIPLE_CHOICE'
+    );
+
+    const targetTagSet = new Set(weakTags);
+    const matchingTagPool = bank.filter(
+      (q) => q.topicTag && targetTagSet.has(q.topicTag)
+    );
+
+    const seedQuestions =
+      wrongQs.length > 0
+        ? wrongQs
+        : matchingTagPool.length > 0
+        ? matchingTagPool
+        : exam.questions.filter((q) => q.type === 'MULTIPLE_CHOICE');
+
+    const basePkg = generateRemediationExamPackage(seedQuestions.slice(0, 5), exam);
+    const selected5: ExamQuestion[] = [...basePkg.questions];
+
+    // Bổ sung đủ 5 câu trắc nghiệm từ kho Tag yếu nếu số câu sai < 5
+    const fallbackPool = [...matchingTagPool, ...bank, ...exam.questions];
+    let idx = 0;
+    while (selected5.length < 5 && fallbackPool.length > 0 && idx < 25) {
+      const candidate = fallbackPool[idx % fallbackPool.length];
+      if (candidate.type === 'MULTIPLE_CHOICE') {
+        selected5.push({
+          ...candidate,
+          id: `rem5-q-${selected5.length + 1}-${Date.now()}-${idx}`,
+          title: `Câu ${selected5.length + 1} [Luyện bù Tag: ${candidate.topicTag || exam.chapterName}]`,
+          score: 2,
+        });
+      }
+      idx++;
+    }
+
+    const pkg5: PracticeExamPackage = {
+      ...basePkg,
+      id: `rem-weak-tags-5q-${Date.now()}`,
+      title: `Đề Luyện Bù 5 Câu Chuyên Biệt — ${weakTags[0] || exam.chapterName}`,
+      durationMinutes: 0,
+      totalPoints: 10,
+      questions: selected5.slice(0, 5).map((q, i) => ({
+        ...q,
+        score: 2,
+        title: q.title.startsWith('Câu') ? q.title : `Câu ${i + 1}: ${q.title}`,
+      })),
+    };
+
+    setRemediationExam(pkg5);
+    setRemediationChoices({});
+    setRemediationTrueFalse({});
+    setRemediationShortAnswers({});
+    setRemediationSubmitted(false);
+    setRemediationResult(null);
+    setIsTakingRemediation(true);
+
+    toast.success('⚡ Đã khởi tạo 5 câu luyện bù chuyên đề đang yếu!', {
+      description: `Tập trung gỡ rối: ${weakTags.slice(0, 2).join(', ') || exam.chapterName}`,
+    });
+
+    setTimeout(() => {
+      document
+        .getElementById('remediation-runner-card')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 120);
   };
 
   // Nộp bài thi biến thể khắc phục
@@ -1108,16 +1325,40 @@ function StandardExamRoomContent() {
     }
   };
 
+  const [outOfPointsBlocked, setOutOfPointsBlocked] = React.useState<{
+    isBlocked: boolean;
+    currentPoints: number;
+    requiredPoints: number;
+    levelLabel: string;
+  }>({
+    isBlocked: false,
+    currentPoints: 0,
+    requiredPoints: 3,
+    levelLabel: 'Cơ bản',
+  });
+
   // Trừ điểm năng lượng khi bắt đầu mở đề thi (PostgreSQL: Cơ bản -3đ, TB -4đ, Giỏi -9đ)
   React.useEffect(() => {
-    if (attemptTokenParam || isSubmitted || isAssessment) return;
+    if (attemptTokenParam || isSubmitted) return;
     const deductedKey = `schoolify_started_pts_${exam.id}`;
     if (typeof window !== 'undefined' && sessionStorage.getItem(deductedKey) === '1') {
       return;
     }
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem(deductedKey, '1');
+
+    const costInfo = getExamLevelCost(levelParam);
+    const cachedPoints = getCachedPointsBalance();
+    if (cachedPoints !== null && (cachedPoints <= 0 || cachedPoints < costInfo.costPoints)) {
+      setOutOfPointsBlocked({
+        isBlocked: true,
+        currentPoints: Math.max(0, cachedPoints),
+        requiredPoints: costInfo.costPoints,
+        levelLabel: costInfo.label,
+      });
+      return;
     }
+
+    if (isAssessment) return;
+
     examPointsService
       .startExamWithPoints({
         userId: user?.id,
@@ -1128,13 +1369,31 @@ function StandardExamRoomContent() {
         chapterId: chapterParam,
       })
       .then((res) => {
-        if (res?.ok && res?.message) {
-          toast.info('Đã kích hoạt phiên làm đề', { description: res.message });
-        } else if (!res?.ok && res?.message) {
-          toast.warning('Thông báo điểm năng lượng', { description: res.message });
+        if (res?.ok) {
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem(deductedKey, '1');
+          }
+          if (res?.message) {
+            toast.info('Đã kích hoạt phiên làm đề', { description: res.message });
+          }
+        } else {
+          setOutOfPointsBlocked({
+            isBlocked: true,
+            currentPoints: Math.max(0, Number(res?.data?.currentPoints ?? 0)),
+            requiredPoints: Number(res?.data?.requiredPoints ?? costInfo.costPoints),
+            levelLabel: res?.data?.levelLabel || costInfo.label,
+          });
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        const costInfo = getExamLevelCost(levelParam);
+        setOutOfPointsBlocked({
+          isBlocked: true,
+          currentPoints: Math.max(0, Number(err?.data?.currentPoints ?? 0)),
+          requiredPoints: Number(err?.data?.requiredPoints ?? costInfo.costPoints),
+          levelLabel: err?.data?.levelLabel || costInfo.label,
+        });
+      });
   }, [attemptTokenParam, isSubmitted, isAssessment, exam.id, exam.title, user?.id, levelParam, subjectSlug, gradeParam, chapterParam]);
 
   // Xử lý cộng/trừ điểm thưởng Token khi nộp bài thi (PostgreSQL)
@@ -1154,7 +1413,7 @@ function StandardExamRoomContent() {
         })
         .then((res) => {
           if (res?.message) {
-            toast.success('Đã cập nhật điểm năng lượng làm đề!', {
+            toast.success('Đã cập nhật Tia Sáng làm đề!', {
               description: res.message,
             });
           }
@@ -1169,7 +1428,7 @@ function StandardExamRoomContent() {
         if (stored) {
           currentBalance = Number(stored);
         } else {
-          localStorage.setItem('schoolify_user_tokens', '250');
+          localStorage.setItem('schoolify_user_tokens', '9');
         }
       } catch {}
 
@@ -1204,6 +1463,26 @@ function StandardExamRoomContent() {
   }, [isSubmitted, isAssessment, examResult, user, subjectSlug]);
 
   const currentQ = exam.questions[activeQuestionIdx] || exam.questions[0];
+
+  // =========================================================================
+  // VIEW: HẾT TIA SÁNG NĂNG LƯỢNG (CHẶN TẠO ĐỀ & MỞ POPUP ĐĂNG KÝ GÓI)
+  // =========================================================================
+  if (outOfPointsBlocked.isBlocked) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-[#070B14] text-slate-900 dark:text-slate-100 flex flex-col pt-20">
+        <Navbar />
+        <OutOfPointsModal
+          isOpen={true}
+          onClose={() => router.push('/luyen-thi')}
+          currentPoints={outOfPointsBlocked.currentPoints}
+          requiredPoints={outOfPointsBlocked.requiredPoints}
+          levelLabel={outOfPointsBlocked.levelLabel}
+          secondaryLabel="Quay lại Cổng Luyện Thi"
+          onNavigatePricing={() => router.push('/pricing')}
+        />
+      </div>
+    );
+  }
 
   // =========================================================================
   // VIEW: TRUY CẬP BỊ TỪ CHỐI (403 FORBIDDEN - BẢO VỆ QUYỀN SỞ HỮU BÀI THI)
@@ -1270,6 +1549,57 @@ function StandardExamRoomContent() {
     const wrongCount = wrongResults.length;
     const accuracyPercent = Math.round((examResult.correctCount / exam.questions.length) * 100);
     const scoreVal = examResult.finalScore;
+
+    // Nhóm độ chính xác theo Chuyên đề Tag (Axis 2: topicTag) & Bẫy sai lầm (Axis 4: trapTag)
+    const tagMap = new Map<
+      string,
+      {
+        topicTag: string;
+        total: number;
+        correct: number;
+        wrong: number;
+        trapTags: string[];
+        cognitiveTags: string[];
+      }
+    >();
+
+    examResult.questionResults.forEach((r) => {
+      const tag = r.question.topicTag || exam.chapterName || 'Chuyên đề trọng tâm';
+      const entry = tagMap.get(tag) || {
+        topicTag: tag,
+        total: 0,
+        correct: 0,
+        wrong: 0,
+        trapTags: [],
+        cognitiveTags: [],
+      };
+      entry.total += 1;
+      if (r.isCorrect) {
+        entry.correct += 1;
+      } else {
+        entry.wrong += 1;
+        if (r.question.trapTag && !entry.trapTags.includes(r.question.trapTag)) {
+          entry.trapTags.push(r.question.trapTag);
+        }
+      }
+      if (r.question.cognitiveTag && !entry.cognitiveTags.includes(r.question.cognitiveTag)) {
+        entry.cognitiveTags.push(r.question.cognitiveTag);
+      }
+      tagMap.set(tag, entry);
+    });
+
+    const tagDiagnosticGroups = Array.from(tagMap.values())
+      .map((g) => {
+        const accuracy = Math.round((g.correct / Math.max(1, g.total)) * 100);
+        const status: 'MASTERED' | 'REVIEW' | 'WEAK' =
+          accuracy >= 75 ? 'MASTERED' : accuracy >= 50 ? 'REVIEW' : 'WEAK';
+        return { ...g, accuracy, status };
+      })
+      .sort((a, b) => a.accuracy - b.accuracy);
+
+    const weakTopicTagNames = tagDiagnosticGroups
+      .filter((g) => g.status !== 'MASTERED')
+      .map((g) => g.topicTag);
 
     // Phân loại sư phạm chuẩn mực (badge trung tính, vòng điểm chỉ khác màu khi chưa đạt)
     const tierBadge =
@@ -1343,214 +1673,460 @@ function StandardExamRoomContent() {
           </div>
 
           {/* ========================================================================= */}
-          {/* 2. SCORECARD: ĐIỂM SỐ + 4 CHỈ SỐ                                          */}
+          {/* 3 TABS NAVIGATION (1. Tổng quan điểm số -> 2. Bản đồ lỗ hổng -> 3. Lời giải)*/}
           {/* ========================================================================= */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 p-1.5 bg-slate-100 dark:bg-slate-900/80 rounded-2xl border border-slate-200/80 dark:border-slate-800 w-full">
+            {/* Tab 1 */}
+            <button
+              type="button"
+              data-testid="result-tab-overview"
+              onClick={() => setResultActiveTab('overview')}
+              className={cn(
+                'flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer select-none text-center',
+                resultActiveTab === 'overview'
+                  ? 'bg-white dark:bg-slate-800 text-[#00B8DD] shadow-xs border border-slate-200/60 dark:border-slate-700'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              )}
+            >
+              <Award className="w-4 h-4 shrink-0" />
+              <span className="sm:hidden font-bold">1. Tổng quan</span>
+              <span className="hidden sm:inline">1. Tổng quan kết quả</span>
+              <span className="hidden md:inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300">
+                {scoreVal}/10đ
+              </span>
+            </button>
 
-            {/* Cột Trái: Điểm số & vòng tròn */}
-            <Card className="lg:col-span-5 p-6 rounded-2xl bg-white dark:bg-[#0B1324] border border-slate-200 dark:border-slate-800 shadow-none flex flex-col justify-between">
-              <div className="space-y-0.5">
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400 block">
-                  Điểm số đạt được
-                </span>
-              </div>
+            {/* Tab 2 */}
+            <button
+              type="button"
+              data-testid="result-tab-gap-analysis"
+              onClick={() => setResultActiveTab('gap_analysis')}
+              className={cn(
+                'flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer select-none text-center',
+                resultActiveTab === 'gap_analysis'
+                  ? 'bg-white dark:bg-slate-800 text-[#00B8DD] shadow-xs border border-slate-200/60 dark:border-slate-700'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              )}
+            >
+              <BrainCircuit className="w-4 h-4 shrink-0" />
+              <span className="sm:hidden font-bold">2. Lỗ hổng</span>
+              <span className="hidden sm:inline">2. Bản đồ lỗ hổng</span>
+              <span className="hidden md:inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300">
+                {weakTopicTagNames.length > 0 ? `${weakTopicTagNames.length} cần ôn` : 'Đạt'}
+              </span>
+            </button>
 
-              <div className="my-6 flex flex-col items-center justify-center">
-                <div className="relative w-44 h-44 flex items-center justify-center">
-                  <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 140 140">
-                    <circle
-                      cx="70"
-                      cy="70"
-                      r={gaugeRadius}
-                      className="text-slate-100 dark:text-slate-800 stroke-current"
-                      strokeWidth="10"
-                      fill="transparent"
-                    />
-                    <circle
-                      cx="70"
-                      cy="70"
-                      r={gaugeRadius}
-                      stroke={assessmentTier.ringColor}
-                      strokeWidth="10"
-                      strokeDasharray={gaugeCircumference}
-                      strokeDashoffset={strokeDashoffset}
-                      strokeLinecap="round"
-                      fill="transparent"
-                      className="transition-all duration-1000 ease-out"
-                    />
-                  </svg>
-
-                  <div className="absolute flex items-baseline justify-center">
-                    <span className="text-5xl font-semibold text-slate-900 dark:text-white tracking-tight tabular-nums">
-                      {scoreVal}
-                    </span>
-                    <span className="text-sm font-medium text-slate-400 ml-1">/10</span>
-                  </div>
-                </div>
-
-                <div className="mt-4 text-center space-y-1.5">
-                  <span className={cn('inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border', assessmentTier.badgeBg)}>
-                    {assessmentTier.label}
-                  </span>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
-                    {assessmentTier.desc}
-                  </p>
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
-                <span>Số câu hỏi</span>
-                <span className="font-semibold text-slate-900 dark:text-slate-200">
-                  {exam.questions.length} câu
-                </span>
-              </div>
-            </Card>
-
-            {/* Cột Phải: 4 chỉ số */}
-            <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-              {/* 1. Độ chính xác */}
-              <Card className="p-5 rounded-2xl bg-white dark:bg-[#0B1324] border border-slate-200 dark:border-slate-800 shadow-none flex flex-col justify-between gap-4">
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Độ chính xác</span>
-                <div>
-                  <div className="text-3xl font-semibold text-slate-900 dark:text-white tabular-nums">
-                    {accuracyPercent}%
-                  </div>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Đúng {examResult.correctCount} / {exam.questions.length} câu
-                  </p>
-                </div>
-                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className="h-full bg-[#00B8DD] rounded-full transition-all duration-700"
-                    style={{ width: `${accuracyPercent}%` }}
-                  />
-                </div>
-              </Card>
-
-              {/* 2. Thời gian làm bài */}
-              <Card className="p-5 rounded-2xl bg-white dark:bg-[#0B1324] border border-slate-200 dark:border-slate-800 shadow-none flex flex-col justify-between gap-4">
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Thời gian làm bài</span>
-                <div>
-                  <div className="text-3xl font-semibold text-slate-900 dark:text-white tabular-nums">
-                    {formatTimer(examResult.timeSpentSeconds)}
-                  </div>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Giới hạn {exam.durationMinutes} phút · TB {Math.max(1, Math.round(examResult.timeSpentSeconds / exam.questions.length))}s/câu
-                  </p>
-                </div>
-                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className="h-full bg-[#00B8DD] rounded-full transition-all duration-700"
-                    style={{ width: `${Math.min(100, (examResult.timeSpentSeconds / (exam.durationMinutes * 60)) * 100)}%` }}
-                  />
-                </div>
-              </Card>
-
-              {/* 3. Câu chưa chính xác */}
-              <Card className="p-5 rounded-2xl bg-white dark:bg-[#0B1324] border border-slate-200 dark:border-slate-800 shadow-none flex flex-col justify-between gap-4">
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Câu chưa chính xác</span>
-                <div>
-                  <div className="text-3xl font-semibold text-slate-900 dark:text-white tabular-nums">
-                    {wrongCount}
-                    <span className="text-sm font-medium text-slate-400 ml-1.5">câu</span>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-1">
-                    {wrongCount > 0 ? 'Cần luyện lại phương pháp giải' : 'Không có câu sai cần ôn'}
-                  </p>
-                </div>
-                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className="h-full bg-[#00B8DD] rounded-full transition-all duration-700"
-                    style={{ width: `${Math.round((wrongCount / exam.questions.length) * 100)}%` }}
-                  />
-                </div>
-              </Card>
-
-              {/* 4. Điểm thưởng */}
-              <Card className="p-5 rounded-2xl bg-white dark:bg-[#0B1324] border border-slate-200 dark:border-slate-800 shadow-none flex flex-col justify-between gap-4">
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Điểm thưởng</span>
-                <div>
-                  <div className="text-3xl font-semibold text-slate-900 dark:text-white tabular-nums">
-                    {examResult.rewardPoints > 0 ? `+${examResult.rewardPoints}` : examResult.rewardPoints}
-                    <span className="text-sm font-medium text-slate-400 ml-1.5">điểm</span>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-1 line-clamp-1">
-                    {examResult.rewardNote}
-                  </p>
-                </div>
-              </Card>
-            </div>
+            {/* Tab 3 */}
+            <button
+              type="button"
+              data-testid="result-tab-solutions"
+              onClick={() => setResultActiveTab('solutions')}
+              className={cn(
+                'flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer select-none text-center',
+                resultActiveTab === 'solutions'
+                  ? 'bg-white dark:bg-slate-800 text-[#00B8DD] shadow-xs border border-slate-200/60 dark:border-slate-700'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              )}
+            >
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span className="sm:hidden font-bold">3. Lời giải</span>
+              <span className="hidden sm:inline">3. Chi tiết lời giải</span>
+              <span className="hidden md:inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300">
+                {exam.questions.length} câu
+              </span>
+            </button>
           </div>
 
           {/* ========================================================================= */}
-          {/* 3. AI COMPETENCY ASSESSMENT DIAGNOSIS (Nếu là bài đánh giá năng lực)      */}
+          {/* TAB 1: TỔNG QUAN KẾT QUẢ (ẢNH 1)                                          */}
           {/* ========================================================================= */}
-          {isAssessment && (
-            <Card className="p-6 rounded-2xl bg-white dark:bg-[#0B1324] border border-slate-200 dark:border-slate-800 shadow-none text-left space-y-2">
-              <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                Kết quả chẩn đoán năng lực
-              </h3>
-              <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                Dựa trên điểm số <strong className="text-slate-950 dark:text-white font-semibold">{examResult.finalScore}/10</strong>, năng lực hiện tại của bạn phù hợp nhất với cấp độ:{' '}
-                <span className="font-semibold text-slate-900 dark:text-white">
-                  {examResult.finalScore >= 8.5
-                    ? 'Nâng cao (Vận dụng cao 9-10đ)'
-                    : examResult.finalScore >= 5.0
-                    ? 'Trung bình (Học kỳ & Tốt nghiệp)'
-                    : 'Cơ bản (SGK & Lý thuyết)'}
-                </span>.
+          {resultActiveTab === 'overview' && (
+            <div className="space-y-6 animate-in fade-in-50 duration-200">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+
+                {/* Cột Trái: Điểm số & vòng tròn */}
+                <Card className="lg:col-span-5 p-6 rounded-2xl bg-white dark:bg-[#0B1324] border border-slate-200 dark:border-slate-800 shadow-none flex flex-col justify-between">
+                  <div className="space-y-0.5">
+                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400 block">
+                      Điểm số đạt được
+                    </span>
+                  </div>
+
+                  <div className="my-6 flex flex-col items-center justify-center">
+                    <div className="relative w-44 h-44 flex items-center justify-center">
+                      <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 140 140">
+                        <circle
+                          cx="70"
+                          cy="70"
+                          r={gaugeRadius}
+                          className="text-slate-100 dark:text-slate-800 stroke-current"
+                          strokeWidth="10"
+                          fill="transparent"
+                        />
+                        <circle
+                          cx="70"
+                          cy="70"
+                          r={gaugeRadius}
+                          stroke={assessmentTier.ringColor}
+                          strokeWidth="10"
+                          strokeDasharray={gaugeCircumference}
+                          strokeDashoffset={strokeDashoffset}
+                          strokeLinecap="round"
+                          fill="transparent"
+                          className="transition-all duration-1000 ease-out"
+                        />
+                      </svg>
+
+                      <div className="absolute flex items-baseline justify-center">
+                        <span className="text-5xl font-semibold text-slate-900 dark:text-white tracking-tight tabular-nums">
+                          {scoreVal}
+                        </span>
+                        <span className="text-sm font-medium text-slate-400 ml-1">/10</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 text-center space-y-1.5">
+                      <span className={cn('inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border', assessmentTier.badgeBg)}>
+                        {assessmentTier.label}
+                      </span>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+                        {assessmentTier.desc}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
+                    <span>Số câu hỏi</span>
+                    <span className="font-semibold text-slate-900 dark:text-slate-200">
+                      {exam.questions.length} câu
+                    </span>
+                  </div>
+                </Card>
+
+                {/* Cột Phải: 4 chỉ số */}
+                <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                  {/* 1. Độ chính xác */}
+                  <Card className="p-5 rounded-2xl bg-white dark:bg-[#0B1324] border border-slate-200 dark:border-slate-800 shadow-none flex flex-col justify-between gap-4">
+                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Độ chính xác</span>
+                    <div>
+                      <div className="text-3xl font-semibold text-slate-900 dark:text-white tabular-nums">
+                        {accuracyPercent}%
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Đúng {examResult.correctCount} / {exam.questions.length} câu
+                      </p>
+                    </div>
+                    <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className="h-full bg-[#00B8DD] rounded-full transition-all duration-700"
+                        style={{ width: `${accuracyPercent}%` }}
+                      />
+                    </div>
+                  </Card>
+
+                  {/* 2. Thời gian làm bài */}
+                  <Card className="p-5 rounded-2xl bg-white dark:bg-[#0B1324] border border-slate-200 dark:border-slate-800 shadow-none flex flex-col justify-between gap-4">
+                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Thời gian làm bài</span>
+                    <div>
+                      <div className="text-3xl font-semibold text-slate-900 dark:text-white tabular-nums">
+                        {formatTimer(examResult.timeSpentSeconds)}
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Giới hạn {exam.durationMinutes} phút · TB {Math.max(1, Math.round(examResult.timeSpentSeconds / exam.questions.length))}s/câu
+                      </p>
+                    </div>
+                    <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className="h-full bg-[#00B8DD] rounded-full transition-all duration-700"
+                        style={{ width: `${Math.min(100, (examResult.timeSpentSeconds / (exam.durationMinutes * 60)) * 100)}%` }}
+                      />
+                    </div>
+                  </Card>
+
+                  {/* 3. Câu chưa chính xác */}
+                  <Card className="p-5 rounded-2xl bg-white dark:bg-[#0B1324] border border-slate-200 dark:border-slate-800 shadow-none flex flex-col justify-between gap-4">
+                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Câu chưa chính xác</span>
+                    <div>
+                      <div className="text-3xl font-semibold text-slate-900 dark:text-white tabular-nums">
+                        {wrongCount}
+                        <span className="text-sm font-medium text-slate-400 ml-1.5">câu</span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">
+                        {wrongCount > 0 ? 'Cần luyện lại phương pháp giải' : 'Không có câu sai cần ôn'}
+                      </p>
+                    </div>
+                    <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className="h-full bg-[#00B8DD] rounded-full transition-all duration-700"
+                        style={{ width: `${Math.round((wrongCount / exam.questions.length) * 100)}%` }}
+                      />
+                    </div>
+                  </Card>
+
+                  {/* 4. Điểm thưởng */}
+                  <Card className="p-5 rounded-2xl bg-white dark:bg-[#0B1324] border border-slate-200 dark:border-slate-800 shadow-none flex flex-col justify-between gap-4">
+                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Điểm thưởng</span>
+                    <div>
+                      <div className="text-3xl font-semibold text-slate-900 dark:text-white tabular-nums">
+                        {examResult.rewardPoints > 0 ? `+${examResult.rewardPoints}` : examResult.rewardPoints}
+                        <span className="text-sm font-medium text-slate-400 ml-1.5">điểm</span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1 line-clamp-1">
+                        {examResult.rewardNote}
+                      </p>
+                    </div>
+                  </Card>
+                </div>
               </div>
-              <p className="text-xs text-slate-500">
-                Kết quả đã được cập nhật vào hồ sơ học tập. Kho môn học sẽ ưu tiên đề xuất lộ trình rèn luyện tương ứng.
-              </p>
-            </Card>
+
+              {/* 3. AI COMPETENCY ASSESSMENT DIAGNOSIS (Nếu là bài đánh giá năng lực) */}
+              {isAssessment && (
+                <Card className="p-6 rounded-2xl bg-white dark:bg-[#0B1324] border border-slate-200 dark:border-slate-800 shadow-none text-left space-y-2">
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+                    Kết quả chẩn đoán năng lực
+                  </h3>
+                  <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                    Dựa trên điểm số <strong className="text-slate-950 dark:text-white font-semibold">{examResult.finalScore}/10</strong>, năng lực hiện tại của bạn phù hợp nhất với cấp độ:{' '}
+                    <span className="font-semibold text-slate-900 dark:text-white">
+                      {examResult.finalScore >= 8.5
+                        ? 'Nâng cao (Vận dụng cao 9-10đ)'
+                        : examResult.finalScore >= 5.0
+                        ? 'Trung bình (Học kỳ & Tốt nghiệp)'
+                        : 'Cơ bản (SGK & Lý thuyết)'}
+                    </span>.
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Kết quả đã được cập nhật vào hồ sơ học tập. Kho môn học sẽ ưu tiên đề xuất lộ trình rèn luyện tương ứng.
+                  </p>
+                </Card>
+              )}
+
+              {/* Prominent CTA Card to Next Tab (Gap Analysis) */}
+              <div
+                onClick={() => {
+                  setResultActiveTab('gap_analysis');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="p-4 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0B1324] flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer group hover:border-[#00B8DD]/60 dark:hover:border-[#00B8DD]/60 transition-all shadow-2xs"
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-[#00B8DD] flex items-center justify-center shrink-0 group-hover:bg-[#00B8DD]/10 transition-colors">
+                    <BrainCircuit className="w-5 h-5" />
+                  </div>
+                  <div className="space-y-0.5 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white group-hover:text-[#00B8DD] transition-colors">
+                        Bản đồ lỗ hổng &amp; Cảnh báo bẫy sai lầm
+                      </h4>
+                      <span className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                        Bước 2
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                      Phân tích mức độ chính xác theo từng dạng bài và bẫy đề thi cần khắc phục.
+                    </p>
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  data-testid="btn-next-to-gap-analysis"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setResultActiveTab('gap_analysis');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-semibold px-5 py-2.5 rounded-xl min-h-[42px] cursor-pointer shadow-xs flex items-center gap-1.5 text-xs sm:text-sm shrink-0 self-end sm:self-auto group"
+                >
+                  <span>Kế tiếp</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </Button>
+              </div>
+
+              {/* Bottom Navigation of Tab 1 */}
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-3 pb-20 sm:pb-12 border-t border-slate-200/80 dark:border-slate-800">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <Button
+                    variant="outline"
+                    onClick={handleRetakeExam}
+                    leftIcon={<RotateCcw className="w-4 h-4" />}
+                    className="rounded-xl font-semibold min-h-[42px] cursor-pointer text-xs sm:text-sm"
+                  >
+                    Làm lại đề này
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleOpenSnapshot}
+                    leftIcon={<BookOpen className="w-4 h-4" />}
+                    className="rounded-xl font-semibold min-h-[42px] cursor-pointer text-xs sm:text-sm"
+                  >
+                    Xem lại đề thi
+                  </Button>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <Link href="/luyen-thi">
+                    <Button
+                      variant="ghost"
+                      className="rounded-xl font-semibold min-h-[42px] text-xs sm:text-sm text-slate-600 dark:text-slate-400"
+                    >
+                      Chọn môn khác
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
           )}
 
-
           {/* ========================================================================= */}
-          {/* 5. ACTION TOOLBAR: CÁC NÚT THAO TÁC ĐIỀU HƯỚNG                             */}
+          {/* TAB 2: BẢN ĐỒ LỖ HỔNG & CẢNH BÁO BẪY SAI LẦM (ẢNH 2)                      */}
           {/* ========================================================================= */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <Button
-                variant="outline"
-                onClick={handleRetakeExam}
-                leftIcon={<RotateCcw className="w-4 h-4" />}
-                className="rounded-xl font-semibold min-h-[42px] cursor-pointer"
-              >
-                Làm lại đề này
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleOpenSnapshot}
-                leftIcon={<BookOpen className="w-4 h-4" />}
-                className="rounded-xl font-semibold min-h-[42px] cursor-pointer"
-              >
-                Xem lại đề thi
-              </Button>
-            </div>
+          {resultActiveTab === 'gap_analysis' && (
+            <div className="space-y-6 animate-in fade-in-50 duration-200">
+              <Card
+                id="tag-gap-diagnostic-report"
+            data-testid="tag-gap-diagnostic-report"
+            className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#0B1324] border border-slate-200 dark:border-slate-800 shadow-none space-y-4 overflow-hidden"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1 min-w-0">
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <BrainCircuit className="w-5 h-5 text-[#00B8DD]" />
+                  <span>Bản đồ lỗ hổng chuyên đề &amp; Cảnh báo bẫy sai lầm</span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Phân tích mức độ thành thạo theo từng dạng bài và phát hiện các bẫy đề thi cần lưu ý.
+                </p>
+                <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-slate-500 dark:text-slate-400">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                    <span>Vững vàng (≥ 75%)</span>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                    <span>Cần củng cố (50–74%)</span>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                    <span>Lỗ hổng (&lt; 50%)</span>
+                  </span>
+                </div>
+              </div>
 
-            <div className="flex flex-wrap items-center gap-2.5">
-              <Link href="/luyen-thi">
+              {weakTopicTagNames.length > 0 && (
                 <Button
-                  className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold rounded-xl min-h-[42px] cursor-pointer"
-                  leftIcon={<BookOpen className="w-4 h-4" />}
+                  type="button"
+                  data-testid="remediate-weak-tags-5q-btn"
+                  onClick={() => handleStartWeakTagRemediation5Q(weakTopicTagNames)}
+                  className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-semibold text-xs sm:text-sm px-4 py-2.5 rounded-xl min-h-[42px] cursor-pointer shadow-xs transition-colors shrink-0 flex items-center gap-2"
                 >
-                  Chọn luyện đề môn khác
+                  <Sparkles className="w-4 h-4" />
+                  <span>Luyện bù 5 câu dạng đang yếu</span>
                 </Button>
-              </Link>
-              <Link href="/">
-                <Button variant="ghost" className="rounded-xl font-semibold min-h-[42px]" leftIcon={<Home className="w-4 h-4" />}>
-                  Về trang chủ
-                </Button>
-              </Link>
+              )}
             </div>
-          </div>
 
-          {/* ================================================================= */}
-          {/* TRUNG TÂM KHẮC PHỤC LỖI SAI & BIẾN THỂ TƯƠNG ĐƯƠNG               */}
-          {/* ================================================================= */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              {tagDiagnosticGroups.map((group) => {
+                const isWeak = group.status === 'WEAK';
+                const isReview = group.status === 'REVIEW';
+                return (
+                  <div
+                    key={group.topicTag}
+                    className="p-4 sm:p-4.5 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0B1324] space-y-3 min-w-0 transition-colors hover:border-slate-300 dark:hover:border-slate-700 shadow-2xs"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <h4 className="text-sm font-semibold text-slate-900 dark:text-white leading-snug break-words">
+                        {group.topicTag}
+                      </h4>
+                      <span
+                        className={cn(
+                          'px-2 py-0.5 rounded-md text-[11px] font-semibold shrink-0',
+                          isWeak
+                            ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200/60 dark:border-rose-900/40'
+                            : isReview
+                            ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/40'
+                            : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/40'
+                        )}
+                      >
+                        {isWeak ? 'Lỗ hổng' : isReview ? 'Cần ôn' : 'Vững vàng'}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
+                        <span>Độ chính xác</span>
+                        <span className="font-semibold text-slate-700 dark:text-slate-300 tabular-nums">
+                          {group.correct}/{group.total} câu ({group.accuracy}%)
+                        </span>
+                      </div>
+                      <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                        <div
+                          className={cn(
+                            'h-full rounded-full transition-all duration-500',
+                            isWeak ? 'bg-rose-500' : isReview ? 'bg-amber-500' : 'bg-emerald-500'
+                          )}
+                          style={{ width: `${Math.max(6, group.accuracy)}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {group.trapTags.length > 0 && (
+                      <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/60 border-l-2 border-amber-400 dark:border-amber-500 text-xs text-slate-700 dark:text-slate-300 leading-relaxed flex items-start gap-2">
+                        <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <span className="font-semibold text-slate-900 dark:text-slate-200">
+                            Bẫy thường gặp:
+                          </span>{' '}
+                          <span>{group.trapTags[0]}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+
+              {/* Bottom Navigation of Tab 2 */}
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-4 pb-20 sm:pb-12 border-t border-slate-200/80 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setResultActiveTab('overview');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  leftIcon={<ArrowLeft className="w-4 h-4" />}
+                  className="rounded-xl font-semibold min-h-[42px] cursor-pointer text-xs sm:text-sm"
+                >
+                  Quay lại tổng quan
+                </Button>
+
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <Button
+                    type="button"
+                    data-testid="btn-next-to-solutions"
+                    onClick={() => {
+                      setResultActiveTab('solutions');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-extrabold px-6 py-2.5 rounded-xl min-h-[44px] cursor-pointer shadow-md shadow-[#00B8DD]/20 flex items-center gap-2 group text-xs sm:text-sm"
+                  >
+                    <span>Kế tiếp: Xem chi tiết lời giải</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB 3: CHI TIẾT BÀI LÀM & LỜI GIẢI (TRUNG TÂM KHẮC PHỤC LỖI SAI)          */}
+          {/* ========================================================================= */}
+          {resultActiveTab === 'solutions' && (
+            <div className="space-y-6 animate-in fade-in-50 duration-200">
           {(() => {
             const wrongResults = examResult.questionResults.filter((r) => !r.isCorrect);
             const wrongCount = wrongResults.length;
@@ -1881,7 +2457,7 @@ function StandardExamRoomContent() {
                             {q.type === 'SHORT_ANSWER' && (
                               <div className="pt-2">
                                 <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                                  Nhập đáp số của bạn:
+                                  Nhập câu trả lời của bạn:
                                 </label>
                                 <input
                                   type="text"
@@ -1892,7 +2468,7 @@ function StandardExamRoomContent() {
                                       [q.id]: e.target.value,
                                     }))
                                   }
-                                  placeholder="Ví dụ: 3.5 hoặc 12"
+                                  placeholder="Nhập câu trả lời của bạn..."
                                   className="w-full sm:w-64 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-[#00B8DD]"
                                 />
                               </div>
@@ -2068,17 +2644,44 @@ function StandardExamRoomContent() {
                             {q.type === 'SHORT_ANSWER' && (
                               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs space-y-1">
                                 <div>
-                                  Đáp số bạn điền:{' '}
+                                  Câu trả lời bạn điền:{' '}
                                   <strong className="text-indigo-600 dark:text-indigo-400 font-mono">
                                     {shortAnswers[q.id] || '(Chưa điền)'}
                                   </strong>
                                 </div>
                                 <div>
-                                  Đáp số chính xác:{' '}
+                                  Câu trả lời chính xác:{' '}
                                   <strong className="text-emerald-600 dark:text-emerald-400 font-mono">
                                     <MathRenderer text={q.shortAnswerCorrect || ''} inline />
                                   </strong>
                                 </div>
+                              </div>
+                            )}
+
+                            {/* Trap Tag Warning Callout */}
+                            {q.trapTag && (
+                              <div className="mt-3 p-3.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/70 text-xs flex flex-wrap items-center justify-between gap-2.5">
+                                <div className="space-y-0.5 min-w-0">
+                                  <div className="font-extrabold text-amber-900 dark:text-amber-300 flex flex-wrap items-center gap-1.5">
+                                    <span>⚠️ Cảnh báo Bẫy sai lầm (Trap Tag):</span>
+                                    {q.topicTag && (
+                                      <span className="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-800 dark:text-amber-200 text-[10px]">
+                                        🏷️ {q.topicTag}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-amber-800 dark:text-amber-200/90 leading-relaxed break-words">
+                                    {q.trapTag}
+                                  </p>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleAskSocraticAiTutor(q)}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#00B8DD]/15 hover:bg-[#00B8DD]/25 text-[#007D99] dark:text-[#00B8DD] border border-[#00B8DD]/30 font-bold text-xs transition-colors cursor-pointer shrink-0"
+                                >
+                                  <Sparkles className="w-3.5 h-3.5" />
+                                  <span>💡 Hỏi Gia Sư AI phân tích câu này</span>
+                                </button>
                               </div>
                             )}
 
@@ -2098,34 +2701,34 @@ function StandardExamRoomContent() {
                     </div>
 
                     {/* DƯỚI CÙNG HIỆN THÊM LỰA CHỌN KHẮC PHỤC NGAY */}
-                    <Card className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-amber-500/20 via-[#00B8DD]/20 to-purple-500/15 border-2 border-amber-400 dark:border-amber-600 shadow-xl text-center space-y-4">
-                      <div className="inline-flex p-3.5 rounded-2xl bg-amber-400/25 text-amber-600 dark:text-amber-400">
-                        <Sparkles className="w-8 h-8 text-amber-500 fill-amber-400" />
+                    <Card className="p-6 sm:p-8 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center space-y-4">
+                      <div className="inline-flex p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                        <RotateCcw className="w-6 h-6" />
                       </div>
                       <div className="space-y-1.5 max-w-xl mx-auto">
-                        <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                          Đã Hiểu Phương Pháp? Hãy Khắc Phục Ngay!
+                        <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+                          Luyện tập lại các câu chưa đúng
                         </h3>
-                        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
-                          Hệ thống đã tự động chuẩn bị sẵn bộ đề thi biến thể tương đương gồm {wrongCount} câu (Toán đổi số liệu, Văn/Anh đổi ngữ cảnh). Làm ngay để biến lỗi sai thành kiến thức vững vàng!
+                        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                          Hệ thống đã chuẩn bị {wrongCount} câu hỏi tương tự để bạn rèn luyện lại ngay. Không giới hạn thời gian, bạn có thể thong thả làm bài và củng cố kiến thức.
                         </p>
                       </div>
                       <div className="flex flex-wrap justify-center items-center gap-3 pt-2">
                         <Button
                           onClick={handleStartRemediation}
                           size="lg"
-                          className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-sm px-6 py-3 rounded-2xl shadow-lg shadow-amber-400/30 cursor-pointer"
-                          leftIcon={<Sparkles className="w-5 h-5 text-slate-950 fill-slate-950" />}
+                          className="bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white font-semibold text-sm px-6 py-2.5 rounded-xl cursor-pointer shadow-2xs"
+                          leftIcon={<RotateCcw className="w-4 h-4" />}
                         >
-                          Bắt Đầu Khắc Phục Ngay ({wrongCount} câu biến thể) ➔
+                          Làm {wrongCount} câu hỏi tương tự ➔
                         </Button>
                         <Button
                           variant="outline"
                           onClick={handleOpenSnapshot}
-                          className="rounded-2xl font-bold text-sm px-5 py-3"
-                          leftIcon={<BookOpen className="w-4 h-4 text-[#00B8DD]" />}
+                          className="rounded-xl font-semibold text-sm px-5 py-2.5 border-slate-200 dark:border-slate-700"
+                          leftIcon={<BookOpen className="w-4 h-4 text-slate-500" />}
                         >
-                          Xem Lại Đề Thi
+                          Xem lại đề thi
                         </Button>
                       </div>
                     </Card>
@@ -2134,6 +2737,48 @@ function StandardExamRoomContent() {
               </div>
             );
           })()}
+
+              {/* Bottom Navigation of Tab 3 */}
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setResultActiveTab('gap_analysis');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  leftIcon={<ArrowLeft className="w-4 h-4" />}
+                  className="rounded-xl font-semibold min-h-[42px] cursor-pointer text-xs sm:text-sm"
+                >
+                  Quay lại phân tích lỗ hổng
+                </Button>
+
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <Button
+                    variant="outline"
+                    onClick={handleRetakeExam}
+                    leftIcon={<RotateCcw className="w-4 h-4" />}
+                    className="rounded-xl font-semibold min-h-[42px] cursor-pointer text-xs sm:text-sm"
+                  >
+                    Làm lại đề này
+                  </Button>
+                  <Link href="/luyen-thi">
+                    <Button
+                      className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold rounded-xl min-h-[42px] cursor-pointer text-xs sm:text-sm"
+                      leftIcon={<BookOpen className="w-4 h-4" />}
+                    >
+                      Chọn luyện đề môn khác
+                    </Button>
+                  </Link>
+                  <Link href="/">
+                    <Button variant="ghost" className="rounded-xl font-semibold min-h-[42px] text-xs sm:text-sm" leftIcon={<Home className="w-4 h-4" />}>
+                      Về trang chủ
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Modal Xem Snapshot Đề Thi */}
           <ExamSnapshotModal
@@ -2226,27 +2871,12 @@ function StandardExamRoomContent() {
             <span>{answeredCount}/{exam.questions.length}</span>
           </button>
 
-          {/* Live Timer Countdown (Đếm ngược thời gian làm bài) */}
-          <div
-            className={cn(
-              'flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl font-mono font-bold text-xs sm:text-sm border shadow-xs transition-colors shrink-0',
-              secondsRemaining < 300
-                ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950/80 dark:text-rose-300 dark:border-rose-700 animate-pulse'
-                : 'bg-slate-100 dark:bg-slate-800/90 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700'
-            )}
-            title={`Thời gian còn lại: ${formatTimer(secondsRemaining)} (Đã làm: ${formatTimer(secondsElapsed)} / ${formatTimer(totalLimitSeconds)})`}
-          >
-            <Clock className={cn('w-3.5 h-3.5 shrink-0', secondsRemaining < 300 ? 'text-rose-600 dark:text-rose-400' : 'text-[#007D99] dark:text-[#00B8DD]')} />
-            <span className="font-mono font-black text-xs sm:text-sm text-slate-900 dark:text-white">
-              {formatTimer(secondsRemaining)}
-            </span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal hidden sm:inline">
-              / {formatTimer(totalLimitSeconds)}
-            </span>
-          </div>
+          {/* Live Timer Countdown (Tách riêng component không re-render cây DOM chính) */}
+          <ExamTopBarTimerBadge timerManager={timerManager} totalLimitSeconds={totalLimitSeconds} />
 
           {/* Nộp Bài Button */}
           <Button
+            data-testid="open-submit-modal-btn"
             onClick={() => setIsSubmitModalOpen(true)}
             className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-black rounded-xl text-xs sm:text-sm shadow-md shadow-[#00B8DD]/20 px-2.5 sm:px-4 py-1.5 h-auto min-h-[32px] shrink-0"
             rightIcon={<Send className="w-3.5 h-3.5 hidden sm:inline" />}
@@ -2338,8 +2968,8 @@ function StandardExamRoomContent() {
               className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/40 overflow-hidden shadow-sm dark:shadow-lg transition-colors"
             >
               {/* Card Header */}
-              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700/60 px-3.5 sm:px-5 py-3 sm:py-4 bg-slate-50/90 dark:bg-slate-800/60 gap-1.5 sm:gap-2">
-                <div className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap min-w-0">
+              <div className="flex flex-wrap items-center justify-between border-b border-slate-200 dark:border-slate-700/60 px-3.5 sm:px-5 py-3 sm:py-4 bg-slate-50/90 dark:bg-slate-800/60 gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0">
                   <span className="h-6 sm:h-7 px-2 sm:px-2.5 rounded-lg bg-[#00B8DD] text-white font-black text-xs flex items-center justify-center shrink-0">
                     Câu {activeQuestionIdx + 1}
                   </span>
@@ -2356,10 +2986,26 @@ function StandardExamRoomContent() {
                     {currentQ.score}đ
                   </Badge>
                   {renderDifficultyBadge(currentQ.difficulty, false)}
+                  {currentQ.topicTag && (
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#00B8DD]/10 text-[#007D99] dark:text-[#00B8DD] border border-[#00B8DD]/30 break-words">
+                      🏷️ {currentQ.topicTag}
+                    </span>
+                  )}
                   {renderPreviousChapterBadge(currentQ, false)}
                 </div>
 
-                <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 shrink-0">
+                  <button
+                    type="button"
+                    data-testid="ask-socratic-ai-btn"
+                    onClick={() => handleAskSocraticAiTutor(currentQ)}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-extrabold text-[#007D99] dark:text-[#00B8DD] bg-[#00B8DD]/15 hover:bg-[#00B8DD]/25 border border-[#00B8DD]/30 transition-colors cursor-pointer"
+                    title="Nhờ Gia sư AI gợi mở phương pháp giải Socratic theo Tag câu này"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-[#00B8DD]" />
+                    <span>💡 Hỏi Gia Sư AI câu này</span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => setReportingQuestion(currentQ)}
@@ -2498,21 +3144,18 @@ function StandardExamRoomContent() {
                 {currentQ.type === 'SHORT_ANSWER' && (
                   <div className="space-y-3 pt-2">
                     <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
-                      Nhập kết quả / đáp số tính toán của bạn:
+                      Nhập câu trả lời của bạn:
                     </label>
-                    <div className="max-w-xs">
+                    <div className="max-w-md">
                       <input
                         type="text"
                         value={shortAnswers[currentQ.id] || ''}
                         onChange={(e) =>
                           handleShortAnswerChange(currentQ.id, e.target.value)
                         }
-                        placeholder="Ví dụ: 6 hoặc 2.5 hoặc -1/2"
+                        placeholder="Nhập câu trả lời của bạn..."
                         className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-sm font-mono font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00B8DD]"
                       />
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5">
-                        * Nhập số nguyên hoặc số thập phân/phân số tối giản.
-                      </p>
                     </div>
                   </div>
                 )}
@@ -2520,12 +3163,12 @@ function StandardExamRoomContent() {
                 {/* 4. ESSAY */}
                 {currentQ.type === 'ESSAY' && (
                   <div className="space-y-3 pt-2">
-                    <MathEssayEditor
+                    <SubjectEssayEditor
+                      subjectSlug={currentQ.subjectSlug || subjectSlug}
                       value={essayAnswers[currentQ.id] || ''}
                       onChange={(val) =>
                         handleEssayAnswerChange(currentQ.id, val)
                       }
-                      placeholder="Trình bày chi tiết từng bước: Tập xác định -> Đạo hàm y' -> Lập bảng biến thiên -> Biện luận tham số m..."
                       rows={8}
                     />
                   </div>
@@ -2636,29 +3279,8 @@ function StandardExamRoomContent() {
             Nhấn số câu để chuyển nhanh đến vị trí làm bài.
           </p>
 
-          {/* Sidebar Live Timer Card */}
-          <div
-            className={cn(
-              'mt-3 px-3 py-2 rounded-xl border flex items-center justify-between transition-colors shadow-xs',
-              secondsRemaining < 300
-                ? 'bg-rose-100 dark:bg-rose-950/70 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-300 animate-pulse'
-                : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
-            )}
-            title="Thời gian làm bài còn lại"
-          >
-            <div className="flex items-center gap-1.5 text-xs font-semibold">
-              <Clock className={cn('w-4 h-4 shrink-0', secondsRemaining < 300 ? 'text-rose-600 dark:text-rose-400' : 'text-[#007D99] dark:text-[#00B8DD]')} />
-              <span>Thời gian còn lại:</span>
-            </div>
-            <div className="flex items-baseline gap-1 font-mono">
-              <span className={cn('font-black text-sm', secondsRemaining < 300 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white')}>
-                {formatTimer(secondsRemaining)}
-              </span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">
-                / {formatTimer(totalLimitSeconds)}
-              </span>
-            </div>
-          </div>
+          {/* Sidebar Live Timer Card (Tách riêng component không re-render cây DOM chính) */}
+          <ExamSideBarTimerCard timerManager={timerManager} totalLimitSeconds={totalLimitSeconds} />
         </div>
 
         {/* Sidebar Content (Scrollable Grid) */}
@@ -2868,7 +3490,7 @@ function StandardExamRoomContent() {
                   Thời gian
                 </span>
                 <strong className="text-sm font-bold text-slate-800 dark:text-slate-100 font-mono mt-0.5 block">
-                  {formatTimer(secondsElapsed)}
+                  {formatTimer(timerManager ? timerManager.getElapsed() : submittedTimeSpent)}
                 </strong>
               </div>
             </div>
@@ -2888,14 +3510,14 @@ function StandardExamRoomContent() {
               </div>
             </div>
           ) : (
-            <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-3">
-              <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-3">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <div className="text-xs">
-                <p className="font-bold text-emerald-900 dark:text-emerald-300">
-                  Tuyệt vời! Bạn đã hoàn thành 100% câu hỏi
+                <p className="font-semibold text-emerald-900 dark:text-emerald-300">
+                  Bạn đã trả lời đầy đủ các câu hỏi
                 </p>
                 <p className="text-emerald-700/90 dark:text-emerald-400/90 text-[11px] mt-0.5">
-                  Hệ thống sẵn sàng chấm điểm tự động và ghi nhận kết quả cho bạn.
+                  Nhấn nộp bài để xem điểm số và lời giải chi tiết.
                 </p>
               </div>
             </div>
@@ -2912,6 +3534,7 @@ function StandardExamRoomContent() {
             </Button>
             <Button
               variant="primary"
+              data-testid="confirm-submit-exam-btn"
               onClick={() => {
                 handleSubmitExam(false);
               }}
@@ -3004,6 +3627,23 @@ function ExamRoomContent() {
   }
 
   if (isOlympiad && olympiadExam) {
+    const cachedPts = isMounted ? getCachedPointsBalance() : null;
+    if (cachedPts !== null && cachedPts < 9) {
+      return (
+        <div className="min-h-screen bg-slate-50 dark:bg-[#070B14] text-slate-900 dark:text-slate-100 flex flex-col pt-20">
+          <Navbar />
+          <OutOfPointsModal
+            isOpen={true}
+            onClose={() => router.push('/luyen-thi')}
+            currentPoints={Math.max(0, cachedPts)}
+            requiredPoints={9}
+            levelLabel={olympiadExam.title || 'Đề HSG / Nâng cao'}
+            secondaryLabel="Quay lại Cổng Luyện Thi"
+            onNavigatePricing={() => router.push('/pricing')}
+          />
+        </div>
+      );
+    }
     if (olympiadExam.examType === 'CODING') {
       return <CodingExamRoom exam={olympiadExam} />;
     } else {

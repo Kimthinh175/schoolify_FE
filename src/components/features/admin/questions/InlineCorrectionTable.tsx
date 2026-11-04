@@ -28,6 +28,8 @@ interface ParsedQuestionItem extends Question {
   hasError?: boolean;
   errorReason?: string;
   originalIndex: number;
+  groupCode?: string;
+  group_code?: string;
 }
 
 interface InlineCorrectionTableProps {
@@ -139,9 +141,28 @@ export function InlineCorrectionTable({
     if (originalIdx === -1) return;
 
     const updatedQ = { ...editingQuestion };
-    // Kiểm tra xem lỗi đã được giải quyết chưa
+    // Kiểm tra xem lỗi đã được giải quyết chưa theo từng dạng câu hỏi
     const hasCorrect = updatedQ.answers?.some((a) => a.is_answer);
-    if (updatedQ.content.trim().length > 0 && hasCorrect) {
+    const hasContent = updatedQ.content.trim().length > 0;
+    let isValid = false;
+
+    if (hasContent) {
+      if (updatedQ.type === 'ESSAY' || updatedQ.type === 'GROUP_QUESTIONS') {
+        isValid = true;
+      } else if (updatedQ.type === 'FILL_BLANK') {
+        isValid = Boolean(updatedQ.shortAnswerCorrect?.trim() || hasCorrect);
+      } else if (updatedQ.type === 'MATCHING') {
+        isValid = Boolean((updatedQ.matching_pairs && updatedQ.matching_pairs.length >= 2) || hasCorrect);
+      } else if (updatedQ.type === 'ORDERING') {
+        isValid = Boolean((updatedQ.ordering_items && updatedQ.ordering_items.length >= 2) || hasCorrect);
+      } else if (updatedQ.type === 'CLOZE_DROPDOWN') {
+        isValid = Boolean((updatedQ.cloze_blanks && updatedQ.cloze_blanks.length > 0) || updatedQ.content.includes('[') || hasCorrect);
+      } else {
+        isValid = Boolean(hasCorrect);
+      }
+    }
+
+    if (isValid) {
       updatedQ.hasError = false;
       updatedQ.errorReason = undefined;
     }
@@ -307,6 +328,14 @@ export function InlineCorrectionTable({
                   >
                     {q.chapter || 'Chương chung'}
                   </Badge>
+                  {q.groupCode && (
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/50 border-purple-200 dark:border-purple-800 font-semibold"
+                    >
+                      Nhóm: {q.groupCode}
+                    </Badge>
+                  )}
                 </div>
 
                 {/* Nhóm nút hành động: Nút Bỏ câu nằm ngoài cùng bên phải */}
@@ -349,6 +378,18 @@ export function InlineCorrectionTable({
                   </Button>
                 </div>
               </div>
+
+              {/* Ngữ liệu đọc hiểu đính kèm nếu là câu con của chùm câu */}
+              {q.passage_content && q.type !== 'GROUP_QUESTIONS' && (
+                <div className="p-2.5 rounded-lg bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/80 text-xs mb-3 space-y-1">
+                  <span className="text-[11px] font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                    <span>📖 Ngữ liệu dùng chung ({q.groupCode ? `Nhóm ${q.groupCode}` : 'Chùm câu'}):</span>
+                  </span>
+                  <p className="line-clamp-2 text-slate-700 dark:text-slate-300 text-[11px] italic leading-relaxed">
+                    &ldquo;{q.passage_content}&rdquo;
+                  </p>
+                </div>
+              )}
 
               {/* Nội dung câu hỏi (Hiển thị render KaTeX và input sửa nhanh) */}
               <div className="space-y-1.5 mb-3">
@@ -421,8 +462,89 @@ export function InlineCorrectionTable({
                 )}
               </div>
 
-              {/* Danh sách phương án & Nút chọn đáp án đúng tức thì */}
-              {q.answers && q.answers.length > 0 && (
+              {/* Hiển thị chi tiết theo từng loại câu hỏi */}
+              {q.type === 'FILL_BLANK' ? (
+                <div className="p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs flex items-center justify-between">
+                  <span className="font-bold text-emerald-900 dark:text-emerald-300">
+                    🎯 Đáp số / Kết quả ngắn chuẩn:
+                  </span>
+                  <Badge className="bg-emerald-600 text-white font-mono text-xs px-2.5 py-1">
+                    {q.shortAnswerCorrect || (q.answers && q.answers[0] && q.answers[0].content) || '(Chưa nhập)'}
+                  </Badge>
+                </div>
+              ) : q.type === 'ESSAY' ? (
+                <div className="p-3 rounded-xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 text-xs text-purple-900 dark:text-purple-300 space-y-1">
+                  <div className="font-bold flex items-center gap-1.5">
+                    <span>📝 Hướng dẫn chấm / Barem tự luận:</span>
+                  </div>
+                  <div className="text-slate-600 dark:text-slate-300">
+                    <MathRenderer content={q.sample_essay_answer || q.explain || 'Không yêu cầu đáp án trắc nghiệm.'} inline />
+                  </div>
+                </div>
+              ) : q.type === 'GROUP_QUESTIONS' ? (
+                <div className="p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-300 space-y-1">
+                  <div className="font-bold flex items-center gap-1.5">
+                    <span>📚 Chùm câu hỏi ngữ liệu:</span>
+                  </div>
+                  <p className="text-slate-600 dark:text-slate-300">
+                    {q.sub_questions && q.sub_questions.length > 0
+                      ? `Đã liên kết ${q.sub_questions.length} câu hỏi con theo nhóm này.`
+                      : 'Nội dung này làm ngữ liệu chung (đoạn văn, bài đọc, đồ thị) cho các câu hỏi con.'}
+                  </p>
+                </div>
+              ) : q.type === 'MATCHING' && q.matching_pairs && q.matching_pairs.length > 0 ? (
+                <div className="space-y-2">
+                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                    Các cặp ghép nối ({q.matching_pairs.length} cặp):
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {q.matching_pairs.map((p, pIdx) => (
+                      <div key={p.id || pIdx} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs flex items-center justify-between gap-2">
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">{p.left_text}</span>
+                        <span className="text-primary font-bold">⇄</span>
+                        <span className="text-slate-600 dark:text-slate-400">{p.right_text}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : q.type === 'ORDERING' && q.ordering_items && q.ordering_items.length > 0 ? (
+                <div className="space-y-2">
+                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                    Thứ tự sắp xếp đúng:
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {[...q.ordering_items]
+                      .sort((a, b) => a.correct_order - b.correct_order)
+                      .map((it, itIdx) => (
+                        <Badge key={it.id || itIdx} variant="outline" className="px-3 py-1.5 text-xs gap-1.5 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
+                          <span className="w-4 h-4 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">
+                            {it.correct_order}
+                          </span>
+                          <span>{it.content}</span>
+                        </Badge>
+                      ))}
+                  </div>
+                </div>
+              ) : q.type === 'CLOZE_DROPDOWN' && q.cloze_blanks && q.cloze_blanks.length > 0 ? (
+                <div className="space-y-2">
+                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                    Các ô đục lỗ ({q.cloze_blanks.length} ô):
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {q.cloze_blanks.map((b) => (
+                      <div key={b.id} className="p-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 text-xs">
+                        <span className="font-bold text-sky-900 dark:text-sky-300">Ô {b.index}: </span>
+                        <span className="text-emerald-700 dark:text-emerald-400 font-bold underline mr-1.5">
+                          {b.correct_answer}
+                        </span>
+                        <span className="text-slate-500 text-[10px]">
+                          (Lựa chọn: {b.options.join(', ')})
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : q.answers && q.answers.length > 0 ? (
                 <div className="space-y-2">
                   <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
                     Các phương án (Click vào chữ cái để chọn/bỏ đáp án đúng):
@@ -457,7 +579,7 @@ export function InlineCorrectionTable({
                     ))}
                   </div>
                 </div>
-              )}
+              ) : null}
 
               {/* Lời giải chi tiết nếu có */}
               {q.explain && (

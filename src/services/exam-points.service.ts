@@ -24,7 +24,10 @@ export interface ExamPointsBalanceResponse {
   studentProfileId: string;
   currentPoints: number;
   diamonds?: number;
+  activePackage?: string;
   dailyAllowance: number;
+  dailyXinAllowance?: number;
+  hasAi50PercentDiscount?: boolean;
   lastDailyGrantDate: string;
   alreadyClaimedToday?: boolean;
   quotaByLevel: {
@@ -63,14 +66,79 @@ function getAuthHeaders(): Record<string, string> {
   }
 }
 
-export function notifyExamPointsUpdated(points?: number) {
+export function notifyExamPointsUpdated(points?: number, diamonds?: number) {
   if (typeof window === 'undefined') return;
   if (typeof points === 'number') {
     try {
       window.localStorage.setItem('schoolify_user_tokens', String(points));
     } catch {}
   }
-  window.dispatchEvent(new CustomEvent('tokens-updated', { detail: { points } }));
+  window.dispatchEvent(new CustomEvent('tokens-updated', { detail: { points, diamonds } }));
+}
+
+export function getCachedPointsBalance(): number | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem('schoolify_user_tokens');
+    if (raw === null || raw === '') return null;
+    const num = Number(raw);
+    return Number.isFinite(num) ? num : null;
+  } catch {
+    return null;
+  }
+}
+
+export function getExamLevelCost(rawLevel?: string): {
+  code: 'BASIC' | 'MEDIUM' | 'ADVANCED';
+  label: string;
+  costPoints: number;
+} {
+  const norm = String(rawLevel || 'BASIC')
+    .trim()
+    .toUpperCase();
+
+  if (
+    norm.includes('NATIONAL') ||
+    norm.includes('QUOC_GIA') ||
+    norm.includes('OLYMPIAD') ||
+    norm.includes('HSG') ||
+    norm.includes('PROVINCIAL') ||
+    norm.includes('TINH') ||
+    norm.includes('DGNL') ||
+    norm.includes('DGTD') ||
+    norm.includes('ADVANCED') ||
+    norm.includes('HARD') ||
+    norm.includes('VERY_HARD') ||
+    norm.includes('GIOI') ||
+    norm.includes('EXCELLENT') ||
+    norm.includes('VAN_DUNG')
+  ) {
+    return {
+      code: 'ADVANCED',
+      label: 'Nâng cao / HSG',
+      costPoints: 9,
+    };
+  }
+
+  if (
+    norm.includes('MEDIUM') ||
+    norm.includes('INTERMEDIATE') ||
+    norm.includes('TRUNG_BINH') ||
+    norm.includes('THONG_HIEU') ||
+    norm.includes('MOCK')
+  ) {
+    return {
+      code: 'MEDIUM',
+      label: 'Trung bình / Thi thử',
+      costPoints: 4,
+    };
+  }
+
+  return {
+    code: 'BASIC',
+    label: 'Cơ bản',
+    costPoints: 3,
+  };
 }
 
 export const examPointsService = {
@@ -138,12 +206,13 @@ export const examPointsService = {
         ...headers,
       },
       body: JSON.stringify({
-        ...payload,
         userId: effectiveUserId,
+        level: payload.level,
+        examTitle: payload.examTitle,
       }),
     });
-    const json = await res.json();
-    if (res.ok && json?.data?.currentPoints !== undefined) {
+    const json = await res.json().catch(() => ({}));
+    if (json?.data?.currentPoints !== undefined) {
       notifyExamPointsUpdated(json.data.currentPoints);
     }
     return { ok: res.ok, status: res.status, ...json };
@@ -211,5 +280,34 @@ export const examPointsService = {
       console.warn('[examPointsService.getHistory] Failed:', err);
       return null;
     }
+  },
+
+  /**
+   * Dành cho ADMIN: Điều chỉnh trực tiếp số điểm Tia Sáng & Ngọc Tri Thức
+   */
+  async adminAdjustPoints(payload: {
+    userId?: string;
+    examPoints?: number;
+    diamonds?: number;
+    note?: string;
+  }): Promise<{ ok: boolean; message?: string; data?: any }> {
+    const headers = getAuthHeaders();
+    const effectiveUserId = payload.userId || headers['x-user-id'] || undefined;
+    const res = await fetch('/api/v1/exams/points/admin-adjust', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...headers,
+      },
+      body: JSON.stringify({
+        ...payload,
+        userId: effectiveUserId,
+      }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (json?.data?.currentPoints !== undefined || json?.data?.diamonds !== undefined) {
+      notifyExamPointsUpdated(json?.data?.currentPoints, json?.data?.diamonds);
+    }
+    return { ok: res.ok, ...json };
   },
 };

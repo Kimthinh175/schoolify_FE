@@ -52,7 +52,7 @@ export default function AboutPage() {
     {
       icon: Heart,
       title: 'Động Lực Từ Gamification',
-      desc: 'Hệ thống tích lũy Kim Cương 💎, Bảng Vàng danh dự thi đua và đổi quà học tập thực tế giúp học sinh chủ động say mê học bài.',
+      desc: 'Hệ thống tích lũy Ngọc Tri Thức 💎, Bảng Vàng danh dự thi đua và đổi quà học tập thực tế giúp học sinh chủ động say mê học bài.',
       color: 'text-amber-600 bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800',
     },
   ];
@@ -200,7 +200,7 @@ export default function AboutPage() {
           Sẵn Sàng Trải Nghiệm Học Tập Số Hóa Ngay Hôm Nay?
         </h2>
         <p className="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto">
-          Bắt đầu luyện tập miễn phí với cấp độ Cơ Bản SGK hoặc đăng ký tài khoản để đồng bộ kết quả và nhận kim cương thưởng!
+          Bắt đầu luyện tập miễn phí với cấp độ Cơ Bản SGK hoặc đăng ký tài khoản để đồng bộ kết quả và nhận ngọc tri thức thưởng!
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
           <Link href="/#kho-mon-hoc">
