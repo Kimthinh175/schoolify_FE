@@ -21,7 +21,13 @@ import {
   downloadWordTemplate,
 } from '@/services/parsers/template-generator.service';
 
-export function ImportGuidelineModal({ triggerText = 'Hướng dẫn & File mẫu' }: { triggerText?: string }) {
+export function ImportGuidelineModal({
+  triggerText = 'Hướng dẫn & File mẫu',
+  triggerClassName,
+}: {
+  triggerText?: string;
+  triggerClassName?: string;
+}) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState<'types' | 'word' | 'excel' | 'rules'>('types');
 
@@ -30,9 +36,9 @@ export function ImportGuidelineModal({ triggerText = 'Hướng dẫn & File mẫ
       <Button
         variant="outline"
         onClick={() => setIsOpen(true)}
-        className="border-primary/30 text-primary bg-white dark:bg-slate-900 hover:bg-primary/5 gap-1.5 font-medium text-xs shadow-xs shrink-0 whitespace-nowrap"
+        className={triggerClassName || "h-9 px-3 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white gap-1.5 font-medium text-xs shadow-2xs shrink-0 whitespace-nowrap cursor-pointer transition-colors"}
       >
-        <HelpCircle className="w-3.5 h-3.5" />
+        <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
         {triggerText}
       </Button>
 

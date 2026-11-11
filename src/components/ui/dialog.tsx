@@ -58,6 +58,8 @@ export function Dialog({
     full: 'sm:max-w-[92vw]',
   };
 
+  const hasHeader = Boolean(title || description);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -103,47 +105,76 @@ export function Dialog({
               className
             )}
           >
-            {/* Header */}
-            <div className={cn(
-              'flex items-start justify-between pb-3 shrink-0',
-              fullscreen && 'border-b border-slate-100 dark:border-slate-800/80 pb-4'
-            )}>
-              <div className="flex-1 mr-3">
-                {title && (
-                  typeof title === 'string' ? (
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white">{title}</h2>
-                  ) : (
-                    <div className="text-lg font-bold text-slate-900 dark:text-white">{title}</div>
-                  )
+            {/* Header: Chỉ render row header khi có title hoặc description */}
+            {hasHeader ? (
+              <div
+                className={cn(
+                  'flex items-start justify-between pb-3 shrink-0',
+                  fullscreen && 'border-b border-slate-100 dark:border-slate-800/80 pb-4'
                 )}
-                {description && (
-                  typeof description === 'string' ? (
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{description}</p>
-                  ) : (
-                    <div className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{description}</div>
-                  )
-                )}
+              >
+                <div className="flex-1 mr-3">
+                  {title && (
+                    typeof title === 'string' ? (
+                      <h2 className="text-lg font-bold text-slate-900 dark:text-white">{title}</h2>
+                    ) : (
+                      <div className="text-lg font-bold text-slate-900 dark:text-white">{title}</div>
+                    )
+                  )}
+                  {description && (
+                    typeof description === 'string' ? (
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{description}</p>
+                    ) : (
+                      <div className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{description}</div>
+                    )
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className={cn(
+                    'rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors',
+                    fullscreen
+                      ? 'p-2 border border-slate-200 dark:border-slate-800 text-xs font-semibold flex items-center gap-1.5'
+                      : 'p-1.5'
+                  )}
+                >
+                  {fullscreen && <span className="hidden sm:inline text-xs font-medium text-slate-500">Đóng</span>}
+                  <X className="h-5 w-5" />
+                </button>
               </div>
+            ) : (
+              /* Nút đóng nổi gọn gàng ở góc khi không có title, tránh tạo khoảng trắng rỗng trên đầu */
               <button
                 type="button"
                 onClick={onClose}
                 className={cn(
-                  'rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors',
-                  fullscreen ? 'p-2 border border-slate-200 dark:border-slate-800 text-xs font-semibold flex items-center gap-1.5' : 'p-1.5'
+                  'absolute top-4 right-4 z-10 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors p-1.5',
+                  fullscreen && 'p-2 border border-slate-200 dark:border-slate-800'
                 )}
+                aria-label="Đóng"
               >
-                {fullscreen && <span className="hidden sm:inline text-xs font-medium text-slate-500">Đóng</span>}
                 <X className="h-5 w-5" />
               </button>
-            </div>
+            )}
 
             {/* Body */}
-            <div className={cn('overflow-y-auto py-2 flex-1 pr-1', fullscreen && 'py-4 sm:py-6')}>
+            <div
+              className={cn(
+                'overflow-y-auto flex-1 pr-1',
+                hasHeader ? 'py-2' : 'pt-0 pb-1',
+                fullscreen && 'py-4 sm:py-6'
+              )}
+            >
               {children}
             </div>
 
             {/* Footer */}
-            {footer && <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3 shrink-0">{footer}</div>}
+            {footer && (
+              <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3 shrink-0">
+                {footer}
+              </div>
+            )}
           </motion.div>
         </div>
       )}

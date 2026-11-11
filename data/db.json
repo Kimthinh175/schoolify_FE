@@ -2,6 +2,856 @@
   "offlineSubmissions": [],
   "examSnapshots": [
     {
+      "id": "SNAP-1794371955815",
+      "attemptToken": "att_d3b32845ce7a4ac9b77aeb847da1e19e",
+      "userId": "guest",
+      "userFullName": "Học sinh",
+      "examId": "exam-toan-hoc-basic-g11-ch1-quiz",
+      "examTitle": "Luyện Tập Chuyên Đề (10 Câu) [Nhận biết] - Chương 1: Ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số",
+      "subjectSlug": "toan-hoc",
+      "subjectName": "Toán Học",
+      "grade": 11,
+      "chapterId": 1,
+      "chapterName": "Chương 1: Ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số",
+      "createdAt": "2026-11-11T04:39:15.815Z",
+      "durationMinutes": 45,
+      "timeSpentSeconds": 2,
+      "originalExam": {
+        "finalScore": 0,
+        "maxScore": 10,
+        "correctCount": 0,
+        "wrongCount": 10,
+        "totalQuestions": 10,
+        "questions": [
+          {
+            "id": "db-toan-hoc-ch4-mcq-02",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "EASY",
+            "grade": 12,
+            "chapterId": 4,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Nguyên hàm & Ứng dụng tính diện tích, thể tích",
+            "title": "Câu 1: Công thức và tính chất Nguyên hàm và tích phân",
+            "content": "Công thức cơ bản nào sau đây được sử dụng để tính toán trong nguyên hàm và tích phân?",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$\\int x^n dx = \\frac{x^{n+1}}{n+1} + C$ (với $n \\neq -1$)"
+              },
+              {
+                "key": "B",
+                "content": "$\\int e^x dx = x e^{x-1} + C$"
+              },
+              {
+                "key": "C",
+                "content": "$\\vec{a} + \\vec{b} = \\vec{a} - \\vec{b}$"
+              },
+              {
+                "key": "D",
+                "content": "$P(A|B) = P(A) + P(B)$"
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Phương án A là công thức chuẩn mực được định nghĩa trong sách giáo khoa.",
+            "topicTag": "Nguyên hàm - Tích phân & Ứng dụng diện tích",
+            "trapTag": "Bẫy quên dấu giá trị tuyệt đối |f(x)| khi tính diện tích hình phẳng",
+            "cognitiveTag": "Nhận biết"
+          },
+          {
+            "id": "q-01",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "EASY",
+            "grade": 12,
+            "chapterId": 1,
+            "title": "Câu 2: Tính đơn điệu của hàm số bậc ba",
+            "content": "Cho hàm số $y = x^3 - 3x^2 + 2$. Khoảng đồng biến của hàm số đã cho là:",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$(0; 2)$"
+              },
+              {
+                "key": "B",
+                "content": "$(-\\infty; 0)$ và $(2; +\\infty)$"
+              },
+              {
+                "key": "C",
+                "content": "$(-\\infty; 2)$"
+              },
+              {
+                "key": "D",
+                "content": "$(0; +\\infty)$"
+              }
+            ],
+            "correctChoice": "B",
+            "explanation": "Ta có đạo hàm $y' = 3x^2 - 6x = 3x(x - 2)$.\\nCho $y' = 0 \\Leftrightarrow x = 0$ hoặc $x = 2$.\\nXét dấu của $y':\\n• $y' > 0$ trên $(-\\infty; 0)$ và $(2; +\\infty)$ ⇒ hàm số đồng biến trên các khoảng $(-\\infty; 0)$ và $(2; +\\infty)$.\\n• $y' < 0$ trên $(0; 2)$ ⇒ hàm số nghịch biến trên $(0; 2)$.\\nVậy đáp án đúng là B.",
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Ứng dụng đạo hàm & Khảo sát đồ thị",
+            "topicTag": "Tính đơn điệu (Đồng biến - Nghịch biến)",
+            "trapTag": "Bẫy dùng ký hiệu hợp ∪ thay vì từ \"và\" giữa các khoảng đơn điệu rời nhau",
+            "cognitiveTag": "Nhận biết"
+          },
+          {
+            "id": "q2-11",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "EASY",
+            "grade": 12,
+            "chapterId": 1,
+            "isPreviousChapterReview": true,
+            "relatedChapterIds": [
+              1
+            ],
+            "title": "Câu 3: Đường tiệm cận đứng của đồ thị hàm phân thức (Ôn tập Chương 1)",
+            "content": "Phương trình đường tiệm cận đứng của đồ thị hàm số $y = \\frac{2x + 1}{x - 3}$ là:",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$x = 3$"
+              },
+              {
+                "key": "B",
+                "content": "$x = -3$"
+              },
+              {
+                "key": "C",
+                "content": "$y = 2$"
+              },
+              {
+                "key": "D",
+                "content": "$y = 3$"
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Tiệm cận đứng tại nghiệm của mẫu $x - 3 = 0 \\Leftrightarrow x = 3$. Chọn A.",
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Tọa độ vectơ & Không gian Oxyz",
+            "topicTag": "Đường tiệm cận của đồ thị hàm số",
+            "trapTag": "Bẫy quên rút gọn nghiệm tử số và mẫu số trước khi kết luận tiệm cận đứng",
+            "cognitiveTag": "Nhận biết"
+          },
+          {
+            "id": "db-toan-hoc-ch1-mcq-02",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "EASY",
+            "grade": 12,
+            "chapterId": 1,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Khảo sát hàm số & Ứng dụng thực tế",
+            "title": "Câu 4: Công thức và tính chất Ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số",
+            "content": "Công thức cơ bản nào sau đây được sử dụng để tính toán trong ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số?",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$y' = \\lim_{\\Delta x \\to 0} \\frac{\\Delta y}{\\Delta x}$"
+              },
+              {
+                "key": "B",
+                "content": "$\\int e^x dx = x e^{x-1} + C$"
+              },
+              {
+                "key": "C",
+                "content": "$\\vec{a} + \\vec{b} = \\vec{a} - \\vec{b}$"
+              },
+              {
+                "key": "D",
+                "content": "$P(A|B) = P(A) + P(B)$"
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Phương án A là công thức chuẩn mực được định nghĩa trong sách giáo khoa.",
+            "topicTag": "Khảo sát hàm số & Ứng dụng thực tế",
+            "trapTag": "Bẫy quên điều kiện xác định và sai dấu khi biến đổi đại số",
+            "cognitiveTag": "Nhận biết"
+          },
+          {
+            "id": "db-toan-hoc-ch5-mcq-02",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "EASY",
+            "grade": 12,
+            "chapterId": 5,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Mặt phẳng, đường thẳng và mặt cầu Oxyz",
+            "title": "Câu 5: Công thức và tính chất Phương pháp tọa độ trong không gian",
+            "content": "Công thức cơ bản nào sau đây được sử dụng để tính toán trong phương pháp tọa độ trong không gian?",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$\\int x^n dx = \\frac{x^{n+1}}{n+1} + C$ (với $n \\neq -1$)"
+              },
+              {
+                "key": "B",
+                "content": "$\\int e^x dx = x e^{x-1} + C$"
+              },
+              {
+                "key": "C",
+                "content": "$\\vec{a} + \\vec{b} = \\vec{a} - \\vec{b}$"
+              },
+              {
+                "key": "D",
+                "content": "$P(A|B) = P(A) + P(B)$"
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Phương án A là công thức chuẩn mực được định nghĩa trong sách giáo khoa.",
+            "topicTag": "Hệ tọa độ không gian Oxyz & Phương trình mặt phẳng",
+            "trapTag": "Bẫy nhầm dấu tọa độ tâm mặt cầu I(a; b; c) và vectơ pháp tuyến",
+            "cognitiveTag": "Nhận biết"
+          },
+          {
+            "id": "q2-01",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "EASY",
+            "grade": 12,
+            "chapterId": 2,
+            "title": "Câu 6: Tọa độ của vectơ trong không gian Oxyz",
+            "content": "Trong không gian $Oxyz$, cho vectơ $\\vec{u} = 2\\vec{i} - 3\\vec{j} + 5\\vec{k}$. Tọa độ của vectơ $\\vec{u}$ là:",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$(2; -3; 5)$"
+              },
+              {
+                "key": "B",
+                "content": "$(2; 3; 5)$"
+              },
+              {
+                "key": "C",
+                "content": "$(-3; 2; 5)$"
+              },
+              {
+                "key": "D",
+                "content": "$(2; -3; -5)$"
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Theo định nghĩa hệ trục $Oxyz$, $\\vec{u} = x\\vec{i} + y\\vec{j} + z\\vec{k} \\Rightarrow \\vec{u} = (2; -3; 5)$. Chọn A.",
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Tọa độ vectơ & Không gian Oxyz",
+            "topicTag": "Hệ tọa độ không gian Oxyz & Phương trình mặt phẳng",
+            "trapTag": "Bẫy nhầm dấu tọa độ tâm mặt cầu I(a; b; c) và vectơ pháp tuyến",
+            "cognitiveTag": "Nhận biết"
+          },
+          {
+            "id": "q-11",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "EASY",
+            "grade": 12,
+            "chapterId": 1,
+            "title": "Câu 7: Điểm cực tiểu của hàm số",
+            "content": "Cho hàm số $y = f(x)$ có đạo hàm $f'(x) = (x - 1)(x + 2)$. Điểm cực tiểu của hàm số đã cho là:",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$x = 1$"
+              },
+              {
+                "key": "B",
+                "content": "$x = -2$"
+              },
+              {
+                "key": "C",
+                "content": "$x = 0$"
+              },
+              {
+                "key": "D",
+                "content": "$x = 2$"
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Ta có $f'(x) = 0 \\Leftrightarrow x = 1$ hoặc $x = -2$. Qua $x = 1$, $f'(x)$ đổi dấu từ âm sang dương nên $x = 1$ là điểm cực tiểu. Chọn A.",
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Ứng dụng đạo hàm & Khảo sát đồ thị",
+            "topicTag": "Cực trị của hàm số & Tham số m",
+            "trapTag": "Bẫy kết luận cực trị khi đạo hàm y' = 0 nhưng không đổi dấu (nghiệm bội chẵn)",
+            "cognitiveTag": "Nhận biết"
+          },
+          {
+            "id": "q-10",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "EASY",
+            "grade": 12,
+            "chapterId": 1,
+            "title": "Câu 8: Tìm đường tiệm cận ngang",
+            "content": "Đường tiệm cận ngang của đồ thị hàm số $y = \\frac{3x - 1}{x + 2}$ có phương trình là:",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$y = 3$"
+              },
+              {
+                "key": "B",
+                "content": "$x = -2$"
+              },
+              {
+                "key": "C",
+                "content": "$y = -\\frac{1}{2}$"
+              },
+              {
+                "key": "D",
+                "content": "$x = 3$"
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Ta có $\\lim_{x \\to \\pm\\infty} \\frac{3x - 1}{x + 2} = 3$. Vậy đường tiệm cận ngang là $y = 3$. Chọn A.",
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Ứng dụng đạo hàm & Khảo sát đồ thị",
+            "topicTag": "Đường tiệm cận của đồ thị hàm số",
+            "trapTag": "Bẫy quên rút gọn nghiệm tử số và mẫu số trước khi kết luận tiệm cận đứng",
+            "cognitiveTag": "Nhận biết"
+          },
+          {
+            "id": "db-toan-hoc-ch2-mcq-01",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "EASY",
+            "grade": 12,
+            "chapterId": 2,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Hệ tọa độ Oxyz & Tích có hướng",
+            "title": "Câu 9: Khái niệm nền tảng Tọa độ của vectơ trong không gian",
+            "content": "Trong chương trình Toán 12, khẳng định nào sau đây là đúng về lý thuyết của hệ tọa độ oxyz & tích có hướng?",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "Định lý và quy tắc cơ bản áp dụng trực tiếp cho hệ tọa độ oxyz & tích có hướng."
+              },
+              {
+                "key": "B",
+                "content": "Mọi hàm số liên tục đều không có cực trị hoặc nguyên hàm xác định."
+              },
+              {
+                "key": "C",
+                "content": "Vectơ không có hướng không cùng phương với bất kỳ vectơ nào."
+              },
+              {
+                "key": "D",
+                "content": "Xác suất của biến cố chắc chắn luôn bằng 0."
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Khẳng định A là định lý cơ bản chuẩn SGK GDPT 2018 cho Tọa độ của vectơ trong không gian.",
+            "topicTag": "Hệ tọa độ không gian Oxyz & Phương trình mặt phẳng",
+            "trapTag": "Bẫy nhầm dấu tọa độ tâm mặt cầu I(a; b; c) và vectơ pháp tuyến",
+            "cognitiveTag": "Nhận biết"
+          },
+          {
+            "id": "db-toan-hoc-ch1-mcq-01",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "EASY",
+            "grade": 12,
+            "chapterId": 1,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Khảo sát hàm số & Ứng dụng thực tế",
+            "title": "Câu 10: Khái niệm nền tảng Ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số",
+            "content": "Trong chương trình Toán 12, khẳng định nào sau đây là đúng về lý thuyết của khảo sát hàm số & ứng dụng thực tế?",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "Định lý và quy tắc cơ bản áp dụng trực tiếp cho khảo sát hàm số & ứng dụng thực tế."
+              },
+              {
+                "key": "B",
+                "content": "Mọi hàm số liên tục đều không có cực trị hoặc nguyên hàm xác định."
+              },
+              {
+                "key": "C",
+                "content": "Vectơ không có hướng không cùng phương với bất kỳ vectơ nào."
+              },
+              {
+                "key": "D",
+                "content": "Xác suất của biến cố chắc chắn luôn bằng 0."
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Khẳng định A là định lý cơ bản chuẩn SGK GDPT 2018 cho Ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số.",
+            "topicTag": "Khảo sát hàm số & Ứng dụng thực tế",
+            "trapTag": "Bẫy quên điều kiện xác định và sai dấu khi biến đổi đại số",
+            "cognitiveTag": "Nhận biết"
+          }
+        ],
+        "studentAnswers": {
+          "multipleChoices": {},
+          "trueFalseAnswers": {},
+          "shortAnswers": {},
+          "essayAnswers": {}
+        },
+        "wrongQuestionIds": [
+          "db-toan-hoc-ch4-mcq-02",
+          "q-01",
+          "q2-11",
+          "db-toan-hoc-ch1-mcq-02",
+          "db-toan-hoc-ch5-mcq-02",
+          "q2-01",
+          "q-11",
+          "q-10",
+          "db-toan-hoc-ch2-mcq-01",
+          "db-toan-hoc-ch1-mcq-01"
+        ]
+      },
+      "bloomSummary": {
+        "EASY": {
+          "total": 10,
+          "correct": 0
+        },
+        "MEDIUM": {
+          "total": 0,
+          "correct": 0
+        },
+        "HARD": {
+          "total": 0,
+          "correct": 0
+        },
+        "VERY_HARD": {
+          "total": 0,
+          "correct": 0
+        }
+      }
+    },
+    {
+      "id": "SNAP-1794370288324",
+      "attemptToken": "att_32ed761d9d9046ff847425fa02261e6b",
+      "userId": "1eb6ce93-cacf-46f8-b9bf-1fe4a1f8c698",
+      "userFullName": "Kim Thịnh (Super Admin)",
+      "examId": "exam-toan-hoc-basic-g11-ch1-quiz",
+      "examTitle": "Luyện Tập Chuyên Đề (10 Câu) [Nhận biết] - Chương 1: Ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số",
+      "subjectSlug": "toan-hoc",
+      "subjectName": "Toán Học",
+      "grade": 11,
+      "chapterId": 1,
+      "chapterName": "Chương 1: Ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số",
+      "createdAt": "2026-11-11T04:11:28.325Z",
+      "durationMinutes": 45,
+      "timeSpentSeconds": 32,
+      "originalExam": {
+        "finalScore": 0,
+        "maxScore": 10,
+        "correctCount": 0,
+        "wrongCount": 10,
+        "totalQuestions": 10,
+        "questions": [
+          {
+            "id": "q-11",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "EASY",
+            "grade": 12,
+            "chapterId": 1,
+            "title": "Câu 1: Điểm cực tiểu của hàm số",
+            "content": "Cho hàm số $y = f(x)$ có đạo hàm $f'(x) = (x - 1)(x + 2)$. Điểm cực tiểu của hàm số đã cho là:",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$x = 1$"
+              },
+              {
+                "key": "B",
+                "content": "$x = -2$"
+              },
+              {
+                "key": "C",
+                "content": "$x = 0$"
+              },
+              {
+                "key": "D",
+                "content": "$x = 2$"
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Ta có $f'(x) = 0 \\Leftrightarrow x = 1$ hoặc $x = -2$. Qua $x = 1$, $f'(x)$ đổi dấu từ âm sang dương nên $x = 1$ là điểm cực tiểu. Chọn A.",
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Ứng dụng đạo hàm & Khảo sát đồ thị",
+            "topicTag": "Cực trị của hàm số & Tham số m",
+            "trapTag": "Bẫy kết luận cực trị khi đạo hàm y' = 0 nhưng không đổi dấu (nghiệm bội chẵn)",
+            "cognitiveTag": "Nhận biết"
+          },
+          {
+            "id": "db-toan-hoc-ch6-mcq-01",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "EASY",
+            "grade": 12,
+            "chapterId": 6,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Công thức Bayes & Xác suất toàn phần",
+            "title": "Câu 2: Khái niệm nền tảng Xác suất có điều kiện",
+            "content": "Trong chương trình Toán 12, khẳng định nào sau đây là đúng về lý thuyết của công thức bayes & xác suất toàn phần?",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "Định lý và quy tắc cơ bản áp dụng trực tiếp cho công thức bayes & xác suất toàn phần."
+              },
+              {
+                "key": "B",
+                "content": "Mọi hàm số liên tục đều không có cực trị hoặc nguyên hàm xác định."
+              },
+              {
+                "key": "C",
+                "content": "Vectơ không có hướng không cùng phương với bất kỳ vectơ nào."
+              },
+              {
+                "key": "D",
+                "content": "Xác suất của biến cố chắc chắn luôn bằng 0."
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Khẳng định A là định lý cơ bản chuẩn SGK GDPT 2018 cho Xác suất có điều kiện.",
+            "topicTag": "Xác suất có điều kiện & Công thức Bayes",
+            "trapTag": "Bẫy nhầm không gian mẫu thu hẹp trong xác suất có điều kiện P(A|B)",
+            "cognitiveTag": "Nhận biết"
+          },
+          {
+            "id": "q2-11",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "EASY",
+            "grade": 12,
+            "chapterId": 1,
+            "isPreviousChapterReview": true,
+            "relatedChapterIds": [
+              1
+            ],
+            "title": "Câu 3: Đường tiệm cận đứng của đồ thị hàm phân thức (Ôn tập Chương 1)",
+            "content": "Phương trình đường tiệm cận đứng của đồ thị hàm số $y = \\frac{2x + 1}{x - 3}$ là:",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$x = 3$"
+              },
+              {
+                "key": "B",
+                "content": "$x = -3$"
+              },
+              {
+                "key": "C",
+                "content": "$y = 2$"
+              },
+              {
+                "key": "D",
+                "content": "$y = 3$"
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Tiệm cận đứng tại nghiệm của mẫu $x - 3 = 0 \\Leftrightarrow x = 3$. Chọn A.",
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Tọa độ vectơ & Không gian Oxyz",
+            "topicTag": "Đường tiệm cận của đồ thị hàm số",
+            "trapTag": "Bẫy quên rút gọn nghiệm tử số và mẫu số trước khi kết luận tiệm cận đứng",
+            "cognitiveTag": "Nhận biết"
+          },
+          {
+            "id": "db-toan-hoc-ch1-mcq-02",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "EASY",
+            "grade": 12,
+            "chapterId": 1,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Khảo sát hàm số & Ứng dụng thực tế",
+            "title": "Câu 4: Công thức và tính chất Ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số",
+            "content": "Công thức cơ bản nào sau đây được sử dụng để tính toán trong ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số?",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$y' = \\lim_{\\Delta x \\to 0} \\frac{\\Delta y}{\\Delta x}$"
+              },
+              {
+                "key": "B",
+                "content": "$\\int e^x dx = x e^{x-1} + C$"
+              },
+              {
+                "key": "C",
+                "content": "$\\vec{a} + \\vec{b} = \\vec{a} - \\vec{b}$"
+              },
+              {
+                "key": "D",
+                "content": "$P(A|B) = P(A) + P(B)$"
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Phương án A là công thức chuẩn mực được định nghĩa trong sách giáo khoa.",
+            "topicTag": "Khảo sát hàm số & Ứng dụng thực tế",
+            "trapTag": "Bẫy quên điều kiện xác định và sai dấu khi biến đổi đại số",
+            "cognitiveTag": "Nhận biết"
+          },
+          {
+            "id": "q-01",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "EASY",
+            "grade": 12,
+            "chapterId": 1,
+            "title": "Câu 5: Tính đơn điệu của hàm số bậc ba",
+            "content": "Cho hàm số $y = x^3 - 3x^2 + 2$. Khoảng đồng biến của hàm số đã cho là:",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$(0; 2)$"
+              },
+              {
+                "key": "B",
+                "content": "$(-\\infty; 0)$ và $(2; +\\infty)$"
+              },
+              {
+                "key": "C",
+                "content": "$(-\\infty; 2)$"
+              },
+              {
+                "key": "D",
+                "content": "$(0; +\\infty)$"
+              }
+            ],
+            "correctChoice": "B",
+            "explanation": "Ta có đạo hàm $y' = 3x^2 - 6x = 3x(x - 2)$.\\nCho $y' = 0 \\Leftrightarrow x = 0$ hoặc $x = 2$.\\nXét dấu của $y':\\n• $y' > 0$ trên $(-\\infty; 0)$ và $(2; +\\infty)$ ⇒ hàm số đồng biến trên các khoảng $(-\\infty; 0)$ và $(2; +\\infty)$.\\n• $y' < 0$ trên $(0; 2)$ ⇒ hàm số nghịch biến trên $(0; 2)$.\\nVậy đáp án đúng là B.",
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Ứng dụng đạo hàm & Khảo sát đồ thị",
+            "topicTag": "Tính đơn điệu (Đồng biến - Nghịch biến)",
+            "trapTag": "Bẫy dùng ký hiệu hợp ∪ thay vì từ \"và\" giữa các khoảng đơn điệu rời nhau",
+            "cognitiveTag": "Nhận biết"
+          },
+          {
+            "id": "db-toan-hoc-ch4-mcq-01",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "EASY",
+            "grade": 12,
+            "chapterId": 4,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Nguyên hàm & Ứng dụng tính diện tích, thể tích",
+            "title": "Câu 6: Khái niệm nền tảng Nguyên hàm và tích phân",
+            "content": "Trong chương trình Toán 12, khẳng định nào sau đây là đúng về lý thuyết của nguyên hàm & ứng dụng tính diện tích, thể tích?",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "Định lý và quy tắc cơ bản áp dụng trực tiếp cho nguyên hàm & ứng dụng tính diện tích, thể tích."
+              },
+              {
+                "key": "B",
+                "content": "Mọi hàm số liên tục đều không có cực trị hoặc nguyên hàm xác định."
+              },
+              {
+                "key": "C",
+                "content": "Vectơ không có hướng không cùng phương với bất kỳ vectơ nào."
+              },
+              {
+                "key": "D",
+                "content": "Xác suất của biến cố chắc chắn luôn bằng 0."
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Khẳng định A là định lý cơ bản chuẩn SGK GDPT 2018 cho Nguyên hàm và tích phân.",
+            "topicTag": "Nguyên hàm - Tích phân & Ứng dụng diện tích",
+            "trapTag": "Bẫy quên dấu giá trị tuyệt đối |f(x)| khi tính diện tích hình phẳng",
+            "cognitiveTag": "Nhận biết"
+          },
+          {
+            "id": "db-toan-hoc-ch1-mcq-01",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "EASY",
+            "grade": 12,
+            "chapterId": 1,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Khảo sát hàm số & Ứng dụng thực tế",
+            "title": "Câu 7: Khái niệm nền tảng Ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số",
+            "content": "Trong chương trình Toán 12, khẳng định nào sau đây là đúng về lý thuyết của khảo sát hàm số & ứng dụng thực tế?",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "Định lý và quy tắc cơ bản áp dụng trực tiếp cho khảo sát hàm số & ứng dụng thực tế."
+              },
+              {
+                "key": "B",
+                "content": "Mọi hàm số liên tục đều không có cực trị hoặc nguyên hàm xác định."
+              },
+              {
+                "key": "C",
+                "content": "Vectơ không có hướng không cùng phương với bất kỳ vectơ nào."
+              },
+              {
+                "key": "D",
+                "content": "Xác suất của biến cố chắc chắn luôn bằng 0."
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Khẳng định A là định lý cơ bản chuẩn SGK GDPT 2018 cho Ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số.",
+            "topicTag": "Khảo sát hàm số & Ứng dụng thực tế",
+            "trapTag": "Bẫy quên điều kiện xác định và sai dấu khi biến đổi đại số",
+            "cognitiveTag": "Nhận biết"
+          },
+          {
+            "id": "db-toan-hoc-ch6-mcq-02",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "EASY",
+            "grade": 12,
+            "chapterId": 6,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Công thức Bayes & Xác suất toàn phần",
+            "title": "Câu 8: Công thức và tính chất Xác suất có điều kiện",
+            "content": "Công thức cơ bản nào sau đây được sử dụng để tính toán trong xác suất có điều kiện?",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$\\int x^n dx = \\frac{x^{n+1}}{n+1} + C$ (với $n \\neq -1$)"
+              },
+              {
+                "key": "B",
+                "content": "$\\int e^x dx = x e^{x-1} + C$"
+              },
+              {
+                "key": "C",
+                "content": "$\\vec{a} + \\vec{b} = \\vec{a} - \\vec{b}$"
+              },
+              {
+                "key": "D",
+                "content": "$P(A|B) = P(A) + P(B)$"
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Phương án A là công thức chuẩn mực được định nghĩa trong sách giáo khoa.",
+            "topicTag": "Xác suất có điều kiện & Công thức Bayes",
+            "trapTag": "Bẫy nhầm không gian mẫu thu hẹp trong xác suất có điều kiện P(A|B)",
+            "cognitiveTag": "Nhận biết"
+          },
+          {
+            "id": "db-toan-hoc-ch3-mcq-01",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "EASY",
+            "grade": 12,
+            "chapterId": 3,
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Phương sai & Độ lệch chuẩn ghép nhóm",
+            "title": "Câu 9: Khái niệm nền tảng Các số đặc trưng đo mức độ phân tán cho mẫu số liệu ghép nhóm",
+            "content": "Trong chương trình Toán 12, khẳng định nào sau đây là đúng về lý thuyết của phương sai & độ lệch chuẩn ghép nhóm?",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "Định lý và quy tắc cơ bản áp dụng trực tiếp cho phương sai & độ lệch chuẩn ghép nhóm."
+              },
+              {
+                "key": "B",
+                "content": "Mọi hàm số liên tục đều không có cực trị hoặc nguyên hàm xác định."
+              },
+              {
+                "key": "C",
+                "content": "Vectơ không có hướng không cùng phương với bất kỳ vectơ nào."
+              },
+              {
+                "key": "D",
+                "content": "Xác suất của biến cố chắc chắn luôn bằng 0."
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Khẳng định A là định lý cơ bản chuẩn SGK GDPT 2018 cho Các số đặc trưng đo mức độ phân tán cho mẫu số liệu ghép nhóm.",
+            "topicTag": "Phương sai & Độ lệch chuẩn ghép nhóm",
+            "trapTag": "Bẫy quên điều kiện xác định và sai dấu khi biến đổi đại số",
+            "cognitiveTag": "Nhận biết"
+          },
+          {
+            "id": "q-10",
+            "type": "MULTIPLE_CHOICE",
+            "difficulty": "EASY",
+            "grade": 12,
+            "chapterId": 1,
+            "title": "Câu 10: Tìm đường tiệm cận ngang",
+            "content": "Đường tiệm cận ngang của đồ thị hàm số $y = \\frac{3x - 1}{x + 2}$ có phương trình là:",
+            "score": 1,
+            "choices": [
+              {
+                "key": "A",
+                "content": "$y = 3$"
+              },
+              {
+                "key": "B",
+                "content": "$x = -2$"
+              },
+              {
+                "key": "C",
+                "content": "$y = -\\frac{1}{2}$"
+              },
+              {
+                "key": "D",
+                "content": "$x = 3$"
+              }
+            ],
+            "correctChoice": "A",
+            "explanation": "Ta có $\\lim_{x \\to \\pm\\infty} \\frac{3x - 1}{x + 2} = 3$. Vậy đường tiệm cận ngang là $y = 3$. Chọn A.",
+            "subjectSlug": "toan-hoc",
+            "subjectName": "Toán Học",
+            "topic": "Ứng dụng đạo hàm & Khảo sát đồ thị",
+            "topicTag": "Đường tiệm cận của đồ thị hàm số",
+            "trapTag": "Bẫy quên rút gọn nghiệm tử số và mẫu số trước khi kết luận tiệm cận đứng",
+            "cognitiveTag": "Nhận biết"
+          }
+        ],
+        "studentAnswers": {
+          "multipleChoices": {},
+          "trueFalseAnswers": {},
+          "shortAnswers": {},
+          "essayAnswers": {}
+        },
+        "wrongQuestionIds": [
+          "q-11",
+          "db-toan-hoc-ch6-mcq-01",
+          "q2-11",
+          "db-toan-hoc-ch1-mcq-02",
+          "q-01",
+          "db-toan-hoc-ch4-mcq-01",
+          "db-toan-hoc-ch1-mcq-01",
+          "db-toan-hoc-ch6-mcq-02",
+          "db-toan-hoc-ch3-mcq-01",
+          "q-10"
+        ]
+      },
+      "bloomSummary": {
+        "EASY": {
+          "total": 10,
+          "correct": 0
+        },
+        "MEDIUM": {
+          "total": 0,
+          "correct": 0
+        },
+        "HARD": {
+          "total": 0,
+          "correct": 0
+        },
+        "VERY_HARD": {
+          "total": 0,
+          "correct": 0
+        }
+      }
+    },
+    {
       "id": "SNAP-1793788700923",
       "attemptToken": "att_820a09fe5afe4da781d5b380bd0d544c",
       "userId": "78076515-cb3e-459c-a019-71d72a4b6ecc",
@@ -20882,734 +21732,6 @@
           "q-05",
           "db-toan-hoc-ch3-tf-01",
           "db-toan-hoc-ch5-tf-02"
-        ]
-      },
-      "bloomSummary": {
-        "EASY": {
-          "total": 3,
-          "correct": 0
-        },
-        "MEDIUM": {
-          "total": 4,
-          "correct": 0
-        },
-        "HARD": {
-          "total": 2,
-          "correct": 0
-        },
-        "VERY_HARD": {
-          "total": 1,
-          "correct": 0
-        }
-      }
-    },
-    {
-      "id": "SNAP-1792596044520",
-      "attemptToken": "att_2379259b80934484bd044d15ba36cbf9",
-      "userId": "fecc38b1-69a8-4dbd-bd4c-790ae0375b60",
-      "userFullName": "Kim Thịnh (Super Admin)",
-      "examId": "exam-ngu-van-assessment-g12-ch1-quiz",
-      "examTitle": "Đề Khảo Thí Đánh Giá Năng Lực (10 Câu) - Lớp 12",
-      "subjectSlug": "ngu-van",
-      "subjectName": "Ngữ Văn",
-      "grade": 12,
-      "chapterId": 1,
-      "chapterName": "Chuyên đề 1: Đọc hiểu văn bản truyện & ký hiện đại",
-      "createdAt": "2026-10-21T15:20:44.521Z",
-      "durationMinutes": 15,
-      "timeSpentSeconds": 9,
-      "originalExam": {
-        "finalScore": 0,
-        "maxScore": 10,
-        "correctCount": 0,
-        "wrongCount": 11,
-        "totalQuestions": 10,
-        "questions": [
-          {
-            "id": "db-ngu-van-ch4-mcq-03",
-            "type": "MULTIPLE_CHOICE",
-            "difficulty": "MEDIUM",
-            "grade": 12,
-            "chapterId": 4,
-            "subjectSlug": "ngu-van",
-            "subjectName": "Ngữ Văn",
-            "topic": "Nghị luận xã hội & Nghị luận văn học chuyên sâu",
-            "title": "Câu 1: Giá trị nhân đạo trong Kỹ năng Đọc hiểu và Viết bài nghị luận",
-            "content": "Chiều sâu giá trị nhân đạo mới mẻ của truyện ngắn 'Vợ nhặt' (Kim Lân) thể hiện tập trung ở điểm nào?",
-            "score": 1,
-            "choices": [
-              {
-                "key": "A",
-                "content": "Dù đứng bên bờ vực cái chết vì đói, con người vẫn khát khao hơi ấm gia đình và tin tưởng vào tương lai"
-              },
-              {
-                "key": "B",
-                "content": "Chỉ đơn thuần miêu tả thảm cảnh nạn đói năm 1945 để gây thương cảm"
-              },
-              {
-                "key": "C",
-                "content": "Lên án sự tha hóa đạo đức của tất cả các nhân vật trong xóm ngụ cư"
-              },
-              {
-                "key": "D",
-                "content": "Tôn vinh tầng lớp địa chủ phong kiến giàu có"
-              }
-            ],
-            "correctChoice": "A",
-            "explanation": "Kim Lân phát hiện vẻ đẹp nhân bản: trong hoàn cảnh ngặt nghèo của nạn đói, tình người và niềm lạc quan vẫn tỏa sáng diệu kỳ."
-          },
-          {
-            "id": "db-ngu-van-ch2-sa-01",
-            "type": "SHORT_ANSWER",
-            "difficulty": "HARD",
-            "grade": 12,
-            "chapterId": 2,
-            "subjectSlug": "ngu-van",
-            "subjectName": "Ngữ Văn",
-            "topic": "Tây Tiến, Việt Bắc & Đất Nước",
-            "title": "Câu 2: Tên thể thơ truyền thống dân tộc",
-            "content": "Chương thơ 'Việt Bắc' của nhà thơ Tố Hữu được sáng tác theo thể thơ truyền thống đậm đà bản sắc dân tộc nào của Việt Nam? (Điền tên thể thơ, ví dụ: LỤC BÁT).",
-            "score": 1,
-            "shortAnswerCorrect": "LỤC BÁT",
-            "explanation": "Bài thơ 'Việt Bắc' được viết bằng thể thơ lục bát truyền thống ngọt ngào, đậm phong vị dân ca giao duyên."
-          },
-          {
-            "id": "db-ngu-van-ch4-sa-01",
-            "type": "SHORT_ANSWER",
-            "difficulty": "HARD",
-            "grade": 12,
-            "chapterId": 4,
-            "subjectSlug": "ngu-van",
-            "subjectName": "Ngữ Văn",
-            "topic": "Nghị luận xã hội & Nghị luận văn học chuyên sâu",
-            "title": "Câu 3: Tên thể thơ truyền thống dân tộc",
-            "content": "Chương thơ 'Việt Bắc' của nhà thơ Tố Hữu được sáng tác theo thể thơ truyền thống đậm đà bản sắc dân tộc nào của Việt Nam? (Điền tên thể thơ, ví dụ: LỤC BÁT).",
-            "score": 1,
-            "shortAnswerCorrect": "LỤC BÁT",
-            "explanation": "Bài thơ 'Việt Bắc' được viết bằng thể thơ lục bát truyền thống ngọt ngào, đậm phong vị dân ca giao duyên."
-          },
-          {
-            "id": "db-ngu-van-ch3-tf-01",
-            "type": "TRUE_FALSE",
-            "difficulty": "MEDIUM",
-            "grade": 12,
-            "chapterId": 3,
-            "subjectSlug": "ngu-van",
-            "subjectName": "Ngữ Văn",
-            "topic": "Hồn Trương Ba, da hàng thịt & Tuyên ngôn Độc lập",
-            "title": "Câu 4: Đặc sắc nghệ thuật tác phẩm văn học",
-            "content": "Về phong cách nghệ thuật của các tác gia văn học lớn trong chương trình Ngữ văn 12. Xét tính đúng hoặc sai của các khẳng định sau:",
-            "score": 1,
-            "statements": [
-              {
-                "subId": "a",
-                "statement": "Tô Hoài có biệt tài miêu tả tâm lý nhân vật sắc sảo và am hiểu sâu sắc phong tục tập quán của đồng bào vùng cao Tây Bắc.",
-                "isCorrect": true,
-                "explanation": "Đúng, thể hiện xuất sắc qua diễn biến tâm trạng Mị trong đêm tình mùa xuân."
-              },
-              {
-                "subId": "b",
-                "statement": "Thơ Tố Hữu mang đậm tính chất trữ tình - chính trị, gắn bó chặt chẽ với từng chặng đường lịch sử của cách mạng Việt Nam.",
-                "isCorrect": true,
-                "explanation": "Đúng, Tố Hữu là lá cờ đầu của thơ ca cách mạng Việt Nam."
-              },
-              {
-                "subId": "c",
-                "statement": "Bút pháp nghệ thuật của Nguyễn Tuân trong 'Người lái đò Sông Đà' thiên về sự giản dị, mộc mạc và tránh dùng từ ngữ góc cạnh.",
-                "isCorrect": false,
-                "explanation": "Sai, phong cách Nguyễn Tuân tài hoa, uyên bác, ngôn từ độc đáo, giàu tính tạo hình và cảm giác mạnh."
-              },
-              {
-                "subId": "d",
-                "statement": "Hình tượng 'Đất Nước' trong trường ca của Nguyễn Khoa Điềm được cảm nhận từ góc nhìn độc đáo: Đất Nước của Nhân dân.",
-                "isCorrect": true,
-                "explanation": "Đúng, tư tưởng cốt lõi của chương thơ là 'Đất Nước của Nhân dân, Đất Nước của ca dao thần thoại'."
-              }
-            ],
-            "explanation": "Phân tích văn học: a) Đúng (Tô Hoài Tây Bắc). b) Đúng (Tố Hữu trữ tình chính trị). c) Sai (Nguyễn Tuân tài hoa uyên bác, không mộc mạc). d) Đúng (Đất Nước nhân dân)."
-          },
-          {
-            "id": "db-ngu-van-ch3-mcq-02",
-            "type": "MULTIPLE_CHOICE",
-            "difficulty": "EASY",
-            "grade": 12,
-            "chapterId": 3,
-            "subjectSlug": "ngu-van",
-            "subjectName": "Ngữ Văn",
-            "topic": "Hồn Trương Ba, da hàng thịt & Tuyên ngôn Độc lập",
-            "title": "Câu 5: Biện pháp tu từ Kịch và văn nghị luận",
-            "content": "Biện pháp tu từ nổi bật trong câu thơ: 'Tây Tiến đoàn binh không mọc tóc / Quân xanh màu lá dữ oai hùm' là:",
-            "score": 1,
-            "choices": [
-              {
-                "key": "A",
-                "content": "Tương phản, đối lập và bút pháp lãng mạn hào hùng"
-              },
-              {
-                "key": "B",
-                "content": "So sánh ngang bằng đơn giản"
-              },
-              {
-                "key": "C",
-                "content": "Điệp từ điệp ngữ đơn thuần"
-              },
-              {
-                "key": "D",
-                "content": "Chơi chữ đồng âm"
-              }
-            ],
-            "correctChoice": "A",
-            "explanation": "Bút pháp tương phản giữa hiện thực gian khổ khốc liệt và tinh thần kiêu hùng lãng mạn của người lính Tây Tiến."
-          },
-          {
-            "id": "db-ngu-van-ch1-mcq-04",
-            "type": "MULTIPLE_CHOICE",
-            "difficulty": "MEDIUM",
-            "grade": 12,
-            "chapterId": 1,
-            "subjectSlug": "ngu-van",
-            "subjectName": "Ngữ Văn",
-            "topic": "Vợ chồng A Phủ, Vợ nhặt & Chí Phèo",
-            "title": "Câu 6: Ý nghĩa triết lý nhân sinh Văn học hiện thực và lãng mạn Việt Nam",
-            "content": "Thông điệp triết lý sâu sắc nhất mà Lưu Quang Vũ gửi gắm qua vở kịch 'Hồn Trương Ba, da hàng thịt' là:",
-            "score": 1,
-            "choices": [
-              {
-                "key": "A",
-                "content": "Con người cần được sống toàn vẹn, hài hòa giữa thể xác và tâm hồn; không thể sống chắp vá hay giả tạo"
-              },
-              {
-                "key": "B",
-                "content": "Khuyên con người nên từ bỏ cuộc sống trần thế để lên thiên đường"
-              },
-              {
-                "key": "C",
-                "content": "Ủng hộ việc thỏa hiệp với thói hư tật xấu của bản năng thể xác"
-              },
-              {
-                "key": "D",
-                "content": "Ca ngợi sự quyền năng tối cao của các vị tiên thần"
-              }
-            ],
-            "correctChoice": "A",
-            "explanation": "Triết lý nhân sinh: Được là chính mình, sống ngay thẳng, hài hòa giữa thể xác thanh khiết và tâm hồn trong sáng là hạnh phúc đích thực."
-          },
-          {
-            "id": "q-van-01",
-            "subjectSlug": "ngu-van",
-            "subjectName": "Ngữ Văn",
-            "topic": "Đọc hiểu thơ trữ tình",
-            "type": "MULTIPLE_CHOICE",
-            "difficulty": "MEDIUM",
-            "grade": 12,
-            "chapterId": 1,
-            "title": "Câu 7: Biện pháp tu từ trong thơ",
-            "content": "Trong câu thơ \"Chao ôi, tiếng hót trong veo như một viên pha lê thả vào lòng giếng cạn\", tác giả đã sử dụng biện pháp tu từ nào nổi bật?",
-            "score": 1,
-            "choices": [
-              {
-                "key": "A",
-                "content": "So sánh và ẩn dụ chuyển đổi cảm giác"
-              },
-              {
-                "key": "B",
-                "content": "Nhân hóa và phóng đại"
-              },
-              {
-                "key": "C",
-                "content": "Chơi chữ và đảo ngữ"
-              },
-              {
-                "key": "D",
-                "content": "Điệp từ và nói giảm nói tránh"
-              }
-            ],
-            "correctChoice": "A",
-            "explanation": "Tác giả so sánh tiếng hót (thính giác) \"như một viên pha lê\" (thị giác) và cảm nhận độ \"trong veo\", đây là sự kết hợp giữa so sánh và ẩn dụ chuyển đổi cảm giác. Chọn A."
-          },
-          {
-            "id": "db-ngu-van-ch1-mcq-02",
-            "type": "MULTIPLE_CHOICE",
-            "difficulty": "EASY",
-            "grade": 12,
-            "chapterId": 1,
-            "subjectSlug": "ngu-van",
-            "subjectName": "Ngữ Văn",
-            "topic": "Vợ chồng A Phủ, Vợ nhặt & Chí Phèo",
-            "title": "Câu 8: Biện pháp tu từ Văn học hiện thực và lãng mạn Việt Nam",
-            "content": "Biện pháp tu từ nổi bật trong câu thơ: 'Tây Tiến đoàn binh không mọc tóc / Quân xanh màu lá dữ oai hùm' là:",
-            "score": 1,
-            "choices": [
-              {
-                "key": "A",
-                "content": "Tương phản, đối lập và bút pháp lãng mạn hào hùng"
-              },
-              {
-                "key": "B",
-                "content": "So sánh ngang bằng đơn giản"
-              },
-              {
-                "key": "C",
-                "content": "Điệp từ điệp ngữ đơn thuần"
-              },
-              {
-                "key": "D",
-                "content": "Chơi chữ đồng âm"
-              }
-            ],
-            "correctChoice": "A",
-            "explanation": "Bút pháp tương phản giữa hiện thực gian khổ khốc liệt và tinh thần kiêu hùng lãng mạn của người lính Tây Tiến."
-          },
-          {
-            "id": "db-ngu-van-ch2-sa-02",
-            "type": "SHORT_ANSWER",
-            "difficulty": "VERY_HARD",
-            "grade": 12,
-            "chapterId": 2,
-            "subjectSlug": "ngu-van",
-            "subjectName": "Ngữ Văn",
-            "topic": "Tây Tiến, Việt Bắc & Đất Nước",
-            "title": "Câu 9: Tên dòng sông huyền thoại trong tùy bút Nguyễn Tuân",
-            "content": "Tên con sông vừa 'hung bạo' vừa 'thơ mộng, trữ tình' trong thiên tùy bút xuất sắc của nhà văn Nguyễn Tuân là sông gì? (Điền tên sông viết hoa, ví dụ: SÔNG ĐÀ).",
-            "score": 1,
-            "shortAnswerCorrect": "SÔNG ĐÀ",
-            "explanation": "Tùy bút 'Người lái đò Sông Đà' khắc họa vẻ đẹp kỳ vĩ, hiểm trở và thơ mộng của dòng sông Đà Tây Bắc."
-          },
-          {
-            "id": "db-ngu-van-ch2-mcq-01",
-            "type": "MULTIPLE_CHOICE",
-            "difficulty": "EASY",
-            "grade": 12,
-            "chapterId": 2,
-            "subjectSlug": "ngu-van",
-            "subjectName": "Ngữ Văn",
-            "topic": "Tây Tiến, Việt Bắc & Đất Nước",
-            "title": "Câu 10: Tác giả - tác phẩm Thơ ca cách mạng và cảm hứng sử thi",
-            "content": "Tác phẩm tiêu biểu gắn liền với tên tuổi tác giả trong tây tiến, việt bắc & đất nước là:",
-            "score": 1,
-            "choices": [
-              {
-                "key": "A",
-                "content": "'Tây Tiến' của Quang Dũng"
-              },
-              {
-                "key": "B",
-                "content": "'Dế Mèn phiêu lưu ký'"
-              },
-              {
-                "key": "C",
-                "content": "'Lão Hạc' của Nam Cao"
-              },
-              {
-                "key": "D",
-                "content": "'Truyện Kiều' của Nguyễn Du"
-              }
-            ],
-            "correctChoice": "A",
-            "explanation": "Phương án A là tác phẩm trọng tâm thuộc chương trình Ngữ văn 12 chuẩn GDPT 2018."
-          }
-        ],
-        "studentAnswers": {
-          "multipleChoices": {},
-          "trueFalseAnswers": {},
-          "shortAnswers": {},
-          "essayAnswers": {}
-        },
-        "wrongQuestionIds": [
-          "db-ngu-van-ch4-mcq-03",
-          "db-ngu-van-ch2-sa-01",
-          "db-ngu-van-ch4-sa-01",
-          "db-ngu-van-ch3-tf-01",
-          "db-ngu-van-ch3-mcq-02",
-          "db-ngu-van-ch1-mcq-04",
-          "q-van-01",
-          "db-ngu-van-ch1-mcq-02",
-          "db-ngu-van-ch2-sa-02",
-          "db-ngu-van-ch2-mcq-01"
-        ]
-      },
-      "bloomSummary": {
-        "EASY": {
-          "total": 3,
-          "correct": 0
-        },
-        "MEDIUM": {
-          "total": 4,
-          "correct": 0
-        },
-        "HARD": {
-          "total": 2,
-          "correct": 0
-        },
-        "VERY_HARD": {
-          "total": 1,
-          "correct": 0
-        }
-      }
-    },
-    {
-      "id": "SNAP-1792595301719",
-      "attemptToken": "att_950368bd67cb488abdda05b0a28b2447",
-      "userId": "guest",
-      "userFullName": "Học sinh",
-      "examId": "exam-toan-hoc-assessment-g12-ch1-quiz",
-      "examTitle": "Đề Khảo Thí Đánh Giá Năng Lực (10 Câu) - Lớp 12",
-      "subjectSlug": "toan-hoc",
-      "subjectName": "Toán Học",
-      "grade": 12,
-      "chapterId": 1,
-      "chapterName": "Chương 1: Ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số",
-      "createdAt": "2026-10-21T15:08:21.720Z",
-      "durationMinutes": 15,
-      "timeSpentSeconds": 900,
-      "originalExam": {
-        "finalScore": 0,
-        "maxScore": 10,
-        "correctCount": 0,
-        "wrongCount": 11,
-        "totalQuestions": 10,
-        "questions": [
-          {
-            "id": "q2-01",
-            "type": "MULTIPLE_CHOICE",
-            "difficulty": "EASY",
-            "grade": 12,
-            "chapterId": 2,
-            "title": "Câu 1: Tọa độ của vectơ trong không gian Oxyz",
-            "content": "Trong không gian $Oxyz$, cho vectơ $\\vec{u} = 2\\vec{i} - 3\\vec{j} + 5\\vec{k}$. Tọa độ của vectơ $\\vec{u}$ là:",
-            "score": 1,
-            "choices": [
-              {
-                "key": "A",
-                "content": "$(2; -3; 5)$"
-              },
-              {
-                "key": "B",
-                "content": "$(2; 3; 5)$"
-              },
-              {
-                "key": "C",
-                "content": "$(-3; 2; 5)$"
-              },
-              {
-                "key": "D",
-                "content": "$(2; -3; -5)$"
-              }
-            ],
-            "correctChoice": "A",
-            "explanation": "Theo định nghĩa hệ trục $Oxyz$, $\\vec{u} = x\\vec{i} + y\\vec{j} + z\\vec{k} \\Rightarrow \\vec{u} = (2; -3; 5)$. Chọn A.",
-            "subjectSlug": "toan-hoc",
-            "subjectName": "Toán Học",
-            "topic": "Tọa độ vectơ & Không gian Oxyz"
-          },
-          {
-            "id": "q-11",
-            "type": "MULTIPLE_CHOICE",
-            "difficulty": "EASY",
-            "grade": 12,
-            "chapterId": 1,
-            "title": "Câu 2: Điểm cực tiểu của hàm số",
-            "content": "Cho hàm số $y = f(x)$ có đạo hàm $f'(x) = (x - 1)(x + 2)$. Điểm cực tiểu của hàm số đã cho là:",
-            "score": 1,
-            "choices": [
-              {
-                "key": "A",
-                "content": "$x = 1$"
-              },
-              {
-                "key": "B",
-                "content": "$x = -2$"
-              },
-              {
-                "key": "C",
-                "content": "$x = 0$"
-              },
-              {
-                "key": "D",
-                "content": "$x = 2$"
-              }
-            ],
-            "correctChoice": "A",
-            "explanation": "Ta có $f'(x) = 0 \\Leftrightarrow x = 1$ hoặc $x = -2$. Qua $x = 1$, $f'(x)$ đổi dấu từ âm sang dương nên $x = 1$ là điểm cực tiểu. Chọn A.",
-            "subjectSlug": "toan-hoc",
-            "subjectName": "Toán Học",
-            "topic": "Ứng dụng đạo hàm & Khảo sát đồ thị"
-          },
-          {
-            "id": "db-toan-hoc-ch2-mcq-03",
-            "type": "MULTIPLE_CHOICE",
-            "difficulty": "MEDIUM",
-            "grade": 12,
-            "chapterId": 2,
-            "subjectSlug": "toan-hoc",
-            "subjectName": "Toán Học",
-            "topic": "Hệ tọa độ Oxyz & Tích có hướng",
-            "title": "Câu 3: Biến đổi và áp dụng định lý Tọa độ của vectơ trong không gian",
-            "content": "Cho hàm số/dữ liệu liên quan đến hệ tọa độ oxyz & tích có hướng. Giá trị của biểu thức đại diện sau khi rút gọn là:",
-            "score": 1,
-            "choices": [
-              {
-                "key": "A",
-                "content": "$2$"
-              },
-              {
-                "key": "B",
-                "content": "$-1$"
-              },
-              {
-                "key": "C",
-                "content": "$4$"
-              },
-              {
-                "key": "D",
-                "content": "$0$"
-              }
-            ],
-            "correctChoice": "A",
-            "explanation": "Áp dụng định lý biến đổi đại số cơ bản, rút gọn được kết quả bằng 2. Chọn A."
-          },
-          {
-            "id": "db-toan-hoc-ch4-mcq-03",
-            "type": "MULTIPLE_CHOICE",
-            "difficulty": "MEDIUM",
-            "grade": 12,
-            "chapterId": 4,
-            "subjectSlug": "toan-hoc",
-            "subjectName": "Toán Học",
-            "topic": "Nguyên hàm & Ứng dụng tính diện tích, thể tích",
-            "title": "Câu 4: Biến đổi và áp dụng định lý Nguyên hàm và tích phân",
-            "content": "Cho hàm số/dữ liệu liên quan đến nguyên hàm & ứng dụng tính diện tích, thể tích. Giá trị của biểu thức đại diện sau khi rút gọn là:",
-            "score": 1,
-            "choices": [
-              {
-                "key": "A",
-                "content": "$2$"
-              },
-              {
-                "key": "B",
-                "content": "$-1$"
-              },
-              {
-                "key": "C",
-                "content": "$4$"
-              },
-              {
-                "key": "D",
-                "content": "$0$"
-              }
-            ],
-            "correctChoice": "A",
-            "explanation": "Áp dụng định lý biến đổi đại số cơ bản, rút gọn được kết quả bằng 2. Chọn A."
-          },
-          {
-            "id": "db-toan-hoc-ch5-tf-01",
-            "type": "TRUE_FALSE",
-            "difficulty": "MEDIUM",
-            "grade": 12,
-            "chapterId": 5,
-            "subjectSlug": "toan-hoc",
-            "subjectName": "Toán Học",
-            "topic": "Mặt phẳng, đường thẳng và mặt cầu Oxyz",
-            "title": "Câu 5: Nhận định khảo sát chuyên đề Phương pháp tọa độ trong không gian",
-            "content": "Cho mô hình toán học thuộc Phương pháp tọa độ trong không gian ($D \\subset \\mathbb{R}$). Xét tính đúng hoặc sai của các khẳng định sau:",
-            "score": 1,
-            "statements": [
-              {
-                "subId": "a",
-                "statement": "Tập xác định hoặc miền giá trị của bài toán thỏa mãn điều kiện cơ bản của mặt phẳng, đường thẳng và mặt cầu oxyz.",
-                "isCorrect": true,
-                "explanation": "Khẳng định đúng theo định nghĩa tập xác định chuẩn."
-              },
-              {
-                "subId": "b",
-                "statement": "Đạo hàm hoặc sai số tuyệt đối luôn nhận giá trị âm trên toàn bộ miền xác định.",
-                "isCorrect": false,
-                "explanation": "Sai vì đại lượng luôn có miền nhận giá trị không âm hoặc đổi dấu."
-              },
-              {
-                "subId": "c",
-                "statement": "Các điểm đặc trưng hoặc nghiệm biên thuộc đồ thị nằm trong khoảng liên tục hữu hạn.",
-                "isCorrect": true,
-                "explanation": "Đúng do tính chất liên tục và bị chặn trên đoạn đóng."
-              },
-              {
-                "subId": "d",
-                "statement": "Giá trị trung bình luôn lớn hơn giá trị lớn nhất của mẫu số liệu khảo sát.",
-                "isCorrect": false,
-                "explanation": "Sai, giá trị trung bình luôn nhỏ hơn hoặc bằng giá trị cực đại."
-              }
-            ],
-            "explanation": "Lời giải chi tiết: Ý a đúng do điều kiện xác định. Ý b sai do đổi dấu. Ý c đúng do tính chất liên tục. Ý d sai theo bất đẳng thức trung bình."
-          },
-          {
-            "id": "q-04",
-            "type": "MULTIPLE_CHOICE",
-            "difficulty": "HARD",
-            "grade": 12,
-            "chapterId": 1,
-            "title": "Câu 6: Đường tiệm cận xiên của đồ thị hàm số",
-            "content": "Đường tiệm cận xiên của đồ thị hàm số $y = \\frac{x^2 + 2x - 1}{x - 1}$ có phương trình là:",
-            "score": 1,
-            "choices": [
-              {
-                "key": "A",
-                "content": "$y = x + 3$"
-              },
-              {
-                "key": "B",
-                "content": "$y = x - 3$"
-              },
-              {
-                "key": "C",
-                "content": "$y = x + 1$"
-              },
-              {
-                "key": "D",
-                "content": "$y = 2x + 1$"
-              }
-            ],
-            "correctChoice": "A",
-            "explanation": "Chia đa thức tử cho mẫu:\\n$y = \\frac{x^2 + 2x - 1}{x - 1} = (x + 3) + \\frac{2}{x - 1}$.\\nKhi $x \\to \\pm\\infty$, $\\lim_{x \\to \\pm\\infty} [y - (x + 3)] = \\lim_{x \\to \\pm\\infty} \\frac{2}{x - 1} = 0$.\\nVậy đường thẳng $y = x + 3$ là tiệm cận xiên của đồ thị. Chọn A.",
-            "subjectSlug": "toan-hoc",
-            "subjectName": "Toán Học",
-            "topic": "Ứng dụng đạo hàm & Khảo sát đồ thị"
-          },
-          {
-            "id": "q-03",
-            "type": "MULTIPLE_CHOICE",
-            "difficulty": "MEDIUM",
-            "grade": 12,
-            "chapterId": 1,
-            "title": "Câu 7: Giá trị lớn nhất trên đoạn",
-            "content": "Giá trị lớn nhất của hàm số $f(x) = x + \\frac{4}{x}$ trên đoạn $[1; 3]$ bằng:",
-            "score": 1,
-            "choices": [
-              {
-                "key": "A",
-                "content": "$5$"
-              },
-              {
-                "key": "B",
-                "content": "$4$"
-              },
-              {
-                "key": "C",
-                "content": "$\\frac{13}{3}$"
-              },
-              {
-                "key": "D",
-                "content": "$6$"
-              }
-            ],
-            "correctChoice": "A",
-            "explanation": "Hàm số liên tục trên $[1; 3]$.\\nĐạo hàm $f'(x) = 1 - \\frac{4}{x^2} = \\frac{x^2 - 4}{x^2}$.\\nCho $f'(x) = 0 \\Leftrightarrow x = 2$ (vì $x \\in [1; 3]$).\\nTính các giá trị:\\n• $f(1) = 1 + 4 = 5$\\n• $f(2) = 2 + 2 = 4$\\n• $f(3) = 3 + \\frac{4}{3} = \\frac{13}{3} \\approx 4.33$\\nSo sánh suy ra $\\max_{[1; 3]} f(x) = f(1) = 5$. Chọn A.",
-            "subjectSlug": "toan-hoc",
-            "subjectName": "Toán Học",
-            "topic": "Ứng dụng đạo hàm & Khảo sát đồ thị"
-          },
-          {
-            "id": "q2-09",
-            "type": "SHORT_ANSWER",
-            "difficulty": "HARD",
-            "grade": 12,
-            "chapterId": 2,
-            "title": "Câu 8: Góc giữa hai vectơ trong không gian",
-            "content": "Trong không gian $Oxyz$, cho hai vectơ $\\vec{u} = (1; 1; 0)$ và $\\vec{v} = (0; 1; 1)$. Tính số đo góc $(\\vec{u}, \\vec{v})$ theo đơn vị độ.",
-            "score": 1,
-            "shortAnswerCorrect": "60",
-            "explanation": "Ta có $\\cos(\\vec{u}, \\vec{v}) = \\frac{\\vec{u}.\\vec{v}}{|\\vec{u}|.|\\vec{v}|} = \\frac{1(0) + 1(1) + 0(1)}{\\sqrt{1^2+1^2}.\\sqrt{1^2+1^2}} = \\frac{1}{\\sqrt{2}.\\sqrt{2}} = \\frac{1}{2}$.\\nSuy ra góc $(\\vec{u}, \\vec{v}) = 60^\\circ$.\\nĐáp số điền: 60.",
-            "subjectSlug": "toan-hoc",
-            "subjectName": "Toán Học",
-            "topic": "Tọa độ vectơ & Không gian Oxyz"
-          },
-          {
-            "id": "q2-07",
-            "type": "MULTIPLE_CHOICE",
-            "difficulty": "VERY_HARD",
-            "grade": 12,
-            "chapterId": 2,
-            "title": "Câu 9: Bài toán thực tế định vị rađa hàng không (Không gian 3D)",
-            "content": "Tại một trung tâm kiểm soát không lưu, trạm radar đặt tại gốc $O(0; 0; 0)$. Máy bay thứ nhất đang bay tại vị trí $A(100; 200; 10)$ km, máy bay thứ hai tại $B(120; 200; 12)$ km. Khoảng cách trực tiếp giữa hai máy bay là bao nhiêu km?",
-            "score": 1,
-            "choices": [
-              {
-                "key": "A",
-                "content": "$2\\sqrt{101}$ km"
-              },
-              {
-                "key": "B",
-                "content": "$20$ km"
-              },
-              {
-                "key": "C",
-                "content": "$22$ km"
-              },
-              {
-                "key": "D",
-                "content": "$15$ km"
-              }
-            ],
-            "correctChoice": "A",
-            "explanation": "Khoảng cách $AB = \\sqrt{(120-100)^2 + (200-200)^2 + (12-10)^2} = \\sqrt{20^2 + 0 + 2^2} = \\sqrt{404} = 2\\sqrt{101}$ km. Chọn A.",
-            "subjectSlug": "toan-hoc",
-            "subjectName": "Toán Học",
-            "topic": "Tọa độ vectơ & Không gian Oxyz"
-          },
-          {
-            "id": "q2-11",
-            "type": "MULTIPLE_CHOICE",
-            "difficulty": "EASY",
-            "grade": 12,
-            "chapterId": 1,
-            "isPreviousChapterReview": true,
-            "relatedChapterIds": [
-              1
-            ],
-            "title": "Câu 10: Đường tiệm cận đứng của đồ thị hàm phân thức (Ôn tập Chương 1)",
-            "content": "Phương trình đường tiệm cận đứng của đồ thị hàm số $y = \\frac{2x + 1}{x - 3}$ là:",
-            "score": 1,
-            "choices": [
-              {
-                "key": "A",
-                "content": "$x = 3$"
-              },
-              {
-                "key": "B",
-                "content": "$x = -3$"
-              },
-              {
-                "key": "C",
-                "content": "$y = 2$"
-              },
-              {
-                "key": "D",
-                "content": "$y = 3$"
-              }
-            ],
-            "correctChoice": "A",
-            "explanation": "Tiệm cận đứng tại nghiệm của mẫu $x - 3 = 0 \\Leftrightarrow x = 3$. Chọn A.",
-            "subjectSlug": "toan-hoc",
-            "subjectName": "Toán Học",
-            "topic": "Tọa độ vectơ & Không gian Oxyz"
-          }
-        ],
-        "studentAnswers": {
-          "multipleChoices": {},
-          "trueFalseAnswers": {},
-          "shortAnswers": {},
-          "essayAnswers": {}
-        },
-        "wrongQuestionIds": [
-          "q2-01",
-          "q-11",
-          "db-toan-hoc-ch2-mcq-03",
-          "db-toan-hoc-ch4-mcq-03",
-          "db-toan-hoc-ch5-tf-01",
-          "q-04",
-          "q-03",
-          "q2-09",
-          "q2-07",
-          "q2-11"
         ]
       },
       "bloomSummary": {

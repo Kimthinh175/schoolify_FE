@@ -69,7 +69,7 @@ function AdminQuestionsImportContent() {
       const json = await res.json();
       if (res.ok && json.success) {
         toast.success(
-          `Đã lưu thành công ${validQuestions.length} câu hỏi vào Ngân hàng câu hỏi PostgreSQL!`,
+          `Đã lưu thành công ${validQuestions.length} câu hỏi vào hệ thống!`,
         );
       } else {
         toast.success(
@@ -306,7 +306,7 @@ function AdminQuestionsImportContent() {
             </h3>
             <span className="text-xs text-slate-500 dark:text-slate-400">
               {isSavingToDb
-                ? 'Đang đồng bộ câu hỏi vào PostgreSQL...'
+                ? 'Đang lưu câu hỏi vào hệ thống...'
                 : 'Bạn có thể chỉnh sửa đáp án đúng và nội dung ngay tại đây trước khi lưu vào Ngân hàng câu hỏi.'}
             </span>
           </div>

@@ -98,36 +98,21 @@ C. 12
 D. 16`,
   },
   {
-    id: 'vat-ly-12',
-    label: 'Đề mẫu Vật Lý 12 (Khí lý tưởng & Hạt nhân)',
-    fileName: 'De_Kiem_Tra_Vat_Ly_12_Khi_Ly_Tuong_Hat_Nhan.docx',
-    subject: 'vat-ly',
-    rawText: `Câu 1: [NB] Trong quá trình đẳng nhiệt của một lượng khí lý tưởng xác định, áp suất tỉ lệ nghịch với đại lượng nào?
-*A. Thể tích V của khối khí
-B. Nhiệt độ tuyệt đối T
-C. Nội năng của khí
-D. Khối lượng phân tử
-Câu 2: [VD] Hạt nhân nguyên tử có hiện tượng phóng xạ với chu kỳ bán rã và năng lượng liên kết riêng. Khi tính độ hụt khối của hạt nhân, công thức nào là đúng?
-*A. Δm = Z.mp + (A - Z).mn - mX
-B. Δm = Z.mp + A.mn - mX
-C. Δm = mX - (Z.mp + N.mn)
-D. Δm = A.mp - Z.mn`,
-  },
-  {
-    id: 'sinh-hoc-12',
-    label: 'Đề mẫu Sinh Học 12 (Di truyền & Quang hợp)',
-    fileName: 'De_Thi_Thu_Sinh_Hoc_12_Di_Truyen_Phan_Tu.docx',
-    subject: 'sinh-hoc',
-    rawText: `Câu 1: [NB] Trong tế bào thực vật, quá trình quang hợp và chuyển hóa năng lượng ánh sáng diễn ra tại bào quan nào?
-*A. Bào quan lục lạp
-B. Ti thể
-C. Bộ máy Golgi
-D. Lưới nội chất
-Câu 2: [TH] Trong cơ chế di truyền cấp độ phân tử, quá trình phiên mã tổng hợp phân tử ARN diễn ra dựa trên mạch nào của gen ADN?
-*A. Mạch khuôn có chiều 3' -> 5'
-B. Mạch bổ sung có chiều 5' -> 3'
-C. Cả hai mạch của phân tử ADN
-D. Mạch polipeptit`,
+    id: 'tin-12',
+    label: 'Đề mẫu Tin Học 12 (Python, SQL & Mạng máy tính)',
+    fileName: 'De_Thi_Thu_Tin_Hoc_12_Python_SQL.docx',
+    subject: 'tin-hoc',
+    rawText: `Câu 1: [NB] Trong SQL, câu lệnh nào dùng để truy vấn lấy dữ liệu từ một bảng?
+*A. SELECT
+B. INSERT
+C. UPDATE
+D. DELETE
+Lời giải: Câu lệnh SELECT dùng để truy vấn dữ liệu từ bảng trong cơ sở dữ liệu quan hệ.
+Câu 2: [TH] Trong ngôn ngữ lập trình Python, kết quả của hàm len([10, 20, 30, 40]) là bao nhiêu?
+*A. 4
+B. 3
+C. 10
+D. 40`,
   },
 ];
 

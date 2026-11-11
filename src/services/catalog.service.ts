@@ -12,6 +12,7 @@ export interface OrderItem {
   item_price_snapshot: number;
   status: 'PENDING' | 'PAID' | 'CANCELLED';
   payment_method: 'BANK' | 'COD';
+  cancel_reason?: string | null;
   created_at: string;
 }
 
@@ -246,6 +247,28 @@ export const catalogService = {
       console.warn('[catalogService.confirmOrderPayment] Failed:', err);
       return null;
     }
+  },
+
+  /** Hủy đơn hàng đang chờ xác nhận (`PATCH /api/v1/catalog/orders/:id/cancel`) */
+  async cancelOrder(
+    orderId: string,
+    reason?: string
+  ): Promise<{ order: OrderItem } | null> {
+    const res = await fetch(`/api/v1/catalog/orders/${encodeURIComponent(orderId)}/cancel`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(reason?.trim() ? { reason: reason.trim() } : {}),
+    });
+    let json: any = null;
+    try {
+      json = await res.json();
+    } catch {
+      json = null;
+    }
+    if (!res.ok) {
+      throw new Error(json?.message || 'Không thể hủy đơn hàng này.');
+    }
+    return json?.data || null;
   },
 
   /** Tạo link thanh toán PayOS VietQR (`POST /api/v1/catalog/payos/create-payment-link`) */

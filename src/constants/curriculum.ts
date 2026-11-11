@@ -28,6 +28,9 @@ export const GRADE_LEVELS = [
 
 export type GradeLevel = typeof GRADE_LEVELS[number];
 
+export const ADMIN_SUBJECTS: string[] = ['Toán học', 'Tin học'];
+export const ADMIN_GRADE_LEVELS = ['12', '11', '10'] as const;
+
 export const GRADE_GROUPS = [
   {
     name: 'THPT (Cấp 3)',
@@ -306,6 +309,18 @@ export const CURRICULUM_CHAPTERS: Record<string, Record<string, string[]>> = {
       'Chương 3: Trí tuệ nhân tạo (AI) ứng dụng',
       'Chương 4: Mạng máy tính & An toàn an ninh mạng',
     ],
+    '11': [
+      'Chương 1: Hệ điều hành & Phần mềm ứng dụng',
+      'Chương 2: Tổ chức lưu trữ, tìm kiếm & Trao đổi thông tin',
+      'Chương 3: Cơ sở dữ liệu quan hệ (SQL)',
+      'Chương 4: Kỹ thuật lập trình & Giải thuật',
+    ],
+    '10': [
+      'Chương 1: Máy tính và Xã hội tri thức',
+      'Chương 2: Mạng máy tính và Internet',
+      'Chương 3: Đạo đức, pháp luật và văn hóa số',
+      'Chương 4: Lập trình bậc cao với Python',
+    ],
   },
   'Công nghệ': {
     '12': [
@@ -332,6 +347,16 @@ export function getChaptersForSubject(subject: string, grade: string): string[] 
 
   // Alias lookup
   const subLower = (subject || '').toLowerCase().trim();
+  if (subLower.includes('toán') || subLower.includes('toan')) {
+    if (CURRICULUM_CHAPTERS['Toán học']?.[grade]) {
+      return CURRICULUM_CHAPTERS['Toán học'][grade];
+    }
+  }
+  if (subLower.includes('tin')) {
+    if (CURRICULUM_CHAPTERS['Tin học']?.[grade]) {
+      return CURRICULUM_CHAPTERS['Tin học'][grade];
+    }
+  }
   if (subLower.includes('gdcd') || subLower.includes('pháp luật') || subLower.includes('phap luat') || subLower.includes('kinh tế') || subLower.includes('công dân')) {
     if (CURRICULUM_CHAPTERS['GDKT & Pháp Luật']?.[grade]) {
       return CURRICULUM_CHAPTERS['GDKT & Pháp Luật'][grade];

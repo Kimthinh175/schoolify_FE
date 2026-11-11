@@ -877,12 +877,6 @@ export function QuestionImportModal({
                                 <option value="SINGLE_CHOICE">Trắc nghiệm 1 đáp án</option>
                                 <option value="MULTIPLE_CHOICE">Trắc nghiệm nhiều đáp án</option>
                                 <option value="TRUE_FALSE">Đúng / Sai đa mệnh đề (2025)</option>
-                                <option value="FILL_BLANK">Điền số / Trả lời ngắn</option>
-                                <option value="ESSAY">Câu hỏi Tự luận</option>
-                                <option value="GROUP_QUESTIONS">Chùm câu hỏi (Ngữ liệu)</option>
-                                <option value="MATCHING">Nối cặp tương ứng</option>
-                                <option value="ORDERING">Sắp xếp theo thứ tự</option>
-                                <option value="CLOZE_DROPDOWN">Đục lỗ chọn từ (Inline)</option>
                               </select>
                               {!q.is_valid && (
                                 <span className="text-xs font-bold text-rose-600 flex items-center gap-1">

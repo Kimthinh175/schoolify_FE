@@ -41,7 +41,7 @@ import {
 import { toast } from 'sonner';
 import { MOCK_COURSES } from '@/services/mock/data';
 import {
-  AVAILABLE_SUBJECTS,
+  ADMIN_SUBJECTS,
   GRADE_LEVELS,
   getChaptersForSubject,
 } from '@/constants/curriculum';
@@ -364,7 +364,7 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
               onChange={(e) => setSubject(e.target.value)}
               className="w-full h-9 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-2.5 py-1.5 text-slate-900 dark:text-white font-semibold focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:border-primary"
             >
-              {AVAILABLE_SUBJECTS.map((sub) => (
+              {ADMIN_SUBJECTS.map((sub) => (
                 <option key={sub} value={sub}>
                   {sub}
                 </option>
@@ -372,34 +372,19 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
             </select>
           </div>
 
-          {/* Khối lớp Dropdown */}
+          {/* Khối lớp Dropdown (THPT 10 - 12) */}
           <div>
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-              Khối lớp:
+              Khối lớp (THPT):
             </label>
             <select
               value={gradeLevel}
               onChange={(e) => setGradeLevel(e.target.value)}
               className="w-full h-9 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-2.5 py-1.5 text-slate-900 dark:text-white font-medium focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:border-primary"
             >
-              <optgroup label="THPT (Cấp 3)">
-                <option value="12">Lớp 12</option>
-                <option value="11">Lớp 11</option>
-                <option value="10">Lớp 10</option>
-              </optgroup>
-              <optgroup label="THCS (Cấp 2)">
-                <option value="9">Lớp 9</option>
-                <option value="8">Lớp 8</option>
-                <option value="7">Lớp 7</option>
-                <option value="6">Lớp 6</option>
-              </optgroup>
-              <optgroup label="Tiểu học (Cấp 1)">
-                <option value="5">Lớp 5</option>
-                <option value="4">Lớp 4</option>
-                <option value="3">Lớp 3</option>
-                <option value="2">Lớp 2</option>
-                <option value="1">Lớp 1</option>
-              </optgroup>
+              <option value="12">Lớp 12 (THPT)</option>
+              <option value="11">Lớp 11 (THPT)</option>
+              <option value="10">Lớp 10 (THPT)</option>
             </select>
           </div>
 
