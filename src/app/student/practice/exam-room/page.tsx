@@ -498,6 +498,22 @@ function StandardExamRoomContent() {
   // 1. Khởi tạo / Khôi phục phiên thi từ IndexedDB & Đếm giờ thực ngầm (Wall-Clock)
   React.useEffect(() => {
     if (attemptTokenParam || isSubmitted) return; // Nếu đang ở chế độ xem kết quả hoặc đã nộp bài thì không mở phiên thi mới!
+    if (outOfPointsBlocked.isBlocked) {
+      examOfflineStorage.clearActiveExamSession().catch(() => {});
+      return;
+    }
+
+    const deductedKey = `schoolify_started_pts_${exam.id}`;
+    const alreadyDeducted = typeof window !== 'undefined' && sessionStorage.getItem(deductedKey) === '1';
+    if (!alreadyDeducted) {
+      const costInfo = getExamLevelCost(levelParam);
+      const cachedPoints = getCachedPointsBalance();
+      if (cachedPoints !== null && (cachedPoints <= 0 || cachedPoints < costInfo.costPoints)) {
+        examOfflineStorage.clearActiveExamSession().catch(() => {});
+        return;
+      }
+    }
+
     let isMounted = true;
     const currentUrl = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
 
@@ -1377,6 +1393,7 @@ function StandardExamRoomContent() {
             toast.info('Đã kích hoạt phiên làm đề', { description: res.message });
           }
         } else {
+          examOfflineStorage.clearActiveExamSession().catch(() => {});
           setOutOfPointsBlocked({
             isBlocked: true,
             currentPoints: Math.max(0, Number(res?.data?.currentPoints ?? 0)),
@@ -1387,6 +1404,7 @@ function StandardExamRoomContent() {
       })
       .catch((err) => {
         const costInfo = getExamLevelCost(levelParam);
+        examOfflineStorage.clearActiveExamSession().catch(() => {});
         setOutOfPointsBlocked({
           isBlocked: true,
           currentPoints: Math.max(0, Number(err?.data?.currentPoints ?? 0)),
@@ -1395,6 +1413,12 @@ function StandardExamRoomContent() {
         });
       });
   }, [attemptTokenParam, isSubmitted, isAssessment, exam.id, exam.title, user?.id, levelParam, subjectSlug, gradeParam, chapterParam]);
+
+  // Nếu học sinh bị chặn do hết Tia Sáng, hủy ngay phiên thi tạm để ExamSessionGuard không khóa chuyển trang
+  React.useEffect(() => {
+    if (!outOfPointsBlocked.isBlocked) return;
+    examOfflineStorage.clearActiveExamSession().catch(() => {});
+  }, [outOfPointsBlocked.isBlocked]);
 
   // Xử lý cộng/trừ điểm thưởng Token khi nộp bài thi (PostgreSQL)
   React.useEffect(() => {
@@ -1468,17 +1492,22 @@ function StandardExamRoomContent() {
   // VIEW: HẾT TIA SÁNG NĂNG LƯỢNG (CHẶN TẠO ĐỀ & MỞ POPUP ĐĂNG KÝ GÓI)
   // =========================================================================
   if (outOfPointsBlocked.isBlocked) {
+    const handleExitBlockedExam = async (targetUrl: string) => {
+      await examOfflineStorage.clearActiveExamSession().catch(() => {});
+      router.push(targetUrl);
+    };
+
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-[#070B14] text-slate-900 dark:text-slate-100 flex flex-col pt-20">
         <Navbar />
         <OutOfPointsModal
           isOpen={true}
-          onClose={() => router.push('/luyen-thi')}
+          onClose={() => void handleExitBlockedExam('/luyen-thi')}
           currentPoints={outOfPointsBlocked.currentPoints}
           requiredPoints={outOfPointsBlocked.requiredPoints}
           levelLabel={outOfPointsBlocked.levelLabel}
           secondaryLabel="Quay lại Cổng Luyện Thi"
-          onNavigatePricing={() => router.push('/pricing')}
+          onNavigatePricing={() => void handleExitBlockedExam('/pricing')}
         />
       </div>
     );
@@ -3629,17 +3658,22 @@ function ExamRoomContent() {
   if (isOlympiad && olympiadExam) {
     const cachedPts = isMounted ? getCachedPointsBalance() : null;
     if (cachedPts !== null && cachedPts < 9) {
+      const handleExitOlympiadBlocked = async (targetUrl: string) => {
+        await examOfflineStorage.clearActiveExamSession().catch(() => {});
+        router.push(targetUrl);
+      };
+
       return (
         <div className="min-h-screen bg-slate-50 dark:bg-[#070B14] text-slate-900 dark:text-slate-100 flex flex-col pt-20">
           <Navbar />
           <OutOfPointsModal
             isOpen={true}
-            onClose={() => router.push('/luyen-thi')}
+            onClose={() => void handleExitOlympiadBlocked('/luyen-thi')}
             currentPoints={Math.max(0, cachedPts)}
             requiredPoints={9}
             levelLabel={olympiadExam.title || 'Đề HSG / Nâng cao'}
             secondaryLabel="Quay lại Cổng Luyện Thi"
-            onNavigatePricing={() => router.push('/pricing')}
+            onNavigatePricing={() => void handleExitOlympiadBlocked('/pricing')}
           />
         </div>
       );

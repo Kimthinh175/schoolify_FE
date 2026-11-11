@@ -20,7 +20,7 @@ import {
 import { MathFormulaToolbar } from '@/components/features/admin/questions/MathFormulaToolbar';
 import { toast } from 'sonner';
 import {
-  AVAILABLE_SUBJECTS,
+  ADMIN_SUBJECTS,
   getChaptersForSubject,
 } from '@/constants/curriculum';
 
@@ -38,7 +38,7 @@ export function QuestionStudioForm({
   onCancel,
 }: QuestionStudioFormProps) {
   const [type, setType] = React.useState<QuestionType>(
-    initialQuestion?.type || 'SINGLE_CHOICE'
+    (initialQuestion?.type === 'MULTIPLE_CHOICE' || initialQuestion?.type === 'TRUE_FALSE') ? initialQuestion.type : 'SINGLE_CHOICE'
   );
   const [title, setTitle] = React.useState(initialQuestion?.title || 'Câu hỏi mới');
   const [content, setContent] = React.useState(initialQuestion?.content || '');
@@ -48,7 +48,11 @@ export function QuestionStudioForm({
   const [difficulty, setDifficulty] = React.useState<DifficultyLevel>(
     initialQuestion?.difficulty || 'UNDERSTANDING'
   );
-  const [subject, setSubject] = React.useState(initialQuestion?.subject || 'Toán học');
+  const [subject, setSubject] = React.useState(() => {
+    const s = (initialQuestion?.subject || '').toLowerCase();
+    if (s.includes('tin')) return 'Tin học';
+    return 'Toán học';
+  });
   const [gradeLevel, setGradeLevel] = React.useState(
     String(initialQuestion?.grade_level || '12')
   );
@@ -267,12 +271,6 @@ export function QuestionStudioForm({
               <option value="SINGLE_CHOICE">Trắc nghiệm 1 đáp án (Single Choice)</option>
               <option value="MULTIPLE_CHOICE">Trắc nghiệm nhiều đáp án (Multi Choice)</option>
               <option value="TRUE_FALSE">Đúng / Sai 4 mệnh đề (Chuẩn 2025)</option>
-              <option value="FILL_BLANK">Điền số / Trả lời ngắn</option>
-              <option value="ESSAY">Tự luận (Barem điểm)</option>
-              <option value="GROUP_QUESTIONS">Chùm câu hỏi / Ngữ liệu</option>
-              <option value="MATCHING">Nối cặp tương ứng A - B</option>
-              <option value="ORDERING">Sắp xếp theo thứ tự</option>
-              <option value="CLOZE_DROPDOWN">Đục lỗ chọn từ (Inline)</option>
             </select>
           </div>
 
@@ -303,7 +301,7 @@ export function QuestionStudioForm({
               onChange={(e) => setSubject(e.target.value)}
               className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-3 py-2.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 font-semibold"
             >
-              {AVAILABLE_SUBJECTS.map((sub) => (
+              {ADMIN_SUBJECTS.map((sub) => (
                 <option key={sub} value={sub}>
                   {sub}
                 </option>
@@ -326,36 +324,21 @@ export function QuestionStudioForm({
           </div>
         </div>
 
-        {/* Khối lớp (1 - 12) & Quản lý Chương (Có sẵn / Tạo mới) */}
+        {/* Khối lớp THPT (10 - 12) & Quản lý Chương (Có sẵn / Tạo mới) */}
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
-          {/* Khối lớp từ Lớp 1 đến Lớp 12 */}
+          {/* Khối lớp THPT (Lớp 10 - 12) */}
           <div className="sm:col-span-4">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-              Khối lớp (Lớp 1 - 12):
+              Khối lớp THPT (Lớp 10 - 12):
             </label>
             <select
               value={gradeLevel}
               onChange={(e) => setGradeLevel(e.target.value)}
               className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-3 py-2.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 font-medium"
             >
-              <optgroup label="THPT (Cấp 3)">
-                <option value="12">Lớp 12</option>
-                <option value="11">Lớp 11</option>
-                <option value="10">Lớp 10</option>
-              </optgroup>
-              <optgroup label="THCS (Cấp 2)">
-                <option value="9">Lớp 9</option>
-                <option value="8">Lớp 8</option>
-                <option value="7">Lớp 7</option>
-                <option value="6">Lớp 6</option>
-              </optgroup>
-              <optgroup label="Tiểu học (Cấp 1)">
-                <option value="5">Lớp 5</option>
-                <option value="4">Lớp 4</option>
-                <option value="3">Lớp 3</option>
-                <option value="2">Lớp 2</option>
-                <option value="1">Lớp 1</option>
-              </optgroup>
+              <option value="12">Lớp 12 (THPT)</option>
+              <option value="11">Lớp 11 (THPT)</option>
+              <option value="10">Lớp 10 (THPT)</option>
             </select>
           </div>
 

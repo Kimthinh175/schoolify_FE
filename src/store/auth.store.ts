@@ -21,6 +21,15 @@ interface AuthStoreState {
   updateUser: (userPartial: Partial<User>) => void;
 }
 
+const resolveUserRole = (
+  user: User,
+  preferredRole?: SchoolRole | SystemRole
+): SchoolRole | SystemRole => {
+  if (preferredRole) return preferredRole;
+  if (user.role === 'SUPER_ADMIN') return 'SUPER_ADMIN';
+  return (user as any).teacher_profile ? 'TEACHER' : 'STUDENT';
+};
+
 export const useAuthStore = create<AuthStoreState>()(
   persist(
     (set, get) => ({
@@ -32,13 +41,7 @@ export const useAuthStore = create<AuthStoreState>()(
       isAuthenticated: false,
 
       login: (user, token, role, schoolId) => {
-        const resolvedRole: SchoolRole | SystemRole =
-          role ||
-          (user.role === 'SUPER_ADMIN'
-            ? 'SUPER_ADMIN'
-            : (user as any).teacher_profile
-              ? 'TEACHER'
-              : 'STUDENT');
+        const resolvedRole = resolveUserRole(user, role);
 
         set({
           user,
@@ -70,19 +73,40 @@ export const useAuthStore = create<AuthStoreState>()(
       },
 
       fetchMe: async () => {
-        const { token, isAuthenticated } = get();
-        if (!isAuthenticated && !token) return null;
+        const { token, isAuthenticated, currentRole } = get();
         try {
           const res = await fetch('/api/v1/auth/me', {
             method: 'GET',
             headers: token ? { Authorization: `Bearer ${token}` } : {},
+            credentials: 'include',
           });
+          if (res.status === 401) {
+            set({
+              user: null,
+              token: null,
+              currentRole: 'STUDENT',
+              currentSchoolId: null,
+              currentSchool: null,
+              isAuthenticated: false,
+            });
+            return null;
+          }
           if (!res.ok) return null;
           const data = await res.json();
           if (data?.user) {
             const current = get().user;
-            const merged = { ...current, ...data.user };
-            set({ user: merged });
+            const merged = { ...current, ...data.user } as User;
+            const resolvedRole =
+              merged.role === 'SUPER_ADMIN'
+                ? 'SUPER_ADMIN'
+                : isAuthenticated
+                  ? currentRole
+                  : resolveUserRole(merged);
+            set({
+              user: merged,
+              isAuthenticated: true,
+              currentRole: resolvedRole,
+            });
             return merged;
           }
           return null;

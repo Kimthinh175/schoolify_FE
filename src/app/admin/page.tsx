@@ -42,13 +42,44 @@ export default function AdminLoginPage() {
   const isAlreadyAdmin = isAuthenticated && currentRole === 'SUPER_ADMIN';
   const [countdown, setCountdown] = React.useState(3);
 
+  const getRedirectUrl = React.useCallback(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get('redirect');
+      if (
+        redirect &&
+        redirect.startsWith('/admin') &&
+        redirect !== '/admin' &&
+        redirect !== '/admin/login'
+      ) {
+        return redirect;
+      }
+    }
+    return '/admin/dashboard';
+  }, []);
+
+  // Đọc query parameters thông báo lỗi chuyển hướng từ Middleware
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const err = params.get('error');
+      if (err === 'unauthorized') {
+        setErrorMessage('Vui lòng đăng nhập với tư cách Quản trị viên để truy cập trang này.');
+      } else if (err === 'session_expired') {
+        setErrorMessage('Phiên làm việc quản trị đã hết hạn. Vui lòng đăng nhập lại.');
+      } else if (err === 'forbidden') {
+        setErrorMessage('Tài khoản của bạn không có quyền Quản trị viên cấp cao (SUPER_ADMIN).');
+      }
+    }
+  }, []);
+
   React.useEffect(() => {
     if (isAlreadyAdmin) {
       const timer = setInterval(() => {
         setCountdown((prev) => {
           if (prev <= 1) {
             clearInterval(timer);
-            router.push('/admin/dashboard');
+            router.push(getRedirectUrl());
             return 0;
           }
           return prev - 1;
@@ -56,7 +87,7 @@ export default function AdminLoginPage() {
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [isAlreadyAdmin, router]);
+  }, [isAlreadyAdmin, router, getRedirectUrl]);
 
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -100,7 +131,7 @@ export default function AdminLoginPage() {
       toast.success('Xác thực Quản trị viên thành công!', {
         description: `Chào mừng ${data.user.fullname} trở lại hệ thống.`,
       });
-      router.push('/admin/dashboard');
+      router.push(getRedirectUrl());
     } catch (err: any) {
       setErrorMessage(err?.message || 'Không thể kết nối đến cổng xác thực Backend.');
     } finally {
@@ -130,7 +161,7 @@ export default function AdminLoginPage() {
         <div className="flex items-center gap-3 sm:gap-4 font-mono text-[11px] text-slate-400">
           <div className="hidden md:flex items-center gap-1.5">
             <Server className="w-3.5 h-3.5 text-slate-500" />
-            <span>PostgreSQL Connected</span>
+            <span>Hệ thống trực tuyến</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />

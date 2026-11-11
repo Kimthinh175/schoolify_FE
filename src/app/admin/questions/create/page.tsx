@@ -28,7 +28,7 @@ export default function AdminQuestionCreatePage() {
   const handleSave = async (newQuestion: Question) => {
     const created = await questionBankService.createPostgresQuestion(newQuestion);
     if (created) {
-      toast.success('Đã lưu câu hỏi mới vào Ngân hàng câu hỏi PostgreSQL!');
+      toast.success('Đã lưu câu hỏi mới vào hệ thống!');
     } else {
       toast.success('Đã thêm câu hỏi mới vào Master Question Bank!');
     }
@@ -53,7 +53,7 @@ export default function AdminQuestionCreatePage() {
           Soạn Thảo Câu Hỏi Chuẩn Hóa
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Hỗ trợ đầy đủ 9 định dạng câu hỏi hiện đại, phân loại Khối lớp (1 - 12), lưu trực tiếp vào PostgreSQL.
+          Chuẩn hóa 3 định dạng đề thi (1 đáp án, nhiều đáp án, đúng/sai) cho Toán học & Tin học THPT (Lớp 10 - 12).
         </p>
       </div>
 

@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { AVAILABLE_SUBJECTS, getChaptersForSubject } from '@/constants/curriculum';
+import { ADMIN_SUBJECTS, getChaptersForSubject } from '@/constants/curriculum';
 import { PracticeLevel } from '@/types/subject';
 import { QuestionDifficulty } from '@/services/mock/practice-flow-data';
 import {
@@ -766,7 +766,7 @@ export default function AdminExamsMatrixPage() {
                     onChange={(e) => setSelectedSubject(e.target.value)}
                     className="h-8 px-2 text-xs font-semibold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary shadow-xs"
                   >
-                    {AVAILABLE_SUBJECTS.map((sub) => (
+                    {ADMIN_SUBJECTS.map((sub) => (
                       <option key={sub} value={sub}>
                         {sub}
                       </option>

@@ -100,9 +100,11 @@ export function ExamSessionGuardProvider({ children }: { children: React.ReactNo
         return;
       }
 
+      let isCancelled = false;
       const fastLock = examOfflineStorage.getFastSyncActiveLock();
 
       const checkAndEnforceLock = (sessionUrl: string, examTitle?: string) => {
+        if (isCancelled) return;
         const currentPath = window.location.pathname;
         const targetPath = sessionUrl.split('?')[0];
 
@@ -124,11 +126,22 @@ export function ExamSessionGuardProvider({ children }: { children: React.ReactNo
       }
 
       examOfflineStorage.getActiveExamSession().then((session) => {
+        if (isCancelled) return;
+        const latestLock = examOfflineStorage.getFastSyncActiveLock();
+        if (!latestLock || !latestLock.isActive) {
+          setActiveSession(null);
+          return;
+        }
+
         setActiveSession(session);
         if (session && session.status === 'IN_PROGRESS') {
           checkAndEnforceLock(session.roomUrl, session.examTitle);
         }
       });
+
+      return () => {
+        isCancelled = true;
+      };
     }
   }, [pathname, router]);
 

@@ -137,7 +137,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     label: 'Cổng Luyện Thi K-12',
     href: '/student/practice',
-    icon: <Sparkles className="w-5 h-5 text-[#00B8DD]" />,
+    icon: <Sparkles className="w-5 h-5" />,
     roles: ['STUDENT'],
   },
   {
@@ -191,7 +191,14 @@ export function AppSidebar({
   const pathname = usePathname();
   const { currentRole, currentSchool } = useAuthStore();
 
-  const filteredNavItems = NAV_ITEMS.filter((item) => item.roles.includes(currentRole));
+  // Ưu tiên đồng bộ menu theo phân khu route để /admin/* luôn hiển thị đúng sidebar Admin kể cả khi auth store chưa hydrate
+  const effectiveRole: SchoolRole | SystemRole = pathname?.startsWith('/admin')
+    ? 'SUPER_ADMIN'
+    : pathname?.startsWith('/teacher')
+      ? 'TEACHER'
+      : currentRole;
+
+  const filteredNavItems = NAV_ITEMS.filter((item) => item.roles.includes(effectiveRole));
 
   const renderSidebar = (isMobile = false) => (
     <aside
@@ -200,10 +207,10 @@ export function AppSidebar({
         isMobile
           ? 'h-full w-full'
           : cn(
-              'fixed bottom-0 left-0 z-30',
-              withNavbar ? 'top-20 h-[calc(100vh-5rem)]' : 'top-0 h-screen',
-              collapsed ? 'w-20' : 'w-64'
-            )
+            'fixed bottom-0 left-0 z-30',
+            withNavbar ? 'top-20 h-[calc(100vh-5rem)]' : 'top-0 h-screen',
+            collapsed ? 'w-20' : 'w-64'
+          )
       )}
     >
       {/* Brand Header: chỉ hiển thị khi không có Navbar hoặc khi mở mobile drawer */}
@@ -219,12 +226,12 @@ export function AppSidebar({
                 <img
                   src="/schoolify-logo.png"
                   alt="Schoolify"
-                  className="h-8 w-auto object-contain dark:hidden"
+                  className="h-11 sm:h-12 w-auto object-contain dark:hidden"
                 />
                 <img
                   src="/am-ban.png"
                   alt="Schoolify"
-                  className="h-8 w-auto object-contain hidden dark:block"
+                  className="h-11 sm:h-12 w-auto object-contain hidden dark:block"
                 />
               </div>
             )}
@@ -265,7 +272,7 @@ export function AppSidebar({
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group',
                 isActive
-                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/20 font-semibold'
+                  ? 'bg-[#00B8DD] text-white shadow-sm shadow-[#00B8DD]/25 font-semibold'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/70 dark:hover:text-white',
                 !isMobile && collapsed && 'justify-center px-2'
               )}
@@ -280,7 +287,7 @@ export function AppSidebar({
                     <span
                       className={cn(
                         'rounded-full px-2 py-0.5 text-xs font-bold shrink-0',
-                        isActive ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300'
+                        isActive ? 'bg-white/20 text-white' : 'bg-[#00B8DD]/10 text-[#009BBD] dark:bg-[#00B8DD]/15 dark:text-[#00B8DD]'
                       )}
                     >
                       {item.badge}
