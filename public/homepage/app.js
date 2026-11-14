@@ -686,18 +686,27 @@
       });
     }
 
+    let headerThreshold = Math.max(240, window.innerHeight * 0.72);
+    let lastHeaderScrolled = null;
     const updateHeaderState = () => {
       if (!siteHeader) return;
-      const threshold = Math.max(240, window.innerHeight * 0.72);
-      siteHeader.classList.toggle('is-scrolled', window.scrollY > threshold);
+      const isScrolled = window.scrollY > headerThreshold;
+      if (isScrolled !== lastHeaderScrolled) {
+        lastHeaderScrolled = isScrolled;
+        siteHeader.classList.toggle('is-scrolled', isScrolled);
+      }
+    };
+    const onHeaderResize = () => {
+      headerThreshold = Math.max(240, window.innerHeight * 0.72);
+      updateHeaderState();
     };
 
     updateHeaderState();
     window.addEventListener('scroll', updateHeaderState, { passive: true });
-    window.addEventListener('resize', updateHeaderState, { passive: true });
+    window.addEventListener('resize', onHeaderResize, { passive: true });
     addCleanup(() => {
       window.removeEventListener('scroll', updateHeaderState);
-      window.removeEventListener('resize', updateHeaderState);
+      window.removeEventListener('resize', onHeaderResize);
     });
 
     const setDrawer = (open) => {
@@ -1130,20 +1139,39 @@
     const ScrollTrigger = window.ScrollTrigger;
     gsap.registerPlugin(ScrollTrigger);
 
+    const mm = gsap.matchMedia();
+    addCleanup(() => mm.revert());
+
     // -----------------------------------------------------------------------
     // ACT I: Origami Glider Takeoff Surge (Soars Upward on Scroll!)
     // -----------------------------------------------------------------------
     if (heroSection && heroGliderRig && !prefersReducedMotion) {
-      ScrollTrigger.create({
-        trigger: heroSection,
-        start: 'top top',
-        end: 'bottom top',
-        scrub: true,
-        onUpdate: (self) => {
-          scrollSurgeY = -self.progress * 245;
-          scrollScale = 1 + self.progress * 0.08;
-          applyHeroGliderTransform();
-        }
+      mm.add('(min-width: 768px)', () => {
+        ScrollTrigger.create({
+          trigger: heroSection,
+          start: 'top top',
+          end: 'bottom top',
+          scrub: true,
+          onUpdate: (self) => {
+            scrollSurgeY = -self.progress * 245;
+            scrollScale = 1 + self.progress * 0.08;
+            applyHeroGliderTransform();
+          }
+        });
+      });
+
+      mm.add('(max-width: 767px)', () => {
+        ScrollTrigger.create({
+          trigger: heroSection,
+          start: 'top top',
+          end: 'bottom top',
+          scrub: true,
+          onUpdate: (self) => {
+            scrollSurgeY = -self.progress * 90;
+            scrollScale = 1 + self.progress * 0.04;
+            applyHeroGliderTransform();
+          }
+        });
       });
     }
 
@@ -1222,7 +1250,7 @@
         if (state.isTriggered) return;
         state.isTriggered = true;
         clearTimers();
-        rebuildLines();
+        if (!state.lines || !state.lines.length) rebuildLines();
 
         state.wordEls.forEach((wEl) => {
           wEl.className = `${baseClass} is-dim`;
@@ -1257,7 +1285,7 @@
         if (!state.isTriggered) return;
         state.isTriggered = false;
         clearTimers();
-        rebuildLines();
+        if (!state.lines || !state.lines.length) rebuildLines();
 
         const reversedLines = state.lines.slice().reverse();
         let revStartMs = 0;
@@ -1288,6 +1316,12 @@
       if (!rootEl) return;
       const wordEls = Array.from(rootEl.querySelectorAll(wordSelector));
       if (!wordEls.length) return;
+      if (window.innerWidth < 768) {
+        wordEls.forEach((wEl, idx) => {
+          wEl.style.transitionDelay = `${Math.min(idx * 22, 320)}ms`;
+        });
+        return;
+      }
       const lines = groupWordsByVisualLines(wordEls, rootEl);
       let lineStartMs = 0;
       const settleMs = 150;
@@ -1434,103 +1468,200 @@
         return unitH + gap;
       };
 
-      syncWipeMask(0);
+      // Desktop Flight Timeline (min-width: 768px)
+      mm.add('(min-width: 768px)', () => {
+        syncWipeMask(0);
 
-      // Master continuous timeline (normalized 0.00 -> 1.00):
-      const tlFlight = gsap.timeline({
-        onUpdate: () => {
-          syncWipeMask(tlFlight.progress());
-        },
-        scrollTrigger: {
-          trigger: flightSection,
-          pin: flightPin,
-          start: 'top top',
-          end: '+=285%',
-          scrub: 0.18,
-          invalidateOnRefresh: true
-        }
-      });
+        // Master continuous timeline (normalized 0.00 -> 1.00):
+        const tlFlight = gsap.timeline({
+          onUpdate: () => {
+            syncWipeMask(tlFlight.progress());
+          },
+          scrollTrigger: {
+            trigger: flightSection,
+            pin: flightPin,
+            start: 'top top',
+            end: '+=285%',
+            scrub: 0.18,
+            invalidateOnRefresh: true
+          }
+        });
 
-      // Phase 1: Giant Glider sweeps across briskly (0.00 to 0.30)
-      tlFlight.fromTo(
-        horizGlider,
-        { x: () => window.innerWidth * 0.96 },
-        {
-          x: () => -(horizGlider.offsetWidth + window.innerWidth * 0.16),
-          duration: 0.30,
-          ease: 'none',
-          immediateRender: true
-        },
-        0
-      );
-
-      // Phase 2: Revealed Paradigm text highlights line-by-line (0.15 -> 0.48) and transitions out (0.50 -> 0.58)
-      if (afterLayer) {
+        // Phase 1: Giant Glider sweeps across briskly (0.00 to 0.30)
         tlFlight.fromTo(
-          afterLayer,
-          { opacity: 1, x: 0 },
+          horizGlider,
+          { x: () => window.innerWidth * 0.96 },
           {
-            opacity: 0,
-            x: () => -window.innerWidth * 0.06,
+            x: () => -(horizGlider.offsetWidth + window.innerWidth * 0.16),
+            duration: 0.30,
+            ease: 'none',
+            immediateRender: true
+          },
+          0
+        );
+
+        // Phase 2: Revealed Paradigm text highlights line-by-line (0.15 -> 0.48) and transitions out (0.50 -> 0.58)
+        if (afterLayer) {
+          tlFlight.fromTo(
+            afterLayer,
+            { opacity: 1, x: 0 },
+            {
+              opacity: 0,
+              x: () => -window.innerWidth * 0.06,
+              duration: 0.08,
+              ease: 'power2.inOut',
+              immediateRender: false
+            },
+            0.50
+          );
+        }
+
+        // Phase 3A: 9 Origami Gliders enter from right edge to centered reading stage (0.50 to 0.58)
+        tlFlight.fromTo(
+          swarmConvoy,
+          { x: getInitialConvoyX },
+          {
+            x: getReadStartConvoyX,
             duration: 0.08,
-            ease: 'power2.inOut',
-            immediateRender: false
+            ease: 'power2.out',
+            immediateRender: true
           },
           0.50
         );
-      }
 
-      // Phase 3A: 9 Origami Gliders enter from right edge to centered reading stage (0.50 to 0.58)
-      tlFlight.fromTo(
-        swarmConvoy,
-        { x: getInitialConvoyX },
-        {
-          x: getReadStartConvoyX,
-          duration: 0.08,
-          ease: 'power2.out',
-          immediateRender: true
-        },
-        0.50
-      );
-
-      // Phase 3B: Gentle drift while lines animate fast word-by-word + 0.8s inter-line delay (0.58 to 0.98)
-      tlFlight.to(
-        swarmConvoy,
-        {
-          x: () => {
-            const totalW = swarmConvoy ? swarmConvoy.offsetWidth : 1200;
-            if (totalW <= window.innerWidth * 0.94) {
-              return Math.max(12, Math.round((window.innerWidth - totalW) * 0.36));
-            }
-            return -(totalW - window.innerWidth * 0.92);
+        // Phase 3B: Gentle drift while lines animate fast word-by-word + 0.8s inter-line delay (0.58 to 0.98)
+        tlFlight.to(
+          swarmConvoy,
+          {
+            x: () => {
+              const totalW = swarmConvoy ? swarmConvoy.offsetWidth : 1200;
+              if (totalW <= window.innerWidth * 0.94) {
+                return Math.max(12, Math.round((window.innerWidth - totalW) * 0.36));
+              }
+              return -(totalW - window.innerWidth * 0.92);
+            },
+            duration: 0.40,
+            ease: 'none'
           },
-          duration: 0.40,
-          ease: 'none'
-        },
-        0.58
-      );
+          0.58
+        );
 
-      // Escort Deployment: 1 lead glider unfolds into 9 delta-formation gliders (0.50 to 0.60)
-      tlFlight.fromTo(
-        swarmUnits,
-        {
-          y: (i, el) => -Number(el.getAttribute('data-slot') || 0) * getSlotSpacingY(),
-          rotation: (i, el) => Number(el.getAttribute('data-slot') || 0) * -6,
-          scale: (i, el) => (Number(el.getAttribute('data-slot') || 0) === 0 ? 1 : 0.75),
-          opacity: (i) => (i === 0 ? 1 : 0.2)
-        },
-        {
-          y: 0,
-          rotation: 0,
-          scale: 1,
-          opacity: 1,
-          duration: 0.10,
-          stagger: 0.008,
-          ease: 'power2.out',
-          immediateRender: true
-        },
-        0.50
-      );
+        // Escort Deployment: 1 lead glider unfolds into 9 delta-formation gliders (0.50 to 0.60)
+        tlFlight.fromTo(
+          swarmUnits,
+          {
+            y: (i, el) => -Number(el.getAttribute('data-slot') || 0) * getSlotSpacingY(),
+            rotation: (i, el) => Number(el.getAttribute('data-slot') || 0) * -6,
+            scale: (i, el) => (Number(el.getAttribute('data-slot') || 0) === 0 ? 1 : 0.75),
+            opacity: (i) => (i === 0 ? 1 : 0.2)
+          },
+          {
+            y: 0,
+            rotation: 0,
+            scale: 1,
+            opacity: 1,
+            duration: 0.10,
+            stagger: 0.008,
+            ease: 'power2.out',
+            immediateRender: true
+          },
+          0.50
+        );
+      });
+
+      // Mobile Flight Timeline (max-width: 767px) - Native Sticky, Compositor-Smooth, Zero Pin Jitter
+      mm.add('(max-width: 767px)', () => {
+        // Reset clip-paths so text is NEVER severed diagonally on mobile
+        if (beforeLayer) {
+          beforeLayer.style.clipPath = 'none';
+          gsap.set(beforeLayer, { opacity: 1, y: 0, x: 0 });
+        }
+        if (afterLayer) {
+          afterLayer.style.clipPath = 'none';
+          gsap.set(afterLayer, { opacity: 0, y: 16, x: 0 });
+        }
+        if (swarmConvoy) {
+          gsap.set(swarmConvoy, { opacity: 0, y: 24, x: 0, scale: 0.98 });
+        }
+        if (horizGlider) {
+          gsap.set(horizGlider, { x: () => window.innerWidth * 0.92, marginTop: 0 });
+        }
+
+        // Native CSS position: sticky on #paradigmPin handles pinning on the Compositor Thread
+        const tlMobileFlight = gsap.timeline({
+          scrollTrigger: {
+            trigger: flightSection,
+            start: 'top top',
+            end: 'bottom bottom',
+            scrub: true,
+            invalidateOnRefresh: true
+          }
+        });
+
+        // Phase 1: Glider swoops swiftly across top (0.00 -> 0.25)
+        if (horizGlider) {
+          tlMobileFlight.fromTo(
+            horizGlider,
+            { x: () => window.innerWidth * 0.92 },
+            {
+              x: () => -(horizGlider.offsetWidth || 240) - 20,
+              duration: 0.25,
+              ease: 'power1.inOut'
+            },
+            0
+          );
+        }
+
+        // Phase 2: Smooth crossfade from Before -> After (0.02 -> 0.24)
+        if (beforeLayer) {
+          tlMobileFlight.to(
+            beforeLayer,
+            { opacity: 0, y: -16, duration: 0.14, ease: 'power2.inOut' },
+            0.02
+          );
+        }
+        if (afterLayer) {
+          tlMobileFlight.to(
+            afterLayer,
+            { opacity: 1, y: 0, duration: 0.14, ease: 'power2.out' },
+            0.10
+          );
+          // Phase 3: After layer stays solid from 0.24 to 0.52, then crossfades cleanly (0.52 -> 0.62)
+          tlMobileFlight.to(
+            afterLayer,
+            { opacity: 0, y: -16, duration: 0.10, ease: 'power2.inOut' },
+            0.52
+          );
+        }
+
+        // Phase 4: Swarm convoy rises in centered (0.55 -> 0.70) and holds solid until 1.00
+        if (swarmConvoy) {
+          tlMobileFlight.fromTo(
+            swarmConvoy,
+            { opacity: 0, y: 20, scale: 0.98 },
+            { opacity: 1, y: 0, scale: 1, duration: 0.15, ease: 'power2.out' },
+            0.55
+          );
+        }
+
+        // Phase 5: Swarm gliders fan out gently (0.57 -> 0.74)
+        if (swarmUnits.length) {
+          tlMobileFlight.fromTo(
+            swarmUnits,
+            { opacity: 0, scale: 0.75, y: 8 },
+            { opacity: 1, scale: 1, y: 0, stagger: 0.015, duration: 0.15, ease: 'back.out(1.4)' },
+            0.57
+          );
+        }
+
+        // Hold final state cleanly until scroll progress reaches 1.00
+        tlMobileFlight.to({}, { duration: 0.26 }, 0.74);
+
+        return () => {
+          if (beforeLayer) beforeLayer.style.clipPath = '';
+          if (afterLayer) afterLayer.style.clipPath = '';
+        };
+      });
     }
 
     // -----------------------------------------------------------------------
@@ -1573,11 +1704,16 @@
       });
     }
 
-    // Helper: Forward Typewriter effect
+    // Helper: Forward Typewriter effect (instant on mobile to prevent text reflow thrashing during touch scroll)
     const runTypewriter = (el, fullText, durationMs = 750, delayMs = 0) => {
       if (!el || !fullText) return;
       if (el._twTimer) clearInterval(el._twTimer);
       if (el._twDelay) clearTimeout(el._twDelay);
+      if (window.innerWidth < 768) {
+        el.textContent = fullText;
+        el.classList.remove('is-typing');
+        return;
+      }
       el.textContent = '';
       el.classList.add('is-typing');
       const totalChars = fullText.length;
@@ -1601,6 +1737,10 @@
       if (!el) return;
       if (el._twTimer) clearInterval(el._twTimer);
       if (el._twDelay) clearTimeout(el._twDelay);
+      if (window.innerWidth < 768) {
+        el.classList.remove('is-typing');
+        return;
+      }
       const curText = el.textContent || '';
       if (!curText.length) {
         el.classList.remove('is-typing');
@@ -1637,6 +1777,7 @@
       if (!item || prefersReducedMotion) return;
       if (item._isPillarUnlocked) return;
       item._isPillarUnlocked = true;
+      const isMobile = window.innerWidth < 768;
 
       if (item._revTimers) {
         item._revTimers.forEach((t) => clearTimeout(t));
@@ -1666,7 +1807,7 @@
           tag.style.transition = 'opacity 0.35s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)';
           tag.style.opacity = '1';
           tag.style.transform = 'translateY(0) scale(1)';
-        }, 220 + tIdx * 140);
+        }, (isMobile ? 80 : 220) + tIdx * (isMobile ? 70 : 140));
         item._fwdTimers.push(tid);
       });
 
@@ -1687,24 +1828,26 @@
             fill.style.transition = 'none';
             fill.style.transform = 'scaleX(0)';
           }
-          if (numEl) numEl.textContent = '0%';
+          if (numEl) numEl.textContent = isMobile ? `${cfg.pct}%` : '0%';
 
           const tid = setTimeout(() => {
-            const startT = performance.now();
-            const dur = 1050;
+            const dur = isMobile ? 650 : 1050;
             if (fill) {
               fill.style.transition = `transform ${dur}ms cubic-bezier(0.22, 1, 0.36, 1)`;
               fill.style.transform = `scaleX(${cfg.scale})`;
             }
-            const tickPct = (tNow) => {
-              if (!item._isPillarUnlocked) return;
-              const p = Math.min(1, (tNow - startT) / dur);
-              const eased = 1 - Math.pow(1 - p, 3);
-              if (numEl) numEl.textContent = `${Math.round(cfg.pct * eased)}%`;
-              if (p < 1) requestAnimationFrame(tickPct);
-            };
-            requestAnimationFrame(tickPct);
-          }, 90 + bIdx * 120);
+            if (!isMobile) {
+              const startT = performance.now();
+              const tickPct = (tNow) => {
+                if (!item._isPillarUnlocked) return;
+                const p = Math.min(1, (tNow - startT) / dur);
+                const eased = 1 - Math.pow(1 - p, 3);
+                if (numEl) numEl.textContent = `${Math.round(cfg.pct * eased)}%`;
+                if (p < 1) requestAnimationFrame(tickPct);
+              };
+              requestAnimationFrame(tickPct);
+            }
+          }, (isMobile ? 50 : 90) + bIdx * (isMobile ? 70 : 120));
           item._fwdTimers.push(tid);
         });
       } else if (idx === 1) {
@@ -1723,7 +1866,7 @@
             fp.style.transition = 'opacity 0.35s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)';
             fp.style.opacity = '1';
             fp.style.transform = 'translateY(0) scale(1)';
-          }, 260 + fIdx * 160);
+          }, (isMobile ? 100 : 260) + fIdx * (isMobile ? 80 : 160));
           item._fwdTimers.push(tid);
         });
       } else if (idx === 2) {
@@ -1734,7 +1877,7 @@
           const tid = setTimeout(() => {
             kbd.classList.add('is-key-pressed');
             setTimeout(() => kbd.classList.remove('is-key-pressed'), 340);
-          }, 100 + kIdx * 190);
+          }, 100 + kIdx * (isMobile ? 110 : 190));
           item._fwdTimers.push(tid);
         });
         const steps = item.querySelectorAll('.v-aistep p');
@@ -1746,14 +1889,18 @@
         // Pillar 04: Podium bars grow from scaleY(0) -> scaleY(1) & Gem count-up
         const gemPill = item.querySelector('.v-gem-pill');
         if (gemPill) {
-          const startG = performance.now();
-          const tickGem = (tNow) => {
-            if (!item._isPillarUnlocked) return;
-            const p = Math.min(1, (tNow - startG) / 980);
-            gemPill.textContent = `◆ +${Math.round(15 * p)} Ngọc`;
-            if (p < 1) requestAnimationFrame(tickGem);
-          };
-          requestAnimationFrame(tickGem);
+          if (isMobile) {
+            gemPill.textContent = '◆ +15 Ngọc';
+          } else {
+            const startG = performance.now();
+            const tickGem = (tNow) => {
+              if (!item._isPillarUnlocked) return;
+              const p = Math.min(1, (tNow - startG) / 980);
+              gemPill.textContent = `◆ +${Math.round(15 * p)} Ngọc`;
+              if (p < 1) requestAnimationFrame(tickGem);
+            };
+            requestAnimationFrame(tickGem);
+          }
         }
         const bars = item.querySelectorAll('.v-podium__bar');
         bars.forEach((bar, bIdx) => {
@@ -1762,7 +1909,7 @@
           const tid = setTimeout(() => {
             bar.style.transition = 'transform 0.85s cubic-bezier(0.22, 1, 0.36, 1)';
             bar.style.transform = 'scaleY(1)';
-          }, 100 + bIdx * 130);
+          }, (isMobile ? 60 : 100) + bIdx * (isMobile ? 80 : 130));
           item._fwdTimers.push(tid);
         });
       }
@@ -1810,7 +1957,7 @@
             fill.style.transition = 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)';
             fill.style.transform = 'scaleX(0)';
           }
-          if (numEl) numEl.textContent = '0%';
+          if (numEl && window.innerWidth >= 768) numEl.textContent = '0%';
         });
       } else if (idx === 1) {
         item.querySelectorAll('.v-snippet code').forEach((c) => runReverseTypewriter(c, 220));
@@ -1827,7 +1974,7 @@
           bar.style.transform = 'scaleY(0)';
         });
         const gemPill = item.querySelector('.v-gem-pill');
-        if (gemPill) gemPill.textContent = '◆ +0 Ngọc';
+        if (gemPill && window.innerWidth >= 768) gemPill.textContent = '◆ +0 Ngọc';
       }
 
       item.classList.add('is-reversing');
@@ -1838,55 +1985,119 @@
     window.__reverseVoyagePillar = reverseVoyagePillar;
 
     if (voyageArena && verticalCraft) {
-      let arenaH = 800;
-      let craftH = 200;
-      let maxTravel = 600;
+      if (voyageWake) {
+        voyageWake.style.height = '100%';
+        voyageWake.style.transformOrigin = 'top center';
+        voyageWake.style.transform = 'scaleY(0)';
+      }
 
-      const updateVoyageMetrics = () => {
-        if (!voyageArena || !verticalCraft) return;
-        arenaH = voyageArena.offsetHeight || 800;
-        craftH = verticalCraft.offsetHeight || 200;
-        maxTravel = Math.max(0, arenaH - craftH);
-      };
-      updateVoyageMetrics();
-      window.addEventListener('resize', updateVoyageMetrics, { passive: true });
-      addCleanup(() => window.removeEventListener('resize', updateVoyageMetrics));
+      // Desktop Voyage Tracking (min-width: 768px)
+      mm.add('(min-width: 768px)', () => {
+        let arenaH = 800;
+        let craftH = 200;
+        let maxTravel = 600;
+        let waypointYs = [];
 
-      verticalCraft.style.top = '0px';
+        const updateVoyageMetrics = () => {
+          if (!voyageArena || !verticalCraft) return;
+          arenaH = voyageArena.offsetHeight || 800;
+          craftH = verticalCraft.offsetHeight || 200;
+          maxTravel = Math.max(0, arenaH - craftH);
+          waypointYs = voyageItems.map((item) => item.offsetTop + 46);
+        };
+        updateVoyageMetrics();
+        window.addEventListener('resize', updateVoyageMetrics, { passive: true });
 
-      ScrollTrigger.create({
-        trigger: voyageArena,
-        start: 'top 56%',
-        end: 'bottom 46%',
-        scrub: 0.18,
-        onUpdate: (self) => {
-          const p = self.progress;
-          const currentY = p * maxTravel;
-          const bankAngle = prefersReducedMotion ? 0 : Math.sin(p * Math.PI * 5) * 3.4;
+        verticalCraft.style.top = '0px';
 
-          verticalCraft.style.transform = `translate3d(-50%, ${currentY.toFixed(1)}px, 0) rotate(${bankAngle.toFixed(2)}deg)`;
+        ScrollTrigger.create({
+          trigger: voyageArena,
+          start: 'top 56%',
+          end: 'bottom 46%',
+          scrub: 0.18,
+          onUpdate: (self) => {
+            const p = self.progress;
+            const currentY = p * maxTravel;
+            const bankAngle = prefersReducedMotion ? 0 : Math.sin(p * Math.PI * 5) * 3.4;
 
-          const wakeTipY = currentY + craftH * 0.55;
-          if (voyageWake) {
-            voyageWake.style.height = `${Math.min(arenaH, wakeTipY).toFixed(1)}px`;
-          }
+            verticalCraft.style.transform = `translate3d(-50%, ${currentY.toFixed(1)}px, 0) rotate(${bankAngle.toFixed(2)}deg)`;
 
-          voyageItems.forEach((item, idx) => {
-            const waypointY = item.offsetTop + 46;
-            const wasUnlocked = Boolean(item._isPillarUnlocked);
-            // Hysteresis 18px để tránh nhấp nháy kích hoạt 2 lần tại biên
-            const nowUnlocked = wasUnlocked
-              ? p > 0.005 && wakeTipY >= waypointY - 18
-              : p > 0.01 && wakeTipY >= waypointY;
-            if (nowUnlocked !== wasUnlocked) {
-              if (nowUnlocked) {
-                animateVoyagePillar(item, idx);
-              } else {
-                reverseVoyagePillar(item, idx);
-              }
+            const wakeTipY = currentY + craftH * 0.55;
+            if (voyageWake) {
+              const wakeRatio = Math.max(0, Math.min(1, wakeTipY / Math.max(1, arenaH)));
+              voyageWake.style.transform = `scaleY(${wakeRatio.toFixed(3)})`;
             }
+
+            voyageItems.forEach((item, idx) => {
+              const waypointY = waypointYs[idx] || 0;
+              const wasUnlocked = Boolean(item._isPillarUnlocked);
+              // Hysteresis 18px để tránh nhấp nháy kích hoạt 2 lần tại biên
+              const nowUnlocked = wasUnlocked
+                ? p > 0.005 && wakeTipY >= waypointY - 18
+                : p > 0.01 && wakeTipY >= waypointY;
+              if (nowUnlocked !== wasUnlocked) {
+                if (nowUnlocked) {
+                  animateVoyagePillar(item, idx);
+                } else {
+                  reverseVoyagePillar(item, idx);
+                }
+              }
+            });
+          }
+        });
+
+        return () => window.removeEventListener('resize', updateVoyageMetrics);
+      });
+
+      // Mobile Voyage Tracking & Card Entrance Triggers (max-width: 767px)
+      mm.add('(max-width: 767px)', () => {
+        let mobileArenaH = 800;
+        let mobileCraftH = 120;
+        let mobileMaxTravel = Math.max(0, mobileArenaH - mobileCraftH);
+
+        const updateMobileVoyageMetrics = () => {
+          if (!voyageArena || !verticalCraft) return;
+          mobileArenaH = voyageArena.offsetHeight || 800;
+          mobileCraftH = verticalCraft.offsetHeight || 120;
+          mobileMaxTravel = Math.max(0, mobileArenaH - mobileCraftH);
+        };
+        updateMobileVoyageMetrics();
+        window.addEventListener('resize', updateMobileVoyageMetrics, { passive: true });
+
+        verticalCraft.style.top = '0px';
+
+        ScrollTrigger.create({
+          trigger: voyageArena,
+          start: 'top 70%',
+          end: 'bottom 25%',
+          scrub: true,
+          onUpdate: (self) => {
+            const p = self.progress;
+            const currentY = p * mobileMaxTravel;
+            verticalCraft.style.transform = `translate3d(-50%, ${currentY.toFixed(1)}px, 0)`;
+            if (voyageWake) {
+              const wakeRatio = Math.max(
+                0,
+                Math.min(1, (currentY + mobileCraftH * 0.5) / Math.max(1, mobileArenaH))
+              );
+              voyageWake.style.transform = `scaleY(${wakeRatio.toFixed(3)})`;
+            }
+          }
+        });
+
+        // Robust individual ScrollTrigger for each pillar card on mobile
+        voyageItems.forEach((item, idx) => {
+          ScrollTrigger.create({
+            trigger: item,
+            start: 'top 78%',
+            end: 'bottom 15%',
+            onEnter: () => animateVoyagePillar(item, idx),
+            onEnterBack: () => animateVoyagePillar(item, idx),
+            onLeaveBack: () => reverseVoyagePillar(item, idx)
           });
-        }
+        });
+
+        return () => window.removeEventListener('resize', updateMobileVoyageMetrics);
       });
     }
 
@@ -2003,96 +2214,147 @@
       window.__triggerImpactSection = animateImpactSection;
       window.__reverseImpactSection = reverseImpactSection;
 
-      ScrollTrigger.create({
-        trigger: impactSection,
-        start: 'top 68%',
-        end: 'bottom 20%',
-        onEnter: animateImpactSection,
-        onEnterBack: animateImpactSection,
-        onLeaveBack: reverseImpactSection
+      // Desktop Impact Animations (min-width: 768px)
+      mm.add('(min-width: 768px)', () => {
+        ScrollTrigger.create({
+          trigger: impactSection,
+          start: 'top 68%',
+          end: 'bottom 20%',
+          onEnter: animateImpactSection,
+          onEnterBack: animateImpactSection,
+          onLeaveBack: reverseImpactSection
+        });
+
+        if (impactImg && !prefersReducedMotion) {
+          gsap.fromTo(
+            impactImg,
+            { yPercent: -10 },
+            {
+              yPercent: 10,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: impactSection,
+                start: 'top bottom',
+                end: 'bottom top',
+                scrub: true
+              }
+            }
+          );
+        }
+
+        if (isoGliderRig && !prefersReducedMotion) {
+          gsap.fromTo(
+            isoGliderRig,
+            {
+              xPercent: 42,
+              yPercent: 18,
+              scale: 0.92
+            },
+            {
+              xPercent: -38,
+              yPercent: 38,
+              scale: 1.02,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: impactSection,
+                start: 'top 85%',
+                end: 'bottom 15%',
+                scrub: 0.5
+              }
+            }
+          );
+        }
+
+        if (isoWingmanHigh && !prefersReducedMotion) {
+          gsap.fromTo(
+            isoWingmanHigh,
+            {
+              x: 220,
+              y: 110
+            },
+            {
+              x: -140,
+              y: -20,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: impactSection,
+                start: 'top 92%',
+                end: 'bottom 8%',
+                scrub: 0.48
+              }
+            }
+          );
+        }
+
+        if (isoWingmanLow && !prefersReducedMotion) {
+          gsap.fromTo(
+            isoWingmanLow,
+            {
+              x: 140,
+              y: 90
+            },
+            {
+              x: -80,
+              y: 60,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: impactSection,
+                start: 'top 85%',
+                end: 'bottom 15%',
+                scrub: 0.72
+              }
+            }
+          );
+        }
       });
-    }
 
-    if (impactSection && impactImg && !prefersReducedMotion) {
-      gsap.fromTo(
-        impactImg,
-        { yPercent: -10 },
-        {
-          yPercent: 10,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: impactSection,
-            start: 'top bottom',
-            end: 'bottom top',
-            scrub: true
-          }
-        }
-      );
-    }
+      // Mobile Impact Animations (max-width: 767px) - Zero Horizontal Drift
+      mm.add('(max-width: 767px)', () => {
+        ScrollTrigger.create({
+          trigger: impactSection,
+          start: 'top 75%',
+          end: 'bottom 15%',
+          onEnter: animateImpactSection,
+          onEnterBack: animateImpactSection,
+          onLeaveBack: reverseImpactSection
+        });
 
-    if (impactSection && isoGliderRig && !prefersReducedMotion) {
-      gsap.fromTo(
-        isoGliderRig,
-        {
-          xPercent: 42,
-          yPercent: 18,
-          scale: 0.92
-        },
-        {
-          xPercent: -38,
-          yPercent: 38,
-          scale: 1.02,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: impactSection,
-            start: 'top 85%',
-            end: 'bottom 15%',
-            scrub: 0.5
-          }
+        if (impactImg && !prefersReducedMotion) {
+          gsap.fromTo(
+            impactImg,
+            { yPercent: -8 },
+            {
+              yPercent: 8,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: impactSection,
+                start: 'top bottom',
+                end: 'bottom top',
+                scrub: true
+              }
+            }
+          );
         }
-      );
-    }
 
-    if (impactSection && isoWingmanHigh && !prefersReducedMotion) {
-      gsap.fromTo(
-        isoWingmanHigh,
-        {
-          x: 220,
-          y: 110
-        },
-        {
-          x: -140,
-          y: -20,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: impactSection,
-            start: 'top 92%',
-            end: 'bottom 8%',
-            scrub: 0.48
-          }
+        if (isoGliderRig && !prefersReducedMotion) {
+          gsap.fromTo(
+            isoGliderRig,
+            { yPercent: -12, scale: 0.92, x: 0 },
+            {
+              yPercent: 12,
+              scale: 1,
+              x: 0,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: impactSection,
+                start: 'top 90%',
+                end: 'bottom 10%',
+                scrub: 0.5
+              }
+            }
+          );
         }
-      );
-    }
-
-    if (impactSection && isoWingmanLow && !prefersReducedMotion) {
-      gsap.fromTo(
-        isoWingmanLow,
-        {
-          x: 140,
-          y: 90
-        },
-        {
-          x: -80,
-          y: 60,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: impactSection,
-            start: 'top 85%',
-            end: 'bottom 15%',
-            scrub: 0.72
-          }
-        }
-      );
+      });
     }
   }
 
@@ -3082,22 +3344,49 @@
     const progressFill = document.getElementById('scrollProgressFill');
     if (!progressWrap || !progressFill) return;
 
-    const updateProgress = () => {
-      const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
-      const docHeight =
-        Math.max(
-          document.body.scrollHeight,
-          document.documentElement.scrollHeight
-        ) - window.innerHeight;
-      const pct = docHeight > 0 ? Math.max(0, Math.min(100, (scrollTop / docHeight) * 100)) : 0;
+    let cachedDocHeight = 1;
+    let rafPending = false;
+    let lastActive = null;
 
-      progressFill.style.width = `${pct.toFixed(2)}%`;
-      progressWrap.classList.toggle('is-active', scrollTop > 12);
+    const recalcDocHeight = () => {
+      cachedDocHeight = Math.max(
+        1,
+        Math.max(
+          document.body ? document.body.scrollHeight : 0,
+          document.documentElement ? document.documentElement.scrollHeight : 0
+        ) - window.innerHeight
+      );
     };
 
-    updateProgress();
-    window.addEventListener('scroll', updateProgress, { passive: true });
-    window.addEventListener('resize', updateProgress, { passive: true });
+    const renderProgress = () => {
+      rafPending = false;
+      const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+      const pct = Math.max(0, Math.min(100, (scrollTop / cachedDocHeight) * 100));
+      progressFill.style.width = `${pct.toFixed(2)}%`;
+      const isActive = scrollTop > 12;
+      if (isActive !== lastActive) {
+        lastActive = isActive;
+        progressWrap.classList.toggle('is-active', isActive);
+      }
+    };
+
+    const onScrollProgress = () => {
+      if (!rafPending) {
+        rafPending = true;
+        requestAnimationFrame(renderProgress);
+      }
+    };
+
+    const onResizeProgress = () => {
+      recalcDocHeight();
+      onScrollProgress();
+    };
+
+    recalcDocHeight();
+    renderProgress();
+    setTimeout(recalcDocHeight, 600);
+    window.addEventListener('scroll', onScrollProgress, { passive: true });
+    window.addEventListener('resize', onResizeProgress, { passive: true });
   }
 
   function initContactSection() {
@@ -3184,8 +3473,13 @@
       if (chatOpen && autoActive) stopAuto(false, true);
     };
 
+    let lastBackVisible = null;
     const onScroll = () => {
-      backBtn.classList.toggle('is-visible', window.scrollY > 560);
+      const vis = window.scrollY > 560;
+      if (vis !== lastBackVisible) {
+        lastBackVisible = vis;
+        backBtn.classList.toggle('is-visible', vis);
+      }
     };
 
     let autoActive = false;
@@ -3194,13 +3488,24 @@
 
     const getScrollY = () => window.scrollY || document.documentElement.scrollTop || 0;
 
+    // Crucial: Force instant scroll update per rAF frame so CSS scroll-behavior: smooth NEVER cancels/freezes auto-scroll
+    const setInstantScrollY = (val) => {
+      const top = Math.max(0, val);
+      try {
+        window.scrollTo({ top, left: 0, behavior: 'instant' });
+      } catch (e) {
+        window.scrollTo(0, top);
+      }
+    };
+
     const buildTourMap = () => {
       const y = getScrollY();
       const vh = window.innerHeight || 900;
+      const isMobile = window.innerWidth < 768;
 
       // 1. Tọa độ section #chuyen-dich (Pinned Origami Glider Wipe & 9-Plane Squadron)
       let cdTop = vh;
-      let pinDist = vh * 2.5;
+      let pinDist = isMobile ? vh * 0.85 : vh * 2.5;
       const chuyenDich = document.getElementById('chuyen-dich');
       if (chuyenDich) {
         const cdRect = chuyenDich.getBoundingClientRect();
@@ -3208,7 +3513,9 @@
         pinDist =
           chuyenDich.offsetHeight > vh
             ? chuyenDich.offsetHeight - vh
-            : vh * 2.5;
+            : isMobile
+              ? vh * 0.85
+              : vh * 2.5;
       }
       const cdEnd = cdTop + pinDist;
 
@@ -3224,16 +3531,18 @@
         );
       }
 
-      // 3. Các điểm dừng tạm (Dwell Stops): 4 trụ cột công nghệ (2s), #tac-dong 3 đĩa tròn (2.2s) & Phòng thí nghiệm Gia Sư AI (2.7s)
+      // 3. Các điểm dừng tạm (Dwell Stops): 4 trụ cột công nghệ, #tac-dong 3 đĩa tròn & Phòng thí nghiệm Gia Sư AI
       const dwellStops = [];
       const pillarEls = document.querySelectorAll('#voyageArena .v-item');
       pillarEls.forEach((el, idx) => {
         const r = el.getBoundingClientRect();
-        const stopY = Math.round(r.top + y - Math.max(70, (vh - Math.min(r.height, vh * 0.78)) * 0.48));
-        if (stopY > cdEnd + 40 && stopY < ctaTargetY - 200) {
+        const stopY = Math.round(
+          r.top + y - Math.max(60, (vh - Math.min(r.height, vh * 0.78)) * 0.48)
+        );
+        if (stopY > cdEnd + 20 && stopY < ctaTargetY - 180) {
           dwellStops.push({
             targetY: stopY,
-            dwellMs: 2000,
+            dwellMs: isMobile ? 1400 : 2000,
             visited: false,
             onArrive: () => {
               if (typeof window.__triggerVoyagePillar === 'function') {
@@ -3247,11 +3556,11 @@
       const impactEl = document.getElementById('tac-dong');
       if (impactEl) {
         const r = impactEl.getBoundingClientRect();
-        const stopY = Math.round(r.top + y + Math.max(0, (r.height - vh) * 0.35));
-        if (stopY > cdEnd + 80 && stopY < ctaTargetY - 200) {
+        const stopY = Math.round(r.top + y + Math.max(0, (r.height - vh) * (isMobile ? 0.2 : 0.35)));
+        if (stopY > cdEnd + 60 && stopY < ctaTargetY - 180) {
           dwellStops.push({
             targetY: stopY,
-            dwellMs: 2200,
+            dwellMs: isMobile ? 1600 : 2200,
             visited: false,
             onArrive: () => {
               if (typeof window.__triggerImpactSection === 'function') {
@@ -3265,11 +3574,13 @@
       const demoEl = document.getElementById('demoCardMain');
       if (demoEl) {
         const r = demoEl.getBoundingClientRect();
-        const stopY = Math.round(r.top + y - Math.max(80, (vh - Math.min(r.height, vh * 0.8)) * 0.45));
-        if (stopY > cdEnd + 100 && stopY < ctaTargetY - 200) {
+        const stopY = Math.round(
+          r.top + y - Math.max(70, (vh - Math.min(r.height, vh * 0.8)) * 0.45)
+        );
+        if (stopY > cdEnd + 80 && stopY < ctaTargetY - 180) {
           dwellStops.push({
             targetY: stopY,
-            dwellMs: 2700,
+            dwellMs: isMobile ? 2000 : 2700,
             visited: false,
             onArrive: () => {
               if (typeof window.__triggerDemoSimulation === 'function') {
@@ -3299,12 +3610,12 @@
           focalPoints.push({
             targetY: centerScrollY,
             radius: 200,
-            minSpeed: 155
+            minSpeed: isMobile ? 175 : 155
           });
         }
       });
 
-      return { cdTop, pinDist, cdEnd, ctaTargetY, dwellStops, focalPoints };
+      return { cdTop, pinDist, cdEnd, ctaTargetY, dwellStops, focalPoints, isMobile };
     };
 
     const setAutoUi = (on) => {
@@ -3324,6 +3635,7 @@
       clearTimeout(autoFinishTimer);
       autoRaf = 0;
       autoFinishTimer = 0;
+      document.documentElement.removeAttribute('data-auto-scrolling');
       setAutoUi(false);
 
       if (lenisInstance) {
@@ -3342,6 +3654,9 @@
     const startAuto = () => {
       if (autoActive) return;
 
+      document.documentElement.setAttribute('data-auto-scrolling', 'true');
+      document.documentElement.style.scrollBehavior = 'auto';
+
       if (lenisInstance && typeof lenisInstance.stop === 'function') {
         try {
           lenisInstance.stop();
@@ -3353,7 +3668,7 @@
 
       if (curY >= tour.ctaTargetY - 45) {
         curY = 0;
-        window.scrollTo(0, 0);
+        setInstantScrollY(0);
         if (window.ScrollTrigger) window.ScrollTrigger.update();
         tour = buildTourMap();
       } else {
@@ -3367,7 +3682,7 @@
       setAutoUi(true);
       showAppToast('Tự lướt đã bật — chạm hoặc cuộn để dừng.');
 
-      let currentSpeed = 190;
+      let currentSpeed = 210;
       let lastNow = performance.now();
       let pauseUntil = 0;
 
@@ -3376,7 +3691,7 @@
         const dt = Math.min(0.05, Math.max(0.001, (now - lastNow) / 1000));
         lastNow = now;
 
-        // Đang trong thời gian dừng 2s tại mỗi Trụ cột công nghệ hoặc Phòng thí nghiệm AI
+        // Đang trong thời gian dừng tại mỗi Trụ cột công nghệ hoặc Phòng thí nghiệm AI
         if (now < pauseUntil) {
           currentSpeed = 0;
           autoRaf = requestAnimationFrame(tick);
@@ -3385,7 +3700,7 @@
 
         const rem = tour.ctaTargetY - curY;
         if (rem <= 1.2) {
-          window.scrollTo(0, tour.ctaTargetY);
+          setInstantScrollY(tour.ctaTargetY);
           if (window.ScrollTrigger) window.ScrollTrigger.update();
           autoFinishTimer = setTimeout(() => {
             if (autoActive) stopAuto(true);
@@ -3393,7 +3708,7 @@
           return;
         }
 
-        // Kiểm tra điểm dừng 2s tiếp theo (4 trụ cột công nghệ & #dung-thu)
+        // Kiểm tra điểm dừng tiếp theo (4 trụ cột công nghệ, #tac-dong & #dung-thu)
         let nextDwell = null;
         for (let i = 0; i < tour.dwellStops.length; i++) {
           if (!tour.dwellStops[i].visited) {
@@ -3402,45 +3717,46 @@
           }
         }
 
-        let targetSpeed = 520;
+        let targetSpeed = tour.isMobile ? 420 : 520;
 
         if (nextDwell && nextDwell.targetY - curY <= 220) {
           const distToStop = nextDwell.targetY - curY;
           if (distToStop <= 3.5) {
-            // Chạm đúng điểm dừng: khóa vị trí, kích hoạt animation thanh tiến trình / gõ chữ và dừng 2s
+            // Chạm đúng điểm dừng: khóa vị trí, kích hoạt animation thanh tiến trình / gõ chữ và dừng
             curY = nextDwell.targetY;
             nextDwell.visited = true;
             currentSpeed = 0;
             pauseUntil = now + nextDwell.dwellMs;
-            window.scrollTo(0, curY);
+            setInstantScrollY(curY);
             if (window.ScrollTrigger) window.ScrollTrigger.update();
             if (typeof nextDwell.onArrive === 'function') nextDwell.onArrive();
             autoRaf = requestAnimationFrame(tick);
             return;
           }
-          // Giảm tốc êm ái khi tiến vào điểm dừng 2s
-          targetSpeed = Math.max(42, distToStop * 2.1);
+          // Giảm tốc êm ái khi tiến vào điểm dừng
+          targetSpeed = Math.max(48, distToStop * 2.1);
         } else if (rem < 420) {
-          targetSpeed = Math.max(38, rem * 1.28);
+          targetSpeed = Math.max(42, rem * 1.28);
         } else if (curY >= tour.cdTop - 30 && curY <= tour.cdEnd) {
-          // Điều tốc chuyên biệt trong section #chuyen-dich (Chữ chạy nhanh theo dòng + nghỉ 0.8s giữa mỗi dòng)
-          const pCD = Math.max(0, Math.min(1, (curY - tour.cdTop) / Math.max(1, tour.pinDist)));
-          if (pCD < 0.04) {
-            targetSpeed = 440;
-          } else if (pCD < 0.16) {
-            // Đoạn máy bay TO bắt đầu quét ngang mở chữ mới
-            targetSpeed = 720;
-          } else if (pCD < 0.50) {
-            // Đoạn đọc 3 dòng #textAfterLayer (mỗi dòng chạy nhanh + delay 0.8s)
-            targetSpeed = Math.max(180, Math.round((0.34 * tour.pinDist) / 2.85));
-          } else if (pCD < 0.57) {
-            // Đội hình 9 máy bay nhỏ bay từ mép phải vào vị trí đọc
-            targetSpeed = 380;
-          } else if (pCD < 0.97) {
-            // Đoạn đọc 3 dòng #swarmConvoy (mỗi dòng chạy nhanh ~0.22s + delay 0.8s giữa các dòng = ~2.6s + giữ đọc)
-            targetSpeed = Math.max(150, Math.round((0.40 * tour.pinDist) / 3.35));
+          if (tour.isMobile) {
+            // Trên mobile, #chuyen-dich dùng native sticky 185svh nên lướt mượt đều với tốc độ 250 px/s
+            targetSpeed = 250;
           } else {
-            targetSpeed = 360;
+            // Điều tốc chuyên biệt trong section #chuyen-dich trên desktop
+            const pCD = Math.max(0, Math.min(1, (curY - tour.cdTop) / Math.max(1, tour.pinDist)));
+            if (pCD < 0.04) {
+              targetSpeed = 440;
+            } else if (pCD < 0.16) {
+              targetSpeed = 720;
+            } else if (pCD < 0.50) {
+              targetSpeed = Math.max(180, Math.round((0.34 * tour.pinDist) / 2.85));
+            } else if (pCD < 0.57) {
+              targetSpeed = 380;
+            } else if (pCD < 0.97) {
+              targetSpeed = Math.max(150, Math.round((0.40 * tour.pinDist) / 3.35));
+            } else {
+              targetSpeed = 360;
+            }
           }
         } else {
           for (let i = 0; i < tour.focalPoints.length; i++) {
@@ -3457,7 +3773,7 @@
         currentSpeed += (targetSpeed - currentSpeed) * (1 - Math.exp(-9.0 * dt));
         curY = Math.min(tour.ctaTargetY, curY + currentSpeed * dt);
 
-        window.scrollTo(0, curY);
+        setInstantScrollY(curY);
         if (window.ScrollTrigger) window.ScrollTrigger.update();
 
         autoRaf = requestAnimationFrame(tick);

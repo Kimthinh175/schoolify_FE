@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import dynamic from 'next/dynamic';
+import { usePathname } from 'next/navigation';
 
 const CasioCalculatorWidget = dynamic(
   () => import('@/components/features/calculator').then((mod) => mod.CasioCalculatorWidget),
@@ -14,6 +15,8 @@ const AgenticChatWidget = dynamic(
 );
 
 export function GlobalFloatingWidgets() {
+  const pathname = usePathname();
+  const isHome = pathname === '/';
   const [isChildWindow, setIsChildWindow] = React.useState(false);
 
   React.useEffect(() => {
@@ -26,7 +29,7 @@ export function GlobalFloatingWidgets() {
 
   return (
     <>
-      <CasioCalculatorWidget />
+      {!isHome && <CasioCalculatorWidget />}
       <AgenticChatWidget />
     </>
   );

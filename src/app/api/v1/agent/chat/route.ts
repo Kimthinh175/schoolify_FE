@@ -363,17 +363,19 @@ export async function POST(req: NextRequest) {
     const query = body?.message || '';
     const currentUrl = body?.currentUrl || '/';
 
-    // Ưu tiên phản hồi tức thì nếu học sinh bấm "Hỏi Gia Sư AI câu này" kèm questionContext 4-axis Tag
-    if (body?.questionContext && typeof body.questionContext === 'object') {
-      const socraticData = generateSocraticQuestionTutorResponse(body.questionContext, query);
-      return NextResponse.json({ success: true, data: socraticData }, { status: 200 });
-    }
-
-    // 1. Thử gọi sang BE nếu BE đang chạy
+    // 1. Gọi sang BE (Gemini 3.8 Flash VIP API) kèm Cookie & Authorization JWT
     try {
+      const forwardHeaders: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      const cookie = req.headers.get('cookie');
+      if (cookie) forwardHeaders['cookie'] = cookie;
+      const auth = req.headers.get('authorization');
+      if (auth) forwardHeaders['authorization'] = auth;
+
       const beRes = await fetch(`${BE_BASE_URL}/agent/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: forwardHeaders,
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(15000), // Cho BE đủ thời gian xử lý AI
       });
@@ -411,28 +413,14 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // Nếu nội dung BE là câu chào mặc định mà câu hỏi về nền tảng -> dùng câu trả lời chuẩn Schoolify
-        const norm = normalizeText(query);
-        if (
-          norm.includes('nen tang') ||
-          norm.includes('schoolify') ||
-          norm.includes('la gi') ||
-          norm.includes('gioi thieu') ||
-          norm.includes('tinh nang')
-        ) {
-          const localData = generateLocalAiResponse(query, currentUrl);
-          return NextResponse.json({
+        return NextResponse.json(
+          {
             success: true,
-            data: localData,
+            data: payload,
             pointUsage: data?.pointUsage || payload?.pointUsage,
-          });
-        }
-
-        return NextResponse.json({
-          success: true,
-          data: payload,
-          pointUsage: data?.pointUsage || payload?.pointUsage,
-        }, { status: 200 });
+          },
+          { status: 200 }
+        );
       } else {
         try {
           const errData = await beRes.json();

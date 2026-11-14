@@ -1,26 +1,23 @@
 import { NextResponse } from 'next/server';
-import { upsertRecord } from '@/lib/server/json-db';
 
-const BE_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const BE_BASE_URL = process.env.NEXT_PUBLIC_BE_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3005';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const questions = Array.isArray(body?.questions) ? body.questions : [];
+    const cookie = request.headers.get('cookie') || '';
+    const authorization = request.headers.get('authorization') || '';
 
-    // 1. Lưu đồng thời vào Demo JSON DB (`data/db.json` -> `generatedQuestions`)
-    for (const q of questions) {
-      if (q && q.id) {
-        await upsertRecord('generatedQuestions', q);
-      }
-    }
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (cookie) headers['cookie'] = cookie;
+    if (authorization) headers['authorization'] = authorization;
 
-    // 2. Gửi sang Backend PostgreSQL (`POST /agent/docx-save-to-bank`)
+    // Gửi thẳng sang Backend PostgreSQL (`POST /agent/docx-save-to-bank`)
     const res = await fetch(`${BE_BASE_URL}/agent/docx-save-to-bank`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(body),
     });
 

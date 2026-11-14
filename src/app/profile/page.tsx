@@ -207,7 +207,7 @@ export default function ProfileSettingsPage() {
           Chỉnh Sửa Hồ Sơ Cá Nhân
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Cập nhật họ tên, ảnh đại diện, số điện thoại và khối lớp trực tiếp vào cơ sở dữ liệu PostgreSQL.
+          Cập nhật họ tên, ảnh đại diện, số điện thoại và khối lớp.
         </p>
       </div>
 
@@ -461,7 +461,7 @@ export default function ProfileSettingsPage() {
               )
             }
           >
-            {isSaving ? 'Đang lưu vào PostgreSQL...' : 'Lưu Thay Đổi Hồ Sơ'}
+            {isSaving ? 'Đang lưu thay đổi...' : 'Lưu Thay Đổi Hồ Sơ'}
           </Button>
         </div>
       </form>

@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Menu,
   Bell,
@@ -16,6 +16,7 @@ import { useAuthStore } from '@/store/auth.store';
 
 export function AppHeader({ onOpenMobileSidebar }: { onOpenMobileSidebar: () => void }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isAuthenticated, logout, fetchMe, currentRole } = useAuthStore();
   const { frameTier } = useActiveAvatarFrame();
   const [isMounted, setIsMounted] = React.useState(false);
@@ -25,14 +26,13 @@ export function AppHeader({ onOpenMobileSidebar }: { onOpenMobileSidebar: () => 
   }, []);
 
   React.useEffect(() => {
-    if (isAuthenticated) {
-      fetchMe().catch(() => {});
-    }
-  }, [isAuthenticated, fetchMe]);
+    if (!isMounted) return;
+    fetchMe().catch(() => {});
+  }, [isMounted, fetchMe]);
 
   const handleLogout = () => {
     logout();
-    router.push('/login');
+    router.push(pathname?.startsWith('/admin') ? '/admin' : '/login');
   };
 
   return (

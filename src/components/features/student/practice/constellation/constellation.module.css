@@ -1,0 +1,221 @@
+/*
+ * Bầu trời "Chòm sao Tia Sáng" — nền TĨNH theo chủ đề từng môn.
+ * Bầu trời luôn tối (kể cả khi trang đang ở giao diện sáng) để các ngôi sao nổi bật.
+ * Tông màu bám design/mockups/chuyen-de-chom-sao-v1.html (bản đã chốt).
+ */
+
+.sky {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 560px;
+  overflow: hidden;
+  color: #fff;
+  background: #090d16;
+}
+
+.rounded {
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ---------- Nền theo môn ---------- */
+.tbg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Toán Số: navy–cyan trên lưới chấm (giấy chấm tọa độ) */
+.tbgSo {
+  background:
+    radial-gradient(120% 90% at 20% 110%, #0f2a44 0%, transparent 55%),
+    radial-gradient(90% 80% at 90% -10%, #12203a 0%, transparent 60%),
+    radial-gradient(rgba(125, 211, 252, 0.16) 1px, transparent 1.4px) 0 0 / 32px 32px;
+}
+
+/* Toán Hình: bản vẽ kỹ thuật (blueprint) */
+.tbgHinh {
+  background:
+    radial-gradient(110% 90% at 80% 110%, #0c4a6e 0%, transparent 60%),
+    radial-gradient(90% 80% at 10% -10%, #0b2f55 0%, transparent 60%),
+    linear-gradient(rgba(186, 230, 253, 0.07) 1px, transparent 1px) 0 0 / 116px 116px,
+    linear-gradient(90deg, rgba(186, 230, 253, 0.07) 1px, transparent 1px) 0 0 / 116px 116px,
+    linear-gradient(rgba(186, 230, 253, 0.035) 1px, transparent 1px) 0 0 / 29px 29px,
+    linear-gradient(90deg, rgba(186, 230, 253, 0.035) 1px, transparent 1px) 0 0 / 29px 29px,
+    #08203a;
+}
+
+/* Tin học: terminal chàm–tím + vạch quét mờ (cố ý không dùng xanh lá để không trùng chấm "đã qua") */
+.tbgTin {
+  background:
+    radial-gradient(110% 90% at 15% 110%, #2e1a5c 0%, transparent 58%),
+    radial-gradient(90% 80% at 92% -10%, #1b2155 0%, transparent 62%),
+    repeating-linear-gradient(0deg, rgba(165, 180, 252, 0.045) 0 1px, transparent 1px 4px),
+    #0a0b1e;
+}
+
+/* ---------- Ký hiệu trang trí (tĩnh, rất mờ) ---------- */
+.deco {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.decoSo { color: #7dd3fc; }
+.decoHinh { color: #bae6fd; }
+.decoTin { color: #a5b4fc; }
+
+.t {
+  position: absolute;
+  white-space: nowrap;
+  line-height: 1;
+  user-select: none;
+  font-size: calc(var(--fs, 20) * 1px * var(--ds, 1));
+}
+.decoSo .t {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: italic;
+}
+.decoTin .t {
+  font-family: ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
+  font-weight: 600;
+}
+
+.g {
+  position: absolute;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  overflow: visible;
+}
+.g text {
+  fill: currentColor;
+  stroke: none;
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 10px;
+}
+
+.rain {
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  white-space: pre;
+  font: 600 14px/1.55 ui-monospace, Menlo, Consolas, monospace;
+  color: #a5b4fc;
+  -webkit-mask-image: linear-gradient(transparent, #000 20%, #000 70%, transparent);
+  mask-image: linear-gradient(transparent, #000 20%, #000 70%, transparent);
+}
+
+.stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.stars i {
+  position: absolute;
+  border-radius: 50%;
+  background: #cbd5e1;
+}
+
+/* ---------- Bản đồ sao ---------- */
+.map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.st {
+  cursor: pointer;
+  outline: none;
+}
+.st .hit {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 2;
+}
+.st:focus-visible .hit {
+  stroke: #fff;
+}
+.st .core {
+  transition: transform 0.2s;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.st:hover .core {
+  transform: scale(1.25);
+}
+
+/* ---------- HUD ---------- */
+.hud {
+  position: absolute;
+  z-index: 2;
+}
+.tl { left: 32px; top: 28px; }
+.tr {
+  right: 28px;
+  top: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  max-width: 60%;
+}
+.bl {
+  left: 32px;
+  bottom: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.br {
+  /* chừa chỗ cho robot Gia sư AI nổi (AgenticChatWidget) ở góc phải dưới */
+  right: 156px;
+  bottom: 24px;
+  width: 320px;
+}
+.hint {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 1;
+  font-size: 12px;
+  color: rgba(148, 163, 184, 0.75);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* ---------- Mobile / tablet hẹp: xếp dọc, KHÔNG scroll ngang ---------- */
+@media (max-width: 899px) {
+  .sky {
+    height: auto;
+    min-height: 0;
+    padding: 20px 16px 16px;
+    gap: 16px;
+    --ds: 0.62;
+  }
+  .hud { position: static; }
+  .tl { order: 1; }
+  .tr { order: 2; max-width: none; justify-content: flex-start; }
+  .map { position: relative; order: 3; inset: auto; height: auto; }
+  .bl { order: 4; }
+  .br { order: 5; width: auto; }
+  .hint { display: none; }
+  .t { opacity: 0.09 !important; }
+  .g { opacity: 0.14 !important; }
+  .rain { opacity: 0.07 !important; }
+  .rain:nth-child(even) { display: none; }
+  .rounded { border-radius: 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map :is(animate, animateMotion, animateTransform) {
+    display: none;
+  }
+}

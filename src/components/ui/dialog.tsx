@@ -6,8 +6,10 @@ import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface DialogProps {
-  isOpen: boolean;
+  isOpen?: boolean;
+  open?: boolean;
   onClose: () => void;
+  showCloseButton?: boolean;
   title?: React.ReactNode;
   description?: React.ReactNode;
   children: React.ReactNode;
@@ -21,7 +23,9 @@ export interface DialogProps {
 
 export function Dialog({
   isOpen,
+  open,
   onClose,
+  showCloseButton = true,
   title,
   description,
   children,
@@ -32,11 +36,13 @@ export function Dialog({
   fullscreen = false,
   maxWidth = 'md',
 }: DialogProps) {
+  const modalOpen = Boolean(isOpen ?? open);
+
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
-    if (isOpen) {
+    if (modalOpen) {
       document.body.style.overflow = 'hidden';
       window.addEventListener('keydown', handleKeyDown);
     }
@@ -44,7 +50,7 @@ export function Dialog({
       document.body.style.overflow = 'unset';
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, [modalOpen, onClose]);
 
   const maxWidthClasses = {
     sm: 'max-w-sm',
@@ -60,7 +66,7 @@ export function Dialog({
 
   return (
     <AnimatePresence>
-      {isOpen && (
+      {modalOpen && (
         <div
           className={cn(
             'fixed inset-0 z-50 flex justify-center',
@@ -104,41 +110,63 @@ export function Dialog({
             )}
           >
             {/* Header */}
-            <div className={cn(
-              'flex items-start justify-between pb-3 shrink-0',
-              fullscreen && 'border-b border-slate-100 dark:border-slate-800/80 pb-4'
-            )}>
-              <div className="flex-1 mr-3">
-                {title && (
-                  typeof title === 'string' ? (
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white">{title}</h2>
-                  ) : (
-                    <div className="text-lg font-bold text-slate-900 dark:text-white">{title}</div>
-                  )
-                )}
-                {description && (
-                  typeof description === 'string' ? (
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{description}</p>
-                  ) : (
-                    <div className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{description}</div>
-                  )
+            {Boolean(title || description) ? (
+              <div className={cn(
+                'flex items-start justify-between pb-3 shrink-0',
+                fullscreen && 'border-b border-slate-100 dark:border-slate-800/80 pb-4'
+              )}>
+                <div className="flex-1 min-w-0 mr-3">
+                  {title && (
+                    typeof title === 'string' ? (
+                      <h2 className="text-lg font-bold text-slate-900 dark:text-white">{title}</h2>
+                    ) : (
+                      <div className="text-lg font-bold text-slate-900 dark:text-white">{title}</div>
+                    )
+                  )}
+                  {description && (
+                    typeof description === 'string' ? (
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{description}</p>
+                    ) : (
+                      <div className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{description}</div>
+                    )
+                  )}
+                </div>
+                {showCloseButton && (
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className={cn(
+                      'shrink-0 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer',
+                      fullscreen ? 'p-2 border border-slate-200 dark:border-slate-800 text-xs font-semibold flex items-center gap-1.5' : 'p-1.5'
+                    )}
+                  >
+                    {fullscreen && <span className="hidden sm:inline text-xs font-medium text-slate-500">Đóng</span>}
+                    <X className="h-5 w-5" />
+                  </button>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={onClose}
-                className={cn(
-                  'rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors',
-                  fullscreen ? 'p-2 border border-slate-200 dark:border-slate-800 text-xs font-semibold flex items-center gap-1.5' : 'p-1.5'
-                )}
-              >
-                {fullscreen && <span className="hidden sm:inline text-xs font-medium text-slate-500">Đóng</span>}
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+            ) : (
+              showCloseButton && (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className={cn(
+                    'absolute top-4 right-4 z-10 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer',
+                    fullscreen ? 'p-2 border border-slate-200 dark:border-slate-800 text-xs font-semibold flex items-center gap-1.5' : 'p-1.5'
+                  )}
+                >
+                  {fullscreen && <span className="hidden sm:inline text-xs font-medium text-slate-500">Đóng</span>}
+                  <X className="h-5 w-5" />
+                </button>
+              )
+            )}
 
             {/* Body */}
-            <div className={cn('overflow-y-auto py-2 flex-1 pr-1', fullscreen && 'py-4 sm:py-6')}>
+            <div className={cn(
+              'overflow-y-auto flex-1 pr-1',
+              Boolean(title || description) ? 'py-2' : 'pt-0 pb-1',
+              fullscreen && 'py-4 sm:py-6'
+            )}>
               {children}
             </div>
 

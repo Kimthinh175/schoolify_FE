@@ -565,30 +565,6 @@ export default function PricingPage() {
         </div>
       </div>
 
-      {/* Highlight Quick Pill for Daily Points & AI */}
-      {audienceTab === 'STUDENT' && (
-        <div className="mt-8 max-w-4xl mx-auto p-4 rounded-2xl bg-gradient-to-r from-cyan-500/10 via-indigo-500/10 to-amber-500/10 border border-[#00B8DD]/30 flex flex-wrap items-center justify-between gap-3 text-xs shadow-sm">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/20 text-[#00B8DD] flex items-center justify-center shrink-0 font-bold shadow-inner">
-              <NgocIcon className="w-5 h-5 animate-pulse" />
-            </div>
-            <div>
-              <span className="font-black text-slate-900 dark:text-white block text-sm">
-                Cơ Chế Tích Điểm Tự Động Mỗi Ngày
-              </span>
-              <span className="text-slate-600 dark:text-slate-400 text-xs">
-                Đăng nhập mỗi ngày để nhận đến <strong>+150 <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat />/ngày</strong>. Điểm tích lũy dùng mở đề VIP và đổi quà thực tế tại Store!
-              </span>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <span className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-extrabold text-[#007D99] dark:text-[#00B8DD] text-xs shadow-xs">
-              Tích lũy đến 4.500 <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat />/tháng
-            </span>
-          </div>
-        </div>
-      )}
-
       {/* ========================================================
           A. GRID CÁC GÓI HỌC SINH (STUDENT PLANS)
       ======================================================== */}

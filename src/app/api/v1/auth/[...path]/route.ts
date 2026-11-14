@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const BE_BASE_URL = process.env.NEXT_PUBLIC_BE_URL || 'http://localhost:3001';
+const BE_BASE_URL = process.env.NEXT_PUBLIC_BE_URL || process.env.BE_URL || 'http://localhost:3005';
 
 export async function POST(
   req: NextRequest,
@@ -16,6 +16,7 @@ export async function POST(
       headers: {
         'Content-Type': 'application/json',
         cookie: req.headers.get('cookie') || '',
+        authorization: req.headers.get('authorization') || '',
       },
       body: JSON.stringify(body),
     });

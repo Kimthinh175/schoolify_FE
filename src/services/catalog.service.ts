@@ -12,6 +12,7 @@ export interface OrderItem {
   item_price_snapshot: number;
   status: 'PENDING' | 'PAID' | 'CANCELLED';
   payment_method: 'BANK' | 'COD';
+  cancel_reason?: string | null;
   created_at: string;
 }
 
@@ -248,6 +249,26 @@ export const catalogService = {
     }
   },
 
+  /** Hủy đơn hàng & lưu lý do hủy (`PATCH /api/v1/catalog/orders/:id/cancel`) */
+  async cancelOrder(
+    orderId: string,
+    reason?: string
+  ): Promise<{ order: OrderItem } | null> {
+    try {
+      const res = await fetch(`/api/v1/catalog/orders/${encodeURIComponent(orderId)}/cancel`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason }),
+      });
+      if (!res.ok) return null;
+      const json = await res.json();
+      return json?.data || null;
+    } catch (err) {
+      console.warn('[catalogService.cancelOrder] Failed:', err);
+      return null;
+    }
+  },
+
   /** Tạo link thanh toán PayOS VietQR (`POST /api/v1/catalog/payos/create-payment-link`) */
   async createPayosPaymentLink(payload: {
     userId?: string;
@@ -382,4 +403,296 @@ export const catalogService = {
       return [];
     }
   },
+
+  /** Ghi nhận lượt truy cập trang web vào PostgreSQL (`POST /api/v1/catalog/analytics/visit`) */
+  async recordWebVisit(payload: {
+    path: string;
+    pageTitle?: string;
+    userId?: string | null;
+    userRole?: string;
+    sessionId?: string;
+    deviceType?: string;
+    screenResolution?: string;
+    timezone?: string;
+    language?: string;
+    platform?: string;
+    referrer?: string;
+    userAgent?: string;
+  }): Promise<boolean> {
+    try {
+      const res = await fetch('/api/v1/catalog/analytics/visit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  },
+
+  /** Lấy dữ liệu Thống kê Hành vi & Toàn diện Web từ PostgreSQL (`GET /api/v1/catalog/analytics/behavior`) */
+  async getBehaviorAnalytics(): Promise<BehaviorAnalyticsData | null> {
+    try {
+      const res = await fetch('/api/v1/catalog/analytics/behavior', {
+        method: 'GET',
+        cache: 'no-store',
+      });
+      if (!res.ok) return null;
+      const json = await res.json();
+      return json?.data || null;
+    } catch (err) {
+      console.warn('[catalogService.getBehaviorAnalytics] Failed:', err);
+      return null;
+    }
+  },
 };
+
+export interface BehaviorAnalyticsData {
+  generatedAt: string;
+  trackingSince?: string;
+  webTraffic: {
+    totalVisits: number;
+    todayVisits: number;
+    last7DaysVisits: number;
+    uniqueVisitors: number;
+    loggedInVisits: number;
+    guestVisits: number;
+    deviceBreakdown: {
+      desktop: number;
+      mobile: number;
+      tablet: number;
+      bot?: number;
+    };
+    byDeviceType?: Array<{
+      type: string;
+      label: string;
+      visits: number;
+      uniqueVisitors: number;
+      percentage: number;
+    }>;
+    byOs?: Array<{
+      name: string;
+      visits: number;
+      uniqueVisitors: number;
+      percentage: number;
+    }>;
+    byBrowser?: Array<{
+      name: string;
+      visits: number;
+      uniqueVisitors: number;
+      percentage: number;
+    }>;
+    byLocation?: Array<{
+      locationKey: string;
+      city: string;
+      region: string | null;
+      country: string;
+      countryCode: string;
+      visits: number;
+      uniqueVisitors: number;
+      percentage: number;
+    }>;
+    byCountry?: Array<{
+      country: string;
+      countryCode: string;
+      visits: number;
+      uniqueVisitors: number;
+      percentage: number;
+    }>;
+    recentVisits?: Array<{
+      id: string;
+      path: string;
+      pageTitle: string;
+      sessionId: string;
+      userRole: string;
+      userName: string | null;
+      deviceType: string;
+      osName: string;
+      browserName: string;
+      deviceModel: string;
+      screenResolution: string | null;
+      ipAddress: string | null;
+      locationLabel: string;
+      cityName: string;
+      countryName: string;
+      countryCode: string;
+      ispName: string | null;
+      timezone: string | null;
+      createdAt: string;
+    }>;
+    topPages: Array<{
+      path: string;
+      pageTitle: string;
+      visits: number;
+      uniqueVisitors: number;
+      percentage: number;
+    }>;
+    dailyTrend: Array<{
+      date: string;
+      label: string;
+      visits: number;
+      uniqueVisitors: number;
+      examsCreated: number;
+    }>;
+  };
+  studentExams: {
+    totalCreated: number;
+    completedCount: number;
+    abandonedOrBlankCount: number;
+    abandonedBreakdown: {
+      zeroAnswersCount: number;
+      under3AnswersCount: number;
+    };
+    completionRate: number;
+    abandonRate: number;
+    avgCompletedScore: number;
+    completedOverview: {
+      aboveOrEqual5Count: number;
+      under5Count: number;
+    };
+    scoreDistribution: {
+      under5: { label: string; range: string; count: number; percentage: number };
+      from5to6_5: { label: string; range: string; count: number; percentage: number };
+      from6_5to8_5: { label: string; range: string; count: number; percentage: number };
+      from8_5to10: { label: string; range: string; count: number; percentage: number };
+    };
+    recentAttempts: Array<{
+      id: string;
+      attemptToken: string | null;
+      studentName: string;
+      studentEmail: string;
+      grade: number;
+      examTitle: string;
+      subjectSlug: string;
+      subjectName: string;
+      level: string;
+      answeredCount: number;
+      totalQuestions: number;
+      completionStatus: 'COMPLETED' | 'BLANK_0' | 'UNDER_3';
+      completionLabel: string;
+      score: number;
+      scoreBucket: string;
+      timeSpentSeconds: number;
+      createdAt: string;
+    }>;
+  };
+  questionBank: {
+    totalQuestions: number;
+    totalQuestionBanks: number;
+    totalSubjects: number;
+    bySubject: Array<{
+      slug: string;
+      name: string;
+      color: string;
+      group: string;
+      count: number;
+      percentage: number;
+      byBloom: Record<string, number>;
+      byFormat: Record<string, number>;
+    }>;
+    byGrade: Array<{
+      grade: number;
+      count: number;
+    }>;
+  };
+  packageSales: {
+    totalSold: number;
+    totalRevenue: number;
+    totalPendingOrders: number;
+    package1: {
+      code: string;
+      label: string;
+      shortName: string;
+      unitPrice: number;
+      soldCount: number;
+      paidOrdersCount: number;
+      pendingOrdersCount: number;
+      activeSubscribersCount: number;
+      revenue: number;
+      buyers: string[];
+    };
+    package2: {
+      code: string;
+      label: string;
+      shortName: string;
+      unitPrice: number;
+      soldCount: number;
+      paidOrdersCount: number;
+      pendingOrdersCount: number;
+      activeSubscribersCount: number;
+      revenue: number;
+      buyers: string[];
+    };
+    recentSubscriptionOrders: Array<{
+      id: string;
+      buyerName: string;
+      buyerEmail: string;
+      packageCode: string;
+      packageLabel: string;
+      amount: number;
+      status: string;
+      createdAt: string;
+    }>;
+  };
+  platformEverything: {
+    users: {
+      totalUsers: number;
+      studentsCount: number;
+      grade12Count?: number;
+      grade11Count?: number;
+      grade10Count?: number;
+      otherGradesCount?: number;
+      incompleteProfileCount?: number;
+      teachersCount: number;
+      parentsCount: number;
+      adminsCount: number;
+    };
+    contentAndCourses: {
+      totalCourses: number;
+      totalLessons: number;
+      totalQuestionBanks: number;
+      totalQuestions: number;
+    };
+    pointsAndEconomy: {
+      totalTiaSangInCirculation: number;
+      totalDiamondsInCirculation: number;
+      totalExamStartsLogged: number;
+      totalCheckins: number;
+      totalRewardsGranted: number;
+      totalPenalties: number;
+      storeRedemptionsCount: number;
+    };
+    aiAndAdaptiveLearning: {
+      totalAiChatSessions: number;
+      totalAiChatMessages: number;
+      totalDrill3Sessions: number;
+      usedAiExampleCount: number;
+      topicMasteriesCount: number;
+      roadmapStepsCount: number;
+      spiritBreakdown: {
+        highGrit: number;
+        moderateInitiative: number;
+        lowPatience: number;
+        avoidanceSkipped: number;
+      };
+      recentDrillBehaviors: Array<{
+        id: string;
+        studentName: string;
+        subject: string;
+        grade: number;
+        topicTag: string;
+        completedTurns: number;
+        totalTurns: number;
+        correctTurns: number;
+        usedAiExample: boolean;
+        spiritTag: string;
+        spiritLabel: string;
+        intelligenceLabel: string;
+        timeSeconds: number;
+        createdAt: string;
+      }>;
+    };
+  };
+}
+

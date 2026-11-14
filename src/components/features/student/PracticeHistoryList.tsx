@@ -361,14 +361,25 @@ export function PracticeHistoryList({ showHeader = true }: PracticeHistoryListPr
               Tra cứu toàn bộ các bài thi đã làm, chi tiết đúng/sai và phân tích 4 mức độ nhận thức Bloom.
             </p>
           </div>
-          <Link href="/luyen-thi" className="shrink-0">
-            <Button
-              className="min-h-[44px] bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold shadow-md shadow-[#00B8DD]/25 text-xs px-4 rounded-xl cursor-pointer shadow-md"
-              rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
-            >
-              Luyện Đề Mới Ngay
-            </Button>
-          </Link>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <Link href="/student/practice">
+              <Button
+                variant="outline"
+                className="min-h-[44px] border-[#00B8DD]/50 text-[#00B8DD] hover:bg-[#00B8DD]/10 font-bold text-xs px-4 rounded-xl cursor-pointer"
+                leftIcon={<Sparkles className="w-3.5 h-3.5" />}
+              >
+                Lộ Trình Cá Nhân Hóa
+              </Button>
+            </Link>
+            <Link href="/luyen-thi">
+              <Button
+                className="min-h-[44px] bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold shadow-md shadow-[#00B8DD]/25 text-xs px-4 rounded-xl cursor-pointer"
+                rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+              >
+                Luyện Đề Mới Ngay
+              </Button>
+            </Link>
+          </div>
         </div>
       )}
 

@@ -73,7 +73,7 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
   const pointsMenuTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const [checkedInToday, setCheckedInToday] = React.useState(false);
 
-  const [scrolled, setScrolled] = React.useState(false);
+  const headerRef = React.useRef<HTMLElement | null>(null);
   const pathname = usePathname();
 
   const handleUserMenuEnter = () => {
@@ -100,8 +100,28 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
 
   const [isMounted, setIsMounted] = React.useState(false);
   const [isPointsLoading, setIsPointsLoading] = React.useState(true);
-  const [tokenBalance, setTokenBalance] = React.useState<number>(9);
-  const [diamondsBalance, setDiamondsBalance] = React.useState<number>(100);
+  const [tokenBalance, setTokenBalance] = React.useState<number>(() => {
+    if (typeof window === 'undefined') return 9;
+    try {
+      const stored = window.localStorage.getItem('schoolify_user_tokens');
+      if (stored !== null && stored !== '') {
+        const parsed = Number(stored);
+        if (Number.isFinite(parsed)) return parsed;
+      }
+    } catch {}
+    return 9;
+  });
+  const [diamondsBalance, setDiamondsBalance] = React.useState<number>(() => {
+    if (typeof window === 'undefined') return 0;
+    try {
+      const stored = window.localStorage.getItem('schoolify_user_diamonds');
+      if (stored !== null && stored !== '') {
+        const parsed = Number(stored);
+        if (Number.isFinite(parsed)) return parsed;
+      }
+    } catch {}
+    return 0;
+  });
   const [dailyAllowance, setDailyAllowance] = React.useState<number>(9);
   const [activePackage, setActivePackage] = React.useState<string>('FREE');
   const { frameTier } = useActiveAvatarFrame(activePackage);
@@ -172,6 +192,14 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
       }
       if (typeof customEvt?.detail?.diamonds === 'number') {
         setDiamondsBalance(customEvt.detail.diamonds);
+      } else if (typeof window !== 'undefined') {
+        const storedDiamonds = window.localStorage.getItem('schoolify_user_diamonds');
+        if (storedDiamonds !== null && storedDiamonds !== '') {
+          const parsedDiamonds = Number(storedDiamonds);
+          if (Number.isFinite(parsedDiamonds)) {
+            setDiamondsBalance(parsedDiamonds);
+          }
+        }
       }
       if (customEvt?.detail?.refreshFromBackend) {
         loadPointsFromBackend();
@@ -210,20 +238,36 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
 
   React.useEffect(() => {
     let ticking = false;
-    let lastState = false;
-    const onScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const isScrolled = window.scrollY > 20;
-          if (isScrolled !== lastState) {
-            lastState = isScrolled;
-            setScrolled(isScrolled);
+    let lastState: boolean | null = null;
+    const scrolledClasses = ['bg-white/98', 'dark:bg-slate-950/90', 'backdrop-blur-md', 'border-slate-200/90', 'shadow-md', 'shadow-slate-900/5'];
+    const defaultClasses = ['bg-white', 'dark:bg-slate-950', 'border-slate-200/80', 'shadow-xs'];
+
+    const applyHeaderScroll = () => {
+      ticking = false;
+      const isScrolled = window.scrollY > 20;
+      if (isScrolled !== lastState) {
+        lastState = isScrolled;
+        const el = headerRef.current;
+        if (el) {
+          if (isScrolled) {
+            el.classList.remove(...defaultClasses);
+            el.classList.add(...scrolledClasses);
+          } else {
+            el.classList.remove(...scrolledClasses);
+            el.classList.add(...defaultClasses);
           }
-          ticking = false;
-        });
-        ticking = true;
+        }
       }
     };
+
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        window.requestAnimationFrame(applyHeaderScroll);
+      }
+    };
+
+    applyHeaderScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
@@ -340,12 +384,8 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
     <>
       {/* ── MAIN NAVBAR HEADER ── */}
       <header
-        className={cn(
-          'fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300',
-          scrolled
-            ? 'bg-white/98 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800 shadow-md shadow-slate-900/5'
-            : 'bg-white dark:bg-slate-950 border-b border-slate-200/80 dark:border-slate-800 shadow-xs'
-        )}
+        ref={headerRef}
+        className="fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 border-b dark:border-slate-800 bg-white dark:bg-slate-950 border-slate-200/80 shadow-xs"
       >
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
 

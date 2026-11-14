@@ -29,6 +29,7 @@ import {
   ChevronRight,
   Sparkles,
   User,
+  Activity,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth.store';
@@ -51,10 +52,16 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['SUPER_ADMIN'],
   },
   {
+    label: 'Thống Kê Hành Vi',
+    href: '/admin/behavior',
+    icon: <Activity className="w-5 h-5" />,
+    badge: 'Live',
+    roles: ['SUPER_ADMIN'],
+  },
+  {
     label: 'Ngân Hàng Câu Hỏi',
     href: '/admin/questions',
     icon: <Database className="w-5 h-5" />,
-    badge: 'Mới',
     roles: ['SUPER_ADMIN'],
   },
   {
@@ -191,7 +198,13 @@ export function AppSidebar({
   const pathname = usePathname();
   const { currentRole, currentSchool } = useAuthStore();
 
-  const filteredNavItems = NAV_ITEMS.filter((item) => item.roles.includes(currentRole));
+  const effectiveRole = pathname?.startsWith('/admin')
+    ? 'SUPER_ADMIN'
+    : pathname?.startsWith('/teacher')
+      ? 'TEACHER'
+      : currentRole;
+
+  const filteredNavItems = NAV_ITEMS.filter((item) => item.roles.includes(effectiveRole));
 
   const renderSidebar = (isMobile = false) => (
     <aside
@@ -211,7 +224,7 @@ export function AppSidebar({
         <div className="flex h-16 items-center justify-between px-3.5 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <Link href="/" className="flex items-center gap-2 overflow-hidden">
             {!isMobile && collapsed ? (
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs p-1">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs p-1">
                 <img src="/logo-icon.png" alt="Schoolify" className="h-full w-full object-contain" />
               </div>
             ) : (
@@ -219,12 +232,12 @@ export function AppSidebar({
                 <img
                   src="/schoolify-logo.png"
                   alt="Schoolify"
-                  className="h-8 w-auto object-contain dark:hidden"
+                  className="h-11 sm:h-12 w-auto object-contain dark:hidden"
                 />
                 <img
                   src="/am-ban.png"
                   alt="Schoolify"
-                  className="h-8 w-auto object-contain hidden dark:block"
+                  className="h-11 sm:h-12 w-auto object-contain hidden dark:block"
                 />
               </div>
             )}
@@ -265,7 +278,7 @@ export function AppSidebar({
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group',
                 isActive
-                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/20 font-semibold'
+                  ? 'bg-[#00B8DD] text-white shadow-sm shadow-[#00B8DD]/25 font-semibold'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/70 dark:hover:text-white',
                 !isMobile && collapsed && 'justify-center px-2'
               )}
@@ -280,7 +293,7 @@ export function AppSidebar({
                     <span
                       className={cn(
                         'rounded-full px-2 py-0.5 text-xs font-bold shrink-0',
-                        isActive ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300'
+                        isActive ? 'bg-white/20 text-white' : 'bg-[#00B8DD]/10 text-[#009BBF] dark:bg-[#00B8DD]/20 dark:text-[#00B8DD]'
                       )}
                     >
                       {item.badge}

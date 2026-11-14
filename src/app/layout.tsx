@@ -4,6 +4,8 @@ import "./globals.css";
 import "katex/dist/katex.min.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ExamSessionGuardProvider } from "@/components/providers/ExamSessionGuardProvider";
+import { WebVisitTracker } from "@/components/providers/WebVisitTracker";
+import { StudentOnboardingGuard } from "@/components/providers/StudentOnboardingGuard";
 import { Toaster } from "sonner";
 import { GlobalFloatingWidgets } from "@/components/providers/GlobalFloatingWidgets";
 
@@ -78,6 +80,8 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-sans bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased transition-colors duration-200 overflow-x-hidden w-full max-w-[100vw]" suppressHydrationWarning>
         <ThemeProvider>
           <ExamSessionGuardProvider>
+            <WebVisitTracker />
+            <StudentOnboardingGuard />
             {children}
             <GlobalFloatingWidgets />
             <Toaster richColors position="top-right" closeButton />

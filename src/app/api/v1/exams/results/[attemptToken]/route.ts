@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const BE_BASE_URL = process.env.NEXT_PUBLIC_BE_URL || 'http://localhost:3001';
+const BE_BASE_URL = process.env.NEXT_PUBLIC_BE_URL || process.env.BE_URL || 'http://localhost:3005';
 
 export async function GET(
   req: NextRequest,
