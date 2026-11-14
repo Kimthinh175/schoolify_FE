@@ -444,7 +444,7 @@ export const AgentChatMessageContent: React.FC<AgentChatMessageContentProps> = R
 
         // Đoạn văn thông thường (hỗ trợ xuống dòng mềm bên trong đoạn)
         return (
-          <div key={`p-${blockKey++}`} className="leading-relaxed my-1">
+          <div key={`p-${blockKey++}`} className="leading-relaxed my-1 first:mt-0 last:mb-0">
             {lines.map((line, lIdx) => (
               <React.Fragment key={`line-${lIdx}`}>
                 {renderInlineContent(line, isUser)}

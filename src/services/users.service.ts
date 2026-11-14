@@ -15,6 +15,23 @@ export interface AdminUserItem {
   created_at?: string;
 }
 
+function getAuthHeaders(includeJsonContentType = false): Record<string, string> {
+  const headers: Record<string, string> = includeJsonContentType
+    ? { 'Content-Type': 'application/json' }
+    : {};
+  if (typeof window === 'undefined') return headers;
+  try {
+    const raw = window.localStorage.getItem('schoolify-auth-storage');
+    if (!raw) return headers;
+    const parsed = JSON.parse(raw);
+    const token = parsed?.state?.token;
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  } catch {}
+  return headers;
+}
+
 export const usersService = {
   /** Lấy danh sách người dùng từ PostgreSQL (`GET /api/v1/users`) */
   async getUsers(params?: {
@@ -32,6 +49,7 @@ export const usersService = {
 
       const res = await fetch(`/api/v1/users?${qs.toString()}`, {
         method: 'GET',
+        headers: getAuthHeaders(false),
         cache: 'no-store',
       });
       if (!res.ok) return { items: [], total: 0 };
@@ -77,7 +95,7 @@ export const usersService = {
     try {
       const res = await fetch('/api/v1/users', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(true),
         body: JSON.stringify(payload),
       });
       if (!res.ok) return null;
@@ -105,7 +123,7 @@ export const usersService = {
     try {
       const res = await fetch(`/api/v1/users/${encodeURIComponent(id)}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(true),
         body: JSON.stringify(payload),
       });
       if (!res.ok) return null;
@@ -122,6 +140,7 @@ export const usersService = {
     try {
       const res = await fetch(`/api/v1/users/${encodeURIComponent(id)}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(false),
       });
       return res.ok;
     } catch (err) {

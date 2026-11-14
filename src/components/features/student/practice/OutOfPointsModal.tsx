@@ -7,6 +7,7 @@ import { Dialog } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TiaSangIcon, NgocIcon } from '@/components/ui/point-icons';
+import { examOfflineStorage } from '@/services/exam-offline-storage.service';
 
 interface OutOfPointsModalProps {
   isOpen: boolean;
@@ -32,7 +33,20 @@ export function OutOfPointsModal({
   const safeRequired = Math.max(3, Number(requiredPoints || 3));
   const shortfall = Math.max(1, safeRequired - safeCurrent);
 
+  // Giải phóng ngay lập tức mọi khóa chống thoát phòng thi khi Modal Hết Điểm xuất hiện
+  React.useEffect(() => {
+    if (isOpen) {
+      examOfflineStorage.clearActiveExamSession().catch(() => {});
+    }
+  }, [isOpen]);
+
+  const handleClose = () => {
+    examOfflineStorage.clearActiveExamSession().catch(() => {});
+    onClose();
+  };
+
   const handleGoToPricing = () => {
+    examOfflineStorage.clearActiveExamSession().catch(() => {});
     if (onNavigatePricing) {
       onNavigatePricing();
       return;
@@ -42,7 +56,7 @@ export function OutOfPointsModal({
   };
 
   return (
-    <Dialog isOpen={isOpen} onClose={onClose} maxWidth="md">
+    <Dialog isOpen={isOpen} onClose={handleClose} maxWidth="md">
       <div className="text-center pt-2 pb-1" data-testid="out-of-points-modal">
         {/* Header Icon */}
         <div className="flex justify-center mb-3">
@@ -144,7 +158,7 @@ export function OutOfPointsModal({
           <button
             type="button"
             data-testid="btn-close-out-of-points"
-            onClick={onClose}
+            onClick={handleClose}
             className="w-full py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer"
           >
             {secondaryLabel}

@@ -181,7 +181,7 @@ export function BugReportsDialog({
                           report.issueType === 'WRONG_ANSWER'
                             ? 'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800'
                             : report.issueType === 'KATEX_ERROR'
-                            ? 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800'
+                            ? 'bg-[#00B8DD]/10 text-[#009BBD] border-[#00B8DD]/25 dark:bg-[#00B8DD]/15 dark:text-[#00B8DD] dark:border-[#00B8DD]/30'
                             : 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800'
                         }`}
                       >

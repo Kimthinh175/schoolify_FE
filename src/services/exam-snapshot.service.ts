@@ -1,5 +1,4 @@
 import { ExamQuestion } from '@/services/mock/practice-flow-data';
-import { demoDb } from '@/lib/demo-db';
 
 export interface ExamSnapshot {
   id: string; // e.g. "SNAP-1791839281923"
@@ -48,13 +47,26 @@ export interface ExamSnapshot {
     };
   };
   bloomSummary: Record<string, { total: number; correct: number }>;
+  level?: string;
+  practiceMode?: string;
+  track?: string;
+  knowledgeUpdate?: KnowledgeUpdatePayload;
+  chapterProgressUpdate?: any;
 }
+
+import {
+  knowledgeProfileService,
+  KnowledgeUpdatePayload,
+} from '@/services/knowledge-profile.service';
+import { chapterRoadmapService } from '@/services/chapter-roadmap.service';
 
 const COLLECTION = 'examSnapshots';
 export const EXAM_SNAPSHOTS_EVENT = 'exam-snapshots-updated';
 
 const notifyUpdated = () => {
   if (typeof window !== 'undefined') window.dispatchEvent(new Event(EXAM_SNAPSHOTS_EVENT));
+  knowledgeProfileService.notifyUpdated();
+  chapterRoadmapService.notifyUpdated();
 };
 
 /** Sinh mã attemptToken an toàn (Cryptographically Random) */
@@ -145,14 +157,30 @@ function mapBackendSubmissionToSnapshot(item: any): ExamSnapshot | null {
 /** Snapshot đề thi được lưu đồng bộ lên Backend (`POST /api/v1/exams/submissions`) & PostgreSQL */
 export const examSnapshotService = {
   /** Lưu một snapshot đề thi mới và đồng bộ lên Backend API PostgreSQL */
-  async saveExamSnapshot(snapshot: ExamSnapshot): Promise<void> {
+  async saveExamSnapshot(snapshot: ExamSnapshot): Promise<KnowledgeUpdatePayload | null> {
     if (!snapshot.attemptToken) {
       snapshot.attemptToken = generateAttemptToken();
     }
 
+    if (typeof window !== 'undefined') {
+      try {
+        window.sessionStorage.setItem(
+          `schoolify_local_snap_${snapshot.attemptToken}`,
+          JSON.stringify(snapshot)
+        );
+      } catch {}
+    }
+
+    let knowledgeUpdate: KnowledgeUpdatePayload | null = null;
+
     // 1. Gửi lên Backend API: POST /api/v1/exams/submissions
     try {
       const headers = getAuthHeaders();
+      const realUserId =
+        snapshot.userId && snapshot.userId !== 'guest'
+          ? snapshot.userId
+          : headers['x-user-id'] || undefined;
+
       const res = await fetch('/api/v1/exams/submissions', {
         method: 'POST',
         headers: {
@@ -166,11 +194,13 @@ export const examSnapshotService = {
           subjectSlug: snapshot.subjectSlug,
           grade: snapshot.grade,
           chapterId: snapshot.chapterId,
+          level: snapshot.level,
+          practiceMode: snapshot.practiceMode,
           timeSpentSeconds: snapshot.timeSpentSeconds,
           scoreOverride: snapshot.originalExam.finalScore,
           answers: snapshot.originalExam.studentAnswers,
           snapshotData: snapshot,
-          userId: snapshot.userId || headers['x-user-id'],
+          userId: realUserId,
         }),
       });
       if (res.ok) {
@@ -179,23 +209,28 @@ export const examSnapshotService = {
         if (serverToken) {
           snapshot.attemptToken = serverToken;
         }
+        const ku = body?.knowledgeUpdate || body?.data?.knowledgeUpdate;
+        if (ku) {
+          knowledgeUpdate = ku;
+          snapshot.knowledgeUpdate = ku;
+        }
+        const cpu = body?.chapterProgressUpdate || body?.data?.chapterProgressUpdate;
+        if (cpu) {
+          snapshot.chapterProgressUpdate = cpu;
+        }
       }
     } catch (err) {
       console.warn('[ExamSnapshotService] Sync to Backend /api/v1/exams/submissions skipped:', err);
     }
 
-    // 2. Lưu bản sao vào Demo JSON DB dự phòng
-    try {
-      await demoDb.create<ExamSnapshot>(COLLECTION, snapshot);
-    } catch {}
     notifyUpdated();
+    return knowledgeUpdate;
   },
 
-  /** Lấy toàn bộ danh sách snapshots (ưu tiên từ PostgreSQL GET /api/v1/exams/history) */
+  /** Lấy toàn bộ danh sách snapshots từ PostgreSQL GET /api/v1/exams/history */
   async getExamSnapshots(): Promise<ExamSnapshot[]> {
     const mergedMap = new Map<string, ExamSnapshot>();
 
-    // 1. Tải từ PostgreSQL qua GET /api/v1/exams/history
     try {
       const headers = getAuthHeaders();
       const userIdQuery = headers['x-user-id']
@@ -218,19 +253,8 @@ export const examSnapshotService = {
         }
       }
     } catch (err) {
-      console.warn('[ExamSnapshotService.getExamSnapshots] Backend fetch skipped:', err);
+      console.warn('[ExamSnapshotService.getExamSnapshots] Backend fetch error:', err);
     }
-
-    // 2. Bổ sung các snapshot local nếu chưa có trong map
-    try {
-      const localList = await demoDb.list<ExamSnapshot>(COLLECTION);
-      for (const localSnap of localList) {
-        const key = localSnap.attemptToken || localSnap.id;
-        if (!mergedMap.has(key)) {
-          mergedMap.set(key, localSnap);
-        }
-      }
-    } catch {}
 
     return Array.from(mergedMap.values()).sort((a, b) =>
       String(b.createdAt).localeCompare(String(a.createdAt))
@@ -253,11 +277,7 @@ export const examSnapshotService = {
       }
     } catch {}
 
-    try {
-      return await demoDb.get<ExamSnapshot>(COLLECTION, id);
-    } catch {
-      return null;
-    }
+    return null;
   },
 
   /** Lấy snapshot theo mã attemptToken bảo mật (ưu tiên kiểm tra qua Backend GET /api/v1/exams/results/:attemptToken) */
@@ -311,7 +331,19 @@ export const examSnapshotService = {
       // Fallback sang GET /api/v1/exams/snapshots/:id hoặc Demo JSON DB
     }
 
-    return this.getExamSnapshotById(token);
+    const byId = await this.getExamSnapshotById(token);
+    if (byId) return byId;
+
+    if (typeof window !== 'undefined') {
+      try {
+        const localRaw = window.sessionStorage.getItem(`schoolify_local_snap_${token}`);
+        if (localRaw) {
+          return JSON.parse(localRaw) as ExamSnapshot;
+        }
+      } catch {}
+    }
+
+    return null;
   },
 
   /**
@@ -339,13 +371,25 @@ export const examSnapshotService = {
     return false;
   },
 
-  /** Cập nhật kết quả bài khắc phục vào snapshot đã có */
+  /** Cập nhật kết quả bài khắc phục vào snapshot đã có và đồng bộ lên Backend PostgreSQL */
   async updateRemediationInSnapshot(
     snapshotId: string,
-    remediationData: NonNullable<ExamSnapshot['remediation']>
+    remediationData: NonNullable<ExamSnapshot['remediation']>,
+    meta?: { attemptToken?: string; subjectSlug?: string; grade?: number; chapterId?: number }
   ): Promise<void> {
     try {
-      await demoDb.patch<ExamSnapshot>(COLLECTION, snapshotId, { remediation: remediationData });
+      await knowledgeProfileService.submitRemediationResult({
+        snapshotId,
+        attemptToken: meta?.attemptToken,
+        subjectSlug: meta?.subjectSlug,
+        grade: meta?.grade,
+        chapterId: meta?.chapterId,
+        finalScore: remediationData.finalScore ?? 0,
+        totalQuestions: remediationData.totalQuestions,
+        correctCount: remediationData.correctCount,
+        questions: remediationData.questions,
+        studentAnswers: remediationData.studentAnswers,
+      });
     } catch {}
     notifyUpdated();
   },

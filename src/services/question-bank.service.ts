@@ -73,6 +73,22 @@ export function mapDifficultyToBloom(diff?: DifficultyLevel | string | null): st
   }
 }
 
+export function mapFrontendTypeToBackendFormat(type?: QuestionType | null): string {
+  switch (type) {
+    case 'TRUE_FALSE':
+      return 'TRUE_FALSE';
+    case 'MULTIPLE_CHOICE':
+      return 'MULTI_CHOICE';
+    case 'SHORT_ANSWER':
+    case 'FILL_BLANK':
+      return 'SHORT_ANSWER';
+    case 'ESSAY':
+      return 'ESSAY';
+    default:
+      return 'SINGLE_CHOICE';
+  }
+}
+
 export function mapBackendQuestionToFrontend(raw: any): Question {
   const rawSubject = String(raw.subject || 'toan-hoc').trim();
   const subjectName =
@@ -82,6 +98,8 @@ export function mapBackendQuestionToFrontend(raw: any): Question {
   let qType: QuestionType = 'SINGLE_CHOICE';
   if (rawFormat === 'TRUE_FALSE_GROUP' || rawFormat === 'TRUE_FALSE') {
     qType = 'TRUE_FALSE';
+  } else if (rawFormat === 'MULTI_CHOICE' || rawFormat === 'MULTIPLE_CHOICE') {
+    qType = 'MULTIPLE_CHOICE';
   } else if (rawFormat === 'SHORT_ANSWER') {
     qType = 'SHORT_ANSWER';
   } else if (rawFormat === 'ESSAY') {
@@ -218,16 +236,7 @@ export const questionBankService = {
           question: question.content || '',
           explanation: question.explain || '',
           bloomLevel: mapDifficultyToBloom(question.difficulty),
-          questionFormat:
-            question.type === 'TRUE_FALSE'
-              ? 'TRUE_FALSE'
-              : question.type === 'MULTIPLE_CHOICE'
-                ? 'MULTI_CHOICE'
-                : question.type === 'SHORT_ANSWER' || question.type === 'FILL_BLANK'
-                  ? 'SHORT_ANSWER'
-                  : question.type === 'ESSAY'
-                    ? 'ESSAY'
-                    : 'SINGLE_CHOICE',
+          questionFormat: mapFrontendTypeToBackendFormat(question.type),
           answers: (question.answers || []).map((a) => ({
             content: a.content,
             is_answer: Boolean(a.is_answer),
@@ -260,6 +269,7 @@ export const questionBankService = {
           question: question.content,
           explanation: question.explain,
           bloomLevel: question.difficulty ? mapDifficultyToBloom(question.difficulty) : undefined,
+          questionFormat: question.type ? mapFrontendTypeToBackendFormat(question.type) : undefined,
           answers: question.answers
             ? question.answers.map((a) => ({
                 content: a.content,

@@ -13,18 +13,25 @@ import { Dialog } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { useAuthStore } from '@/store/auth.store';
+import { questionReportService } from '@/services/question-report.service';
 
 export interface QuestionBugReport {
   id: string;
   questionId: string;
   questionTitle: string;
   subjectName: string;
+  questionSnippet?: string;
   issueType: string;
   issueTypeLabel: string;
   description: string;
   reportedAt: string;
   studentName: string;
+  reporterId?: string | null;
   status: 'PENDING' | 'RESOLVED';
+  adminNote?: string | null;
+  resolvedAt?: string | null;
+  resolvedByName?: string | null;
 }
 
 interface ReportQuestionModalProps {
@@ -62,7 +69,7 @@ const ISSUE_TYPES = [
     label: 'Vấn đề khảo thí khác',
     desc: 'Các góp ý khác về mặt phương pháp sư phạm hoặc hình vẽ minh họa.',
   },
-];
+] as const;
 
 export function ReportQuestionModal({
   isOpen,
@@ -72,47 +79,44 @@ export function ReportQuestionModal({
   subjectName = 'Toán Học',
   questionContentSnippet,
 }: ReportQuestionModalProps) {
-  const [selectedIssue, setSelectedIssue] = React.useState<string>(ISSUE_TYPES[0].id);
+  const { user } = useAuthStore();
+  const [selectedIssue, setSelectedIssue] = React.useState<(typeof ISSUE_TYPES)[number]['id']>(
+    ISSUE_TYPES[0].id
+  );
   const [description, setDescription] = React.useState<string>('');
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setIsSubmitting(true);
 
     const issueObj = ISSUE_TYPES.find((i) => i.id === selectedIssue) || ISSUE_TYPES[0];
-
-    const report: QuestionBugReport = {
-      id: `rep_${Date.now()}`,
-      questionId,
-      questionTitle,
-      subjectName,
-      issueType: selectedIssue,
-      issueTypeLabel: issueObj.label,
-      description: description.trim() || 'Học sinh báo cáo lỗi đề thi từ phòng thi khảo thí.',
-      reportedAt: new Date().toISOString(),
-      studentName: 'Học sinh luyện thi',
-      status: 'PENDING',
-    };
+    const studentName = user?.fullname?.trim() || 'Học sinh luyện thi';
 
     try {
-      const existing = localStorage.getItem('schoolify_question_bug_reports');
-      const list: QuestionBugReport[] = existing ? JSON.parse(existing) : [];
-      list.unshift(report);
-      localStorage.setItem('schoolify_question_bug_reports', JSON.stringify(list));
-    } catch (err) {
-      console.warn('Cannot write report to localStorage:', err);
-    }
+      await questionReportService.submitQuestionBugReport({
+        questionId,
+        questionTitle,
+        subjectName,
+        questionContentSnippet,
+        issueType: selectedIssue,
+        issueTypeLabel: issueObj.label,
+        description: description.trim() || 'Học sinh báo cáo lỗi đề thi từ phòng thi khảo thí.',
+        studentName,
+      });
 
-    setTimeout(() => {
-      setIsSubmitting(false);
       toast.success(
-        `Đã gửi báo cáo cho Ban Khảo thí thành công! Cảm ơn bạn đã đóng góp để hoàn thiện đề thi.`,
+        'Đã gửi báo cáo cho Ban Khảo thí thành công! Cảm ơn bạn đã đóng góp để hoàn thiện đề thi.',
         { duration: 4000 }
       );
       setDescription('');
       onClose();
-    }, 600);
+    } catch (err: any) {
+      toast.error(err?.message || 'Không thể gửi báo cáo. Vui lòng thử lại.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

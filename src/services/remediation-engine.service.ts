@@ -64,27 +64,56 @@ function isScienceSubject(subjectSlug?: string): boolean {
   return !subjectSlug || scienceSlugs.includes(subjectSlug);
 }
 
-/** Biến đổi văn bản tự nhiên theo tham số toán học */
-function transformScienceText(text: string): { result: string; primaryFactor: number } {
+/** Biến đổi văn bản tự nhiên theo tham số toán học (hỗ trợ nhiều cấp biến thể 1, 2, 3 khác số liệu nhau) */
+function transformScienceText(
+  text: string,
+  variantStep: number = 1
+): { result: string; primaryFactor: number } {
   let transformed = text;
+  const stepIndex = ((variantStep - 1) % 3) + 1; // 1, 2, 3
+  const stepMultiplier = stepIndex + 1; // 2, 3, 4
+  const stepOffset = stepIndex * 2; // +2, +4, +6
   let primaryFactor = 1;
 
-  for (const rule of NUMBER_RULES) {
-    if (rule.pattern.test(transformed)) {
-      transformed = transformed.replace(rule.pattern, rule.replacement);
-      if (rule.factor && primaryFactor === 1) {
-        primaryFactor = rule.factor;
+  if (stepIndex === 1) {
+    for (const rule of NUMBER_RULES) {
+      if (rule.pattern.test(transformed)) {
+        transformed = transformed.replace(rule.pattern, rule.replacement);
+        if (rule.factor && primaryFactor === 1) {
+          primaryFactor = rule.factor;
+        }
       }
     }
+  } else {
+    // Biến thể số 2 và số 3: nhân/cộng theo hệ số riêng để 3 câu có 3 bộ số liệu hoàn toàn khác nhau
+    transformed = transformed
+      .replace(/\b3x\^2\b/g, `${3 * stepMultiplier}x^2`)
+      .replace(/\b- 3x\^2\b/g, `- ${3 * stepMultiplier}x^2`)
+      .replace(/\b\+ 2\b/g, `+ ${2 + stepOffset}`)
+      .replace(/\b- 2\b/g, `- ${2 + stepOffset}`)
+      .replace(/\b\+ 1\b/g, `+ ${1 + stepOffset}`)
+      .replace(/\b- 1\b/g, `- ${1 + stepOffset}`)
+      .replace(/\b\(0;\s*2\)/g, `(0; ${2 * stepMultiplier})`)
+      .replace(/\b\(2;\s*\+\\infty\)/g, `(${2 * stepMultiplier}; +\\infty)`);
   }
 
-  // Fallback nếu chưa match được quy tắc cụ thể: biến đổi số nhẹ
+  // Fallback nếu chưa match được quy tắc cụ thể: biến đổi các hằng số tự nhiên theo bậc biến thể
   if (transformed === text) {
     transformed = transformed.replace(/(\b\d+\b)/g, (match) => {
       const val = parseInt(match, 10);
-      if (val >= 1 && val <= 30 && val !== 12 && val !== 2018 && val !== 2025 && val !== 2026) {
-        primaryFactor = (val + 2) / val;
-        return String(val + 2);
+      if (
+        val >= 1 &&
+        val <= 50 &&
+        val !== 10 &&
+        val !== 11 &&
+        val !== 12 &&
+        val !== 2018 &&
+        val !== 2025 &&
+        val !== 2026
+      ) {
+        const nextVal = val + stepOffset;
+        primaryFactor = nextVal / val;
+        return String(nextVal);
       }
       return match;
     });
@@ -94,10 +123,21 @@ function transformScienceText(text: string): { result: string; primaryFactor: nu
 }
 
 /** Biến đổi văn bản ngữ văn / xã hội theo ngữ cảnh */
-function transformHumanitiesText(text: string): string {
+function transformHumanitiesText(text: string, variantStep: number = 1): string {
   let transformed = text;
   for (const [pattern, replacement] of CONTEXT_RULES) {
     transformed = transformed.replace(pattern, replacement);
+  }
+  if (variantStep === 2) {
+    transformed = transformed
+      .replace(/Michael/g, 'David')
+      .replace(/Emily/g, 'Sophia')
+      .replace(/at the library/gi, 'in the science lab');
+  } else if (variantStep === 3) {
+    transformed = transformed
+      .replace(/Michael/g, 'Robert')
+      .replace(/Emily/g, 'Olivia')
+      .replace(/at the library/gi, 'at the study center');
   }
   return transformed;
 }
@@ -138,13 +178,85 @@ function shuffleChoices(
 }
 
 /**
+ * Trích xuất gợi ý tư duy (Socratic Hint) từ lời giải gốc mà KHÔNG tiết lộ đáp án cuối cùng
+ */
+export function buildVariantSocraticHint(
+  original: ExamQuestion,
+  variantStep: number = 1
+): string {
+  const rawExp = (original.explanation || '').trim();
+  // Loại bỏ các câu chốt đáp án trực tiếp như "Chọn đáp án A", "Vậy chọn B", "Đáp án đúng là..."
+  const cleanedLines = rawExp
+    .split('\n')
+    .map((line) =>
+      line
+        .replace(/(?:Vậy\s*)?(?:chọn|đáp án(?:\s*đúng)?(?:\s*là)?)\s*(?:phương án\s*)?[A-D]\.?/gi, '')
+        .trim()
+    )
+    .filter(Boolean);
+
+  // Chỉ lấy phần công thức / bước đầu tiên để gợi mở
+  const coreMethodHint =
+    cleanedLines.length > 1
+      ? cleanedLines.slice(0, Math.max(1, cleanedLines.length - 1)).join('\n')
+      : cleanedLines[0]
+      ? cleanedLines[0].slice(0, Math.max(80, Math.floor(cleanedLines[0].length * 0.65))) + '...'
+      : 'Áp dụng công thức trọng tâm của chuyên đề và kiểm tra kỹ điều kiện xác định.';
+
+  const trapNote = original.trapTag
+    ? `\n• **Lưu ý tránh bẫy sai lầm:** ${original.trapTag}`
+    : '';
+
+  return (
+    `• **Phương pháp & Công thức cốt lõi:** ${coreMethodHint}` +
+    trapNote +
+    `\n• **Gợi ý thực hành (Câu ${variantStep}/3):** Hãy thay bộ số liệu mới của câu này vào bước biến đổi trên để tự tìm ra kết quả nhé!`
+  );
+}
+
+/**
+ * Sinh duy nhất 1 Gợi ý phương pháp giải chung cho cả 3 lần làm lại (vì 3 câu chung 1 dạng bài)
+ * Không tiết lộ đáp án cuối cùng
+ */
+export function buildSharedPatternHint(original: ExamQuestion): string {
+  const rawExp = (original.explanation || '').trim();
+  const cleanedLines = rawExp
+    .split('\n')
+    .map((line) =>
+      line
+        .replace(/(?:Vậy\s*)?(?:chọn|đáp án(?:\s*đúng)?(?:\s*là)?)\s*(?:phương án\s*)?[A-D]\.?/gi, '')
+        .trim()
+    )
+    .filter(Boolean);
+
+  const coreMethodHint =
+    cleanedLines.length > 1
+      ? cleanedLines.slice(0, Math.max(1, cleanedLines.length - 1)).join('\n')
+      : cleanedLines[0]
+      ? cleanedLines[0].slice(0, Math.max(80, Math.floor(cleanedLines[0].length * 0.65))) + '...'
+      : 'Xác định điều kiện xác định và áp dụng công thức trọng tâm của chuyên đề để biến đổi về dạng chuẩn.';
+
+  const trapNote = original.trapTag
+    ? `\n• **Lưu ý tránh bẫy sai lầm chung của dạng này:** ${original.trapTag}`
+    : '';
+
+  return (
+    `• **Quy luật & Phương pháp giải chung (áp dụng cho cả 3 lần làm):** ${coreMethodHint}` +
+    trapNote +
+    `\n• **Cách rèn phản xạ:** Cả 3 lần làm bên dưới đều giữ nguyên cấu trúc logic này (chỉ đổi bộ số liệu). Bạn hãy dùng chung phương pháp trên để tự giải từng lần nhé!`
+  );
+}
+
+/**
  * Sinh câu hỏi biến thể cho 1 câu hỏi cụ thể đã làm sai
  * Đảm bảo 100% tính toán chính xác đáp án và lời giải tương ứng
  */
 export function generateQuestionVariant(original: ExamQuestion, indexInExam: number = 1): ExamQuestion {
   const isScience = isScienceSubject(original.subjectSlug);
   const textTransformer = (text: string) => {
-    return isScience ? transformScienceText(text).result : transformHumanitiesText(text);
+    return isScience
+      ? transformScienceText(text, indexInExam).result
+      : transformHumanitiesText(text, indexInExam);
   };
 
   const newTitle = `[Biến Thể Khắc Phục ${indexInExam}] ${original.title.replace(/^\[Biến Thể Khắc Phục\s*\d*\]\s*/, '')}`;
@@ -182,7 +294,9 @@ export function generateQuestionVariant(original: ExamQuestion, indexInExam: num
   if (newShortAnswer) {
     const num = parseFloat(newShortAnswer);
     if (!isNaN(num)) {
-      const { primaryFactor } = isScience ? transformScienceText(original.content) : { primaryFactor: 1.5 };
+      const { primaryFactor } = isScience
+        ? transformScienceText(original.content, indexInExam)
+        : { primaryFactor: 1.5 };
       const calculatedVal = Math.round(num * primaryFactor * 100) / 100;
       newShortAnswer = String(calculatedVal);
     } else {
@@ -192,15 +306,13 @@ export function generateQuestionVariant(original: ExamQuestion, indexInExam: num
 
   // 4. Biến đổi và sinh lời giải chi tiết từng bước
   const stepByStepExplanation = isScience
-    ? `💡 Lời giải chi tiết cho câu biến thể:\n` +
-      `• Bước 1: Phân tích số liệu mới từ đề bài: Áp dụng cùng dạng phương trình/định luật của bài toán gốc.\n` +
-      `• Bước 2: Biến đổi toán học & thay số liệu mới đã được chuẩn hóa.\n` +
-      `• Bước 3: Tính toán và kiểm tra điều kiện nghiệm: Kết quả chính xác tương ứng phương án ${newCorrectChoice || newShortAnswer}.\n\n` +
-      `📌 Ghi chú khắc phục: Bạn đã hiểu đúng phương pháp của dạng bài này, hãy ghi nhớ các bước suy luận trên số liệu mới!`
-    : `💡 Lời giải phân tích câu biến thể:\n` +
+    ? `💡 Lời giải chi tiết cho câu biến thể ${indexInExam}:\n` +
+      `• Bước 1 (Phương pháp gốc): ${textTransformer(original.explanation || '')}\n` +
+      `• Bước 2 (Thay số liệu biến thể ${indexInExam}): Tính toán và đối chiếu điều kiện xác định.\n` +
+      `• Bước 3 (Kết luận): Đáp án chính xác ứng với bộ số liệu mới là phương án ${newCorrectChoice || newShortAnswer}.`
+    : `💡 Lời giải phân tích câu biến thể ${indexInExam}:\n` +
       `• Phân tích ngữ cảnh mới: ${textTransformer(original.explanation)}\n` +
-      `• Đáp án chính xác được xác định là phương án ${newCorrectChoice || newShortAnswer}.\n\n` +
-      `📌 Ghi chú sư phạm: Câu hỏi kiểm tra khả năng vận dụng quy tắc và từ vựng trong ngữ cảnh tương đương.`;
+      `• Đáp án chính xác được xác định là phương án ${newCorrectChoice || newShortAnswer}.`;
 
   return {
     ...original,
@@ -214,6 +326,33 @@ export function generateQuestionVariant(original: ExamQuestion, indexInExam: num
     explanation: stepByStepExplanation,
     topic: original.topic ? `${original.topic} (Khắc phục)` : 'Khắc phục lỗi sai',
   };
+}
+
+export interface QuickDrillQuestion extends ExamQuestion {
+  socraticHint: string;
+  variantStep: number;
+}
+
+/**
+ * Sinh nhanh bộ 3 câu hỏi y chang dạng của câu học sinh vừa chọn để luyện lại tức thì trong Popup Full-screen,
+ * đi kèm gợi ý hướng giải (Socratic Hint) cho từng câu.
+ */
+export function generateThreeSameTypeQuestions(original: ExamQuestion): QuickDrillQuestion[] {
+  const cleanBaseTitle = original.title
+    .replace(/^Câu\s*\d+\s*[:.-]?\s*/i, '')
+    .replace(/^\[Biến Thể Khắc Phục\s*\d*\]\s*/i, '')
+    .trim();
+
+  return [1, 2, 3].map((step) => {
+    const variant = generateQuestionVariant(original, step);
+    return {
+      ...variant,
+      id: `${original.id}_quick3_${step}_${Date.now()}`,
+      title: `Câu ${step}/3 — Cùng dạng: ${cleanBaseTitle || original.topicTag || 'Luyện phản xạ'}`,
+      socraticHint: buildVariantSocraticHint(original, step),
+      variantStep: step,
+    };
+  });
 }
 
 /**

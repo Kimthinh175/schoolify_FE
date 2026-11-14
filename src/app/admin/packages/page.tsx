@@ -1,7 +1,21 @@
 'use client';
 
 import * as React from 'react';
-import { Plus, Edit, Trash2, RefreshCw } from 'lucide-react';
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  RefreshCw,
+  Package,
+  CheckCircle2,
+  Sparkles,
+  Zap,
+  Eye,
+  EyeOff,
+  Check,
+  X,
+  CreditCard,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -10,6 +24,7 @@ import { Dialog } from '@/components/ui/dialog';
 import { catalogService } from '@/services/catalog.service';
 import { SubscriptionPackage } from '@/types';
 import { toast } from 'sonner';
+import { TiaSangIcon, NgocIcon } from '@/components/ui/point-icons';
 
 export default function AdminPackagesPage() {
   const [packages, setPackages] = React.useState<SubscriptionPackage[]>([]);
@@ -17,12 +32,13 @@ export default function AdminPackagesPage() {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [editingPkg, setEditingPkg] = React.useState<SubscriptionPackage | null>(null);
 
+  // Form states
   const [name, setName] = React.useState('');
   const [description, setDescription] = React.useState('');
-  const [price, setPrice] = React.useState('');
-  const [maxStudents, setMaxStudents] = React.useState('500');
-  const [maxTeachers, setMaxTeachers] = React.useState('10');
-  const [storageGb, setStorageGb] = React.useState('50');
+  const [price, setPrice] = React.useState('50000');
+  const [billingCycle, setBillingCycle] = React.useState<'MONTHLY' | 'YEARLY'>('MONTHLY');
+  const [featuresText, setFeaturesText] = React.useState('');
+  const [isActive, setIsActive] = React.useState(true);
 
   const loadPackages = React.useCallback(async () => {
     setIsLoading(true);
@@ -40,17 +56,19 @@ export default function AdminPackagesPage() {
     loadPackages();
   }, [loadPackages]);
 
-  const formatMoney = (amount: number) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  const formatVND = (amount: number) =>
+    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(amount);
 
   const openCreateModal = () => {
     setEditingPkg(null);
     setName('');
     setDescription('');
-    setPrice('199000');
-    setMaxStudents('500');
-    setMaxTeachers('10');
-    setStorageGb('50');
+    setPrice('50000');
+    setBillingCycle('MONTHLY');
+    setFeaturesText(
+      '+5 Điểm Xịn (💎) mỗi ngày\n+9 Điểm Free (✨) mỗi ngày\nĐủ làm 6 đề Cơ bản hoặc 4 đề Trung bình\nĐổi quà hấp dẫn trong Store'
+    );
+    setIsActive(true);
     setIsModalOpen(true);
   };
 
@@ -59,87 +77,57 @@ export default function AdminPackagesPage() {
     setName(pkg.name || '');
     setDescription(pkg.description || '');
     setPrice(String(pkg.price ?? 0));
-    setMaxStudents(String(pkg.max_students_total ?? 500));
-    setMaxTeachers(String(pkg.max_teachers ?? 10));
-    setStorageGb(String(pkg.storage_limit_gb ?? 50));
+    setBillingCycle((pkg.billing_cycle as any) || 'MONTHLY');
+    setFeaturesText(
+      Array.isArray(pkg.features)
+        ? pkg.features.join('\n')
+        : typeof pkg.features === 'string'
+        ? pkg.features
+        : ''
+    );
+    setIsActive(pkg.is_active ?? true);
     setIsModalOpen(true);
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim()) {
+      toast.error('Vui lòng nhập tên gói đăng ký!');
+      return;
+    }
+
+    const featureList = featuresText
+      .split('\n')
+      .map((f) => f.trim())
+      .filter(Boolean);
+
+    const payload: Partial<SubscriptionPackage> = {
+      name: name.trim(),
+      description: description.trim(),
+      price: Math.max(0, Number(price) || 0),
+      billing_cycle: billingCycle,
+      is_active: isActive,
+      features: featureList,
+    };
 
     if (editingPkg) {
-      const updated = await catalogService.updatePackage(editingPkg.id, {
-        name: name.trim(),
-        description: description.trim() || editingPkg.description,
-        price: Number(price) || 0,
-        max_students_total: Number(maxStudents) || 500,
-        max_teachers: Number(maxTeachers) || 10,
-        storage_limit_gb: Number(storageGb) || 50,
-      });
+      const updated = await catalogService.updatePackage(editingPkg.id, payload);
       if (updated) {
         setPackages((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
-        toast.success('Đã cập nhật gói đăng ký trên PostgreSQL!');
+        toast.success(`Đã cập nhật gói "${name}" thành công!`);
       } else {
         setPackages((prev) =>
-          prev.map((p) =>
-            p.id === editingPkg.id
-              ? {
-                  ...p,
-                  name: name.trim(),
-                  description: description.trim(),
-                  price: Number(price) || 0,
-                  max_students_total: Number(maxStudents) || 500,
-                  max_teachers: Number(maxTeachers) || 10,
-                  storage_limit_gb: Number(storageGb) || 50,
-                }
-              : p
-          )
+          prev.map((p) => (p.id === editingPkg.id ? { ...p, ...payload } : p))
         );
-        toast.success('Đã cập nhật gói đăng ký!');
+        toast.success(`Đã cập nhật gói "${name}"!`);
       }
     } else {
-      const created = await catalogService.createPackage({
-        name: name.trim(),
-        description:
-          description.trim() ||
-          'Gói đăng ký bản quyền dịch vụ luyện thi & quản lý học tập trên nền tảng Schoolify.',
-        price: Number(price) || 0,
-        billing_cycle: 'MONTHLY',
-        max_teachers: Number(maxTeachers) || 10,
-        max_students_total: Number(maxStudents) || 500,
-        max_classes: 20,
-        max_students_per_class: 40,
-        storage_limit_gb: Number(storageGb) || 50,
-        can_sell_courses: true,
-        is_active: true,
-        features: ['Quản lý toàn diện', 'Luyện đề chuẩn GDPT 2018', 'Hỗ trợ 24/7'],
-      });
-
+      const created = await catalogService.createPackage(payload);
       if (created) {
         setPackages((prev) => [...prev, created]);
-        toast.success('Đã tạo gói đăng ký mới trong PostgreSQL!');
+        toast.success(`Đã thêm gói mới "${name}" thành công!`);
       } else {
-        const fallbackPkg: SubscriptionPackage = {
-          id: `pkg-${Date.now()}`,
-          name: name.trim(),
-          description: description.trim(),
-          price: Number(price) || 0,
-          billing_cycle: 'MONTHLY',
-          max_teachers: Number(maxTeachers) || 10,
-          max_students_total: Number(maxStudents) || 500,
-          max_classes: 20,
-          max_students_per_class: 40,
-          storage_limit_gb: Number(storageGb) || 50,
-          can_sell_courses: true,
-          is_active: true,
-          features: ['Quản lý toàn diện', 'Hỗ trợ 24/7'],
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        setPackages((prev) => [...prev, fallbackPkg]);
-        toast.success('Đã thêm gói đăng ký mới!');
+        toast.error('Không thể tạo gói mới. Vui lòng thử lại.');
       }
     }
 
@@ -161,169 +149,400 @@ export default function AdminPackagesPage() {
   };
 
   const handleDelete = async (pkg: SubscriptionPackage) => {
+    if (!confirm(`Bạn có chắc chắn muốn xóa gói "${pkg.name}" khỏi cơ sở dữ liệu?`)) return;
     const ok = await catalogService.deletePackage(pkg.id);
-    setPackages((prev) => prev.filter((p) => p.id !== pkg.id));
     if (ok) {
-      toast.success(`Đã xóa gói "${pkg.name}" khỏi PostgreSQL!`);
+      setPackages((prev) => prev.filter((p) => p.id !== pkg.id));
+      toast.success(`Đã xóa gói "${pkg.name}" thành công!`);
     } else {
-      toast.success(`Đã xóa gói "${pkg.name}"!`);
+      toast.error('Không thể xóa gói đăng ký.');
     }
   };
 
+
+  const getPackageMeta = (pkg: SubscriptionPackage) => {
+    const nameLower = String(pkg.name || '').toLowerCase();
+    const price = Number(pkg.price || 0);
+
+    if (price === 0) {
+      return {
+        tier: 'FREE',
+        badge: 'Khởi đầu miễn phí',
+        badgeClass: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700',
+        cardClass: 'border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700',
+        sparks: '9 Tia Sáng/ngày',
+        sparksSub: 'Luyện 3 đề thi cơ bản mỗi ngày',
+        gems: null,
+        extraTag: null,
+      };
+    }
+
+    if (nameLower.includes('vip') || nameLower.includes('thủ khoa')) {
+      return {
+        tier: 'VIP',
+        badge: 'Đặc quyền cao cấp',
+        badgeClass: 'bg-[#00B8DD]/10 text-[#00B8DD] border border-[#00B8DD]/20',
+        cardClass: 'border-2 border-[#00B8DD] bg-white dark:bg-slate-900 shadow-xs hover:border-[#009BBD]',
+        sparks: '29 Tia Sáng/ngày',
+        sparksSub: 'Luyện đề không giới hạn & hướng dẫn giải chi tiết',
+        gems: '+10 Ngọc/ngày',
+        extraTag: 'AI Gia Sư -50%',
+      };
+    }
+
+    return {
+      tier: 'PRO',
+      badge: 'Mục tiêu 8+ • Bán chạy',
+      badgeClass: 'bg-[#00B8DD]/10 text-[#00B8DD] border border-[#00B8DD]/20',
+      cardClass: 'border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700',
+      sparks: '18 Tia Sáng/ngày',
+      sparksSub: 'Gấp đôi lượt luyện đề & tích lũy đổi quà',
+      gems: '+5 Ngọc/ngày',
+      extraTag: null,
+    };
+  };
+
+  const activeCount = packages.filter((p) => p.is_active).length;
+  const freeCount = packages.filter((p) => Number(p.price) === 0).length;
+  const paidCount = packages.filter((p) => Number(p.price) > 0).length;
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-6 pb-12 max-w-7xl mx-auto font-sans text-slate-900 dark:text-slate-100">
+      {/* 1. Header & Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80 dark:border-slate-800">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Gói Đăng Ký</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Quản lý và thiết lập các gói đăng ký dịch vụ đồng bộ trực tiếp với PostgreSQL
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+              Quản Lý Gói Dịch Vụ SaaS
+            </h1>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
+              {packages.length} gói cước
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Thiết lập các gói luyện thi (Free, Bứt Phá, Thủ Khoa VIP), quyền lợi làm bài và bảng giá.
           </p>
         </div>
+
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={loadPackages}
             disabled={isLoading}
-            leftIcon={<RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />}
+            className="h-8 px-3 text-xs font-semibold border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
           >
+            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${isLoading ? 'animate-spin' : ''}`} />
             Làm mới
           </Button>
-          <Button onClick={openCreateModal} leftIcon={<Plus className="w-4 h-4" />}>
-            Tạo Gói Đăng Ký Mới
+          <Button
+            size="sm"
+            onClick={openCreateModal}
+            className="h-8 px-3 text-xs font-semibold bg-[#00B8DD] hover:bg-[#009BBD] text-white shadow-xs cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5 mr-1" />
+            Tạo gói mới
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {packages.map((pkg) => (
-          <Card key={pkg.id} className="p-6 flex flex-col justify-between space-y-4">
-            <div>
-              <div className="flex items-center justify-between">
-                <Badge variant="primary" className="text-xs">
-                  {pkg.billing_cycle}
-                </Badge>
-                <button
-                  type="button"
-                  onClick={() => handleToggleActive(pkg)}
-                  className="cursor-pointer"
-                  title="Bấm để bật/tắt trạng thái mở bán"
-                >
-                  <Badge variant={pkg.is_active ? 'success' : 'secondary'}>
-                    {pkg.is_active ? 'ĐANG BÁN' : 'TẠM ẨN'}
-                  </Badge>
-                </button>
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-2">{pkg.name}</h3>
-              <p className="text-xs text-slate-500 mt-1 line-clamp-2">{pkg.description}</p>
-              <div className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-4">
-                {formatMoney(Number(pkg.price || 0))}{' '}
-                <span className="text-xs text-slate-400 font-normal">
-                  /{pkg.billing_cycle === 'YEARLY' ? 'năm' : 'tháng'}
-                </span>
-              </div>
-            </div>
+      {/* 2. Thẻ KPI Tóm Tắt */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs">
+          <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Đang Mở Bán Trực Tuyến</div>
+          <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+            {activeCount} <span className="text-xs font-normal text-slate-400">/ {packages.length} gói</span>
+          </div>
+          <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
+            <CheckCircle2 className="w-3.5 h-3.5" /> Hiển thị công khai trên trang Bảng giá
+          </p>
+        </Card>
 
-            <div className="space-y-1.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs">
-              <div className="flex justify-between">
-                <span className="text-slate-500">Giới hạn học sinh:</span>
-                <span className="font-bold text-slate-900 dark:text-white">
-                  {pkg.max_students_total} em
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Giáo viên:</span>
-                <span className="font-bold text-slate-900 dark:text-white">{pkg.max_teachers}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Cloud Storage:</span>
-                <span className="font-bold text-slate-900 dark:text-white">
-                  {pkg.storage_limit_gb} GB
-                </span>
-              </div>
-            </div>
+        <Card className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs">
+          <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Gói Trả Phí (PRO / VIP)</div>
+          <div className="text-2xl font-bold text-[#00B8DD] mt-1">{paidCount} gói</div>
+          <p className="text-[11px] text-slate-400 mt-1">
+            Tích hợp thanh toán tự động qua VietQR & PayOS
+          </p>
+        </Card>
 
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 justify-center"
-                onClick={() => openEditModal(pkg)}
-                leftIcon={<Edit className="w-3.5 h-3.5" />}
-              >
-                Chỉnh Sửa Gói
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                onClick={() => handleDelete(pkg)}
-                title="Xóa gói"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
-          </Card>
-        ))}
+        <Card className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs">
+          <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Gói Mặc Định Miễn Phí</div>
+          <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{freeCount} gói</div>
+          <p className="text-[11px] text-slate-400 mt-1">
+            Tự động cấp 9 Tia Sáng ✨ mỗi ngày cho học sinh mới
+          </p>
+        </Card>
       </div>
 
+      {/* 3. Lưới Các Gói Dịch Vụ - Thiết Kế Nổi Bật Phân Cấp */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2 items-stretch">
+        {packages.map((pkg) => {
+          const isFree = Number(pkg.price) === 0;
+          const meta = getPackageMeta(pkg);
+          const isVip = meta.tier === 'VIP';
+          const features: string[] = Array.isArray(pkg.features)
+            ? pkg.features
+            : typeof pkg.features === 'string'
+            ? [pkg.features]
+            : [];
+
+          return (
+            <div
+              key={pkg.id}
+              className={`rounded-3xl p-6 sm:p-7 flex flex-col justify-between transition-all duration-200 relative ${meta.cardClass} ${
+                !pkg.is_active ? 'opacity-60 grayscale-[0.3]' : ''
+              }`}
+            >
+              {/* Top Banner cho gói VIP */}
+              {isVip && (
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#00B8DD] text-white text-[11px] font-bold px-3.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-xs whitespace-nowrap">
+                  <Sparkles className="w-3.5 h-3.5 fill-white" />
+                  <span>Gói Khuyên Dùng • Thủ Khoa 9+</span>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                {/* Header card: Tag phân loại & Nút trạng thái */}
+                <div className="flex items-center justify-between pt-1">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${meta.badgeClass}`}>
+                    {meta.badge}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => handleToggleActive(pkg)}
+                    className="cursor-pointer transition-transform active:scale-95"
+                    title="Bấm để bật/tắt hiển thị gói"
+                  >
+                    <span
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 hover:border-slate-300 transition-colors"
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${pkg.is_active ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                      {pkg.is_active ? 'Đang mở bán' : 'Tạm dừng'}
+                    </span>
+                  </button>
+                </div>
+
+                {/* Tên gói & Mô tả */}
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                    {pkg.name}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 min-h-[32px]">
+                    {pkg.description || 'Gói dịch vụ luyện thi chuẩn hóa GDPT 2018 trên Schoolify.'}
+                  </p>
+                </div>
+
+                {/* Giá tiền nổi bật */}
+                <div className="pt-2 pb-1 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className={`text-3xl sm:text-4xl font-extrabold tracking-tight ${
+                      isVip ? 'text-[#00B8DD]' : 'text-slate-900 dark:text-white'
+                    }`}>
+                      {isFree ? 'Miễn phí' : formatVND(Number(pkg.price || 0))}
+                    </span>
+                    {!isFree && (
+                      <span className="text-xs text-slate-400 font-medium">
+                        /{pkg.billing_cycle === 'YEARLY' ? 'năm' : 'tháng'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* KHUNG QUYỀN LỢI CỐT LÕI (HIGHLIGHT BOX) */}
+                <div className="p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/50 space-y-1">
+                  <div className="flex items-center gap-2 font-bold text-xs text-slate-900 dark:text-white flex-wrap">
+                    <span className="inline-flex items-center gap-1 text-slate-800 dark:text-slate-200">
+                      <TiaSangIcon className="w-3.5 h-3.5" flat />
+                      {meta.sparks}
+                    </span>
+                    {meta.gems && (
+                      <>
+                        <span className="text-slate-300 dark:text-slate-600">•</span>
+                        <span className="inline-flex items-center gap-1 text-[#00B8DD]">
+                          <NgocIcon className="w-3.5 h-3.5" flat />
+                          {meta.gems}
+                        </span>
+                      </>
+                    )}
+                    {meta.extraTag && (
+                      <>
+                        <span className="text-slate-300 dark:text-slate-600">•</span>
+                        <span className="text-[10px] bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-1.5 py-0.2 rounded font-semibold">
+                          {meta.extraTag}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                    {meta.sparksSub}
+                  </p>
+                </div>
+
+                {/* Danh sách quyền lợi chi tiết - ĐỒNG BỘ CHECKMARK #00B8DD TOÀN BỘ CÁC GÓI */}
+                <div className="space-y-2 pt-1">
+                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    Toàn bộ quyền lợi:
+                  </div>
+                  {features.length > 0 ? (
+                    <ul className="space-y-2 text-xs">
+                      {features.map((feat, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-slate-700 dark:text-slate-300">
+                          <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-[#00B8DD]" />
+                          <span className="leading-snug">{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-xs text-slate-400 italic">Chưa có quyền lợi cụ thể</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Action buttons chân thẻ */}
+              <div className="pt-5 mt-6 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openEditModal(pkg)}
+                  className="flex-1 h-9 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  <Edit2 className="w-3.5 h-3.5 mr-1.5 text-slate-400" /> Sửa thông tin
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDelete(pkg)}
+                  className="h-9 px-2.5 text-xs text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl cursor-pointer transition-colors"
+                  title="Xóa gói"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* 4. Modal Tạo / Sửa Gói Dịch Vụ */}
       <Dialog
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingPkg ? 'Chỉnh Sửa Gói Đăng Ký' : 'Tạo Gói Bản Quyền SaaS Mới'}
-        description="Cấu hình mức giá và các giới hạn Quotas lưu trực tiếp vào PostgreSQL."
+        maxWidth="lg"
+        title={editingPkg ? 'Chỉnh Sửa Gói Dịch Vụ' : 'Tạo Gói Dịch Vụ Mới'}
+        description="Cập nhật thông tin gói cước và quyền lợi ôn thi."
       >
-        <form onSubmit={handleSave} className="space-y-4 py-2">
-          <Input
-            label="Tên gói cước *"
-            placeholder="VD: Gói Luyện Thi Chuyên Sâu Pro"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-          <Input
-            label="Mô tả ngắn"
-            placeholder="Mô tả quyền lợi nổi bật của gói..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-          <Input
-            label="Giá tiền (VNĐ) *"
-            type="number"
-            placeholder="199000"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            required
-          />
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <Input
-              label="Tối đa học sinh"
-              type="number"
-              value={maxStudents}
-              onChange={(e) => setMaxStudents(e.target.value)}
-            />
-            <Input
-              label="Tối đa giáo viên"
-              type="number"
-              value={maxTeachers}
-              onChange={(e) => setMaxTeachers(e.target.value)}
-            />
-            <Input
-              label="Cloud Storage (GB)"
-              type="number"
-              value={storageGb}
-              onChange={(e) => setStorageGb(e.target.value)}
-            />
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="ghost" type="button" onClick={() => setIsModalOpen(false)}>
-              Hủy
-            </Button>
-            <Button type="submit" variant="primary">
-              {editingPkg ? 'Lưu Cập Nhật' : 'Lưu Gói Cước'}
-            </Button>
-          </div>
-        </form>
+        <form onSubmit={handleSave} className="space-y-4 text-xs pt-1">
+            {/* Tên gói */}
+            <div>
+              <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                Tên Gói Dịch Vụ *
+              </label>
+              <Input
+                required
+                placeholder="Ví dụ: Gói Bứt Phá (50k), Gói Thủ Khoa VIP..."
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="h-9 text-xs"
+              />
+            </div>
+
+            {/* Giá tiền & Chu kỳ */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  Giá Tiền (VNĐ) *
+                </label>
+                <Input
+                  required
+                  type="number"
+                  min="0"
+                  step="1000"
+                  placeholder="50000"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  className="h-9 text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  Chu Kỳ Tính Phí
+                </label>
+                <select
+                  value={billingCycle}
+                  onChange={(e) => setBillingCycle(e.target.value as any)}
+                  className="w-full h-9 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 font-medium focus:outline-none focus:border-[#00B8DD]"
+                >
+                  <option value="MONTHLY">Hàng tháng (Monthly)</option>
+                  <option value="YEARLY">Hàng năm (Yearly)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Mô tả ngắn */}
+            <div>
+              <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                Mô Tả Ngắn
+              </label>
+              <textarea
+                rows={2}
+                placeholder="Ví dụ: +5 Điểm Xịn mỗi ngày, +9 Điểm Free để tạo & luyện đề thả ga..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-[#00B8DD]"
+              />
+            </div>
+
+            {/* Danh sách tính năng */}
+            <div>
+              <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                Danh Sách Quyền Lợi & Hạn Mức (Mỗi dòng một quyền lợi)
+              </label>
+              <textarea
+                rows={4}
+                placeholder={`+5 Điểm Xịn (💎) mỗi ngày\n+9 Điểm Free (✨) mỗi ngày\nLuyện đề không giới hạn`}
+                value={featuresText}
+                onChange={(e) => setFeaturesText(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-mono text-slate-700 dark:text-slate-200 focus:outline-none focus:border-[#00B8DD]"
+              />
+            </div>
+
+            {/* Trạng thái mở bán */}
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                type="checkbox"
+                id="is-active"
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+                className="w-4 h-4 rounded text-[#00B8DD] border-slate-300 focus:ring-[#00B8DD]"
+              />
+              <label htmlFor="is-active" className="text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">
+                Kích hoạt mở bán ngay trên Cổng Thanh Toán & Trang Bảng Giá
+              </label>
+            </div>
+
+            {/* Actions */}
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsModalOpen(false)}
+                className="h-8 text-xs font-semibold"
+              >
+                Hủy bỏ
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                className="h-8 text-xs font-semibold bg-[#00B8DD] hover:bg-[#009BBD] text-white"
+              >
+                Lưu thay đổi
+              </Button>
+            </div>
+          </form>
       </Dialog>
     </div>
   );

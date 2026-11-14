@@ -73,6 +73,11 @@ export function notifyExamPointsUpdated(points?: number, diamonds?: number) {
       window.localStorage.setItem('schoolify_user_tokens', String(points));
     } catch {}
   }
+  if (typeof diamonds === 'number') {
+    try {
+      window.localStorage.setItem('schoolify_user_diamonds', String(diamonds));
+    } catch {}
+  }
   window.dispatchEvent(new CustomEvent('tokens-updated', { detail: { points, diamonds } }));
 }
 
@@ -154,9 +159,14 @@ export const examPointsService = {
       });
       const json = await res.json();
       if (json?.success && json?.data) {
-        if (typeof window !== 'undefined' && typeof json.data.currentPoints === 'number') {
+        if (typeof window !== 'undefined') {
           try {
-            window.localStorage.setItem('schoolify_user_tokens', String(json.data.currentPoints));
+            if (typeof json.data.currentPoints === 'number') {
+              window.localStorage.setItem('schoolify_user_tokens', String(json.data.currentPoints));
+            }
+            if (typeof json.data.diamonds === 'number') {
+              window.localStorage.setItem('schoolify_user_diamonds', String(json.data.diamonds));
+            }
           } catch {}
         }
         return json.data as ExamPointsBalanceResponse;

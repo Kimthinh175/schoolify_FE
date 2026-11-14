@@ -47,16 +47,20 @@ import {
 import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
 import { NgocIcon } from '@/components/ui/point-icons';
+import { getGuestOnboarding, parseHighSchoolGrade } from '@/lib/semester-utils';
+import { buildTopicRoadmapHref } from '@/lib/topic-route-utils';
 
 interface LevelSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
   subject: K12Subject | null;
   isLoggedIn?: boolean;
+  initialMode?: 'TOPIC' | 'MOCK_EXAM';
 }
 
 type WizardStep =
   | 'MODE'
+  | 'CHAPTER_PATH'
   | 'LEVEL'
   | 'GRADE'
   | 'CHAPTER'
@@ -68,11 +72,7 @@ type WizardStep =
 
 const TOPIC_WIZARD_STEPS: { step: WizardStep; number: number; label: string }[] = [
   { step: 'MODE', number: 1, label: 'Chế độ' },
-  { step: 'LEVEL', number: 2, label: 'Cấp độ' },
-  { step: 'GRADE', number: 3, label: 'Khối lớp' },
-  { step: 'CHAPTER', number: 4, label: 'Chương học' },
-  { step: 'FORMAT', number: 5, label: 'Hình thức' },
-  { step: 'DURATION', number: 6, label: 'Thời gian' },
+  { step: 'CHAPTER_PATH', number: 2, label: 'Lộ trình chương' },
 ];
 
 const MOCK_WIZARD_STEPS: { step: WizardStep; number: number; label: string }[] = [
@@ -268,10 +268,17 @@ export function LevelSelectionModal({
   onClose,
   subject,
   isLoggedIn = false,
+  initialMode,
 }: LevelSelectionModalProps) {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
-  const effectiveIsLoggedIn = isLoggedIn || isAuthenticated;
+  const { user, isAuthenticated, currentRole } = useAuthStore();
+  const effectiveIsLoggedIn = Boolean((isLoggedIn || isAuthenticated) && user?.id);
+  const isAdmin =
+    (currentRole as string) === 'ADMIN' ||
+    currentRole === 'SUPER_ADMIN' ||
+    (user?.role as string) === 'ADMIN' ||
+    user?.role === 'SUPER_ADMIN';
+  const [isVerifyingStart, setIsVerifyingStart] = React.useState(false);
 
   // Wizard Steps
   const [currentStep, setCurrentStep] = React.useState<WizardStep>('MODE');
@@ -280,6 +287,7 @@ export function LevelSelectionModal({
 
   // Selected State
   const [selectedPracticeMode, setSelectedPracticeMode] = React.useState<'TOPIC' | 'MOCK_EXAM'>('TOPIC');
+  const [activeModeTooltip, setActiveModeTooltip] = React.useState<'TOPIC' | 'MOCK_EXAM' | null>(null);
   const [selectedLevel, setSelectedLevel] = React.useState<LevelDetail>(CORE_PRACTICE_LEVELS[0]);
   const [selectedMockMilestone, setSelectedMockMilestone] = React.useState<MockMilestone>(MOCK_MILESTONES[0]);
   const [selectedGrade, setSelectedGrade] = React.useState<number>(12);
@@ -339,8 +347,8 @@ export function LevelSelectionModal({
     syncPoints();
 
     // Luôn đồng bộ số dư điểm thực tế mới nhất từ Backend khi mở Modal
-    if (isOpen) {
-      examPointsService.getBalance(user?.id).then((res) => {
+    if (isOpen && user?.id) {
+      examPointsService.getBalance(user.id).then((res) => {
         if (res && typeof res.currentPoints === 'number') {
           setCurrentPoints(res.currentPoints);
           notifyExamPointsUpdated(res.currentPoints);
@@ -357,7 +365,26 @@ export function LevelSelectionModal({
   }, [user?.id, isOpen]);
 
   const checkAndGatePoints = React.useCallback(
-    (rawLevel: string, customLabel?: string): boolean => {
+    (rawLevel: string, customLabel?: string, targetUrl?: string): boolean => {
+      // 1. Chưa đăng nhập -> Cho phép Khách làm thử miễn phí 1 đề CƠ BẢN sau khi điền Tên + Lớp
+      if (!effectiveIsLoggedIn) {
+        const guest = getGuestOnboarding();
+        const isFreeBasicGuestTrial =
+          Boolean(guest) &&
+          (guest?.trialUsedCount ?? 0) < 1 &&
+          String(rawLevel || '').toUpperCase() === 'BASIC';
+        if (isFreeBasicGuestTrial) {
+          return true;
+        }
+        setSelectedGatedLevelName(customLabel || 'Đề luyện thi');
+        setPendingReturnUrl(targetUrl || '/luyen-thi');
+        setRequireLoginOpen(true);
+        return false;
+      }
+
+      if (isAdmin) return true;
+
+      // 2. Kiểm tra số dư Tia Sáng hiện tại
       const cached = getCachedPointsBalance();
       const effectivePoints = cached !== null ? cached : currentPoints;
       const costInfo = getExamLevelCost(rawLevel);
@@ -372,7 +399,51 @@ export function LevelSelectionModal({
       }
       return true;
     },
-    [currentPoints]
+    [effectiveIsLoggedIn, isAdmin, currentPoints]
+  );
+
+  // Xác thực đăng nhập + kiểm tra điểm thực tế từ PostgreSQL TRƯỚC khi tạo bài thi & chuyển trang
+  const verifyPointsAndStartExam = React.useCallback(
+    async (targetUrl: string, rawLevel: string, customLabel?: string) => {
+      if (isVerifyingStart) return;
+      if (!checkAndGatePoints(rawLevel, customLabel, targetUrl)) {
+        return;
+      }
+
+      // Khách làm thử đề đầu tiên (BASIC) hoặc Admin -> Vào thẳng phòng thi không cần kiểm tra ví điểm
+      if (!effectiveIsLoggedIn || isAdmin) {
+        onClose();
+        router.push(targetUrl);
+        return;
+      }
+
+      setIsVerifyingStart(true);
+      try {
+        const costInfo = getExamLevelCost(rawLevel);
+        const latestBalance = await examPointsService.getBalance(user?.id);
+        if (latestBalance && typeof latestBalance.currentPoints === 'number') {
+          setCurrentPoints(latestBalance.currentPoints);
+          notifyExamPointsUpdated(latestBalance.currentPoints);
+          if (
+            latestBalance.currentPoints <= 0 ||
+            latestBalance.currentPoints < costInfo.costPoints
+          ) {
+            setOutOfPointsModal({
+              isOpen: true,
+              currentPoints: Math.max(0, latestBalance.currentPoints),
+              requiredPoints: costInfo.costPoints,
+              levelLabel: customLabel || costInfo.label,
+            });
+            return;
+          }
+        }
+        onClose();
+        router.push(targetUrl);
+      } finally {
+        setIsVerifyingStart(false);
+      }
+    },
+    [isVerifyingStart, checkAndGatePoints, effectiveIsLoggedIn, isAdmin, user?.id, onClose, router]
   );
 
   // Competency Check State
@@ -410,14 +481,30 @@ export function LevelSelectionModal({
   // Reset step on reopen
   React.useEffect(() => {
     if (isOpen) {
-      setCurrentStep('MODE');
-      setMaxStepReached(1);
-      setSelectedPracticeMode('TOPIC');
+      const detectedGrade =
+        parseHighSchoolGrade(user?.student_profile?.grade_level) ||
+        getGuestOnboarding()?.grade ||
+        12;
+      if (initialMode === 'TOPIC' && subject) {
+        onClose();
+        router.push(buildTopicRoadmapHref(subject.slug, { grade: detectedGrade }));
+        return;
+      }
+      if (initialMode === 'MOCK_EXAM') {
+        setSelectedPracticeMode('MOCK_EXAM');
+        setCurrentStep('MOCK_MILESTONE');
+        setMaxStepReached(2);
+        setIsAllChaptersMock(true);
+      } else {
+        setCurrentStep('MODE');
+        setMaxStepReached(1);
+        setSelectedPracticeMode('TOPIC');
+        setIsAllChaptersMock(false);
+      }
       setSelectedLevel(CORE_PRACTICE_LEVELS[0]);
       setSelectedMockMilestone(MOCK_MILESTONES[0]);
-      setSelectedGrade(12);
+      setSelectedGrade(detectedGrade);
       setSelectedChapterId(1);
-      setIsAllChaptersMock(false);
       setSelectedFormat('QUIZ');
       setQuizCount(10);
       setEssayCount(5);
@@ -425,7 +512,7 @@ export function LevelSelectionModal({
       setIsAssessmentMode(false);
       setSelectedDifficulty('ALL');
     }
-  }, [isOpen]);
+  }, [isOpen, initialMode, onClose, router, subject, user?.student_profile?.grade_level]);
 
   if (!subject) return null;
 
@@ -451,33 +538,25 @@ export function LevelSelectionModal({
     }
   };
 
-  // Step 1: Handle Mode Click (Chuyên đề vs Thi thử)
+  // Step 1: Handle Mode Click (Chuyên đề trang riêng vs Thi thử)
   const handleSelectMode = (mode: 'TOPIC' | 'MOCK_EXAM') => {
-    if (mode === 'MOCK_EXAM') {
-      if (!checkAndGatePoints('MEDIUM', 'Thi thử tổng hợp')) {
-        return;
-      }
-    } else {
-      if (!checkAndGatePoints('BASIC', 'Luyện theo chuyên đề')) {
-        return;
-      }
+    if (mode === 'TOPIC') {
+      onClose();
+      router.push(buildTopicRoadmapHref(subject.slug, { grade: selectedGrade }));
+      return;
+    }
+
+    if (!checkAndGatePoints('MEDIUM', 'Thi thử tổng hợp')) {
+      return;
     }
     setIsAssessmentMode(false);
-    setSelectedPracticeMode(mode);
-    if (mode === 'MOCK_EXAM') {
-      setSelectedDuration(selectedMockMilestone.duration);
-      setQuizCount(selectedMockMilestone.questionCount);
-      setSelectedDifficulty('ALL');
-      setIsAllChaptersMock(true);
-      setMaxStepReached((prev) => Math.max(prev, 2));
-      setCurrentStep('MOCK_MILESTONE');
-    } else {
-      setQuizCount(10);
-      setSelectedDuration(45);
-      setIsAllChaptersMock(false);
-      setMaxStepReached((prev) => Math.max(prev, 2));
-      setCurrentStep('LEVEL');
-    }
+    setSelectedPracticeMode('MOCK_EXAM');
+    setSelectedDuration(selectedMockMilestone.duration);
+    setQuizCount(selectedMockMilestone.questionCount);
+    setSelectedDifficulty('ALL');
+    setIsAllChaptersMock(true);
+    setMaxStepReached((prev) => Math.max(prev, 2));
+    setCurrentStep('MOCK_MILESTONE');
   };
 
   // Step 2 (MOCK_EXAM): Handle Milestone Click
@@ -498,23 +577,8 @@ export function LevelSelectionModal({
 
   // Step 4 (MOCK_EXAM): Start Mock Exam
   const handleStartMockExam = () => {
-    if (!checkAndGatePoints('MEDIUM', selectedMockMilestone.name)) {
-      return;
-    }
-
     const examRoomUrl = `/student/practice/exam-room?subject=${subject.slug}&level=medium&grade=${selectedGrade}&chapter=1&format=quiz&duration=${selectedMockMilestone.duration}&quizCount=${selectedMockMilestone.questionCount}&count=${selectedMockMilestone.questionCount}&practiceMode=MOCK_EXAM&difficulty=ALL&milestone=${selectedMockMilestone.id.toLowerCase()}`;
-
-    const isFreeMock = selectedMockMilestone.id === '15P' || selectedMockMilestone.id === '45P';
-
-    if (!effectiveIsLoggedIn && !isFreeMock) {
-      setSelectedGatedLevelName(selectedMockMilestone.name);
-      setPendingReturnUrl(examRoomUrl);
-      setRequireLoginOpen(true);
-      return;
-    }
-
-    onClose();
-    router.push(examRoomUrl);
+    void verifyPointsAndStartExam(examRoomUrl, 'MEDIUM', selectedMockMilestone.name);
   };
 
   // Handle Assessment Click
@@ -554,30 +618,9 @@ export function LevelSelectionModal({
     const nextDiff = selectedPracticeMode === 'MOCK_EXAM' ? 'ALL' : (diffMap[level.id] || 'ALL');
     setSelectedDifficulty(nextDiff);
 
-    const isFreeTrial = level.id === 'BASIC' || level.id === 'MEDIUM';
-
-    // Cấp Học Sinh Giỏi Tỉnh & Quốc Gia: Bắt buộc đăng nhập ngay
     if (level.id === 'PROVINCIAL_EXCELLENT' || level.id === 'NATIONAL_EXCELLENT') {
-      if (!effectiveIsLoggedIn) {
-        setSelectedGatedLevelName(level.name);
-        setPendingReturnUrl(
-          `/student/practice/exam-room?olympiadId=olympiad-toan-hn-2025&subject=${subject.slug}&level=${level.id.toLowerCase()}`
-        );
-        setRequireLoginOpen(true);
-        return;
-      }
       setSelectedLevel(level);
       setCurrentStep('HSG_EXAMS');
-      return;
-    }
-
-    // Cấp Nâng cao (ADVANCED) hoặc bất kỳ cấp độ nào ngoài Basic & Medium: Bắt buộc đăng nhập ngay
-    if (!effectiveIsLoggedIn && !isFreeTrial) {
-      setSelectedGatedLevelName(level.name);
-      setPendingReturnUrl(
-        `/student/practice/exam-room?subject=${subject.slug}&level=${level.id.toLowerCase()}&grade=${selectedGrade}&chapter=${selectedChapterId}&format=${selectedFormat.toLowerCase()}&duration=${selectedDuration}&count=${quizCount}&practiceMode=${selectedPracticeMode}&difficulty=${nextDiff}`
-      );
-      setRequireLoginOpen(true);
       return;
     }
 
@@ -593,13 +636,8 @@ export function LevelSelectionModal({
     }
     setSelectedGrade(gradeId);
     if (isAssessmentMode) {
-      if (!checkAndGatePoints('BASIC', 'Kiểm Tra Năng Lực')) {
-        return;
-      }
-      onClose();
-      router.push(
-        `/student/practice/exam-room?subject=${subject.slug}&level=assessment&grade=${gradeId}&chapter=1&format=quiz&duration=50&quizCount=30&count=30&practiceMode=MOCK_EXAM&difficulty=ALL`
-      );
+      const targetUrl = `/student/practice/exam-room?subject=${subject.slug}&level=assessment&grade=${gradeId}&chapter=1&format=quiz&duration=50&quizCount=30&count=30&practiceMode=MOCK_EXAM&difficulty=ALL`;
+      void verifyPointsAndStartExam(targetUrl, 'BASIC', 'Kiểm Tra Năng Lực');
       return;
     }
     if (selectedPracticeMode === 'MOCK_EXAM') {
@@ -634,11 +672,6 @@ export function LevelSelectionModal({
 
   // Step 6: Start Exam
   const handleStartExam = () => {
-    if (!checkAndGatePoints(selectedLevel.id, selectedLevel.name)) {
-      return;
-    }
-
-    const isFreeTrial = selectedLevel.id === 'BASIC' || selectedLevel.id === 'MEDIUM';
     const countParam =
       selectedFormat === 'QUIZ'
         ? quizCount
@@ -648,15 +681,7 @@ export function LevelSelectionModal({
 
     const examRoomUrl = `/student/practice/exam-room?subject=${subject.slug}&level=${selectedLevel.id.toLowerCase()}&grade=${selectedGrade}&chapter=${selectedChapterId}&format=${selectedFormat.toLowerCase()}&duration=${selectedDuration}&quizCount=${quizCount}&essayCount=${essayCount}&count=${countParam}&practiceMode=${selectedPracticeMode}&difficulty=${selectedDifficulty}`;
 
-    if (!effectiveIsLoggedIn && !isFreeTrial) {
-      setSelectedGatedLevelName(selectedLevel.name);
-      setPendingReturnUrl(examRoomUrl);
-      setRequireLoginOpen(true);
-      return;
-    }
-
-    onClose();
-    router.push(examRoomUrl);
+    void verifyPointsAndStartExam(examRoomUrl, selectedLevel.id, selectedLevel.name);
   };
 
   return (
@@ -665,53 +690,90 @@ export function LevelSelectionModal({
         isOpen={isOpen}
         onClose={onClose}
         fullscreen={true}
-        className="w-full h-full p-4 sm:p-6 md:px-12 md:py-6"
+        className={cn(
+          'w-full h-full p-4 sm:p-6',
+          currentStep === 'CHAPTER_PATH' ? 'md:px-8 md:py-4' : 'md:px-12 md:py-6',
+        )}
         title={
-          <div className="max-w-4xl lg:max-w-5xl mx-auto w-full flex items-center gap-3">
-            <div
-              className={cn(
-                'h-10 w-10 rounded-xl flex items-center justify-center font-bold text-base border shrink-0',
-                'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-700'
-              )}
-            >
-              <BookOpen className="w-5 h-5 text-slate-700 dark:text-slate-300" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                  Môn {subject.name}
-                </span>
-                <span className="text-slate-300 dark:text-slate-700">•</span>
-                <span className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                  {currentStep === 'MODE'
-                    ? 'Khảo thí & Luyện tập'
-                    : selectedPracticeMode === 'MOCK_EXAM'
-                    ? 'Thi thử tổng hợp'
-                    : 'Luyện theo chuyên đề'}
-                </span>
-              </div>
-              <div className="text-base sm:text-lg md:text-xl font-bold text-slate-900 dark:text-white truncate">
-                {currentStep === 'MODE' && 'Hôm nay bạn muốn học như thế nào?'}
-                {currentStep === 'MOCK_MILESTONE' && 'Bước 2/4: Chọn mốc thi thử định kỳ'}
-                {currentStep === 'LEVEL' && 'Bước 2/6: Chọn cấp độ học tập'}
-                {currentStep === 'GRADE' && (
-                  isAssessmentMode
-                    ? 'Bước 2/2: Chọn khối lớp'
-                    : selectedPracticeMode === 'MOCK_EXAM'
-                    ? 'Bước 3/4: Chọn khối lớp bạn đang học'
-                    : 'Bước 3/6: Chọn khối lớp bạn đang học'
+          <div
+            className={cn(
+              'mx-auto w-full flex flex-wrap items-center justify-between gap-3',
+              currentStep === 'CHAPTER_PATH'
+                ? 'max-w-7xl'
+                : 'max-w-4xl lg:max-w-5xl',
+            )}
+          >
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div
+                className={cn(
+                  'h-10 w-10 rounded-xl flex items-center justify-center font-bold text-base border shrink-0',
+                  currentStep === 'CHAPTER_PATH'
+                    ? 'bg-[#00B8DD]/10 text-[#00B8DD] border-[#00B8DD]/25'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-700',
                 )}
-                {currentStep === 'CHAPTER' && 'Bước 4/6: Chọn chương / chuyên đề cần ôn'}
-                {currentStep === 'FORMAT' && 'Bước 5/6: Chọn hình thức làm bài'}
-                {currentStep === 'DURATION' && 'Bước 6/6: Chọn thời gian làm bài'}
-                {currentStep === 'MOCK_READY' && 'Bước 4/4: Xác nhận & Bắt đầu làm đề'}
-                {currentStep === 'HSG_EXAMS' && `Đề thi học sinh giỏi ${selectedLevel.id === 'PROVINCIAL_EXCELLENT' ? 'cấp Tỉnh' : 'cấp Quốc Gia'} - Môn ${subject.name}`}
+              >
+                <BookOpen
+                  className={cn(
+                    'w-5 h-5',
+                    currentStep === 'CHAPTER_PATH'
+                      ? 'text-[#00B8DD]'
+                      : 'text-slate-700 dark:text-slate-300',
+                  )}
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    Môn {subject.name}
+                  </span>
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                    {currentStep === 'MODE'
+                      ? 'Khảo thí & Luyện tập'
+                      : selectedPracticeMode === 'MOCK_EXAM'
+                        ? 'Thi thử tổng hợp'
+                        : 'Luyện theo chuyên đề'}
+                  </span>
+                </div>
+                <div className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white leading-snug break-words sm:truncate">
+                  {currentStep === 'MODE' && 'Hôm nay bạn muốn học như thế nào?'}
+                  {currentStep === 'CHAPTER_PATH' &&
+                    'Không gian lộ trình chuyên đề GDPT 2018'}
+                  {currentStep === 'MOCK_MILESTONE' &&
+                    'Bước 2/4: Chọn mốc thi thử định kỳ'}
+                  {currentStep === 'LEVEL' && 'Bước 2/6: Chọn cấp độ học tập'}
+                  {currentStep === 'GRADE' &&
+                    (isAssessmentMode
+                      ? 'Bước 2/2: Chọn khối lớp'
+                      : selectedPracticeMode === 'MOCK_EXAM'
+                        ? 'Bước 3/4: Chọn khối lớp bạn đang học'
+                        : 'Bước 3/6: Chọn khối lớp bạn đang học')}
+                  {currentStep === 'CHAPTER' &&
+                    'Bước 4/6: Chọn chương / chuyên đề cần ôn'}
+                  {currentStep === 'FORMAT' && 'Bước 5/6: Chọn hình thức làm bài'}
+                  {currentStep === 'DURATION' && 'Bước 6/6: Chọn thời gian làm bài'}
+                  {currentStep === 'MOCK_READY' &&
+                    'Bước 4/4: Xác nhận & Bắt đầu làm đề'}
+                  {currentStep === 'HSG_EXAMS' &&
+                    `Đề thi học sinh giỏi ${selectedLevel.id === 'PROVINCIAL_EXCELLENT' ? 'cấp Tỉnh' : 'cấp Quốc Gia'} - Môn ${subject.name}`}
+                </div>
               </div>
             </div>
+
+            {currentStep === 'CHAPTER_PATH' && (
+              <button
+                type="button"
+                onClick={() => setCurrentStep('MODE')}
+                className="hidden sm:inline-flex min-h-[38px] px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Đổi chế độ</span>
+              </button>
+            )}
           </div>
         }
         description={
-          currentStep === 'MODE' ? null : (
+          currentStep === 'MODE' || currentStep === 'CHAPTER_PATH' ? null : (
             <div className="max-w-4xl lg:max-w-5xl mx-auto w-full space-y-2 mt-2">
               {currentStep === 'HSG_EXAMS' ? (
                 <div className="flex flex-wrap items-center justify-between gap-2 py-1 text-xs">
@@ -766,7 +828,7 @@ export function LevelSelectionModal({
                           disabled={!isUnlocked}
                           className="relative z-[3] flex flex-col items-center group cursor-pointer select-none focus-visible:outline-hidden min-w-[54px] sm:min-w-[72px]"
                         >
-                          {/* Slot: on active step, the paper plane directly replaces the circle */}
+                          {/* Slot: on active step, the paper plane directly replacing the circle */}
                           <div className="relative w-12 sm:w-16 h-10 sm:h-12 flex items-center justify-center">
                             {isCurrent ? (
                               <motion.div
@@ -808,8 +870,8 @@ export function LevelSelectionModal({
                               isCurrent
                                 ? 'text-cyan-600 dark:text-cyan-400 font-extrabold sm:text-sm'
                                 : isPast
-                                ? 'text-slate-700 dark:text-slate-300 font-semibold'
-                                : 'text-slate-400 dark:text-slate-500'
+                                  ? 'text-slate-700 dark:text-slate-300 font-semibold'
+                                  : 'text-slate-400 dark:text-slate-500',
                             )}
                           >
                             {s.label}
@@ -824,14 +886,21 @@ export function LevelSelectionModal({
           )
         }
       >
-        <div className="w-full max-w-4xl lg:max-w-5xl mx-auto py-2 sm:py-6 flex-1 flex flex-col justify-start">
+        <div
+          className={cn(
+            'w-full mx-auto flex-1 flex flex-col justify-start',
+            currentStep === 'CHAPTER_PATH'
+              ? 'max-w-7xl py-1 sm:py-2'
+              : 'max-w-4xl lg:max-w-5xl py-2 sm:py-6',
+          )}
+        >
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={currentStep}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
               className="flex-1 flex flex-col justify-between"
             >
               {/* ========================================================================= */}
@@ -846,7 +915,7 @@ export function LevelSelectionModal({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Chế độ 1: Luyện theo chuyên đề */}
                     <motion.div
-                      whileHover={{ y: -3 }}
+                      whileHover={{ y: -2 }}
                       whileTap={{ scale: 0.99 }}
                       role="button"
                       tabIndex={0}
@@ -858,70 +927,121 @@ export function LevelSelectionModal({
                           handleSelectMode('TOPIC');
                         }
                       }}
-                      className={cn(
-                        'p-5 sm:p-6 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group relative overflow-hidden focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-cyan-500',
-                        'bg-gradient-to-br from-cyan-50/80 via-white to-sky-50/30 dark:from-cyan-950/20 dark:via-slate-900 dark:to-slate-900',
+                       className={cn(
+                        'min-h-[132px] sm:min-h-[148px] p-5 sm:p-7 rounded-3xl border transition-all duration-300 cursor-pointer flex items-center justify-between gap-4 group relative isolate focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-cyan-500',
+                        'bg-gradient-to-br from-cyan-100 via-sky-50 to-indigo-100 dark:from-cyan-950 dark:via-slate-900 dark:to-indigo-950/70',
+                        activeModeTooltip === 'TOPIC' && 'z-30',
                         selectedPracticeMode === 'TOPIC'
-                          ? 'border-cyan-500 shadow-md shadow-cyan-500/10 ring-1 ring-cyan-500/50'
-                          : 'border-slate-200/90 dark:border-slate-800 hover:border-cyan-400 dark:hover:border-cyan-500/60 hover:shadow-lg hover:shadow-cyan-500/5'
+                          ? 'border-cyan-400 shadow-xl shadow-cyan-500/25 ring-2 ring-cyan-400/60'
+                          : 'border-cyan-200/80 dark:border-cyan-900/60 shadow-md shadow-cyan-500/10 hover:border-cyan-400 dark:hover:border-cyan-500/70 hover:shadow-xl hover:shadow-cyan-500/25'
                       )}
                     >
-                      <div className="space-y-3.5">
-                        {/* Header Card: Schoolify Cyan Icon + Beacon Badge */}
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-300">
-                            <BookOpen className="w-6 h-6" />
-                          </div>
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-cyan-100/90 text-cyan-800 dark:bg-cyan-950/80 dark:text-cyan-300 border border-cyan-300/80 dark:border-cyan-800/80">
-                            <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
-                            Học hằng ngày
-                          </span>
-                        </div>
-
-                        <div>
-                          <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
-                            Luyện theo chuyên đề
-                          </h3>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                            Ôn sâu từng bài học SGK, vững nền tảng kiến thức.
-                          </p>
-                        </div>
-
-                        {/* DÒNG HIGHLIGHT TRỌNG TÂM */}
-                        <div className="p-2.5 rounded-xl bg-cyan-500/10 dark:bg-cyan-950/40 border border-cyan-500/20 text-xs font-bold text-cyan-900 dark:text-cyan-200 flex items-center gap-2">
-                          <Sparkles className="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" />
-                          <span>Có Gia Sư AI kèm 1:1 hướng dẫn từng bước tư duy</span>
-                        </div>
-
-                        {/* 3 Lợi ích súc tích dạng Chip trực quan */}
-                        <div className="space-y-2 pt-1 text-xs text-slate-700 dark:text-slate-300">
-                          <div className="flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-md bg-cyan-100/80 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 flex items-center justify-center shrink-0 font-bold text-[11px]">✓</span>
-                            <span><strong>Bám sát SGK 2018:</strong> Chọn đúng bài đang học trên lớp</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-md bg-cyan-100/80 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 flex items-center justify-center shrink-0 font-bold text-[11px]">✓</span>
-                            <span><strong>Tự do thời gian:</strong> Thảnh thơi suy nghĩ, không áp lực</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-md bg-cyan-100/80 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 flex items-center justify-center shrink-0 font-bold text-[11px]">✓</span>
-                            <span><strong>Đủ cấp độ:</strong> Lấy lại gốc SGK đến rèn tư duy 9–10</span>
-                          </div>
-                        </div>
+                      {/* Lớp trang trí nền (cắt gọn trong khung, không che popup giải thích) */}
+                      <div
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-0 -z-10 rounded-3xl overflow-hidden"
+                      >
+                        <div className="absolute -top-16 -right-12 w-56 h-56 rounded-full bg-cyan-400/45 dark:bg-cyan-500/20 blur-3xl group-hover:scale-125 transition-transform duration-700" />
+                        <div className="absolute -bottom-20 -left-10 w-52 h-52 rounded-full bg-indigo-400/35 dark:bg-indigo-500/15 blur-3xl group-hover:scale-125 transition-transform duration-700" />
+                        <div className="absolute top-1/2 left-1/3 w-32 h-32 -translate-y-1/2 rounded-full bg-sky-300/40 dark:bg-sky-400/10 blur-2xl" />
+                        <div
+                          className="absolute inset-0 opacity-[0.35] dark:opacity-[0.12]"
+                          style={{
+                            backgroundImage:
+                              'radial-gradient(circle at 1px 1px, rgba(8,145,178,0.45) 1px, transparent 0)',
+                            backgroundSize: '18px 18px',
+                            maskImage: 'linear-gradient(115deg, transparent 15%, black 75%)',
+                            WebkitMaskImage: 'linear-gradient(115deg, transparent 15%, black 75%)',
+                          }}
+                        />
+                        <BookOpen className="absolute -right-4 -bottom-6 w-36 h-36 sm:w-44 sm:h-44 text-cyan-500/20 dark:text-cyan-400/10 -rotate-12 group-hover:rotate-0 group-hover:scale-110 transition-all duration-700" />
+                        <div className="absolute inset-y-0 -left-1/2 w-1/3 bg-gradient-to-r from-transparent via-white/60 to-transparent skew-x-[-20deg] opacity-0 group-hover:opacity-100 group-hover:translate-x-[420%] transition-all duration-1000 ease-out" />
+                        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/90 to-transparent" />
                       </div>
 
-                      {/* Footer Card */}
-                      <div className="mt-4 pt-3.5 border-t border-cyan-100 dark:border-cyan-950/60 flex items-center justify-between text-xs sm:text-sm font-bold text-cyan-600 dark:text-cyan-400">
-                        <span className="text-slate-500 dark:text-slate-400 text-xs font-normal">Chắc lý thuyết &amp; phương pháp</span>
-                        <span className="flex items-center gap-1.5 group-hover:translate-x-1 transition-transform">
-                          Vào luyện chuyên đề <ArrowRight className="w-4 h-4" />
-                        </span>
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/40 ring-4 ring-white/70 dark:ring-white/10 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300">
+                          <BookOpen className="w-7 h-7 sm:w-8 sm:h-8 drop-shadow" />
+                        </div>
+                        <h3 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white group-hover:text-cyan-700 dark:group-hover:text-cyan-300 transition-colors">
+                          Luyện theo chuyên đề
+                        </h3>
+                      </div>
+
+                      {/* Nút dấu ? có vòng tròn bọc ngoài (Hover hoặc Click hiện giải thích) */}
+                      <div
+                        className="relative shrink-0"
+                        onMouseEnter={() => setActiveModeTooltip('TOPIC')}
+                        onMouseLeave={() =>
+                          setActiveModeTooltip((prev) => (prev === 'TOPIC' ? null : prev))
+                        }
+                      >
+                        <button
+                          type="button"
+                          aria-label="Giải thích chế độ Luyện theo chuyên đề"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveModeTooltip((prev) => (prev === 'TOPIC' ? null : 'TOPIC'));
+                          }}
+                          className={cn(
+                            'w-6 h-6 rounded-full border flex items-center justify-center text-xs font-extrabold transition-all cursor-pointer',
+                            activeModeTooltip === 'TOPIC'
+                              ? 'bg-cyan-600 text-white border-cyan-600 shadow-sm scale-105'
+                              : 'bg-white/90 dark:bg-slate-800 text-cyan-700 dark:text-cyan-300 border-cyan-300 dark:border-cyan-700 hover:bg-cyan-50 dark:hover:bg-cyan-950/60'
+                          )}
+                        >
+                          ?
+                        </button>
+
+                        <AnimatePresence>
+                          {activeModeTooltip === 'TOPIC' && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: 4, scale: 0.97 }}
+                              transition={{ duration: 0.15 }}
+                              onClick={(e) => e.stopPropagation()}
+                              className="absolute right-0 top-full mt-2.5 w-72 sm:w-80 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-cyan-200 dark:border-cyan-800 shadow-xl shadow-slate-900/15 z-50 text-left space-y-2.5 cursor-default"
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-xs font-extrabold text-cyan-700 dark:text-cyan-300">
+                                  Luyện theo chuyên đề
+                                </span>
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-100/90 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
+                                  Học hằng ngày
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-600 dark:text-slate-300">
+                                Ôn sâu từng bài học SGK, vững nền tảng kiến thức.
+                              </p>
+                              <div className="p-2 rounded-xl bg-cyan-500/10 dark:bg-cyan-950/50 border border-cyan-500/20 text-[11px] font-bold text-cyan-900 dark:text-cyan-200 flex items-center gap-1.5">
+                                <Sparkles className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 shrink-0" />
+                                <span>Có Gia Sư AI kèm 1:1 hướng dẫn từng bước tư duy</span>
+                              </div>
+                              <div className="space-y-1.5 text-[11px] text-slate-700 dark:text-slate-300">
+                                <div className="flex items-start gap-1.5">
+                                  <span className="text-cyan-600 font-bold">✓</span>
+                                  <span><strong>Bám sát SGK 2018:</strong> Chọn đúng bài đang học trên lớp</span>
+                                </div>
+                                <div className="flex items-start gap-1.5">
+                                  <span className="text-cyan-600 font-bold">✓</span>
+                                  <span><strong>Tự do thời gian:</strong> Thảnh thơi suy nghĩ, không áp lực</span>
+                                </div>
+                                <div className="flex items-start gap-1.5">
+                                  <span className="text-cyan-600 font-bold">✓</span>
+                                  <span><strong>Đủ cấp độ:</strong> Lấy lại gốc SGK đến rèn tư duy 9–10</span>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     </motion.div>
 
                     {/* Chế độ 2: Thi thử tổng hợp */}
                     <motion.div
-                      whileHover={{ y: -3 }}
+                      whileHover={{ y: -2 }}
                       whileTap={{ scale: 0.99 }}
                       role="button"
                       tabIndex={0}
@@ -934,63 +1054,116 @@ export function LevelSelectionModal({
                         }
                       }}
                       className={cn(
-                        'p-5 sm:p-6 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group relative overflow-hidden focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-amber-500',
-                        'bg-gradient-to-br from-amber-50/80 via-white to-orange-50/30 dark:from-amber-950/20 dark:via-slate-900 dark:to-slate-900',
+                        'min-h-[132px] sm:min-h-[148px] p-5 sm:p-7 rounded-3xl border transition-all duration-300 cursor-pointer flex items-center justify-between gap-4 group relative isolate focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-amber-500',
+                        'bg-gradient-to-br from-amber-100 via-orange-50 to-rose-100 dark:from-amber-950 dark:via-slate-900 dark:to-orange-950/70',
+                        activeModeTooltip === 'MOCK_EXAM' && 'z-30',
                         selectedPracticeMode === 'MOCK_EXAM'
-                          ? 'border-amber-500 shadow-md shadow-amber-500/10 ring-1 ring-amber-500/50'
-                          : 'border-slate-200/90 dark:border-slate-800 hover:border-amber-400 dark:hover:border-amber-500/60 hover:shadow-lg hover:shadow-amber-500/5'
+                          ? 'border-amber-400 shadow-xl shadow-amber-500/25 ring-2 ring-amber-400/60'
+                          : 'border-amber-200/80 dark:border-amber-900/60 shadow-md shadow-amber-500/10 hover:border-amber-400 dark:hover:border-amber-500/70 hover:shadow-xl hover:shadow-amber-500/25'
                       )}
                     >
-                      <div className="space-y-3.5">
-                        {/* Header Card: Schoolify Amber Icon + Beacon Badge */}
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-300">
-                            <Trophy className="w-6 h-6" />
-                          </div>
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100/90 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800/80">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                            Chuẩn Bộ GD&ĐT
-                          </span>
-                        </div>
-
-                        <div>
-                          <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                            Thi thử tổng hợp
-                          </h3>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                            Kiểm tra định kỳ &amp; thi thử toàn diện theo cấu trúc chuẩn.
-                          </p>
-                        </div>
-
-                        {/* DÒNG HIGHLIGHT TRỌNG TÂM */}
-                        <div className="p-2.5 rounded-xl bg-amber-500/10 dark:bg-amber-950/40 border border-amber-500/20 text-xs font-bold text-amber-900 dark:text-amber-200 flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                          <span>Bấm giờ phòng thi • Tự động chấm &amp; chữa chi tiết</span>
-                        </div>
-
-                        {/* 3 Lợi ích súc tích dạng Chip trực quan */}
-                        <div className="space-y-2 pt-1 text-xs text-slate-700 dark:text-slate-300">
-                          <div className="flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-md bg-amber-100/80 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 font-bold text-[11px]">✓</span>
-                            <span><strong>Đủ các mốc thi:</strong> 15p, 45p, Giữa kỳ, Cuối kỳ &amp; Tốt nghiệp</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-md bg-amber-100/80 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 font-bold text-[11px]">✓</span>
-                            <span><strong>Chấm điểm tức thì:</strong> Nhận điểm số và phân tích lỗ hổng ngay</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-md bg-amber-100/80 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 font-bold text-[11px]">✓</span>
-                            <span><strong>Rèn tâm lý phòng thi:</strong> Đồng hồ đếm ngược rèn phản xạ tốc độ</span>
-                          </div>
-                        </div>
+                      {/* Lớp trang trí nền (cắt gọn trong khung, không che popup giải thích) */}
+                      <div
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-0 -z-10 rounded-3xl overflow-hidden"
+                      >
+                        <div className="absolute -top-16 -right-12 w-56 h-56 rounded-full bg-amber-400/45 dark:bg-amber-500/20 blur-3xl group-hover:scale-125 transition-transform duration-700" />
+                        <div className="absolute -bottom-20 -left-10 w-52 h-52 rounded-full bg-rose-400/35 dark:bg-rose-500/15 blur-3xl group-hover:scale-125 transition-transform duration-700" />
+                        <div className="absolute top-1/2 left-1/3 w-32 h-32 -translate-y-1/2 rounded-full bg-yellow-300/40 dark:bg-yellow-400/10 blur-2xl" />
+                        <div
+                          className="absolute inset-0 opacity-[0.35] dark:opacity-[0.12]"
+                          style={{
+                            backgroundImage:
+                              'radial-gradient(circle at 1px 1px, rgba(217,119,6,0.45) 1px, transparent 0)',
+                            backgroundSize: '18px 18px',
+                            maskImage: 'linear-gradient(115deg, transparent 15%, black 75%)',
+                            WebkitMaskImage: 'linear-gradient(115deg, transparent 15%, black 75%)',
+                          }}
+                        />
+                        <Trophy className="absolute -right-4 -bottom-6 w-36 h-36 sm:w-44 sm:h-44 text-amber-500/20 dark:text-amber-400/10 -rotate-12 group-hover:rotate-0 group-hover:scale-110 transition-all duration-700" />
+                        <div className="absolute inset-y-0 -left-1/2 w-1/3 bg-gradient-to-r from-transparent via-white/60 to-transparent skew-x-[-20deg] opacity-0 group-hover:opacity-100 group-hover:translate-x-[420%] transition-all duration-1000 ease-out" />
+                        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/90 to-transparent" />
                       </div>
 
-                      {/* Footer Card */}
-                      <div className="mt-4 pt-3.5 border-t border-amber-100 dark:border-amber-950/60 flex items-center justify-between text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400">
-                        <span className="text-slate-500 dark:text-slate-400 text-xs font-normal">Rèn tốc độ &amp; phản xạ</span>
-                        <span className="flex items-center gap-1.5 group-hover:translate-x-1 transition-transform">
-                          Chọn mốc thi thử <ArrowRight className="w-4 h-4" />
-                        </span>
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-lg shadow-amber-500/40 ring-4 ring-white/70 dark:ring-white/10 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-300">
+                          <Trophy className="w-7 h-7 sm:w-8 sm:h-8 drop-shadow" />
+                        </div>
+                        <h3 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors">
+                          Thi thử tổng hợp
+                        </h3>
+                      </div>
+
+                      {/* Nút dấu ? có vòng tròn bọc ngoài (Hover hoặc Click hiện giải thích) */}
+                      <div
+                        className="relative shrink-0"
+                        onMouseEnter={() => setActiveModeTooltip('MOCK_EXAM')}
+                        onMouseLeave={() =>
+                          setActiveModeTooltip((prev) => (prev === 'MOCK_EXAM' ? null : prev))
+                        }
+                      >
+                        <button
+                          type="button"
+                          aria-label="Giải thích chế độ Thi thử tổng hợp"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveModeTooltip((prev) =>
+                              prev === 'MOCK_EXAM' ? null : 'MOCK_EXAM'
+                            );
+                          }}
+                          className={cn(
+                            'w-6 h-6 rounded-full border flex items-center justify-center text-xs font-extrabold transition-all cursor-pointer',
+                            activeModeTooltip === 'MOCK_EXAM'
+                              ? 'bg-amber-500 text-white border-amber-500 shadow-sm scale-105'
+                              : 'bg-white/90 dark:bg-slate-800 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/60'
+                          )}
+                        >
+                          ?
+                        </button>
+
+                        <AnimatePresence>
+                          {activeModeTooltip === 'MOCK_EXAM' && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: 4, scale: 0.97 }}
+                              transition={{ duration: 0.15 }}
+                              onClick={(e) => e.stopPropagation()}
+                              className="absolute right-0 top-full mt-2.5 w-72 sm:w-80 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800 shadow-xl shadow-slate-900/15 z-50 text-left space-y-2.5 cursor-default"
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-xs font-extrabold text-amber-700 dark:text-amber-300">
+                                  Thi thử tổng hợp
+                                </span>
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100/90 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                  Chuẩn Bộ GD&amp;ĐT
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-600 dark:text-slate-300">
+                                Kiểm tra định kỳ &amp; thi thử toàn diện theo cấu trúc chuẩn.
+                              </p>
+                              <div className="p-2 rounded-xl bg-amber-500/10 dark:bg-amber-950/50 border border-amber-500/20 text-[11px] font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                                <span>Bấm giờ phòng thi • Tự động chấm &amp; chữa chi tiết</span>
+                              </div>
+                              <div className="space-y-1.5 text-[11px] text-slate-700 dark:text-slate-300">
+                                <div className="flex items-start gap-1.5">
+                                  <span className="text-amber-600 font-bold">✓</span>
+                                  <span><strong>Đủ các mốc thi:</strong> 15p, 45p, Giữa kỳ, Cuối kỳ &amp; Tốt nghiệp</span>
+                                </div>
+                                <div className="flex items-start gap-1.5">
+                                  <span className="text-amber-600 font-bold">✓</span>
+                                  <span><strong>Chấm điểm tức thì:</strong> Nhận điểm số và phân tích lỗ hổng ngay</span>
+                                </div>
+                                <div className="flex items-start gap-1.5">
+                                  <span className="text-amber-600 font-bold">✓</span>
+                                  <span><strong>Rèn tâm lý phòng thi:</strong> Đồng hồ đếm ngược rèn phản xạ tốc độ</span>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     </motion.div>
                   </div>
@@ -1029,6 +1202,7 @@ export function LevelSelectionModal({
                   </motion.div>
                 </div>
               )}
+
 
           {/* ========================================================================= */}
           {/* STEP 2 (MOCK_EXAM): CHỌN MỐC THI THỬ                                      */}
@@ -1290,18 +1464,8 @@ export function LevelSelectionModal({
 
                         <Button
                           onClick={() => {
-                            if (!checkAndGatePoints(selectedLevel.id, hExam.title)) {
-                              return;
-                            }
                             const targetUrl = `/student/practice/exam-room?olympiadId=${hExam.id}&subject=${subject.slug}&level=${selectedLevel.id.toLowerCase()}`;
-                            if (!effectiveIsLoggedIn) {
-                              setSelectedGatedLevelName(hExam.title);
-                              setPendingReturnUrl(targetUrl);
-                              setRequireLoginOpen(true);
-                              return;
-                            }
-                            onClose();
-                            router.push(targetUrl);
+                            void verifyPointsAndStartExam(targetUrl, selectedLevel.id, hExam.title);
                           }}
                           className="bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white font-semibold rounded-xl text-xs px-4"
                           rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
@@ -1322,18 +1486,8 @@ export function LevelSelectionModal({
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          if (!checkAndGatePoints('PROVINCIAL_EXCELLENT', 'Đề HSG Toán Hà Nội')) {
-                            return;
-                          }
                           const targetUrl = '/student/practice/exam-room?olympiadId=olympiad-toan-hn-2025&subject=toan-hoc&level=provincial_excellent';
-                          if (!effectiveIsLoggedIn) {
-                            setSelectedGatedLevelName('Đề HSG Toán Hà Nội');
-                            setPendingReturnUrl(targetUrl);
-                            setRequireLoginOpen(true);
-                            return;
-                          }
-                          onClose();
-                          router.push(targetUrl);
+                          void verifyPointsAndStartExam(targetUrl, 'PROVINCIAL_EXCELLENT', 'Đề HSG Toán Hà Nội');
                         }}
                         className="text-xs rounded-xl"
                       >
@@ -1343,18 +1497,8 @@ export function LevelSelectionModal({
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          if (!checkAndGatePoints('PROVINCIAL_EXCELLENT', 'Đề HSG Tin Học Nghệ An')) {
-                            return;
-                          }
                           const targetUrl = '/student/practice/exam-room?olympiadId=olympiad-tin-tinh-2025&subject=tin-hoc&level=provincial_excellent';
-                          if (!effectiveIsLoggedIn) {
-                            setSelectedGatedLevelName('Đề HSG Tin Học Nghệ An');
-                            setPendingReturnUrl(targetUrl);
-                            setRequireLoginOpen(true);
-                            return;
-                          }
-                          onClose();
-                          router.push(targetUrl);
+                          void verifyPointsAndStartExam(targetUrl, 'PROVINCIAL_EXCELLENT', 'Đề HSG Tin Học Nghệ An');
                         }}
                         className="text-xs rounded-xl"
                       >
@@ -1543,13 +1687,8 @@ export function LevelSelectionModal({
                   </div>
                   <Button
                     onClick={() => {
-                      if (!checkAndGatePoints('BASIC', 'Kiểm Tra Năng Lực')) {
-                        return;
-                      }
-                      onClose();
-                      router.push(
-                        `/student/practice/exam-room?subject=${subject.slug}&level=assessment&grade=${selectedGrade}&chapter=1&format=quiz&duration=15&count=10&mode=diagnostic`
-                      );
+                      const targetUrl = `/student/practice/exam-room?subject=${subject.slug}&level=assessment&grade=${selectedGrade}&chapter=1&format=quiz&duration=15&count=10&mode=diagnostic`;
+                      void verifyPointsAndStartExam(targetUrl, 'BASIC', 'Kiểm Tra Năng Lực');
                     }}
                     className="bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white font-semibold gap-1.5 rounded-xl text-xs sm:text-sm"
                   >

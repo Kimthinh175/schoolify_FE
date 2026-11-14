@@ -98,6 +98,23 @@ C. 12
 D. 16`,
   },
   {
+    id: 'tin-12',
+    label: 'Đề mẫu Tin Học 12 (Python, SQL & Mạng máy tính)',
+    fileName: 'De_Thi_Thu_Tin_Hoc_12_Python_SQL.docx',
+    subject: 'tin-hoc',
+    rawText: `Câu 1: [NB] Trong SQL, câu lệnh nào dùng để truy vấn lấy dữ liệu từ một bảng?
+*A. SELECT
+B. INSERT
+C. UPDATE
+D. DELETE
+Lời giải: Câu lệnh SELECT dùng để truy vấn dữ liệu từ bảng trong cơ sở dữ liệu quan hệ.
+Câu 2: [TH] Trong ngôn ngữ lập trình Python, kết quả của hàm len([10, 20, 30, 40]) là bao nhiêu?
+*A. 4
+B. 3
+C. 10
+D. 40`,
+  },
+  {
     id: 'vat-ly-12',
     label: 'Đề mẫu Vật Lý 12 (Khí lý tưởng & Hạt nhân)',
     fileName: 'De_Kiem_Tra_Vat_Ly_12_Khi_Ly_Tuong_Hat_Nhan.docx',

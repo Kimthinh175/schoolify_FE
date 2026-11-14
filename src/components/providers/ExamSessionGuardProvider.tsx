@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { examOfflineStorage, ActiveExamSession } from '@/services/exam-offline-storage.service';
+import { useAuthStore } from '@/store/auth.store';
 import { toast } from 'sonner';
 import { WifiOff } from 'lucide-react';
 
@@ -21,6 +22,7 @@ export const ExamSessionGuardContext = React.createContext<ExamSessionGuardConte
 export function ExamSessionGuardProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { isAuthenticated, user } = useAuthStore();
 
   const [activeSession, setActiveSession] = React.useState<ActiveExamSession | null>(null);
   const [isOnline, setIsOnline] = React.useState<boolean>(true);
@@ -88,8 +90,17 @@ export function ExamSessionGuardProvider({ children }: { children: React.ReactNo
 
   // ── KIỂM TRA KHÓA PHÒNG THI (LOCKDOWN ROUTE GUARD) ──
   React.useEffect(() => {
+    let isCancelled = false;
+
     if (typeof window !== 'undefined') {
-      // Nếu URL có attemptToken hoặc token (nghĩa là vừa nộp bài xong đang xem kết quả),
+      // 1. Nếu chưa đăng nhập, xóa ngay mọi khóa phiên thi còn sót để không bao giờ kẹt khách vãng lai
+      if (!isAuthenticated || !user?.id) {
+        examOfflineStorage.clearActiveExamSession().catch(() => {});
+        setActiveSession(null);
+        return;
+      }
+
+      // 2. Nếu URL có attemptToken hoặc token (vừa nộp bài xong đang xem kết quả),
       // giải phóng ngay toàn bộ khóa phiên thi còn sót trong IndexedDB & LocalStorage!
       if (
         window.location.search.includes('attemptToken=') ||
@@ -102,9 +113,21 @@ export function ExamSessionGuardProvider({ children }: { children: React.ReactNo
 
       const fastLock = examOfflineStorage.getFastSyncActiveLock();
 
-      const checkAndEnforceLock = (sessionUrl: string, examTitle?: string) => {
+      const checkAndEnforceLock = (sessionUrl: string, examTitle?: string, examId?: string) => {
         const currentPath = window.location.pathname;
         const targetPath = sessionUrl.split('?')[0];
+
+        // Nếu bài thi này chưa được xác thực trừ điểm (hoặc bị chặn hết điểm), giải phóng khóa ngay lập tức!
+        if (examId) {
+          const isStartedPaid = sessionStorage.getItem(`schoolify_started_pts_${examId}`) === '1';
+          const isAdminUser =
+            (user?.role as string) === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+          if (!isStartedPaid && !isAdminUser) {
+            examOfflineStorage.clearActiveExamSession().catch(() => {});
+            setActiveSession(null);
+            return;
+          }
+        }
 
         if (currentPath === targetPath) {
           return;
@@ -120,17 +143,27 @@ export function ExamSessionGuardProvider({ children }: { children: React.ReactNo
       };
 
       if (fastLock && fastLock.isActive && fastLock.roomUrl) {
-        checkAndEnforceLock(fastLock.roomUrl, fastLock.examTitle);
+        checkAndEnforceLock(fastLock.roomUrl, fastLock.examTitle, fastLock.examId);
       }
 
       examOfflineStorage.getActiveExamSession().then((session) => {
+        if (isCancelled) return;
+        const latestLock = examOfflineStorage.getFastSyncActiveLock();
+        if (!latestLock || !latestLock.isActive) {
+          setActiveSession(null);
+          return;
+        }
         setActiveSession(session);
         if (session && session.status === 'IN_PROGRESS') {
-          checkAndEnforceLock(session.roomUrl, session.examTitle);
+          checkAndEnforceLock(session.roomUrl, session.examTitle, session.examId);
         }
       });
     }
-  }, [pathname, router]);
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [pathname, router, isAuthenticated, user?.id, user?.role]);
 
   React.useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {

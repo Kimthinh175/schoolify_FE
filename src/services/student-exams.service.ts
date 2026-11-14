@@ -263,6 +263,40 @@ export const studentExamsService = {
                     { key: 'D', content: 'Phương án D' },
                   ];
 
+            const statements =
+              type === 'TRUE_FALSE'
+                ? Array.isArray(q.statements) && q.statements.length > 0
+                  ? q.statements.map((st: any, sIdx: number) => ({
+                      subId: (st.subId || ['a', 'b', 'c', 'd'][sIdx] || 'a') as
+                        | 'a'
+                        | 'b'
+                        | 'c'
+                        | 'd',
+                      statement: st.statement || '',
+                      isCorrect: Boolean(st.isCorrect),
+                    }))
+                  : Array.isArray(q.answers) && q.answers.length > 0
+                  ? q.answers.map((a: any, aIdx: number) => ({
+                      subId: ((a.label || ['a', 'b', 'c', 'd'][aIdx] || 'a').toLowerCase() as
+                        | 'a'
+                        | 'b'
+                        | 'c'
+                        | 'd'),
+                      statement: a.content || '',
+                      isCorrect: Boolean(a.isAnswer),
+                    }))
+                  : undefined
+                : undefined;
+
+            const shortAnswerCorrect =
+              type === 'SHORT_ANSWER'
+                ? String(
+                    q.shortAnswerCorrect ??
+                      q.answers?.find((a: any) => a.isAnswer)?.content ??
+                      ''
+                  )
+                : undefined;
+
             const subjectLabel = SUBJECT_NAME_MAP[subjectSlug] || 'Môn Học K-12';
             return {
               id: q.id || `q-matrix-${idx + 1}`,
@@ -289,6 +323,8 @@ export const studentExamsService = {
               score: Number(q.points || 0.25),
               choices,
               correctChoice: (q.correctChoice || 'A') as 'A' | 'B' | 'C' | 'D',
+              statements,
+              shortAnswerCorrect,
               explanation:
                 q.explanation || 'Xem lời giải chi tiết và các bước phân tích phương án đúng.',
             };
@@ -353,5 +389,46 @@ export const studentExamsService = {
       console.warn('[studentExamsService.submitExamResult] Error submitting to BE:', err);
     }
     return null;
+  },
+
+  /** Lấy các câu hỏi đã được chỉnh sửa trong PostgreSQL theo danh sách ID */
+  async getQuestionsByIds(ids: string[]): Promise<any[]> {
+    if (!Array.isArray(ids) || ids.length === 0) return [];
+    try {
+      const headers = getAuthHeaders();
+      const res = await fetch('/api/v1/exams/questions/by-ids', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers,
+        },
+        body: JSON.stringify({ ids }),
+      });
+      if (res.ok) {
+        const json = await res.json().catch(() => null);
+        return Array.isArray(json?.data) ? json.data : [];
+      }
+    } catch (err) {
+      console.warn('[studentExamsService.getQuestionsByIds] Error:', err);
+    }
+    return [];
+  },
+
+  /** Admin chỉnh sửa trực tiếp câu hỏi & phương án trả lời ngay trong phòng thi (lưu thẳng PostgreSQL) */
+  async updateQuestionDirect(questionId: string, payload: any): Promise<any> {
+    const headers = getAuthHeaders();
+    const res = await fetch(`/api/v1/exams/questions/${encodeURIComponent(questionId)}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...headers,
+      },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok) {
+      throw new Error(json?.message || 'Không thể lưu chỉnh sửa câu hỏi vào PostgreSQL');
+    }
+    return json?.data || json;
   },
 };

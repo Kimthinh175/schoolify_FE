@@ -272,10 +272,11 @@ export default function RemediationExamPage() {
     setShowConfirmSubmit(false);
     setIsSubmitting(false);
 
-    // Cập nhật kết quả vào Snapshot trong hệ thống
-    if (data?.snapshotId) {
-      examSnapshotService
-        .updateRemediationInSnapshot(data.snapshotId, {
+    // Cập nhật kết quả vào Snapshot & Hồ sơ Kiến thức trong PostgreSQL Backend
+    examSnapshotService
+      .updateRemediationInSnapshot(
+        data?.snapshotId || `REM-${Date.now()}`,
+        {
           attempted: true,
           attemptedAt: new Date().toISOString(),
           finalScore: finalScore,
@@ -288,10 +289,16 @@ export default function RemediationExamPage() {
             shortAnswers,
             essayAnswers: {},
           },
-        })
-        .then(() => toast.success('Đã lưu kết quả bài khắc phục thành công!'))
-        .catch(() => {});
-    }
+        },
+        {
+          attemptToken: data?.attemptToken,
+          subjectSlug: remediationExam.subjectSlug,
+          grade: remediationExam.grade,
+          chapterId: remediationExam.chapterId,
+        }
+      )
+      .then(() => toast.success('Đã lưu kết quả bài khắc phục & cập nhật lộ trình thành công!'))
+      .catch(() => {});
 
     // Tặng thưởng khích lệ Ngọc Tri Thức vì tinh thần rèn luyện
     try {

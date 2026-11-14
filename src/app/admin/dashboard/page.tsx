@@ -261,13 +261,24 @@ export default function AdminDashboardPage() {
           </p>
         </div>
 
-        {/* Cụm nút lối tắt gọn trên 1 dòng duy nhất */}
-        <div className="flex items-center gap-2.5 shrink-0">
+        {/* Cụm nút lối tắt gọn gàng, tự xuống dòng trên mobile */}
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <Link href="/admin/behavior">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 px-3.5 text-xs font-semibold border-[#00B8DD]/40 bg-[#00B8DD]/10 hover:bg-[#00B8DD]/20 text-[#0088A9] dark:text-[#00B8DD] gap-1.5 shadow-2xs"
+            >
+              <BarChart3 className="w-3.5 h-3.5 text-[#00B8DD]" />
+              Thống kê hành vi & Web
+            </Button>
+          </Link>
+
           <Link href="/admin/questions">
             <Button
               variant="outline"
               size="sm"
-              className="h-9 px-3.5 text-xs font-semibold border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 text-slate-700 dark:text-slate-200 gap-1.5 whitespace-nowrap shadow-2xs"
+              className="h-9 px-3.5 text-xs font-semibold border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 text-slate-700 dark:text-slate-200 gap-1.5 shadow-2xs"
             >
               <Database className="w-3.5 h-3.5 text-indigo-600" />
               Ngân hàng câu hỏi
@@ -278,7 +289,7 @@ export default function AdminDashboardPage() {
             <Button
               variant="outline"
               size="sm"
-              className="h-9 px-3.5 text-xs font-semibold border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 text-slate-700 dark:text-slate-200 gap-1.5 whitespace-nowrap shadow-2xs"
+              className="h-9 px-3.5 text-xs font-semibold border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 text-slate-700 dark:text-slate-200 gap-1.5 shadow-2xs"
             >
               <FileCheck2 className="w-3.5 h-3.5 text-emerald-600" />
               Tạo đề ma trận
@@ -288,7 +299,7 @@ export default function AdminDashboardPage() {
           <Link href="/admin/questions/create">
             <Button
               size="sm"
-              className="h-9 px-3.5 bg-primary hover:bg-primary/90 text-white text-xs font-semibold gap-1.5 whitespace-nowrap shadow-xs"
+              className="h-9 px-3.5 bg-primary hover:bg-primary/90 text-white text-xs font-semibold gap-1.5 shadow-xs"
             >
               <Plus className="w-3.5 h-3.5" />
               Soạn câu hỏi mới
