@@ -6,6 +6,7 @@ export * from './order';
 export * from './store';
 export * from './question';
 export * from './subject';
+export * from './news';
 export type {
   TheoryDefinition,
   TheoryFormula,
