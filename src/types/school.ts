@@ -69,20 +69,39 @@ export interface SchoolSubscription {
   created_at: string;
 }
 
+export type ClassStatus = 'ACTIVE' | 'UPCOMING' | 'PAUSED' | 'COMPLETED' | 'CANCELLED';
+
+/** ERD: Class (+ vài field mở rộng FE cho UI) */
 export interface Class {
   id: string;
   school_id: string;
   teacher_id?: string | null;
-  name: string;
-  code: string;
+  /** Khóa học gắn với lớp (ERD: course_id) */
+  course_id?: string | null;
+  /** Tên lớp (ERD: class_name) */
+  class_name: string;
+  /** Trạng thái lớp (ERD: status) */
+  status: ClassStatus;
+  // — Mở rộng cho UI —
+  code?: string;
   room?: string | null;
   start_date?: string | null;
   end_date?: string | null;
   student_count?: number;
   teacher_name?: string;
   created_at: string;
+  updated_at?: string;
 }
 
+/** ERD: ClassCourse — bảng nối Lớp ↔ Khóa học (phân công khóa học vào lớp) */
+export interface ClassCourse {
+  id: string;
+  teacher_id: string;
+  course_id: string;
+  class_id: string;
+}
+
+/** ERD: ClassSession */
 export interface ClassSession {
   id: string;
   class_id: string;
@@ -92,6 +111,9 @@ export interface ClassSession {
   meeting_url?: string | null;
   start_time: string;
   end_time: string;
+  // — Quan hệ / mở rộng cho UI —
   teacher_name?: string;
   class_name?: string;
+  created_at?: string;
+  updated_at?: string;
 }

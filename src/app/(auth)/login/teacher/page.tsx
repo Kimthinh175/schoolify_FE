@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/store/auth.store';
+import { MOCK_TEACHER_PROFILE } from '@/services/mock/data';
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -59,6 +60,7 @@ export default function TeacherLoginPage() {
           status: true,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
+          teacher_profile: MOCK_TEACHER_PROFILE,
           school_memberships: [
             {
               id: 'mem-01',

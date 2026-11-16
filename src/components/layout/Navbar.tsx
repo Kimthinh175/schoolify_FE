@@ -74,9 +74,13 @@ export function Navbar() {
   }, []);
 
   // Close menus on route change
+  const prevPathnameRef = React.useRef(pathname);
   React.useEffect(() => {
-    setLoginDrawerOpen(false);
-    setMobileMenuOpen(false);
+    if (prevPathnameRef.current !== pathname) {
+      prevPathnameRef.current = pathname;
+      setLoginDrawerOpen(false);
+      setMobileMenuOpen(false);
+    }
   }, [pathname]);
 
   // ESC key closes drawer
@@ -94,6 +98,7 @@ export function Navbar() {
   const navLinks = [
     { label: 'Khám Phá Khóa Học', href: '/courses' },
     { label: 'Bảng Giá SaaS', href: '/pricing' },
+    { label: 'Bảng Xếp Hạng 🏆', href: '/leaderboard' },
   ];
 
   return (

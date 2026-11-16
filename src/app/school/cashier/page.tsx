@@ -23,8 +23,8 @@ export default function CashierPage() {
       buyer_phone: '0987654321',
       reference_type: 'TUITION',
       reference_id: 'cls-11a1',
-      item_title: 'Học phí Học kỳ I - Lớp 11A1',
-      total_amount: 3500000,
+      item_name_snapshot: 'Học phí Học kỳ I - Lớp 11A1',
+      item_price_snapshot: 3500000,
       payment_method: 'COD',
       status: 'PENDING',
       created_at: '2026-08-24T08:00:00Z',
@@ -97,10 +97,10 @@ export default function CashierPage() {
                   <p className="text-xs text-slate-500">{order.buyer_phone}</p>
                 </TableCell>
                 <TableCell className="text-xs text-slate-600 dark:text-slate-300">
-                  {order.item_title}
+                  {order.item_name_snapshot}
                 </TableCell>
                 <TableCell className="font-bold text-sm text-indigo-600 dark:text-indigo-400">
-                  {formatMoney(order.total_amount)}
+                  {formatMoney(order.item_price_snapshot)}
                 </TableCell>
                 <TableCell>
                   <Badge variant="secondary" className="text-[10px]">
@@ -162,7 +162,7 @@ export default function CashierPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Khoản thu:</span>
-                <span className="text-slate-900 dark:text-white">{selectedReceipt.item_title}</span>
+                <span className="text-slate-900 dark:text-white">{selectedReceipt.item_name_snapshot}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Thời gian giao dịch:</span>
@@ -170,7 +170,7 @@ export default function CashierPage() {
               </div>
               <div className="flex justify-between pt-2 border-t border-slate-200 dark:border-slate-700 font-bold text-sm">
                 <span>TỔNG TIỀN ĐÃ THU:</span>
-                <span className="text-indigo-600 dark:text-indigo-400">{formatMoney(selectedReceipt.total_amount)}</span>
+                <span className="text-indigo-600 dark:text-indigo-400">{formatMoney(selectedReceipt.item_price_snapshot)}</span>
               </div>
             </div>
 

@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/input';
 import { Dialog } from '@/components/ui/dialog';
+import { MathEssayEditor } from '@/components/ui/math-editor';
 import { MOCK_EXAMS } from '@/services/mock/data';
 
 export default function OnlineExamRunnerPage() {
@@ -123,22 +124,22 @@ export default function OnlineExamRunnerPage() {
             {/* Options */}
             {q.type === 'ESSAY' ? (
               <div className="pt-2">
-                <Textarea
-                  rows={5}
+                <MathEssayEditor
+                  rows={6}
                   placeholder="Nhập lời giải tự luận chi tiết của bạn vào đây..."
                   value={essayAnswer}
-                  onChange={(e) => setEssayAnswer(e.target.value)}
+                  onChange={setEssayAnswer}
                 />
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                {q.options?.map((opt) => {
-                  const isSelected = selectedAnswers[q.id] === opt.id;
+                {q.answers?.map((ans) => {
+                  const isSelected = selectedAnswers[q.id] === ans.id;
                   return (
                     <button
-                      key={opt.id}
+                      key={ans.id}
                       type="button"
-                      onClick={() => handleSelectOption(q.id, opt.id)}
+                      onClick={() => handleSelectOption(q.id, ans.id)}
                       className={`p-3.5 rounded-xl border text-left text-sm font-medium transition-all flex items-center gap-3 cursor-pointer ${
                         isSelected
                           ? 'border-indigo-600 bg-indigo-50/80 text-indigo-950 dark:bg-indigo-950/60 dark:text-indigo-200 font-bold shadow-xs'
@@ -154,7 +155,7 @@ export default function OnlineExamRunnerPage() {
                       >
                         {isSelected && <div className="h-2 w-2 rounded-full bg-white" />}
                       </div>
-                      <span>{opt.text}</span>
+                      <span>{ans.content}</span>
                     </button>
                   );
                 })}

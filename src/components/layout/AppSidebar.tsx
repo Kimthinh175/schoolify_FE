@@ -26,6 +26,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  Trophy,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth.store';
@@ -69,6 +70,13 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Quản lý Users Toàn Cầu',
     href: '/admin/users',
     icon: <Users className="w-5 h-5" />,
+    roles: ['SUPER_ADMIN'],
+  },
+  {
+    label: 'Bảng Xếp Hạng & Mùa Giải',
+    href: '/admin/leaderboard',
+    icon: <Trophy className="w-5 h-5 text-amber-500" />,
+    badge: 'Mùa 1',
     roles: ['SUPER_ADMIN'],
   },
 
@@ -151,6 +159,12 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['TEACHER'],
   },
   {
+    label: 'Ngân Hàng Đề (Studio)',
+    href: '/teacher/questions',
+    icon: <HelpCircle className="w-5 h-5" />,
+    roles: ['TEACHER'],
+  },
+  {
     label: 'Doanh Thu Khóa Học',
     href: '/teacher/revenue',
     icon: <DollarSign className="w-5 h-5" />,
@@ -175,6 +189,13 @@ const NAV_ITEMS: NavItem[] = [
     href: '/student/practice',
     icon: <CheckSquare className="w-5 h-5" />,
     badge: 'Mới',
+    roles: ['STUDENT'],
+  },
+  {
+    label: 'Bảng Xếp Hạng Đua Top',
+    href: '/leaderboard',
+    icon: <Trophy className="w-5 h-5 text-amber-500" />,
+    badge: 'Mùa 1',
     roles: ['STUDENT'],
   },
   {
@@ -216,9 +237,9 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['PARENT'],
   },
   {
-    label: 'Sổ Liên Lạc & Lời Phê',
-    href: '/parent/academic',
-    icon: <BookCheck className="w-5 h-5" />,
+    label: 'Sổ Liên Lạc (Kết Quả)',
+    href: '/parent/report',
+    icon: <GraduationCap className="w-5 h-5" />,
     badge: 'Điểm mới',
     roles: ['PARENT'],
   },

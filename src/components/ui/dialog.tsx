@@ -13,7 +13,7 @@ export interface DialogProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   className?: string;
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '4xl';
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '4xl' | 'full';
 }
 
 export function Dialog({
@@ -47,6 +47,7 @@ export function Dialog({
     xl: 'max-w-xl',
     '2xl': 'max-w-2xl',
     '4xl': 'max-w-4xl',
+    full: 'sm:max-w-[92vw]',
   };
 
   return (
@@ -76,11 +77,24 @@ export function Dialog({
           >
             {/* Header */}
             <div className="flex items-start justify-between pb-3">
-              <div>
-                {title && <h2 className="text-lg font-bold text-slate-900 dark:text-white">{title}</h2>}
-                {description && <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{description}</p>}
+              <div className="flex-1 mr-3">
+                {title && (
+                  typeof title === 'string' ? (
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white">{title}</h2>
+                  ) : (
+                    <div className="text-lg font-bold text-slate-900 dark:text-white">{title}</div>
+                  )
+                )}
+                {description && (
+                  typeof description === 'string' ? (
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{description}</p>
+                  ) : (
+                    <div className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{description}</div>
+                  )
+                )}
               </div>
               <button
+                type="button"
                 onClick={onClose}
                 className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors"
               >
@@ -89,7 +103,7 @@ export function Dialog({
             </div>
 
             {/* Body */}
-            <div className="overflow-y-auto py-2 flex-1 pr-1">{children}</div>
+            <div className="overflow-y-auto py-2 flex-1 pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">{children}</div>
 
             {/* Footer */}
             {footer && <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">{footer}</div>}
