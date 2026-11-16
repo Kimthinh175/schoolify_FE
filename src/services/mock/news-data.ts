@@ -480,5 +480,92 @@ Sau mỗi kỳ kiểm tra định kỳ, Tổ trưởng chuyên môn và Ban Giá
     created_at: '2026-09-14T10:00:00.000Z',
     updated_at: '2026-09-15T09:00:00.000Z',
   },
+  {
+    id: 'news-07',
+    category_id: 'cat-thpt',
+    title: 'Tổng hợp 50 câu hỏi trắc nghiệm trả lời ngắn Vật Lý 12 chương Nhiệt học kèm giải chi tiết',
+    slug: 'tong-hop-50-cau-hoi-trac-nghiem-tra-loi-ngan-vat-ly-12-chuong-nhiet-hoc',
+    excerpt:
+      'Bộ tài liệu chọn lọc các bài toán thực tế về Nội năng, Định luật I Nhiệt động lực học và sự chuyển thể phục vụ ôn thi THPT 2026.',
+    content: `## 1. Trọng tâm kiến thức Vật Lý Nhiệt lớp 12
+
+Chương Vật lý nhiệt là phần kiến thức mới được đưa vào chương trình Vật Lý 12 theo GDPT 2018. Các câu hỏi trả lời ngắn thường yêu cầu tính nhiệt lượng trao đổi $Q = mc\\Delta t$ và hiệu suất động cơ nhiệt.
+
+## 2. Các lỗi sai thường gặp về đổi đơn vị
+
+Học sinh cần đặc biệt lưu ý đổi đơn vị nhiệt dung riêng về $\\text{J/(kg.K)}$ và làm tròn chữ số thập phân theo đúng yêu cầu của đề thi.`,
+    thumbnail_url: 'https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=1000&auto=format&fit=crop&q=80',
+    cover_image_url: 'https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=1400&auto=format&fit=crop&q=80',
+    image_alt: 'Tài liệu ôn tập Vật Lý 12 chương Nhiệt học',
+    reading_time_minutes: 6,
+    word_count: 540,
+    view_count: 0,
+    like_count: 0,
+    share_count: 0,
+    bookmark_count: 0,
+    tags: ['Vật Lý 12', 'Trả lời ngắn', 'Nhiệt học', 'THPT 2026'],
+    grade_levels: [12],
+    subject_slugs: ['vat-ly'],
+    target_roles: ['STUDENT', 'TEACHER'],
+    meta_title: '50 câu trắc nghiệm trả lời ngắn Vật Lý 12 chương Nhiệt học',
+    meta_description: 'Tuyển tập câu hỏi trả lời ngắn Vật Lý 12 chương Nhiệt học chuẩn cấu trúc đề thi tốt nghiệp THPT.',
+    meta_keywords: ['vật lý 12 nhiệt học', 'trắc nghiệm trả lời ngắn vật lý'],
+    focus_keyword: 'trắc nghiệm trả lời ngắn Vật Lý 12',
+    is_indexable: true,
+    author_name: 'Cô Minh Châu (Tổ Vật Lý)',
+    author_role: 'Giáo viên Vật Lý THPT',
+    status: 'SCHEDULED',
+    is_featured: false,
+    is_pinned: false,
+    is_breaking: false,
+    allow_comments: true,
+    scheduled_at: '2026-12-01T08:00:00.000Z',
+    created_at: '2026-11-15T10:00:00.000Z',
+    updated_at: '2026-11-15T10:00:00.000Z',
+  },
+  {
+    id: 'news-08',
+    category_id: 'cat-bi-quyet',
+    title: '[Bản nháp] Lộ trình 90 ngày bứt phá từ 6 lên 8.5+ môn Tiếng Anh kỳ thi THPT',
+    slug: 'lo-trinh-90-ngay-but-pha-tu-6-len-8-5-mon-tieng-anh-thpt',
+    excerpt:
+      'Chiến lược học từ vựng theo Collocations, Phrasal Verbs và kỹ năng đọc hiểu điền từ đoạn văn dài theo định dạng đề mới.',
+    content: `## 1. Phân tích ma trận đề Tiếng Anh mới
+
+Đề thi Tiếng Anh tập trung mạnh vào khả năng đọc hiểu văn bản thực tế (thông báo, tờ rơi, bài báo học thuật) và sắp xếp hội thoại/đoạn văn logic.
+
+## 2. Phân bổ thời gian 90 ngày nước rút
+
+- **30 ngày đầu:** Củng cố ngữ pháp cốt lõi và 500 Collocations theo chủ đề SGK.
+- **30 ngày giữa:** Luyện chuyên sâu dạng bài Đọc điền khuyết và Đọc hiểu suy luận.
+- **30 ngày cuối:** Thực chiến 25 đề chuẩn cấu trúc tại phòng thi ảo Schoolify.`,
+    thumbnail_url: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=1000&auto=format&fit=crop&q=80',
+    cover_image_url: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=1400&auto=format&fit=crop&q=80',
+    image_alt: 'Lộ trình ôn thi Tiếng Anh THPT 90 ngày',
+    reading_time_minutes: 5,
+    word_count: 480,
+    view_count: 0,
+    like_count: 0,
+    share_count: 0,
+    bookmark_count: 0,
+    tags: ['Tiếng Anh 12', 'Lộ trình 90 ngày', 'Collocations'],
+    grade_levels: [12],
+    subject_slugs: ['tieng-anh'],
+    target_roles: ['STUDENT'],
+    meta_title: 'Lộ trình 90 ngày ôn thi Tiếng Anh THPT đạt 8.5+',
+    meta_description: 'Kế hoạch 90 ngày nắm trọn từ vựng, Collocations và kỹ năng đọc hiểu Tiếng Anh THPT.',
+    meta_keywords: ['ôn thi tiếng anh thpt', 'lộ trình 90 ngày tiếng anh'],
+    focus_keyword: 'lộ trình 90 ngày môn Tiếng Anh',
+    is_indexable: true,
+    author_name: 'Ban Biên Tập Ngoại Ngữ',
+    author_role: 'Tổ Chuyên Môn Tiếng Anh',
+    status: 'DRAFT',
+    is_featured: false,
+    is_pinned: false,
+    is_breaking: false,
+    allow_comments: true,
+    created_at: '2026-11-15T14:30:00.000Z',
+    updated_at: '2026-11-15T14:30:00.000Z',
+  },
 ];
 

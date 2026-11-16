@@ -123,6 +123,22 @@ async function ensureSeeded(): Promise<void> {
             search_text,
           });
         }
+      } else {
+        // Bổ sung các bài viết mẫu mới (như DRAFT / SCHEDULED) nếu chưa tồn tại trong DB
+        const existingIds = new Set(existingArticles.map((a) => a.id));
+        for (const art of MOCK_NEWS_ARTICLES) {
+          if (!existingIds.has(art.id)) {
+            const toc = extractTableOfContents(art.content);
+            const search_text = removeVietnameseTones(
+              `${art.title} ${art.excerpt} ${(art.tags || []).join(' ')} ${art.author_name}`
+            );
+            await demoDb.create('newsArticles', {
+              ...art,
+              table_of_contents: toc,
+              search_text,
+            });
+          }
+        }
       }
     } catch {
       // Fallback sang dữ liệu bộ nhớ nếu môi trường hiện tại không ghi được file
@@ -310,6 +326,207 @@ export const newsService = {
     const nextLikes = (target.like_count || 0) + 1;
     await demoDb.patch<NewsArticle>('newsArticles', id, { like_count: nextLikes }).catch(() => {});
     return nextLikes;
+  },
+
+  // ── ADMIN CMS: QUẢN TRỊ BÀI VIẾT ──
+
+  async updateArticleFlags(
+    id: string,
+    patch: Partial<
+      Pick<
+        NewsArticle,
+        | 'is_featured'
+        | 'is_pinned'
+        | 'is_breaking'
+        | 'status'
+        | 'scheduled_at'
+        | 'published_at'
+      >
+    >
+  ): Promise<NewsArticle | null> {
+    await ensureSeeded();
+    const updatedPayload: Partial<NewsArticle> = {
+      ...patch,
+      updated_at: new Date().toISOString(),
+    };
+    if (patch.status === 'PUBLISHED' && !patch.published_at) {
+      updatedPayload.published_at = new Date().toISOString();
+    }
+    try {
+      const updated = await demoDb.patch<NewsArticle>('newsArticles', id, updatedPayload);
+      return updated;
+    } catch {
+      return null;
+    }
+  },
+
+  async saveArticle(
+    payload: Partial<NewsArticle> & { title: string; category_id: string }
+  ): Promise<NewsArticle> {
+    await ensureSeeded();
+    const nowIso = new Date().toISOString();
+    const id = payload.id || `news-${Date.now()}`;
+    const slug = payload.slug?.trim() ? slugify(payload.slug) : slugify(payload.title);
+    const content = payload.content || '';
+    const metrics = calculateReadingMetrics(content);
+    const toc = extractTableOfContents(content);
+    const tags = payload.tags || [];
+    const author_name = payload.author_name?.trim() || 'Ban Biên Tập Schoolify';
+    const excerpt = payload.excerpt?.trim() || '';
+    const status: NewsStatus = payload.status || 'DRAFT';
+
+    const record: NewsArticle = {
+      id,
+      category_id: payload.category_id,
+      title: payload.title.trim(),
+      slug,
+      excerpt,
+      content,
+      table_of_contents: toc,
+      thumbnail_url:
+        payload.thumbnail_url?.trim() ||
+        'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1000&auto=format&fit=crop&q=80',
+      cover_image_url:
+        payload.cover_image_url?.trim() ||
+        payload.thumbnail_url?.trim() ||
+        'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1400&auto=format&fit=crop&q=80',
+      image_alt: payload.image_alt?.trim() || payload.title.trim(),
+      image_caption: payload.image_caption?.trim() || null,
+      attachments: payload.attachments || [],
+      reading_time_minutes: payload.reading_time_minutes || metrics.readingTimeMinutes,
+      word_count: metrics.wordCount,
+      view_count: payload.view_count ?? 0,
+      like_count: payload.like_count ?? 0,
+      share_count: payload.share_count ?? 0,
+      bookmark_count: payload.bookmark_count ?? 0,
+      tags,
+      grade_levels: payload.grade_levels || [12],
+      subject_slugs: payload.subject_slugs || ['toan-hoc'],
+      target_roles: payload.target_roles || ['STUDENT', 'TEACHER'],
+      search_text: removeVietnameseTones(
+        `${payload.title} ${excerpt} ${tags.join(' ')} ${author_name}`
+      ),
+      related_article_ids: payload.related_article_ids || [],
+      meta_title: payload.meta_title?.trim() || payload.title.trim().slice(0, 70),
+      meta_description: payload.meta_description?.trim() || excerpt.slice(0, 160),
+      meta_keywords: payload.meta_keywords || tags,
+      focus_keyword: payload.focus_keyword?.trim() || tags[0] || null,
+      canonical_url: payload.canonical_url?.trim() || null,
+      og_title: payload.og_title?.trim() || payload.meta_title?.trim() || payload.title.trim(),
+      og_description: payload.og_description?.trim() || excerpt.slice(0, 200),
+      og_image_url: payload.og_image_url?.trim() || payload.thumbnail_url?.trim() || null,
+      structured_data: payload.structured_data || null,
+      is_indexable: payload.is_indexable ?? true,
+      author_id: payload.author_id || null,
+      author_name,
+      author_avatar: payload.author_avatar || null,
+      author_role: payload.author_role?.trim() || 'Ban Biên Tập Giáo Dục',
+      author_bio: payload.author_bio?.trim() || null,
+      source_name: payload.source_name?.trim() || null,
+      source_url: payload.source_url?.trim() || null,
+      status,
+      is_featured: Boolean(payload.is_featured),
+      is_pinned: Boolean(payload.is_pinned),
+      is_breaking: Boolean(payload.is_breaking),
+      allow_comments: payload.allow_comments ?? true,
+      published_at:
+        status === 'PUBLISHED'
+          ? payload.published_at || nowIso
+          : payload.published_at || null,
+      scheduled_at: status === 'SCHEDULED' ? payload.scheduled_at || null : null,
+      created_at: payload.created_at || nowIso,
+      updated_at: nowIso,
+      deleted_at: null,
+    };
+
+    try {
+      await demoDb.create<NewsArticle>('newsArticles', record);
+    } catch {
+      // ignore if offline
+    }
+    return record;
+  },
+
+  async deleteArticle(id: string): Promise<void> {
+    await ensureSeeded();
+    try {
+      await demoDb.remove('newsArticles', id);
+    } catch {
+      // ignore
+    }
+  },
+
+  // ── ADMIN CMS: QUẢN TRỊ CHUYÊN MỤC ──
+
+  async saveCategory(
+    payload: Partial<NewsCategory> & { name: string }
+  ): Promise<NewsCategory> {
+    await ensureSeeded();
+    const nowIso = new Date().toISOString();
+    const id = payload.id || `cat-${Date.now()}`;
+    const slug = payload.slug?.trim() ? slugify(payload.slug) : slugify(payload.name);
+
+    const record: NewsCategory = {
+      id,
+      parent_id: payload.parent_id || null,
+      name: payload.name.trim(),
+      slug,
+      description: payload.description?.trim() || '',
+      icon: payload.icon || 'Newspaper',
+      color: payload.color || '#00B8DD',
+      cover_image_url: payload.cover_image_url || null,
+      order_index: Number(payload.order_index ?? 1),
+      is_active: payload.is_active ?? true,
+      is_featured: payload.is_featured ?? true,
+      meta_title: payload.meta_title?.trim() || `${payload.name.trim()} | Schoolify`,
+      meta_description: payload.meta_description?.trim() || payload.description?.trim() || '',
+      meta_keywords: payload.meta_keywords || [],
+      canonical_url: payload.canonical_url || null,
+      og_image_url: payload.og_image_url || null,
+      is_indexable: payload.is_indexable ?? true,
+      created_at: payload.created_at || nowIso,
+      updated_at: nowIso,
+    };
+
+    try {
+      await demoDb.create<NewsCategory>('newsCategories', record);
+    } catch {
+      // ignore
+    }
+    return record;
+  },
+
+  async toggleCategoryFlags(
+    id: string,
+    patch: Partial<Pick<NewsCategory, 'is_active' | 'is_featured' | 'order_index'>>
+  ): Promise<NewsCategory | null> {
+    await ensureSeeded();
+    try {
+      return await demoDb.patch<NewsCategory>('newsCategories', id, {
+        ...patch,
+        updated_at: new Date().toISOString(),
+      });
+    } catch {
+      return null;
+    }
+  },
+
+  async deleteCategory(id: string): Promise<{ ok: boolean; message?: string }> {
+    await ensureSeeded();
+    const articles = await this.getArticles({ onlyPublic: false });
+    const usedCount = articles.filter((a) => a.category_id === id).length;
+    if (usedCount > 0) {
+      return {
+        ok: false,
+        message: `Không thể xoá chuyên mục đang chứa ${usedCount} bài viết. Vui lòng chuyển bài viết sang chuyên mục khác hoặc ẩn chuyên mục này.`,
+      };
+    }
+    try {
+      await demoDb.remove('newsCategories', id);
+      return { ok: true };
+    } catch {
+      return { ok: false, message: 'Lỗi khi xoá chuyên mục.' };
+    }
   },
 };
 
