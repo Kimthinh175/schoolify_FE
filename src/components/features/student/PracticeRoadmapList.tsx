@@ -54,7 +54,6 @@ export interface LessonRoadmapItem {
   badges: {
     theory: { completed: boolean; label: string };
     quiz: { completed: boolean; score: string; total: number };
-    essay: { completed: boolean; label: string };
     exam: { completed: boolean; score?: string; locked?: boolean };
   };
 }
@@ -98,7 +97,6 @@ export const MOCK_TIN_ROADMAP_LESSONS: LessonRoadmapItem[] = [
     badges: {
       theory: { completed: true, label: 'Đã học' },
       quiz: { completed: true, score: '3/3', total: 3 },
-      essay: { completed: true, label: 'Đã nộp' },
       exam: { completed: true, score: '10/10' },
     },
   },
@@ -113,7 +111,6 @@ export const MOCK_TIN_ROADMAP_LESSONS: LessonRoadmapItem[] = [
     badges: {
       theory: { completed: true, label: 'Đã học' },
       quiz: { completed: true, score: '4/5', total: 5 },
-      essay: { completed: true, label: 'Đã nộp' },
       exam: { completed: false, locked: false },
     },
   },
@@ -128,7 +125,6 @@ export const MOCK_TIN_ROADMAP_LESSONS: LessonRoadmapItem[] = [
     badges: {
       theory: { completed: true, label: 'Đã học' },
       quiz: { completed: false, score: '0/5', total: 5 },
-      essay: { completed: false, label: 'Chưa nộp' },
       exam: { completed: false, locked: false },
     },
   },
@@ -143,7 +139,6 @@ export const MOCK_TIN_ROADMAP_LESSONS: LessonRoadmapItem[] = [
     badges: {
       theory: { completed: false, label: 'Chưa học' },
       quiz: { completed: false, score: '0/5', total: 5 },
-      essay: { completed: false, label: 'Chưa nộp' },
       exam: { completed: false, locked: true },
     },
   },
@@ -158,7 +153,6 @@ export const MOCK_TIN_ROADMAP_LESSONS: LessonRoadmapItem[] = [
     badges: {
       theory: { completed: false, label: 'Chưa học' },
       quiz: { completed: false, score: '0/10', total: 10 },
-      essay: { completed: false, label: 'Chưa nộp' },
       exam: { completed: false, locked: true },
     },
   },
@@ -176,7 +170,6 @@ export const MOCK_ROADMAP_LESSONS: LessonRoadmapItem[] = [
     badges: {
       theory: { completed: true, label: 'Đã học' },
       quiz: { completed: true, score: '3/3', total: 3 },
-      essay: { completed: true, label: 'Đã nộp' },
       exam: { completed: true, score: '9/10' },
     },
   },
@@ -191,7 +184,6 @@ export const MOCK_ROADMAP_LESSONS: LessonRoadmapItem[] = [
     badges: {
       theory: { completed: true, label: 'Đã học' },
       quiz: { completed: true, score: '4/5', total: 5 },
-      essay: { completed: true, label: 'Đã nộp' },
       exam: { completed: false, locked: false },
     },
   },
@@ -206,7 +198,6 @@ export const MOCK_ROADMAP_LESSONS: LessonRoadmapItem[] = [
     badges: {
       theory: { completed: true, label: 'Đã học' },
       quiz: { completed: false, score: '0/5', total: 5 },
-      essay: { completed: false, label: 'Chưa nộp' },
       exam: { completed: false, locked: false },
     },
   },
@@ -221,7 +212,6 @@ export const MOCK_ROADMAP_LESSONS: LessonRoadmapItem[] = [
     badges: {
       theory: { completed: false, label: 'Chưa học' },
       quiz: { completed: false, score: '0/5', total: 5 },
-      essay: { completed: false, label: 'Chưa nộp' },
       exam: { completed: false, locked: true },
     },
   },
@@ -229,14 +219,13 @@ export const MOCK_ROADMAP_LESSONS: LessonRoadmapItem[] = [
     id: 'lesson-05',
     number: 'Bài 05',
     title: 'Ôn Tập Chương Lượng Giác & Đề Thi Mẫu',
-    description: 'Tổng hợp câu hỏi trắc nghiệm và tự luận phân hóa cao chuẩn cấu trúc đề thi THPT.',
+    description: 'Tổng hợp câu hỏi trắc nghiệm phân hóa cao chuẩn cấu trúc đề thi THPT.',
     progressPercent: 0,
     rewardDiamonds: 100,
     status: 'LOCKED',
     badges: {
       theory: { completed: false, label: 'Chưa học' },
       quiz: { completed: false, score: '0/10', total: 10 },
-      essay: { completed: false, label: 'Chưa nộp' },
       exam: { completed: false, locked: true },
     },
   },
@@ -274,7 +263,7 @@ export function PracticeRoadmapList({
     }
     return currentLevelSlug;
   });
-  const [activeMode, setActiveMode] = React.useState<'ADAPTIVE' | 'CURRICULUM'>('CURRICULUM');
+  const [activeMode, setActiveMode] = React.useState<'ADAPTIVE' | 'CURRICULUM'>('ADAPTIVE');
   const [requireLoginOpen, setRequireLoginOpen] = React.useState(false);
   const [gatedLevelName, setGatedLevelName] = React.useState('');
   const [isPendingModalOpen, setIsPendingModalOpen] = React.useState(false);
@@ -462,17 +451,22 @@ export function PracticeRoadmapList({
 
           {/* Mode Toggle Switcher (flex-wrap, Zero Horizontal Scroll) */}
           <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-slate-950 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0 self-start lg:self-auto">
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer min-h-[40px]"
+            >
+              <span>🏠 Về Trang Chủ</span>
+            </Link>
             <button
               type="button"
-              onClick={() => setActiveMode('CURRICULUM')}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer min-h-[40px] ${
-                activeMode === 'CURRICULUM'
-                  ? 'bg-[#00B8DD] text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
+              onClick={() => {
+                const canonicalSubject = selectedSubject.includes('tin') ? 'tin-hoc' : 'toan';
+                router.push(`/luyen-thi/chuyen-de/${canonicalSubject}?grade=${activeGrade}`);
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer min-h-[40px]"
             >
               <BookOpen className="w-3.5 h-3.5" />
-              <span>Lộ trình từng chương (Số &amp; Hình)</span>
+              <span>Bản đồ Chuyên đề (Số &amp; Hình)</span>
             </button>
             <button
               type="button"

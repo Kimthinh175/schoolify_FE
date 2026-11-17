@@ -1,10 +1,10 @@
 /**
  * Bố cục chòm sao: sinh vị trí các ngôi sao theo SỐ CHƯƠNG THẬT của nhánh đang xem
- * (Toán Số 4, Toán Hình 4, Tin 6, ... — không cố định).
+ * (Toán 12: 8 cụm chương, Toán 11: 11 cụm chương, Tin 6-7 chương, ...).
  *
- * - Desktop: các sao chạy từ trái-dưới lên phải-trên (hình chòm sao), nhãn luân phiên dưới/trên
- *   để không chồng nhau; các sao ở vùng bên phải luôn đặt nhãn phía trên để tránh thẻ chi tiết (góc phải dưới).
- * - Mobile: xếp dọc zigzag, nhãn nằm dưới mỗi sao, chiều cao bản đồ co giãn theo số chương.
+ * - Desktop: dải ngang có thể kéo/lướt mượt sang trái-phải (pad hai đầu đủ rộng),
+ *   nhãn nằm phía trên mỗi ngôi sao để khoảng không ngay dưới ngôi sao luôn thoáng cho thẻ chi tiết nổi tại vị trí sao đang chọn.
+ * - Mobile: xếp dọc zigzag, thẻ chi tiết mở ngay tại chương đang chọn, không scroll ngang.
  */
 
 export type SkyTheme = 'so' | 'hinh' | 'tin';
@@ -28,6 +28,27 @@ export interface SkyLayout {
 /** Jitter xác định (không random) theo môn để mỗi chòm sao có "dáng" riêng */
 const JITTER_SEED: Record<SkyTheme, number> = { so: 0.7, hinh: 2.1, tin: 3.9 };
 
+/** Trích nhãn "Chương X" / "Chương 2A" chuẩn SGK và khóa sắp xếp từ tên chương */
+export function parseChapterSortAndLabel(
+  name: string,
+  fallbackOrder: number,
+): { sortKey: number; eyebrow: string } {
+  const m = (name || '').trim().match(/^Chương\s+(\d+)([A-Z]?)\b/i);
+  if (!m) {
+    return {
+      sortKey: fallbackOrder * 10,
+      eyebrow: `Chương ${fallbackOrder}`,
+    };
+  }
+  const num = parseInt(m[1], 10);
+  const suffix = (m[2] || '').toUpperCase();
+  const subOffset = suffix ? suffix.charCodeAt(0) - 64 : 0;
+  return {
+    sortKey: num * 10 + subOffset,
+    eyebrow: `Chương ${num}${suffix}`,
+  };
+}
+
 export function buildLayout(count: number, mobile: boolean, theme: SkyTheme): SkyLayout {
   const n = Math.max(1, count);
   const seed = JITTER_SEED[theme];
@@ -43,21 +64,27 @@ export function buildLayout(count: number, mobile: boolean, theme: SkyTheme): Sk
     return { w: 400, h, fs: 1.15, pos };
   }
 
-  const W = 1160;
   const H = 580;
+  const padLeft = 185;
+  const padRight = 235;
+  const stepX = n <= 4 ? 270 : 250;
+  const W =
+    n === 1
+      ? 1160
+      : Math.max(1160, Math.round(padLeft + (n - 1) * stepX + padRight));
+
+  const span = Math.max(0, W - padLeft - padRight);
   const pos: StarPos[] = Array.from({ length: n }, (_, i) => {
     const t = n === 1 ? 0.5 : i / (n - 1);
-    const x = n === 1 ? W / 2 : 130 + t * 900;
-    const base = 350 - 120 * t;
-    const odd = i % 2 === 1;
-    const jitter = odd ? Math.sin(i * 2.3 + seed) * 16 : 0;
-    const y = Math.round(odd ? base + 20 + jitter : base);
-    const labelAbove = odd || x > 740;
+    const x = n === 1 ? W / 2 : padLeft + t * span;
+    const rawY =
+      272 - Math.sin(t * Math.PI) * 24 + Math.sin(i * 1.65 + seed) * 22;
+    const y = Math.max(235, Math.min(310, Math.round(rawY)));
     return {
       x: Math.round(x),
       y,
       lx: Math.round(x),
-      ly: labelAbove ? y - 64 : y + 52,
+      ly: y - 62,
     };
   });
   return { w: W, h: H, fs: 1, pos };

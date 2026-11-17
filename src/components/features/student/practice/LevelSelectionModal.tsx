@@ -38,10 +38,14 @@ import {
 import { getOlympiadExamsBySubject, OLYMPIAD_EXAMS } from '@/services/mock/olympiad-exams';
 import { RequireLoginModal } from '@/components/features/auth/RequireLoginModal';
 import { OutOfPointsModal } from '@/components/features/student/practice/OutOfPointsModal';
+import { DiagnosticPromptModal } from '@/components/features/student/practice/DiagnosticPromptModal';
 import {
   examPointsService,
+  getCachedDiamondsBalance,
   getCachedPointsBalance,
   getExamLevelCost,
+  isDiagnosticPromptSkipped,
+  markDiagnosticPromptSkipped,
   notifyExamPointsUpdated,
 } from '@/services/exam-points.service';
 import { useAuthStore } from '@/store/auth.store';
@@ -295,7 +299,6 @@ export function LevelSelectionModal({
   const [isAllChaptersMock, setIsAllChaptersMock] = React.useState<boolean>(false);
   const [selectedFormat, setSelectedFormat] = React.useState<ExamFormat>('QUIZ');
   const [quizCount, setQuizCount] = React.useState<number>(10);
-  const [essayCount, setEssayCount] = React.useState<number>(5);
   const [selectedDuration, setSelectedDuration] = React.useState<number>(45);
   const [selectedDifficulty, setSelectedDifficulty] = React.useState<'ALL' | 'EASY' | 'MEDIUM' | 'HARD' | 'VERY_HARD'>('ALL');
 
@@ -323,25 +326,49 @@ export function LevelSelectionModal({
     const cached = getCachedPointsBalance();
     return cached !== null ? cached : 9;
   });
+  const [currentDiamonds, setCurrentDiamonds] = React.useState<number>(() => {
+    const cached = getCachedDiamondsBalance();
+    return cached !== null ? cached : Number(user?.student_profile?.points ?? 0);
+  });
   const [outOfPointsModal, setOutOfPointsModal] = React.useState<{
     isOpen: boolean;
     currentPoints: number;
+    currentDiamonds: number;
     requiredPoints: number;
     levelLabel: string;
+    targetExamUrl: string;
   }>({
     isOpen: false,
     currentPoints: 0,
+    currentDiamonds: 0,
     requiredPoints: 3,
     levelLabel: 'Cơ bản',
+    targetExamUrl: '',
   });
 
-  // Sync Tia Sáng balance from localStorage & backend
+  const [diagnosticModal, setDiagnosticModal] = React.useState<{
+    isOpen: boolean;
+    reason: 'FIRST_TIME' | 'INACTIVE_30_DAYS';
+    daysSinceLastPractice: number | null;
+    pendingStart: { targetUrl: string; rawLevel: string; customLabel?: string } | null;
+  }>({
+    isOpen: false,
+    reason: 'FIRST_TIME',
+    daysSinceLastPractice: null,
+    pendingStart: null,
+  });
+
+  // Sync Tia Sáng & Ngọc Tri Thức balance from localStorage & backend
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
     const syncPoints = () => {
       const cached = getCachedPointsBalance();
       if (cached !== null) {
         setCurrentPoints(cached);
+      }
+      const cachedDiamonds = getCachedDiamondsBalance();
+      if (cachedDiamonds !== null) {
+        setCurrentDiamonds(cachedDiamonds);
       }
     };
     syncPoints();
@@ -350,8 +377,10 @@ export function LevelSelectionModal({
     if (isOpen && user?.id) {
       examPointsService.getBalance(user.id).then((res) => {
         if (res && typeof res.currentPoints === 'number') {
+          const d = Math.max(0, Number(res.diamonds ?? 0));
           setCurrentPoints(res.currentPoints);
-          notifyExamPointsUpdated(res.currentPoints);
+          setCurrentDiamonds(d);
+          notifyExamPointsUpdated(res.currentPoints, d);
         }
       });
     }
@@ -366,6 +395,9 @@ export function LevelSelectionModal({
 
   const checkAndGatePoints = React.useCallback(
     (rawLevel: string, customLabel?: string, targetUrl?: string): boolean => {
+      const costInfo = getExamLevelCost(rawLevel);
+      if (costInfo.costPoints === 0) return true;
+
       // 1. Chưa đăng nhập -> Cho phép Khách làm thử miễn phí 1 đề CƠ BẢN sau khi điền Tên + Lớp
       if (!effectiveIsLoggedIn) {
         const guest = getGuestOnboarding();
@@ -387,31 +419,60 @@ export function LevelSelectionModal({
       // 2. Kiểm tra số dư Tia Sáng hiện tại
       const cached = getCachedPointsBalance();
       const effectivePoints = cached !== null ? cached : currentPoints;
-      const costInfo = getExamLevelCost(rawLevel);
+      const cachedDiamonds = getCachedDiamondsBalance();
+      const effectiveDiamonds = cachedDiamonds !== null ? cachedDiamonds : currentDiamonds;
       if (effectivePoints <= 0 || effectivePoints < costInfo.costPoints) {
+        const diamondUrl = targetUrl
+          ? `${targetUrl}${targetUrl.includes('?') ? '&' : '?'}useDiamonds=true`
+          : '';
         setOutOfPointsModal({
           isOpen: true,
           currentPoints: Math.max(0, effectivePoints),
+          currentDiamonds: Math.max(0, effectiveDiamonds),
           requiredPoints: costInfo.costPoints,
           levelLabel: customLabel || costInfo.label,
+          targetExamUrl: diamondUrl,
         });
         return false;
       }
       return true;
     },
-    [effectiveIsLoggedIn, isAdmin, currentPoints]
+    [effectiveIsLoggedIn, isAdmin, currentPoints, currentDiamonds]
   );
 
   // Xác thực đăng nhập + kiểm tra điểm thực tế từ PostgreSQL TRƯỚC khi tạo bài thi & chuyển trang
   const verifyPointsAndStartExam = React.useCallback(
-    async (targetUrl: string, rawLevel: string, customLabel?: string) => {
+    async (
+      targetUrl: string,
+      rawLevel: string,
+      customLabel?: string,
+      skipDiagnosticCheck = false
+    ) => {
       if (isVerifyingStart) return;
-      if (!checkAndGatePoints(rawLevel, customLabel, targetUrl)) {
-        return;
-      }
 
-      // Khách làm thử đề đầu tiên (BASIC) hoặc Admin -> Vào thẳng phòng thi không cần kiểm tra ví điểm
+      const isAssessmentExam = String(rawLevel || '')
+        .toUpperCase()
+        .includes('ASSESSMENT');
+
+      // Khách làm thử đề đầu tiên (BASIC) hoặc Admin
       if (!effectiveIsLoggedIn || isAdmin) {
+        if (!checkAndGatePoints(rawLevel, customLabel, targetUrl)) {
+          return;
+        }
+        if (
+          !effectiveIsLoggedIn &&
+          !isAssessmentExam &&
+          !skipDiagnosticCheck &&
+          !isDiagnosticPromptSkipped('guest', 'FIRST_TIME')
+        ) {
+          setDiagnosticModal({
+            isOpen: true,
+            reason: 'FIRST_TIME',
+            daysSinceLastPractice: null,
+            pendingStart: { targetUrl, rawLevel, customLabel },
+          });
+          return;
+        }
         onClose();
         router.push(targetUrl);
         return;
@@ -421,18 +482,43 @@ export function LevelSelectionModal({
       try {
         const costInfo = getExamLevelCost(rawLevel);
         const latestBalance = await examPointsService.getBalance(user?.id);
+
+        // 1. Gợi ý bài Test Đánh giá năng lực (nếu tạo đề lần đầu hoặc >= 30 ngày không luyện)
+        if (
+          !isAssessmentExam &&
+          !skipDiagnosticCheck &&
+          latestBalance?.diagnosticPrompt?.shouldPrompt &&
+          latestBalance.diagnosticPrompt.reason &&
+          !isDiagnosticPromptSkipped(user?.id, latestBalance.diagnosticPrompt.reason)
+        ) {
+          setDiagnosticModal({
+            isOpen: true,
+            reason: latestBalance.diagnosticPrompt.reason,
+            daysSinceLastPractice: latestBalance.diagnosticPrompt.daysSinceLastPractice,
+            pendingStart: { targetUrl, rawLevel, customLabel },
+          });
+          return;
+        }
+
+        // 2. Kiểm tra Tia Sáng ⚡ và Ngọc Tri Thức 💎
         if (latestBalance && typeof latestBalance.currentPoints === 'number') {
+          const d = Math.max(0, Number(latestBalance.diamonds ?? 0));
           setCurrentPoints(latestBalance.currentPoints);
-          notifyExamPointsUpdated(latestBalance.currentPoints);
+          setCurrentDiamonds(d);
+          notifyExamPointsUpdated(latestBalance.currentPoints, d);
           if (
-            latestBalance.currentPoints <= 0 ||
-            latestBalance.currentPoints < costInfo.costPoints
+            costInfo.costPoints > 0 &&
+            (latestBalance.currentPoints <= 0 ||
+              latestBalance.currentPoints < costInfo.costPoints)
           ) {
+            const diamondUrl = `${targetUrl}${targetUrl.includes('?') ? '&' : '?'}useDiamonds=true`;
             setOutOfPointsModal({
               isOpen: true,
               currentPoints: Math.max(0, latestBalance.currentPoints),
+              currentDiamonds: d,
               requiredPoints: costInfo.costPoints,
               levelLabel: customLabel || costInfo.label,
+              targetExamUrl: diamondUrl,
             });
             return;
           }
@@ -507,7 +593,6 @@ export function LevelSelectionModal({
       setSelectedChapterId(1);
       setSelectedFormat('QUIZ');
       setQuizCount(10);
-      setEssayCount(5);
       setSelectedDuration(45);
       setIsAssessmentMode(false);
       setSelectedDifficulty('ALL');
@@ -658,28 +743,16 @@ export function LevelSelectionModal({
   };
 
   // Step 5: Handle Format Selection
-  const handleSelectFormat = (format: ExamFormat) => {
-    setSelectedFormat(format);
-    if (format === 'QUIZ') {
-      setQuizCount((prev) => Math.max(5, Math.min(40, prev)));
-    } else if (format === 'ESSAY') {
-      setEssayCount((prev) => Math.max(5, Math.min(10, prev)));
-    } else if (format === 'MIXED') {
-      setQuizCount((prev) => Math.max(5, Math.min(30, prev)));
-      setEssayCount((prev) => Math.max(1, Math.min(10, prev)));
-    }
+  const handleSelectFormat = () => {
+    setSelectedFormat('QUIZ');
+    setQuizCount((prev) => Math.max(5, Math.min(40, prev)));
   };
 
   // Step 6: Start Exam
   const handleStartExam = () => {
-    const countParam =
-      selectedFormat === 'QUIZ'
-        ? quizCount
-        : selectedFormat === 'ESSAY'
-        ? essayCount
-        : quizCount + essayCount;
+    const countParam = quizCount;
 
-    const examRoomUrl = `/student/practice/exam-room?subject=${subject.slug}&level=${selectedLevel.id.toLowerCase()}&grade=${selectedGrade}&chapter=${selectedChapterId}&format=${selectedFormat.toLowerCase()}&duration=${selectedDuration}&quizCount=${quizCount}&essayCount=${essayCount}&count=${countParam}&practiceMode=${selectedPracticeMode}&difficulty=${selectedDifficulty}`;
+    const examRoomUrl = `/student/practice/exam-room?subject=${subject.slug}&level=${selectedLevel.id.toLowerCase()}&grade=${selectedGrade}&chapter=${selectedChapterId}&format=quiz&duration=${selectedDuration}&quizCount=${quizCount}&count=${countParam}&practiceMode=${selectedPracticeMode}&difficulty=${selectedDifficulty}`;
 
     void verifyPointsAndStartExam(examRoomUrl, selectedLevel.id, selectedLevel.name);
   };
@@ -1402,9 +1475,7 @@ export function LevelSelectionModal({
                       Đề thi chọn lọc: {selectedLevel.name}
                     </span>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                      {subject.slug === 'tin-hoc'
-                        ? 'Đề thi lập trình giải trực tiếp trên trình soạn thảo code (C++, Python), chấm tự động theo bộ testcase.'
-                        : 'Đề thi tự luận nâng cao có barem điểm rõ ràng và hướng dẫn giải chi tiết cho từng ý.'}
+                      Đề thi lập trình giải trực tiếp trên trình soạn thảo code (C++, Python), chấm tự động theo bộ testcase.
                     </p>
                   </div>
                 </div>
@@ -1427,7 +1498,7 @@ export function LevelSelectionModal({
                             {hExam.province || 'Toàn Quốc'} • {hExam.year}
                           </span>
                           <span className="px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                            {hExam.examType === 'CODING' ? '💻 Lập trình chấm testcase' : '✍️ Tự luận có barem'}
+                            💻 Lập trình chấm testcase
                           </span>
                         </div>
                         <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-2.5 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
@@ -1456,9 +1527,7 @@ export function LevelSelectionModal({
                           </span>
                           <span>•</span>
                           <span>
-                            {hExam.examType === 'CODING'
-                              ? `${hExam.codingProblems?.length || 3} bài thuật toán`
-                              : `${hExam.mathProblems?.length || 4} bài tự luận`}
+                            {`${hExam.codingProblems?.length || 3} bài thuật toán`}
                           </span>
                         </div>
 
@@ -1479,20 +1548,9 @@ export function LevelSelectionModal({
                   <div className="p-8 text-center rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 space-y-3">
                     <BookOpen className="w-8 h-8 text-slate-400 mx-auto" />
                     <p className="text-xs text-slate-500">
-                      Hiện tại môn {subject.name} đang hoàn tất biên soạn kho đề thi {selectedLevel.name}. Bạn có thể trải nghiệm các đề HSG mẫu đang mở:
+                      Hiện tại môn {subject.name} đang hoàn tất biên soạn kho đề thi {selectedLevel.name}. Bạn có thể trải nghiệm đề HSG Tin học (Coding IDE):
                     </p>
                     <div className="flex flex-wrap justify-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const targetUrl = '/student/practice/exam-room?olympiadId=olympiad-toan-hn-2025&subject=toan-hoc&level=provincial_excellent';
-                          void verifyPointsAndStartExam(targetUrl, 'PROVINCIAL_EXCELLENT', 'Đề HSG Toán Hà Nội');
-                        }}
-                        className="text-xs rounded-xl"
-                      >
-                        Đề HSG Toán Hà Nội (Tự Luận)
-                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
@@ -1814,355 +1872,113 @@ export function LevelSelectionModal({
           {currentStep === 'FORMAT' && (
             <div className="space-y-4">
               <p className="text-xs text-slate-500">
-                Chọn hình thức làm bài phù hợp với nhu cầu ôn luyện:
+                Chọn số lượng câu hỏi trắc nghiệm và mức độ phù hợp với nhu cầu ôn luyện:
               </p>
 
-              {/* 3 Formats Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {/* 1. Trắc Nghiệm */}
-                <div
-                  onClick={() => handleSelectFormat('QUIZ')}
-                  className={cn(
-                    'p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between group',
-                    selectedFormat === 'QUIZ'
-                      ? 'bg-slate-50 dark:bg-slate-900 border-slate-900 dark:border-white ring-1 ring-slate-900 dark:ring-white shadow-2xs'
-                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-400'
-                  )}
-                >
+              {/* Card Trắc Nghiệm duy nhất */}
+              <div
+                onClick={() => handleSelectFormat()}
+                className="p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-4 bg-slate-50 dark:bg-slate-900 border-slate-900 dark:border-white ring-1 ring-slate-900 dark:ring-white shadow-2xs"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs shrink-0">
+                    <CheckCircle2 className="w-4 h-4" />
+                  </div>
                   <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs">
-                        <CheckCircle2 className="w-4 h-4" />
-                      </div>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                        {quizCount} câu
-                      </span>
-                    </div>
                     <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                      Trắc nghiệm
+                      Trắc nghiệm khách quan (9 dạng bài chuẩn hóa)
                     </h4>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                      Lựa chọn đáp án đúng, câu hỏi đúng/sai và trả lời ngắn.
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                      Bao gồm chọn 1 đáp án, nhiều đáp án, đúng/sai 4 ý, điền số, chùm ngữ liệu, nối cặp, sắp xếp &amp; đục lỗ.
                     </p>
                   </div>
-                  <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
-                    {quizCount} câu hỏi • Chấm ngay
-                  </div>
                 </div>
-
-                {/* 2. Tự Luận */}
-                <div
-                  onClick={() => handleSelectFormat('ESSAY')}
-                  className={cn(
-                    'p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between group',
-                    selectedFormat === 'ESSAY'
-                      ? 'bg-slate-50 dark:bg-slate-900 border-slate-900 dark:border-white ring-1 ring-slate-900 dark:ring-white shadow-2xs'
-                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-400'
-                  )}
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs">
-                        <FileText className="w-4 h-4" />
-                      </div>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                        {essayCount} câu
-                      </span>
-                    </div>
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                      Tự luận
-                    </h4>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                      Trình bày bài giải từng bước và đối chiếu với barem điểm chi tiết.
-                    </p>
-                  </div>
-                  <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
-                    {essayCount} câu tự luận • Có barem
-                  </div>
-                </div>
-
-                {/* 3. Trộn Kết Hợp */}
-                <div
-                  onClick={() => handleSelectFormat('MIXED')}
-                  className={cn(
-                    'p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between group',
-                    selectedFormat === 'MIXED'
-                      ? 'bg-slate-50 dark:bg-slate-900 border-slate-900 dark:border-white ring-1 ring-slate-900 dark:ring-white shadow-2xs'
-                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-400'
-                  )}
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs">
-                        <Award className="w-4 h-4" />
-                      </div>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                        {quizCount + essayCount} câu
-                      </span>
-                    </div>
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                      Kết hợp (Trắc nghiệm + Tự luận)
-                    </h4>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                      Luyện cả câu trắc nghiệm tốc độ và các bài tự luận phân hóa.
-                    </p>
-                  </div>
-                  <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
-                    {quizCount} TN + {essayCount} TL
-                  </div>
-                </div>
+                <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-slate-900 dark:bg-white text-white dark:text-slate-900 shrink-0">
+                  {quizCount} câu • Chấm ngay
+                </span>
               </div>
 
-              {/* Option A: Input tùy chọn số lượng câu hỏi trắc nghiệm (min 5, max 40) & Tag Mức độ */}
-              {selectedFormat === 'QUIZ' && (
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                      <label className="text-xs font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
-                        <CheckCircle2 className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-                        Số lượng câu hỏi trắc nghiệm:
-                      </label>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        Tùy chỉnh số lượng câu hỏi trong đề (từ 5 đến 40 câu).
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      <input
-                        type="number"
-                        min={5}
-                        max={40}
-                        value={quizCount}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value, 10);
-                          if (isNaN(val)) {
-                            setQuizCount(10);
-                          } else {
-                            setQuizCount(Math.min(40, Math.max(5, val)));
-                          }
-                        }}
-                        className="w-20 px-3 py-1.5 text-center rounded-lg bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 font-semibold text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-slate-900"
-                      />
-                      <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">câu</span>
-                    </div>
-                  </div>
-
-                  {/* Quick-pick Chips */}
-                  <div className="flex items-center gap-2 pt-1 border-t border-slate-200 dark:border-slate-800 flex-wrap">
-                    <span className="text-[10px] text-slate-500 font-medium">Chọn nhanh:</span>
-                    {[5, 10, 15, 20, 25, 30].map((num) => (
-                      <button
-                        key={num}
-                        type="button"
-                        onClick={() => setQuizCount(num)}
-                        className={cn(
-                          'px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer',
-                          quizCount === num
-                            ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xs'
-                            : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-400'
-                        )}
-                      >
-                        {num} câu
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Cognitive Difficulty Tag Filter (khi luyện chuyên đề) */}
-                  {selectedPracticeMode === 'TOPIC' && (
-                    <div className="flex items-center gap-2 pt-2 border-t border-slate-200 dark:border-slate-800 flex-wrap">
-                      <span className="text-[10px] text-slate-500 font-medium">Mức độ câu hỏi:</span>
-                      {[
-                        { id: 'ALL', label: 'Tất cả mức độ' },
-                        { id: 'EASY', label: 'Nhận biết' },
-                        { id: 'MEDIUM', label: 'Thông hiểu' },
-                        { id: 'HARD', label: 'Vận dụng' },
-                        { id: 'VERY_HARD', label: 'Vận dụng cao' },
-                      ].map((d) => (
-                        <button
-                          key={d.id}
-                          type="button"
-                          onClick={() => setSelectedDifficulty(d.id as any)}
-                          className={cn(
-                            'px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer',
-                            selectedDifficulty === d.id
-                              ? 'bg-sky-600 text-white shadow-2xs'
-                              : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-400'
-                          )}
-                        >
-                          {d.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Option B: Input tùy chọn số lượng câu hỏi tự luận (min 5, max 10) */}
-              {selectedFormat === 'ESSAY' && (
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                      <label className="text-xs font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
-                        <FileText className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-                        Số lượng câu hỏi tự luận:
-                      </label>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        Tùy chỉnh số lượng câu tự luận trong đề (từ 5 đến 10 câu).
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      <input
-                        type="number"
-                        min={5}
-                        max={10}
-                        value={essayCount}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value, 10);
-                          if (isNaN(val)) {
-                            setEssayCount(5);
-                          } else {
-                            setEssayCount(Math.min(10, Math.max(5, val)));
-                          }
-                        }}
-                        className="w-20 px-3 py-1.5 text-center rounded-lg bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 font-semibold text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-slate-900"
-                      />
-                      <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">câu</span>
-                    </div>
-                  </div>
-
-                  {/* Quick-pick Chips for Essay */}
-                  <div className="flex items-center gap-2 pt-1 border-t border-slate-200 dark:border-slate-800 flex-wrap">
-                    <span className="text-[10px] text-slate-500 font-medium">Chọn nhanh:</span>
-                    {[5, 6, 7, 8, 10].map((num) => (
-                      <button
-                        key={num}
-                        type="button"
-                        onClick={() => setEssayCount(num)}
-                        className={cn(
-                          'px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer',
-                          essayCount === num
-                            ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xs'
-                            : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-400'
-                        )}
-                      >
-                        {num} câu
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Option C: Tùy chọn cấu hình đề Trộn (cả Trắc nghiệm & Tự luận) */}
-              {selectedFormat === 'MIXED' && (
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3.5">
+              {/* Input tùy chọn số lượng câu hỏi trắc nghiệm (min 5, max 40) & Tag Mức độ */}
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <label className="text-xs font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
-                      <Award className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-                      Số lượng câu hỏi trong đề:
+                      <CheckCircle2 className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+                      Số lượng câu hỏi trắc nghiệm:
                     </label>
                     <p className="text-[11px] text-slate-500 mt-0.5">
-                      Tùy chọn số lượng câu trắc nghiệm (5 - 30) và câu tự luận (1 - 10):
+                      Tùy chỉnh số lượng câu hỏi trong đề (từ 5 đến 40 câu).
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* Trắc nghiệm Config */}
-                    <div className="p-3 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                          Trắc nghiệm (5-30):
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          <input
-                            type="number"
-                            min={5}
-                            max={30}
-                            value={quizCount}
-                            onChange={(e) => {
-                              const val = parseInt(e.target.value, 10);
-                              if (isNaN(val)) {
-                                setQuizCount(5);
-                              } else {
-                                setQuizCount(Math.min(30, Math.max(5, val)));
-                              }
-                            }}
-                            className="w-16 px-2 py-1 text-center rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-semibold text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-slate-900"
-                          />
-                          <span className="text-[11px] text-slate-500">câu</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-slate-100 dark:border-slate-800">
-                        {[5, 10, 15, 20].map((num) => (
-                          <button
-                            key={num}
-                            type="button"
-                            onClick={() => setQuizCount(num)}
-                            className={cn(
-                              'px-2 py-0.5 rounded text-[11px] font-semibold transition-all cursor-pointer',
-                              quizCount === num
-                                ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                            )}
-                          >
-                            {num}c
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Tự luận Config */}
-                    <div className="p-3 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                          Tự luận (1-10):
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          <input
-                            type="number"
-                            min={1}
-                            max={10}
-                            value={essayCount}
-                            onChange={(e) => {
-                              const val = parseInt(e.target.value, 10);
-                              if (isNaN(val)) {
-                                setEssayCount(1);
-                              } else {
-                                setEssayCount(Math.min(10, Math.max(1, val)));
-                              }
-                            }}
-                            className="w-16 px-2 py-1 text-center rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-semibold text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-slate-900"
-                          />
-                          <span className="text-[11px] text-slate-500">câu</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-slate-100 dark:border-slate-800">
-                        {[1, 2, 3, 5].map((num) => (
-                          <button
-                            key={num}
-                            type="button"
-                            onClick={() => setEssayCount(num)}
-                            className={cn(
-                              'px-2 py-0.5 rounded text-[11px] font-semibold transition-all cursor-pointer',
-                              essayCount === num
-                                ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                            )}
-                          >
-                            {num}c
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="text-[11px] text-slate-600 dark:text-slate-400 pt-0.5">
-                    Tổng số câu: <strong className="text-slate-900 dark:text-white">{quizCount + essayCount} câu</strong> ({quizCount} trắc nghiệm + {essayCount} tự luận).
+                  <div className="flex items-center gap-2 shrink-0">
+                    <input
+                      type="number"
+                      min={5}
+                      max={40}
+                      value={quizCount}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        if (isNaN(val)) {
+                          setQuizCount(10);
+                        } else {
+                          setQuizCount(Math.min(40, Math.max(5, val)));
+                        }
+                      }}
+                      className="w-20 px-3 py-1.5 text-center rounded-lg bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 font-semibold text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-slate-900"
+                    />
+                    <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">câu</span>
                   </div>
                 </div>
-              )}
+
+                {/* Quick-pick Chips */}
+                <div className="flex items-center gap-2 pt-1 border-t border-slate-200 dark:border-slate-800 flex-wrap">
+                  <span className="text-[10px] text-slate-500 font-medium">Chọn nhanh:</span>
+                  {[5, 10, 15, 20, 25, 30].map((num) => (
+                    <button
+                      key={num}
+                      type="button"
+                      onClick={() => setQuizCount(num)}
+                      className={cn(
+                        'px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer',
+                        quizCount === num
+                          ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xs'
+                          : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                      )}
+                    >
+                      {num} câu
+                    </button>
+                  ))}
+                </div>
+
+                {/* Cognitive Difficulty Tag Filter (khi luyện chuyên đề) */}
+                {selectedPracticeMode === 'TOPIC' && (
+                  <div className="flex items-center gap-2 pt-2 border-t border-slate-200 dark:border-slate-800 flex-wrap">
+                    <span className="text-[10px] text-slate-500 font-medium">Mức độ câu hỏi:</span>
+                    {[
+                      { id: 'ALL', label: 'Tất cả mức độ' },
+                      { id: 'EASY', label: 'Nhận biết' },
+                      { id: 'MEDIUM', label: 'Thông hiểu' },
+                      { id: 'HARD', label: 'Vận dụng' },
+                      { id: 'VERY_HARD', label: 'Vận dụng cao' },
+                    ].map((d) => (
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={() => setSelectedDifficulty(d.id as any)}
+                        className={cn(
+                          'px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer',
+                          selectedDifficulty === d.id
+                            ? 'bg-sky-600 text-white shadow-2xs'
+                            : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                        )}
+                      >
+                        {d.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* Step 5 Footer: Next to Step 6 (Duration) */}
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -2170,13 +1986,7 @@ export function LevelSelectionModal({
                   <span>Cấu hình đề: </span>
                   <strong className="text-slate-900 dark:text-white">
                     {selectedPracticeMode === 'MOCK_EXAM' ? 'Thi thử' : 'Chuyên đề'} • {subject.name} • Lớp {selectedGrade} •{' '}
-                    {isAllChaptersMock ? 'Tổng hợp cả năm' : `Chương ${selectedChapterId}`} (
-                    {selectedFormat === 'QUIZ'
-                      ? `Trắc nghiệm: ${quizCount} câu`
-                      : selectedFormat === 'ESSAY'
-                      ? `Tự luận: ${essayCount} câu`
-                      : `Trộn: ${quizCount} TN + ${essayCount} TL`}
-                    )
+                    {isAllChaptersMock ? 'Tổng hợp cả năm' : `Chương ${selectedChapterId}`} (Trắc nghiệm: {quizCount} câu)
                   </strong>
                 </div>
 
@@ -2249,12 +2059,7 @@ export function LevelSelectionModal({
                   <strong className="text-slate-900 dark:text-white">
                     {selectedPracticeMode === 'MOCK_EXAM' ? 'Thi thử' : 'Chuyên đề'} • {subject.name} • Lớp {selectedGrade} •{' '}
                     {isAllChaptersMock ? 'Tổng hợp cả năm' : `Chương ${selectedChapterId}`} •{' '}
-                    {selectedFormat === 'QUIZ'
-                      ? `${quizCount} câu TN`
-                      : selectedFormat === 'ESSAY'
-                      ? `${essayCount} câu TL`
-                      : `${quizCount} TN + ${essayCount} TL`}{' '}
-                    • Thời gian: {selectedDuration} phút
+                    {quizCount} câu TN • Thời gian: {selectedDuration} phút
                   </strong>
                 </div>
 
@@ -2395,12 +2200,52 @@ export function LevelSelectionModal({
         isOpen={outOfPointsModal.isOpen}
         onClose={() => setOutOfPointsModal((prev) => ({ ...prev, isOpen: false }))}
         currentPoints={outOfPointsModal.currentPoints}
+        currentDiamonds={outOfPointsModal.currentDiamonds}
         requiredPoints={outOfPointsModal.requiredPoints}
         levelLabel={outOfPointsModal.levelLabel}
+        onUseDiamonds={() => {
+          const targetUrl = outOfPointsModal.targetExamUrl;
+          setOutOfPointsModal((prev) => ({ ...prev, isOpen: false }));
+          if (targetUrl) {
+            onClose();
+            router.push(targetUrl);
+          }
+        }}
         onNavigatePricing={() => {
           setOutOfPointsModal((prev) => ({ ...prev, isOpen: false }));
           onClose();
           router.push('/pricing');
+        }}
+      />
+
+      {/* Diagnostic Assessment Prompt Modal (First-Time or >= 30 Days Inactivity) */}
+      <DiagnosticPromptModal
+        isOpen={diagnosticModal.isOpen}
+        onClose={() => setDiagnosticModal((prev) => ({ ...prev, isOpen: false }))}
+        reason={diagnosticModal.reason}
+        daysSinceLastPractice={diagnosticModal.daysSinceLastPractice}
+        subjectName={subject?.name || 'Toán học'}
+        grade={selectedGrade || 12}
+        onStartDiagnostic={() => {
+          const gradeNum = selectedGrade || 12;
+          setDiagnosticModal((prev) => ({ ...prev, isOpen: false, pendingStart: null }));
+          onClose();
+          router.push(
+            `/student/practice/exam-room?subject=${subject?.slug || 'toan-hoc'}&level=assessment&grade=${gradeNum}&format=quiz&duration=15&quizCount=10&count=10&practiceMode=ASSESSMENT`
+          );
+        }}
+        onSkipAndContinue={() => {
+          const pending = diagnosticModal.pendingStart;
+          markDiagnosticPromptSkipped(user?.id || 'guest', diagnosticModal.reason);
+          setDiagnosticModal((prev) => ({ ...prev, isOpen: false, pendingStart: null }));
+          if (pending) {
+            void verifyPointsAndStartExam(
+              pending.targetUrl,
+              pending.rawLevel,
+              pending.customLabel,
+              true
+            );
+          }
         }}
       />
     </>

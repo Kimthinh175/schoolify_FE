@@ -70,7 +70,7 @@ const TOP_3_STUDENTS: LeaderboardUser[] = [
     examsCompleted: 142,
     points: 9420,
     diamonds: 1620,
-    badgeTitle: 'Chiến Thần Tự Luận 🌟',
+    badgeTitle: 'Chiến Thần Giải Đề 🌟',
   },
   {
     rank: 3,
@@ -212,7 +212,7 @@ export default function LeaderboardPage() {
               idx === 0
                 ? 'Đại Cao Thủ K-12 ⭐'
                 : idx === 1
-                  ? 'Chiến Thần Tự Luận 🌟'
+                  ? 'Chiến Thần Giải Đề 🌟'
                   : idx === 2
                     ? 'Bậc Thầy Giải Tốc Độ ⚡'
                     : 'Học Sinh Xuất Sắc',
@@ -256,7 +256,7 @@ export default function LeaderboardPage() {
             <span>BẢNG XẾP HẠNG THI ĐUA</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            Mỗi bài thi, câu hỏi trắc nghiệm và tự luận hoàn thành trên Schoolify đều được quy đổi thành điểm kinh nghiệm và Ngọc Tri Thức <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat /> để vinh danh trên Bảng Vàng!
+            Mỗi bài thi và câu hỏi trắc nghiệm hoàn thành trên Schoolify đều được quy đổi thành điểm kinh nghiệm và Ngọc Tri Thức <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat /> để vinh danh trên Bảng Vàng!
           </p>
         </motion.div>
       </div>

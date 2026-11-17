@@ -12,7 +12,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   // Bỏ sidebar và header cho các phòng thi / phòng học tập trung
   const isFocusOrPractice =
     pathname?.startsWith('/student/practice/exam-room') ||
-    pathname?.startsWith('/student/practice') ||
+    pathname?.startsWith('/student/practice/remediation') ||
     pathname?.startsWith('/student/learn') ||
     pathname?.startsWith('/student/exam/');
 

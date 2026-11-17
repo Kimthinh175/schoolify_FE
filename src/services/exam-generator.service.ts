@@ -53,12 +53,10 @@ export function generateAnswerKey(questions: Question[]): Record<string, string 
       } else {
         keyMap[qKey] = 'a-Đ; b-S; c-Đ; d-S';
       }
-    } else if (q.type === 'FILL_BLANK') {
+    } else if (q.type === 'FILL_BLANK' || q.type === 'SHORT_ANSWER') {
       keyMap[qKey] = q.shortAnswerCorrect || q.answers?.[0]?.content || 'Đáp số';
-    } else if (q.type === 'ESSAY') {
-      keyMap[qKey] = 'Tự luận (Barem 4 bước)';
     } else {
-      keyMap[qKey] = 'Theo barem';
+      keyMap[qKey] = 'A';
     }
   });
   return keyMap;
@@ -118,38 +116,38 @@ export function pickQuestionsByBloom(
   return selected.slice(0, targetCount);
 }
 
-/** Tính toán phân bổ 4 danh mục câu hỏi mặc định nếu config chưa chỉ định */
+/** Tính toán phân bổ danh mục câu hỏi trắc nghiệm mặc định nếu config chưa chỉ định */
 export function resolveCategoryDistribution(
   total: number,
   custom?: ExamCategoryDistribution
 ): ExamCategoryDistribution {
   if (custom) {
-    const sum = custom.multiple_choice + custom.true_false + custom.short_answer + custom.essay;
+    const sum = custom.multiple_choice + custom.true_false + custom.short_answer;
     if (sum === total) {
-      return custom;
+      return { ...custom };
     }
   }
 
-  // Tỉ lệ chuẩn GDPT 2018 (Ví dụ đề 20 câu: 10 MCQ, 4 TF, 4 SA, 2 Essay)
+  // Tỉ lệ chuẩn GDPT 2018 (3 Phần Trắc Nghiệm: 60% MCQ, 20% Đúng/Sai, 20% Trả lời ngắn)
   if (total <= 10) {
+    const mcq = Math.max(1, Math.round(total * 0.6));
+    const tf = Math.max(1, Math.round(total * 0.2));
+    const sa = Math.max(0, total - mcq - tf);
     return {
-      multiple_choice: Math.max(1, Math.round(total * 0.6)),
-      true_false: Math.max(1, Math.round(total * 0.2)),
-      short_answer: Math.max(1, Math.round(total * 0.1)),
-      essay: Math.max(0, total - Math.round(total * 0.6) - Math.round(total * 0.2) - Math.round(total * 0.1)),
+      multiple_choice: mcq,
+      true_false: tf,
+      short_answer: sa,
     };
   }
 
-  const mcq = Math.round(total * 0.5); // 50%
-  const tf = Math.round(total * 0.2);  // 20%
-  const sa = Math.round(total * 0.2);  // 20%
-  const essay = Math.max(0, total - (mcq + tf + sa)); // 10% còn lại
+  const mcq = Math.round(total * 0.6);
+  const tf = Math.round(total * 0.2);
+  const sa = Math.max(0, total - mcq - tf);
 
   return {
     multiple_choice: mcq,
     true_false: tf,
     short_answer: sa,
-    essay,
   };
 }
 
@@ -214,22 +212,26 @@ function pickCategoryQuestions(
   return pickQuestionsByBloom(categoryPool, targetCount, config.difficulty_ratio);
 }
 
-/** Thuật toán sinh đề thi theo ma trận (Exam Matrix Blueprint) tuân theo 4 danh mục Bộ GD&ĐT 2025 */
+/** Thuật toán sinh đề thi theo ma trận (Exam Matrix Blueprint) 3 Phần Trắc nghiệm Bộ GD&ĐT 2025 */
 export function generateExamsFromMatrix(
   questionPool: Question[],
   config: ExamMatrixConfig
 ): ExamVariant[] {
   const total = config.total_questions;
 
-  // 1. Lọc chặt chẽ theo Môn học (Tuyệt đối không lẫn sang câu hỏi môn khác)
+  // 1. Lọc chặt chẽ theo Môn học & loại bỏ hoàn toàn câu hỏi tự luận cũ (nếu có)
   let subjectPool = questionPool.filter(
-    (q) => !config.subject || isSubjectMatch(q.subject, config.subject)
+    (q) =>
+      (q.type as string) !== 'ESSAY' &&
+      (!config.subject || isSubjectMatch(q.subject, config.subject))
   );
   if (subjectPool.length === 0 && config.subject) {
-    subjectPool = questionPool.filter((q) => isSubjectMatch(q.subject, config.subject));
+    subjectPool = questionPool.filter(
+      (q) => (q.type as string) !== 'ESSAY' && isSubjectMatch(q.subject, config.subject)
+    );
   }
 
-  // 2. Phân loại pool câu hỏi theo 4 danh mục chuẩn GDPT 2018
+  // 2. Phân loại pool câu hỏi theo 3 phần trắc nghiệm chuẩn GDPT 2018
   const mcqPool = subjectPool.filter(
     (q) => q.type === 'MULTIPLE_CHOICE' || q.type === 'SINGLE_CHOICE'
   );
@@ -237,7 +239,6 @@ export function generateExamsFromMatrix(
   const saPool = subjectPool.filter(
     (q) => q.type === 'FILL_BLANK' || q.type === 'SHORT_ANSWER'
   );
-  const essayPool = subjectPool.filter((q) => q.type === 'ESSAY');
 
   // 3. Phân bổ số câu cho từng danh mục
   const catDist = resolveCategoryDistribution(total, config.category_distribution);
@@ -256,11 +257,6 @@ export function generateExamsFromMatrix(
   const baseSa = pickCategoryQuestions(
     saPool.length > 0 ? saPool : subjectPool,
     catDist.short_answer,
-    config
-  );
-  const baseEssay = pickCategoryQuestions(
-    essayPool.length > 0 ? essayPool : subjectPool,
-    catDist.essay,
     config
   );
 
@@ -288,18 +284,13 @@ export function generateExamsFromMatrix(
       section_title: 'PHẦN III. CÂU HỎI TRẮC NGHIỆM TRẢ LỜI NGẮN',
     }));
 
-    const varEssay = shuffleArray(baseEssay).map((q) => ({
-      ...q,
-      section_title: 'PHẦN IV. CÂU HỎI TỰ LUẬN & BAREM ĐIỂM',
-    }));
-
-    // Hợp nhất theo đúng thứ tự 4 phần của Bộ GD&ĐT
-    const allQuestions = [...varMcq, ...varTf, ...varSa, ...varEssay].map((q, idx) => ({
+    // Hợp nhất theo đúng thứ tự 3 phần trắc nghiệm của Bộ GD&ĐT
+    const allQuestions = [...varMcq, ...varTf, ...varSa].map((q, idx) => ({
       ...q,
       title: `Câu ${idx + 1}`,
     }));
 
-    // Cấu trúc 4 phần chuẩn
+    // Cấu trúc 3 phần trắc nghiệm chuẩn
     const parts: ExamVariantPart[] = [];
     if (varMcq.length > 0) {
       parts.push({
@@ -332,17 +323,6 @@ export function generateExamsFromMatrix(
         questions: varSa,
         points_per_question: 0.5,
         total_points: Number((varSa.length * 0.5).toFixed(2)),
-      });
-    }
-    if (varEssay.length > 0) {
-      parts.push({
-        part_number: 4,
-        title: 'PHẦN IV. CÂU HỎI TỰ LUẬN',
-        description: 'Thí sinh trình bày chi tiết lời giải các bước theo yêu cầu đề bài.',
-        question_type: 'ESSAY',
-        questions: varEssay,
-        points_per_question: 2.0,
-        total_points: Number((varEssay.length * 2.0).toFixed(2)),
       });
     }
 

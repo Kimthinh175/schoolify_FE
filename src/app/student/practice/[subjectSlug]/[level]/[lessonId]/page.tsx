@@ -37,7 +37,6 @@ import { Card } from '@/components/ui/card';
 import { Tabs } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { getCurriculum, SubjectCurriculum } from '@/services/mock/curriculumData';
-import { SubjectEssayEditor } from '@/components/features/student/practice/SubjectEssayEditor';
 import { NgocIcon } from '@/components/ui/point-icons';
 
 // Helper function to turn slug to human friendly title
@@ -127,11 +126,6 @@ export default function StudentPracticeWorkspacePage() {
   const [userAnswers, setUserAnswers] = React.useState<Record<number, string>>({});
   const [submittedQuiz, setSubmittedQuiz] = React.useState<boolean>(false);
 
-  // Tự Luận state
-  const [essayAnswer, setEssayAnswer] = React.useState<string>('');
-  const [essaySubmitted, setEssaySubmitted] = React.useState<boolean>(false);
-  const [showEssaySolution, setShowEssaySolution] = React.useState<boolean>(false);
-
   // Bài Thi state
   const [examStarted, setExamStarted] = React.useState<boolean>(false);
   const [examTimeLeft, setExamTimeLeft] = React.useState<number>(900);
@@ -205,13 +199,8 @@ export default function StudentPracticeWorkspacePage() {
       badge: MOCK_QUIZ_QUESTIONS.length,
     },
     {
-      id: 'essay',
-      label: '3. Bài Tập Tự Luận',
-      icon: <FileText className="w-4 h-4" />,
-    },
-    {
       id: 'exam',
-      label: '4. Đề Thi Kiểm Tra',
+      label: '3. Đề Thi Kiểm Tra',
       icon: <Clock className="w-4 h-4" />,
       badge: '15Ph',
     },
@@ -710,96 +699,7 @@ export default function StudentPracticeWorkspacePage() {
           </div>
         )}
 
-        {/* ================= TAB 3: BÀI TẬP TỰ LUẬN ================= */}
-        {activeTab === 'essay' && (
-          <div className="space-y-6">
-            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm dark:shadow-xl space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-4">
-                <div>
-                  <Badge variant="primary" className="mb-1 text-[10px]">
-                    Bài Tập Tự Luận Nâng Cao
-                  </Badge>
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                    Đề Bài: Trình Bày Biến Đổi & Giải Phương Trình Lượng Giác
-                  </h2>
-                </div>
-                <Badge variant="outline" className="text-amber-600 dark:text-amber-400 border-amber-500/30">
-                  Thưởng 30 <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat />
-                </Badge>
-              </div>
-
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-mono">
-                Cho phương trình lượng giác: <br />
-                <span className="text-indigo-700 dark:text-indigo-300 font-bold">
-                  2sin²(x) + 3cos(x) - 3 = 0
-                </span>{' '}
-                tìm các nghiệm x nằm trong khoảng <span className="text-amber-700 dark:text-amber-300">[0, 2π]</span>.
-              </div>
-
-              <div className="space-y-2">
-                <SubjectEssayEditor
-                  subjectSlug={typeof subjectSlug === 'string' ? subjectSlug : 'toan-hoc'}
-                  value={essayAnswer}
-                  onChange={setEssayAnswer}
-                  rows={6}
-                />
-              </div>
-
-              <div className="p-4 border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-indigo-500/50 rounded-xl bg-slate-50/50 dark:bg-slate-950/50 flex flex-col items-center justify-center text-center cursor-pointer transition-colors">
-                <UploadCloud className="w-8 h-8 text-slate-400 mb-2" />
-                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Tải lên ảnh chụp bài làm (JPG, PNG) hoặc file PDF
-                </span>
-                <span className="text-[10px] text-slate-500 mt-1">Dung lượng tối đa: 10MB</span>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowEssaySolution(!showEssaySolution)}
-                  leftIcon={<HelpCircle className="w-4 h-4" />}
-                >
-                  {showEssaySolution ? 'Ẩn Lời Giải Mẫu' : 'Xem Lời Giải Mẫu & Gợi Ý'}
-                </Button>
-
-                <Button
-                  variant={essaySubmitted ? 'success' : 'primary'}
-                  disabled={!essayAnswer.trim() && !essaySubmitted}
-                  onClick={() => {
-                    setEssaySubmitted(true);
-                    handleClaimReward();
-                  }}
-                  leftIcon={<Send className="w-4 h-4" />}
-                >
-                  {essaySubmitted ? 'Đã Nộp Bài Tự Luận' : 'Gửi Bài Làm'}
-                </Button>
-              </div>
-
-              {showEssaySolution && (
-                <div className="mt-4 p-5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-500/30 space-y-3">
-                  <h4 className="text-sm font-bold text-indigo-800 dark:text-indigo-300 flex items-center gap-2">
-                    <FileCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                    Hướng Dẫn Giải Chi Tiết (Đáp Án Mẫu):
-                  </h4>
-                  <div className="text-xs text-slate-800 dark:text-slate-200 space-y-2 font-mono leading-relaxed">
-                    <p>1. Ta có: sin²(x) = 1 - cos²(x).</p>
-                    <p>2. Thay vào phương trình: 2(1 - cos²(x)) + 3cos(x) - 3 = 0</p>
-                    <p>⇔ -2cos²(x) + 3cos(x) - 1 = 0</p>
-                    <p>3. Đặt t = cos(x) với |t| ≤ 1. Ta được: -2t² + 3t - 1 = 0</p>
-                    <p>⇒ t = 1 hoặc t = 1/2 (cả hai đều thỏa mãn).</p>
-                    <p>4. Với cos(x) = 1 ⇒ x = 0 hoặc x = 2π trên [0, 2π].</p>
-                    <p>5. Với cos(x) = 1/2 ⇒ x = π/3 hoặc x = 5π/3 trên [0, 2π].</p>
-                    <div className="pt-2 font-bold text-emerald-700 dark:text-emerald-400">
-                      Kết luận: Tập nghiệm S = &#123;0, π/3, 5π/3, 2π&#125;.
-                    </div>
-                  </div>
-                </div>
-              )}
-            </Card>
-          </div>
-        )}
-
-        {/* ================= TAB 4: ĐỀ THI KIỂM TRA ================= */}
+        {/* ================= TAB 3: ĐỀ THI KIỂM TRA ================= */}
         {activeTab === 'exam' && (
           <div className="space-y-6">
             {!examStarted ? (

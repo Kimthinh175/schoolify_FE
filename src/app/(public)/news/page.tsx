@@ -88,7 +88,7 @@ const MOCK_NEWS: ArticleItem[] = [
     id: 'news-05',
     title: 'Hướng dẫn sử dụng công cụ gõ công thức Toán học trực quan trên Schoolify',
     excerpt:
-      'Trải nghiệm viết bài tự luận môn Toán, Vật Lý, Hóa Học dễ dàng với các phím tắt LaTeX thông minh và bộ công cụ xem trước theo thời gian thực.',
+      'Trải nghiệm gõ và hiển thị công thức Toán, Vật Lý, Hóa Học dễ dàng với LaTeX/KaTeX sắc nét theo thời gian thực.',
     category: 'Hướng Dẫn Nền Tảng',
     date: '20 Tháng 09, 2026',
     readTime: '4 phút đọc',

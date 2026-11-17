@@ -17,7 +17,6 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/input';
 import { Dialog } from '@/components/ui/dialog';
-import { MathEssayEditor } from '@/components/ui/math-editor';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { MOCK_EXAMS } from '@/services/mock/data';
 
@@ -33,9 +32,6 @@ export default function OnlineExamRunnerPage() {
     'q-02': 'opt-5',
     'q-03': 'opt-7',
   });
-  const [essayAnswer, setEssayAnswer] = React.useState(
-    'Ta có sin(2x) = 1/2 <=> sin(2x) = sin(pi/6)\n<=> 2x = pi/6 + k2pi hoặc 2x = 5pi/6 + k2pi\n<=> x = pi/12 + kpi hoặc x = 5pi/12 + kpi (k thuộc Z).'
-  );
   const [isSubmitModalOpen, setIsSubmitModalOpen] = React.useState(false);
   const [isSubmitted, setIsSubmitted] = React.useState(false);
 
@@ -69,7 +65,7 @@ export default function OnlineExamRunnerPage() {
           </div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Nộp Bài Thành Công!</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Bài làm của bạn đã được ghi nhận. Giáo viên sẽ chấm điểm phần tự luận và gửi lời phê sớm nhất qua Sổ liên lạc.
+            Bài làm của bạn đã được ghi nhận và chấm điểm tự động. Bạn có thể xem chi tiết kết quả ngay trong Góc học tập.
           </p>
           <div className="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold text-sm">
             🎉 Bạn nhận được +50 Điểm thưởng chuyên cần!
@@ -146,45 +142,34 @@ export default function OnlineExamRunnerPage() {
             </p>
 
             {/* Options */}
-            {q.type === 'ESSAY' ? (
-              <div className="pt-2">
-                <MathEssayEditor
-                  rows={6}
-                  placeholder="Nhập lời giải tự luận chi tiết của bạn vào đây..."
-                  value={essayAnswer}
-                  onChange={setEssayAnswer}
-                />
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                {q.answers?.map((ans) => {
-                  const isSelected = selectedAnswers[q.id] === ans.id;
-                  return (
-                    <button
-                      key={ans.id}
-                      type="button"
-                      onClick={() => handleSelectOption(q.id, ans.id)}
-                      className={`p-3.5 rounded-xl border text-left text-sm font-medium transition-all flex items-center gap-3 cursor-pointer ${
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              {q.answers?.map((ans) => {
+                const isSelected = selectedAnswers[q.id] === ans.id;
+                return (
+                  <button
+                    key={ans.id}
+                    type="button"
+                    onClick={() => handleSelectOption(q.id, ans.id)}
+                    className={`p-3.5 rounded-xl border text-left text-sm font-medium transition-all flex items-center gap-3 cursor-pointer ${
+                      isSelected
+                        ? 'border-indigo-600 bg-indigo-50/80 text-indigo-950 dark:bg-indigo-950/60 dark:text-indigo-200 font-bold shadow-xs'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/40 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                    }`}
+                  >
+                    <div
+                      className={`h-5 w-5 rounded-full border flex items-center justify-center shrink-0 ${
                         isSelected
-                          ? 'border-indigo-600 bg-indigo-50/80 text-indigo-950 dark:bg-indigo-950/60 dark:text-indigo-200 font-bold shadow-xs'
-                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/40 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                          ? 'border-indigo-600 bg-indigo-600 text-white'
+                          : 'border-slate-300 dark:border-slate-600'
                       }`}
                     >
-                      <div
-                        className={`h-5 w-5 rounded-full border flex items-center justify-center shrink-0 ${
-                          isSelected
-                            ? 'border-indigo-600 bg-indigo-600 text-white'
-                            : 'border-slate-300 dark:border-slate-600'
-                        }`}
-                      >
-                        {isSelected && <div className="h-2 w-2 rounded-full bg-white" />}
-                      </div>
-                      <span>{ans.content}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+                      {isSelected && <div className="h-2 w-2 rounded-full bg-white" />}
+                    </div>
+                    <span>{ans.content}</span>
+                  </button>
+                );
+              })}
+            </div>
           </Card>
         ))}
       </div>
@@ -213,7 +198,7 @@ export default function OnlineExamRunnerPage() {
           <div className="p-3.5 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-3 text-xs text-emerald-900 dark:text-emerald-300">
             <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span>
-              Sau khi nộp bài, hệ thống sẽ tự động chấm điểm phần trắc nghiệm và chuyển bài tự luận tới giáo viên bộ môn.
+              Sau khi nộp bài, hệ thống sẽ tự động chấm điểm và hiển thị phân tích đáp án chi tiết ngay lập tức.
             </span>
           </div>
 

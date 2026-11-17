@@ -6,7 +6,6 @@ export interface LessonItem {
   views?: number;
   hasTheory: boolean;
   hasQuiz: boolean;
-  hasEssay: boolean;
   hasExam: boolean;
 }
 
@@ -58,7 +57,6 @@ export const MOCK_CURRICULUM_DATA: Record<string, SubjectCurriculum> = {
             views: 12450,
             hasTheory: true,
             hasQuiz: true,
-            hasEssay: true,
             hasExam: true,
           },
           {
@@ -68,7 +66,6 @@ export const MOCK_CURRICULUM_DATA: Record<string, SubjectCurriculum> = {
             views: 9820,
             hasTheory: true,
             hasQuiz: true,
-            hasEssay: true,
             hasExam: false,
           },
           {
@@ -78,7 +75,6 @@ export const MOCK_CURRICULUM_DATA: Record<string, SubjectCurriculum> = {
             views: 8540,
             hasTheory: true,
             hasQuiz: true,
-            hasEssay: true,
             hasExam: false,
           },
           {
@@ -88,7 +84,6 @@ export const MOCK_CURRICULUM_DATA: Record<string, SubjectCurriculum> = {
             views: 11200,
             hasTheory: true,
             hasQuiz: true,
-            hasEssay: true,
             hasExam: true,
           },
           {
@@ -98,7 +93,6 @@ export const MOCK_CURRICULUM_DATA: Record<string, SubjectCurriculum> = {
             views: 14500,
             hasTheory: true,
             hasQuiz: true,
-            hasEssay: true,
             hasExam: true,
           },
         ],
@@ -115,7 +109,6 @@ export const MOCK_CURRICULUM_DATA: Record<string, SubjectCurriculum> = {
             views: 7400,
             hasTheory: true,
             hasQuiz: true,
-            hasEssay: false,
             hasExam: false,
           },
           {
@@ -125,7 +118,6 @@ export const MOCK_CURRICULUM_DATA: Record<string, SubjectCurriculum> = {
             views: 9100,
             hasTheory: true,
             hasQuiz: true,
-            hasEssay: true,
             hasExam: true,
           },
           {
@@ -135,7 +127,6 @@ export const MOCK_CURRICULUM_DATA: Record<string, SubjectCurriculum> = {
             views: 8300,
             hasTheory: true,
             hasQuiz: true,
-            hasEssay: true,
             hasExam: true,
           },
         ],
@@ -152,7 +143,6 @@ export const MOCK_CURRICULUM_DATA: Record<string, SubjectCurriculum> = {
             views: 10200,
             hasTheory: true,
             hasQuiz: true,
-            hasEssay: true,
             hasExam: true,
           },
           {
@@ -162,7 +152,6 @@ export const MOCK_CURRICULUM_DATA: Record<string, SubjectCurriculum> = {
             views: 9500,
             hasTheory: true,
             hasQuiz: true,
-            hasEssay: true,
             hasExam: true,
           },
           {
@@ -172,7 +161,6 @@ export const MOCK_CURRICULUM_DATA: Record<string, SubjectCurriculum> = {
             views: 6800,
             hasTheory: true,
             hasQuiz: true,
-            hasEssay: true,
             hasExam: false,
           },
         ],
@@ -204,7 +192,6 @@ export const MOCK_CURRICULUM_DATA: Record<string, SubjectCurriculum> = {
             views: 8900,
             hasTheory: true,
             hasQuiz: true,
-            hasEssay: true,
             hasExam: true,
           },
           {
@@ -214,7 +201,6 @@ export const MOCK_CURRICULUM_DATA: Record<string, SubjectCurriculum> = {
             views: 7800,
             hasTheory: true,
             hasQuiz: true,
-            hasEssay: true,
             hasExam: true,
           },
         ],
@@ -231,7 +217,6 @@ export const MOCK_CURRICULUM_DATA: Record<string, SubjectCurriculum> = {
             views: 6500,
             hasTheory: true,
             hasQuiz: true,
-            hasEssay: true,
             hasExam: false,
           },
         ],
@@ -263,7 +248,6 @@ export const MOCK_CURRICULUM_DATA: Record<string, SubjectCurriculum> = {
             views: 7100,
             hasTheory: true,
             hasQuiz: true,
-            hasEssay: true,
             hasExam: true,
           },
         ],
@@ -295,7 +279,6 @@ export const MOCK_CURRICULUM_DATA: Record<string, SubjectCurriculum> = {
             views: 11500,
             hasTheory: true,
             hasQuiz: true,
-            hasEssay: true,
             hasExam: true,
           },
           {
@@ -305,7 +288,6 @@ export const MOCK_CURRICULUM_DATA: Record<string, SubjectCurriculum> = {
             views: 9200,
             hasTheory: true,
             hasQuiz: true,
-            hasEssay: true,
             hasExam: true,
           },
         ],
@@ -337,7 +319,6 @@ export const MOCK_CURRICULUM_DATA: Record<string, SubjectCurriculum> = {
             views: 6400,
             hasTheory: true,
             hasQuiz: true,
-            hasEssay: true,
             hasExam: true,
           },
         ],

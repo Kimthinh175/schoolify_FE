@@ -29,6 +29,7 @@ interface GradeOnboardingModalProps {
   isOpen: boolean;
   mode: GradeOnboardingMode;
   onClose?: () => void;
+  preventClose?: boolean;
   /** Gọi ngay sau khi lưu xong để mở tiếp bản đồ chòm sao các chương */
   onCompleted?: (result: { grade: 10 | 11 | 12; fullname: string }) => void;
   subjectName?: string;
@@ -64,6 +65,7 @@ export function GradeOnboardingModal({
   isOpen,
   mode,
   onClose,
+  preventClose = false,
   onCompleted,
   subjectName,
 }: GradeOnboardingModalProps) {
@@ -161,12 +163,12 @@ export function GradeOnboardingModal({
     <Dialog
       open={isOpen}
       onClose={() => {
-        // Khi FIRST_LOGIN bắt buộc chọn lớp để mở lộ trình đúng lớp; GUEST_TRIAL cho phép đóng quay lại
-        if (mode === 'GUEST_TRIAL' && onClose) {
+        // Khi FIRST_LOGIN hoặc preventClose bắt buộc chọn lớp để mở lộ trình đúng lớp
+        if (!preventClose && mode === 'GUEST_TRIAL' && onClose) {
           onClose();
         }
       }}
-      showCloseButton={mode === 'GUEST_TRIAL'}
+      showCloseButton={!preventClose && mode === 'GUEST_TRIAL'}
       className="max-w-lg p-0 overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-2xl"
     >
       {/* Header thương hiệu Schoolify Cyan -> Deep Navy */}

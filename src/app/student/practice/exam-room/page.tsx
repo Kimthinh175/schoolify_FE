@@ -48,14 +48,19 @@ import {
   ExamFormat,
   QuestionDifficulty,
 } from '@/services/mock/practice-flow-data';
+import { permuteQuestionChoicesGuaranteedShift } from '@/services/mock/question-matrix-engine';
 import { PracticeLevel } from '@/types/subject';
 import { useAuthStore } from '@/store/auth.store';
-import { getGuestOnboarding, recordGuestChapterCompletion } from '@/lib/semester-utils';
+import {
+  getGuestOnboarding,
+  recordGuestChapterCompletion,
+  recordGuestDiagnosticResult,
+} from '@/lib/semester-utils';
+import { chapterRoadmapService } from '@/services/chapter-roadmap.service';
 import { buildTopicRoadmapHref } from '@/lib/topic-route-utils';
 import { GradeOnboardingModal } from '@/components/features/student/practice/GradeOnboardingModal';
 import { RequireLoginModal } from '@/components/features/auth/RequireLoginModal';
 import { cn } from '@/lib/utils';
-import { SubjectEssayEditor } from '@/components/features/student/practice/SubjectEssayEditor';
 import { MathRenderer } from '@/components/ui/math-renderer';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Navbar } from '@/components/layout/Navbar';
@@ -75,7 +80,6 @@ import {
 import { examSnapshotService, ExamSnapshot, generateAttemptToken } from '@/services/exam-snapshot.service';
 import { ExamSnapshotModal } from '@/components/features/student/practice/ExamSnapshotModal';
 import { CodingExamRoom } from '@/components/features/student/practice/CodingExamRoom';
-import { OlympiadEssayExamRoom } from '@/components/features/student/practice/OlympiadEssayExamRoom';
 import {
   createExamTimerManager,
   ExamTimerManager,
@@ -87,6 +91,7 @@ import { getOlympiadExamById, getOlympiadExamsBySubject } from '@/services/mock/
 import { examOfflineStorage } from '@/services/exam-offline-storage.service';
 import {
   examPointsService,
+  getCachedDiamondsBalance,
   getCachedPointsBalance,
   getExamLevelCost,
 } from '@/services/exam-points.service';
@@ -168,7 +173,6 @@ function StandardExamRoomContent() {
   const countParam = searchParams.get('count') ? Number(searchParams.get('count')) : undefined;
   const durationParam = searchParams.get('duration') ? Number(searchParams.get('duration')) : undefined;
   const quizCountParam = searchParams.get('quizCount') ? Number(searchParams.get('quizCount')) : undefined;
-  const essayCountParam = searchParams.get('essayCount') ? Number(searchParams.get('essayCount')) : undefined;
   const practiceModeParam: PracticeMode =
     searchParams.get('practiceMode')?.toUpperCase() === 'MOCK_EXAM' ? 'MOCK_EXAM' : 'TOPIC';
   const difficultyParam = (searchParams.get('difficulty')?.toUpperCase() || 'ALL') as
@@ -177,7 +181,12 @@ function StandardExamRoomContent() {
   const topicTagParam = searchParams.get('topicTag') || undefined;
   const trackParam = searchParams.get('track') || undefined;
   const modeParam = searchParams.get('mode') || '';
+  const useDiamondsParam =
+    searchParams.get('useDiamonds') === '1' || searchParams.get('useDiamonds') === 'true';
   const isAssessment = levelParam === 'ASSESSMENT' || modeParam === 'diagnostic';
+
+  const canonicalTopicSubject = subjectSlug.includes('tin') ? 'tin-hoc' : 'toan';
+  const canonicalTopicMapHref = `/luyen-thi/chuyen-de/${canonicalTopicSubject}?grade=${gradeParam}`;
 
   const activeChapterMeta = React.useMemo(() => {
     const list = getChaptersBySubject(subjectSlug, gradeParam);
@@ -210,20 +219,22 @@ function StandardExamRoomContent() {
     'overview' | 'gap_analysis' | 'roadmap_sync' | 'solutions'
   >('overview');
 
-  // Trạng thái kiểm tra số dư Tia Sáng TRƯỚC khi cho phép tạo đề & khóa phiên thi
+  // Trạng thái kiểm tra số dư Tia Sáng / Ngọc Tri Thức TRƯỚC khi cho phép tạo đề & khóa phiên thi
   const [outOfPointsBlocked, setOutOfPointsBlocked] = React.useState<{
     isBlocked: boolean;
     currentPoints: number;
+    currentDiamonds: number;
     requiredPoints: number;
     levelLabel: string;
   }>({
     isBlocked: false,
     currentPoints: 0,
+    currentDiamonds: 0,
     requiredPoints: 3,
     levelLabel: 'Cơ bản',
   });
   const [isPointsVerified, setIsPointsVerified] = React.useState<boolean>(() => {
-    if (attemptTokenParam || isAdmin) return true;
+    if (attemptTokenParam || isAdmin || isAssessment) return true;
     if (typeof window !== 'undefined') {
       const deductedKey = `schoolify_started_pts_${computedExamId}`;
       if (sessionStorage.getItem(deductedKey) === '1') return true;
@@ -232,9 +243,19 @@ function StandardExamRoomContent() {
   });
 
   // Load Exam Package with persistence (chống đổi/đảo câu hỏi khi reload hoặc rời phòng thi)
+  const preloadedFromGateRef = React.useRef<boolean>(false);
   const [exam, setExam] = React.useState<PracticeExamPackage>(() => {
     if (typeof window !== 'undefined') {
       try {
+        const preloadedRaw = sessionStorage.getItem(`schoolify_preloaded_exam_${computedExamId}`);
+        if (preloadedRaw) {
+          const parsedPreloaded = JSON.parse(preloadedRaw);
+          if (parsedPreloaded && Array.isArray(parsedPreloaded.questions) && parsedPreloaded.questions.length > 0) {
+            preloadedFromGateRef.current = true;
+            localStorage.setItem(`schoolify_pkg_${computedExamId}`, preloadedRaw);
+            return parsedPreloaded;
+          }
+        }
         const lock = examOfflineStorage.getFastSyncActiveLock();
         // Nếu đang có phiên thi dở của đề này, ưu tiên lấy đề đã lưu trong localStorage
         if (lock && lock.isActive && lock.examId === computedExamId) {
@@ -253,7 +274,6 @@ function StandardExamRoomContent() {
     return getPracticeExam(subjectSlug, levelParam, gradeParam, chapterParam, formatParam, {
       requestedCount: countParam,
       quizCount: quizCountParam,
-      essayCount: essayCountParam,
       durationMinutes: durationParam,
       practiceMode: practiceModeParam,
       targetDifficulty: difficultyParam,
@@ -269,6 +289,22 @@ function StandardExamRoomContent() {
     let isCancelled = false;
 
     const syncOrFetchExam = async () => {
+      // 0. Nếu vừa được khởi tạo sẵn từ màn DiagnosticGateOverlay -> giữ nguyên 12 câu vừa bung, không gọi API đè lại
+      if (preloadedFromGateRef.current) {
+        try {
+          const preloadedRaw = sessionStorage.getItem(`schoolify_preloaded_exam_${computedExamId}`);
+          if (preloadedRaw) {
+            const parsedPreloaded = JSON.parse(preloadedRaw);
+            if (parsedPreloaded && Array.isArray(parsedPreloaded.questions) && parsedPreloaded.questions.length > 0) {
+              if (!isCancelled) setExam(parsedPreloaded);
+              sessionStorage.removeItem(`schoolify_preloaded_exam_${computedExamId}`);
+              preloadedFromGateRef.current = false;
+              return;
+            }
+          }
+        } catch {}
+      }
+
       // 1. Nếu đang có phiên thi dở dang hợp lệ, giữ nguyên phiên
       let restored: PracticeExamPackage | null = null;
       if (typeof window !== 'undefined') {
@@ -305,8 +341,9 @@ function StandardExamRoomContent() {
           practiceMode: practiceModeParam,
           targetDifficulty: difficultyParam,
           topicTagFilter: topicTagParam,
-          level: levelParam,
+          level: isAssessment ? ('ASSESSMENT' as any) : levelParam,
           format: formatParam,
+          useDiamonds: useDiamondsParam,
         });
 
         if (!isCancelled && liveExam && Array.isArray(liveExam.questions) && liveExam.questions.length > 0) {
@@ -319,7 +356,7 @@ function StandardExamRoomContent() {
         }
       } catch (err: any) {
         if (!isCancelled && (err?.isInsufficientPoints || err?.errorCode === 'INSUFFICIENT_EXAM_POINTS')) {
-          const costInfo = getExamLevelCost(levelParam);
+          const costInfo = getExamLevelCost(isAssessment ? 'ASSESSMENT' : levelParam);
           examOfflineStorage.clearActiveExamSession().catch(() => {});
           if (typeof window !== 'undefined') {
             try {
@@ -331,6 +368,10 @@ function StandardExamRoomContent() {
           setOutOfPointsBlocked({
             isBlocked: true,
             currentPoints: Math.max(0, Number(err?.data?.currentPoints ?? 0)),
+            currentDiamonds: Math.max(
+              0,
+              Number(err?.data?.currentDiamonds ?? err?.data?.diamonds ?? getCachedDiamondsBalance() ?? 0)
+            ),
             requiredPoints: Number(err?.data?.requiredPoints ?? costInfo.costPoints),
             levelLabel: err?.data?.levelLabel || costInfo.label,
           });
@@ -353,7 +394,6 @@ function StandardExamRoomContent() {
     formatParam,
     countParam,
     quizCountParam,
-    essayCountParam,
     durationParam,
     practiceModeParam,
     difficultyParam,
@@ -407,10 +447,6 @@ function StandardExamRoomContent() {
                 ov.shortAnswerCorrect !== undefined
                   ? String(ov.shortAnswerCorrect)
                   : q.shortAnswerCorrect,
-              essaySampleAnswer:
-                ov.essaySampleAnswer !== undefined
-                  ? String(ov.essaySampleAnswer)
-                  : q.essaySampleAnswer,
             };
           });
           if (!changed) return prev;
@@ -449,7 +485,6 @@ function StandardExamRoomContent() {
       explanation: string;
     }>;
     shortAnswerCorrect: string;
-    essaySampleAnswer: string;
   }>({
     title: '',
     topicTag: '',
@@ -469,7 +504,6 @@ function StandardExamRoomContent() {
       { subId: 'd', statement: '', isCorrect: false, explanation: '' },
     ],
     shortAnswerCorrect: '',
-    essaySampleAnswer: '',
   });
 
   const handleOpenAdminEditQuestion = React.useCallback((q: ExamQuestion) => {
@@ -504,7 +538,6 @@ function StandardExamRoomContent() {
               { subId: 'd', statement: '', isCorrect: false, explanation: '' },
             ],
       shortAnswerCorrect: q.shortAnswerCorrect || '',
-      essaySampleAnswer: q.essaySampleAnswer || '',
     });
   }, []);
 
@@ -536,11 +569,6 @@ function StandardExamRoomContent() {
                 shortAnswerCorrect: adminEditDraft.shortAnswerCorrect.trim(),
               }
             : {}),
-          ...(q.type === 'ESSAY'
-            ? {
-                essaySampleAnswer: adminEditDraft.essaySampleAnswer,
-              }
-            : {}),
         };
 
         await studentExamsService.updateQuestionDirect(q.id, {
@@ -556,7 +584,6 @@ function StandardExamRoomContent() {
           choices: updatedQ.choices,
           statements: updatedQ.statements,
           shortAnswerCorrect: updatedQ.shortAnswerCorrect,
-          essaySampleAnswer: updatedQ.essaySampleAnswer,
         });
 
         setExam((prev) => {
@@ -590,21 +617,6 @@ function StandardExamRoomContent() {
     ]
   );
 
-  // Phân chia danh sách câu hỏi Trắc nghiệm và Tự luận
-  const quizQuestions = React.useMemo(
-    () => exam.questions.filter((q) => q.type !== 'ESSAY'),
-    [exam.questions]
-  );
-  const essayQuestions = React.useMemo(
-    () => exam.questions.filter((q) => q.type === 'ESSAY'),
-    [exam.questions]
-  );
-
-  // Tab state (giống /student/learn/crs-01/ls-01: 'quiz' | 'essay')
-  const [activeTab, setActiveTab] = React.useState<'quiz' | 'essay'>(
-    formatParam === 'ESSAY' ? 'essay' : 'quiz'
-  );
-
   // Timer state (Tách biệt khỏi React state của ExamRoomPage để tránh re-render toàn bộ đề thi mỗi giây)
   const totalLimitSeconds = exam.durationMinutes * 60;
   const [timerManager, setTimerManager] = React.useState<ExamTimerManager | null>(null);
@@ -615,7 +627,6 @@ function StandardExamRoomContent() {
   const [multipleChoices, setMultipleChoices] = React.useState<Record<string, 'A' | 'B' | 'C' | 'D'>>({});
   const [trueFalseAnswers, setTrueFalseAnswers] = React.useState<Record<string, Record<string, boolean>>>({});
   const [shortAnswers, setShortAnswers] = React.useState<Record<string, string>>({});
-  const [essayAnswers, setEssayAnswers] = React.useState<Record<string, string>>({});
   const [flaggedIds, setFlaggedIds] = React.useState<Record<string, boolean>>({});
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
   const [lastSaved, setLastSaved] = React.useState<string>('Đã lưu an toàn');
@@ -624,7 +635,6 @@ function StandardExamRoomContent() {
     multipleChoices: {} as Record<string, 'A' | 'B' | 'C' | 'D'>,
     trueFalseAnswers: {} as Record<string, Record<string, boolean>>,
     shortAnswers: {} as Record<string, string>,
-    essayAnswers: {} as Record<string, string>,
     flaggedIds: {} as Record<string, boolean>,
   });
 
@@ -633,19 +643,13 @@ function StandardExamRoomContent() {
       multipleChoices,
       trueFalseAnswers,
       shortAnswers,
-      essayAnswers,
       flaggedIds,
     };
-  }, [multipleChoices, trueFalseAnswers, shortAnswers, essayAnswers, flaggedIds]);
+  }, [multipleChoices, trueFalseAnswers, shortAnswers, flaggedIds]);
 
-  // Quick jump to a question and auto switch tab if needed
-  const handleJumpToQuestion = (q: ExamQuestion, globalIdx: number) => {
+  // Quick jump to a question
+  const handleJumpToQuestion = (_q: ExamQuestion, globalIdx: number) => {
     setActiveQuestionIdx(globalIdx);
-    if (q.type === 'ESSAY' && activeTab !== 'essay') {
-      setActiveTab('essay');
-    } else if (q.type !== 'ESSAY' && activeTab !== 'quiz') {
-      setActiveTab('quiz');
-    }
     setIsMobileSidebarOpen(false);
     setTimeout(() => {
       const scrollContainer = document.getElementById('exam-main-scroll');
@@ -784,7 +788,6 @@ function StandardExamRoomContent() {
           snap.originalExam.studentAnswers.trueFalseAnswers || {}
         );
         setShortAnswers(snap.originalExam.studentAnswers.shortAnswers || {});
-        setEssayAnswers(snap.originalExam.studentAnswers.essayAnswers || {});
         setSubmittedTimeSpent(snap.timeSpentSeconds || 0);
         setCurrentSnapshotId(snap.id);
         setCurrentAttemptToken(snap.attemptToken || attemptTokenParam);
@@ -845,9 +848,6 @@ function StandardExamRoomContent() {
           if (ans.shortAnswers && Object.keys(ans.shortAnswers).length > 0) {
             setShortAnswers(ans.shortAnswers);
           }
-          if (ans.essayAnswers && Object.keys(ans.essayAnswers).length > 0) {
-            setEssayAnswers(ans.essayAnswers);
-          }
           if (ans.flaggedIds && Object.keys(ans.flaggedIds).length > 0) {
             setFlaggedIds(ans.flaggedIds);
           }
@@ -898,7 +898,6 @@ function StandardExamRoomContent() {
       multipleChoices: answersDraftRef.current.multipleChoices,
       trueFalseAnswers: answersDraftRef.current.trueFalseAnswers,
       shortAnswers: answersDraftRef.current.shortAnswers,
-      essayAnswers: answersDraftRef.current.essayAnswers,
       flaggedIds: answersDraftRef.current.flaggedIds,
     };
 
@@ -910,19 +909,23 @@ function StandardExamRoomContent() {
     });
 
     if (typeof window !== 'undefined' && navigator.onLine) {
-      studentExamsService
-        .submitExamResult({
-          sessionId: exam.id,
-          examId: exam.id,
-          examTitle: exam.title,
-          subjectSlug: exam.subjectSlug,
-          grade: exam.grade,
-          chapterId: exam.chapterId,
-          timeSpentSeconds: timeSpent,
-          answers: answersPayload,
-          isAutoSubmit,
-        })
-        .catch((err) => console.warn('[handleSubmitExam] Direct BE submit skipped:', err));
+      if (!isAssessment) {
+        studentExamsService
+          .submitExamResult({
+            sessionId: exam.id,
+            examId: exam.id,
+            examTitle: exam.title,
+            subjectSlug: exam.subjectSlug,
+            grade: exam.grade,
+            chapterId: exam.chapterId,
+            level: levelParam,
+            practiceMode: practiceModeParam,
+            timeSpentSeconds: timeSpent,
+            answers: answersPayload,
+            isAutoSubmit,
+          })
+          .catch((err) => console.warn('[handleSubmitExam] Direct BE submit skipped:', err));
+      }
 
       await examOfflineStorage.syncPendingSubmissions();
     }
@@ -1008,16 +1011,6 @@ function StandardExamRoomContent() {
     });
   };
 
-  // Essay Answer Change
-  const handleEssayAnswerChange = (qId: string, val: string) => {
-    if (isSubmitted) return;
-    setEssayAnswers((prev) => {
-      const updated = { ...prev, [qId]: val };
-      triggerDebouncedSave({ essayAnswers: updated });
-      return updated;
-    });
-  };
-
   // Check if a question is answered
   const isQuestionAnswered = (q: ExamQuestion): boolean => {
     if (q.type === 'MULTIPLE_CHOICE') return !!multipleChoices[q.id];
@@ -1026,13 +1019,10 @@ function StandardExamRoomContent() {
       return answers && Object.keys(answers).length === 4;
     }
     if (q.type === 'SHORT_ANSWER') return !!shortAnswers[q.id]?.trim();
-    if (q.type === 'ESSAY') return !!essayAnswers[q.id]?.trim();
     return false;
   };
 
   const answeredCount = exam.questions.filter(isQuestionAnswered).length;
-  const answeredQuizCount = quizQuestions.filter(isQuestionAnswered).length;
-  const answeredEssayCount = essayQuestions.filter(isQuestionAnswered).length;
 
   // Calculate detailed exam results
   const examResult = React.useMemo(() => {
@@ -1081,14 +1071,6 @@ function StandardExamRoomContent() {
           correctCount++;
         } else if (studentAns) {
           wrongCount++;
-        }
-      } else if (q.type === 'ESSAY') {
-        const studentEssay = essayAnswers[q.id]?.trim();
-        // Giả lập chấm điểm tự luận: hoàn thành bài làm được điểm cộng khuyến khích
-        if (studentEssay && studentEssay.length > 30) {
-          earnedScore = q.score * 0.85; // 85% điểm số nếu trình bày đầy đủ
-          isCorrect = true;
-          correctCount++;
         }
       }
 
@@ -1188,7 +1170,6 @@ function StandardExamRoomContent() {
     multipleChoices,
     trueFalseAnswers,
     shortAnswers,
-    essayAnswers,
     answeredCount,
     submittedTimeSpent,
   ]);
@@ -1213,15 +1194,22 @@ function StandardExamRoomContent() {
         practiceMode: practiceModeParam,
         targetDifficulty: difficultyParam,
         topicTagFilter: topicTagParam,
-        level: levelParam,
+        level: isAssessment ? ('ASSESSMENT' as any) : levelParam,
         format: formatParam,
+        useDiamonds: useDiamondsParam,
+        isRetake: true,
+        shuffleAnswers: true,
       });
     } catch (err: any) {
       if (err?.isInsufficientPoints || err?.errorCode === 'INSUFFICIENT_EXAM_POINTS') {
-        const costInfo = getExamLevelCost(levelParam);
+        const costInfo = getExamLevelCost(isAssessment ? 'ASSESSMENT' : levelParam);
         setOutOfPointsBlocked({
           isBlocked: true,
           currentPoints: Math.max(0, Number(err?.data?.currentPoints ?? 0)),
+          currentDiamonds: Math.max(
+            0,
+            Number(err?.data?.currentDiamonds ?? err?.data?.diamonds ?? getCachedDiamondsBalance() ?? 0)
+          ),
           requiredPoints: Number(err?.data?.requiredPoints ?? costInfo.costPoints),
           levelLabel: err?.data?.levelLabel || costInfo.label,
         });
@@ -1230,12 +1218,15 @@ function StandardExamRoomContent() {
       fresh = getPracticeExam(subjectSlug, levelParam, gradeParam, chapterParam, formatParam, {
         requestedCount: countParam,
         quizCount: quizCountParam,
-        essayCount: essayCountParam,
         durationMinutes: durationParam,
         practiceMode: practiceModeParam,
         targetDifficulty: difficultyParam,
         topicTagFilter: topicTagParam,
       });
+      const retakeSalt = `retake-${Date.now()}`;
+      fresh.questions = fresh.questions.map((q) =>
+        permuteQuestionChoicesGuaranteedShift(q, retakeSalt)
+      );
     }
     setExam(fresh);
     if (typeof window !== 'undefined') {
@@ -1259,7 +1250,6 @@ function StandardExamRoomContent() {
     setMultipleChoices({});
     setTrueFalseAnswers({});
     setShortAnswers({});
-    setEssayAnswers({});
     setFlaggedIds({});
     setActiveQuestionIdx(0);
     setSubmittedTimeSpent(0);
@@ -1326,8 +1316,8 @@ function StandardExamRoomContent() {
         grade: exam.grade,
         chapterId: exam.chapterId,
         chapterName: exam.chapterName,
-        level: levelParam,
-        practiceMode: practiceModeParam,
+        level: isAssessment ? ('ASSESSMENT' as any) : levelParam,
+        practiceMode: isAssessment ? 'ASSESSMENT' : practiceModeParam,
         track: activeChapterTrack,
         createdAt: new Date().toISOString(),
         durationMinutes: exam.durationMinutes,
@@ -1343,7 +1333,6 @@ function StandardExamRoomContent() {
             multipleChoices: { ...multipleChoices },
             trueFalseAnswers: { ...trueFalseAnswers },
             shortAnswers: { ...shortAnswers },
-            essayAnswers: { ...essayAnswers },
           },
           wrongQuestionIds: wrongIds,
         },
@@ -1358,30 +1347,88 @@ function StandardExamRoomContent() {
       setCurrentSnapshotId(snapId);
       setCurrentAttemptToken(token);
 
-      // Nếu là Khách làm thử (chưa đăng nhập) -> Lưu tiến độ Sao & bài nộp tạm vào localStorage để đồng bộ vào PostgreSQL ngay khi Login
+      // Nếu là Khách làm thử (chưa đăng nhập) -> Lưu tiến độ hoặc kết quả Test năng lực vào localStorage để đồng bộ vào PostgreSQL khi Login
       if (!user?.id) {
-        recordGuestChapterCompletion({
-          subjectSlug: exam.subjectSlug,
-          grade: exam.grade,
-          track: activeChapterTrack,
-          chapterId: exam.chapterId,
-          level: levelParam,
-          score: examResult.finalScore,
-          submissionPayload: {
-            attemptToken: token,
-            examId: exam.id,
-            examTitle: exam.title,
+        if (isAssessment) {
+          const subjChapters = getChaptersBySubject(exam.subjectSlug, exam.grade);
+          const chTrackMap = new Map(subjChapters.map((c) => [c.id, c.track || 'DEFAULT']));
+          const trackAgg: Record<string, { correct: number; total: number }> =
+            exam.subjectSlug === 'toan-hoc'
+              ? { TOAN_SO: { correct: 0, total: 0 }, TOAN_HINH: { correct: 0, total: 0 } }
+              : { DEFAULT: { correct: 0, total: 0 } };
+          const bloomAgg: Record<string, { correct: number; total: number }> = {
+            NHAN_BIET: { correct: 0, total: 0 },
+            THONG_HIEU: { correct: 0, total: 0 },
+            VAN_DUNG: { correct: 0, total: 0 },
+          };
+
+          for (const qr of examResult.questionResults) {
+            const qAny: any = qr.question;
+            const tr =
+              qAny.track ||
+              chTrackMap.get(Number(qAny.chapterId || 1)) ||
+              (exam.subjectSlug === 'toan-hoc' ? 'TOAN_SO' : 'DEFAULT');
+            if (!trackAgg[tr]) trackAgg[tr] = { correct: 0, total: 0 };
+            trackAgg[tr].total += 1;
+            if (qr.isCorrect) trackAgg[tr].correct += 1;
+
+            const bl =
+              qr.question.difficulty === 'EASY'
+                ? 'NHAN_BIET'
+                : qr.question.difficulty === 'HARD' || qr.question.difficulty === 'VERY_HARD'
+                  ? 'VAN_DUNG'
+                  : 'THONG_HIEU';
+            bloomAgg[bl].total += 1;
+            if (qr.isCorrect) bloomAgg[bl].correct += 1;
+          }
+
+          const trackScores: Record<string, number> = {};
+          for (const [tk, st] of Object.entries(trackAgg)) {
+            trackScores[tk] =
+              st.total > 0 ? Number(((st.correct / st.total) * 10).toFixed(2)) : examResult.finalScore;
+          }
+
+          const diagLevel: 'BASIC' | 'MEDIUM' | 'ADVANCED' =
+            examResult.finalScore >= 8.0
+              ? 'ADVANCED'
+              : examResult.finalScore >= 5.0
+                ? 'MEDIUM'
+                : 'BASIC';
+
+          recordGuestDiagnosticResult({
+            subject: exam.subjectSlug,
+            grade: exam.grade,
+            assignedLevel: diagLevel,
+            overallScore: examResult.finalScore,
+            trackScores,
+            bloomBreakdown: bloomAgg,
+            completedAt: new Date().toISOString(),
+          });
+          chapterRoadmapService.notifyUpdated();
+        } else {
+          recordGuestChapterCompletion({
             subjectSlug: exam.subjectSlug,
             grade: exam.grade,
+            track: activeChapterTrack,
             chapterId: exam.chapterId,
             level: levelParam,
-            practiceMode: practiceModeParam,
-            timeSpentSeconds: examResult.timeSpentSeconds,
-            scoreOverride: examResult.finalScore,
-            answers: snapshot.originalExam.studentAnswers,
-            snapshotData: snapshot,
-          },
-        });
+            score: examResult.finalScore,
+            submissionPayload: {
+              attemptToken: token,
+              examId: exam.id,
+              examTitle: exam.title,
+              subjectSlug: exam.subjectSlug,
+              grade: exam.grade,
+              chapterId: exam.chapterId,
+              level: levelParam,
+              practiceMode: practiceModeParam,
+              timeSpentSeconds: examResult.timeSpentSeconds,
+              scoreOverride: examResult.finalScore,
+              answers: snapshot.originalExam.studentAnswers,
+              snapshotData: snapshot,
+            },
+          });
+        }
       }
 
       // Cập nhật URL với attemptToken bảo mật (chống F5 bị mất màn hình kết quả)
@@ -1418,7 +1465,6 @@ function StandardExamRoomContent() {
     multipleChoices,
     trueFalseAnswers,
     shortAnswers,
-    essayAnswers,
   ]);
 
   // Mở modal snapshot
@@ -1815,6 +1861,17 @@ function StandardExamRoomContent() {
     setQuickDrillCheckedIds(nextChecked);
     setQuickDrillSkippedIds(nextSkipped);
 
+    const isRight = isQuickDrillQuestionCorrect(qd);
+    if (isRight) {
+      toast.success(`🎉 Chúc mừng! Lần ${idx + 1}/3 trả lời chính xác!`, {
+        description: 'Bạn đã nắm đúng bản chất phương pháp giải của dạng bài này.',
+      });
+    } else {
+      toast.info(`💙 Chia buồn! Lần ${idx + 1}/3 chưa chính xác rồi.`, {
+        description: 'Đừng nản lòng nhé! Hãy đọc lời giải phân tích bên dưới trước khi qua lượt tiếp theo.',
+      });
+    }
+
     const allResolved = quickDrillQuestions.every(
       (item) => Boolean(nextChecked[item.id] || nextSkipped[item.id])
     );
@@ -2007,6 +2064,16 @@ function StandardExamRoomContent() {
     setRemediationResult(result);
     setRemediationSubmitted(true);
 
+    if (finalScore >= 5.0) {
+      toast.success(`🎉 Chúc mừng! Bạn đã đạt ${finalScore}/10đ bài khắc phục!`, {
+        description: `Đúng ${correct}/${remediationExam.questions.length} câu biến thể.`,
+      });
+    } else {
+      toast.info(`💙 Chia buồn cùng bạn! Bài khắc phục đạt ${finalScore}/10đ.`, {
+        description: 'Đừng nản lòng nhé! Hãy xem kỹ lời giải từng câu bên dưới để nắm vững phương pháp.',
+      });
+    }
+
     if (currentSnapshotId) {
       examSnapshotService
         .updateRemediationInSnapshot(currentSnapshotId, {
@@ -2020,7 +2087,6 @@ function StandardExamRoomContent() {
             multipleChoices: remediationChoices,
             trueFalseAnswers: remediationTrueFalse,
             shortAnswers: remediationShortAnswers,
-            essayAnswers: {},
           },
         })
         .then(() => toast.success('Đã lưu kết quả bài khắc phục vào đề thi!'))
@@ -2042,14 +2108,14 @@ function StandardExamRoomContent() {
     }
   }, [outOfPointsBlocked.isBlocked, computedExamId, exam.id]);
 
-  // Kiểm tra & Trừ điểm năng lượng TRƯỚC khi bắt đầu mở đề thi (PostgreSQL: Cơ bản -3đ, TB -4đ, Giỏi -9đ)
+  // Kiểm tra & Trừ điểm năng lượng TRƯỚC khi bắt đầu mở đề thi (PostgreSQL: Cơ bản -3đ, TB -4đ, Giỏi -9đ, ASSESSMENT 0đ; hỗ trợ Ngọc Tri Thức 1:1)
   React.useEffect(() => {
     if (attemptTokenParam || isSubmitted) {
       setIsPointsVerified(true);
       return;
     }
 
-    if (isAdmin) {
+    if (isAdmin || isAssessment) {
       if (typeof window !== 'undefined') {
         sessionStorage.setItem(`schoolify_started_pts_${computedExamId}`, '1');
         sessionStorage.setItem(`schoolify_started_pts_${exam.id}`, '1');
@@ -2088,14 +2154,26 @@ function StandardExamRoomContent() {
       return;
     }
 
-    const costInfo = getExamLevelCost(levelParam);
+    const costInfo = getExamLevelCost(isAssessment ? 'ASSESSMENT' : levelParam);
     const cachedPoints = getCachedPointsBalance();
-    if (cachedPoints !== null && (cachedPoints <= 0 || cachedPoints < costInfo.costPoints)) {
+    const cachedDiamonds = Number(getCachedDiamondsBalance() ?? 0);
+    const shouldAutoUseDiamonds =
+      useDiamondsParam ||
+      (cachedPoints !== null &&
+        cachedPoints < costInfo.costPoints &&
+        cachedDiamonds >= costInfo.costPoints);
+
+    if (
+      cachedPoints !== null &&
+      cachedPoints < costInfo.costPoints &&
+      !shouldAutoUseDiamonds
+    ) {
       examOfflineStorage.clearActiveExamSession().catch(() => {});
       setIsPointsVerified(false);
       setOutOfPointsBlocked({
         isBlocked: true,
         currentPoints: Math.max(0, cachedPoints),
+        currentDiamonds: Math.max(0, cachedDiamonds),
         requiredPoints: costInfo.costPoints,
         levelLabel: costInfo.label,
       });
@@ -2105,11 +2183,12 @@ function StandardExamRoomContent() {
     examPointsService
       .startExamWithPoints({
         userId: user?.id,
-        level: isAssessment ? 'BASIC' : levelParam,
+        level: isAssessment ? 'ASSESSMENT' : levelParam,
         examTitle: exam.title,
         subjectSlug,
         grade: gradeParam,
         chapterId: chapterParam,
+        useDiamonds: shouldAutoUseDiamonds,
       })
       .then((res) => {
         if (res?.ok) {
@@ -2127,6 +2206,10 @@ function StandardExamRoomContent() {
           setOutOfPointsBlocked({
             isBlocked: true,
             currentPoints: Math.max(0, Number(res?.data?.currentPoints ?? 0)),
+            currentDiamonds: Math.max(
+              0,
+              Number(res?.data?.currentDiamonds ?? res?.data?.diamonds ?? getCachedDiamondsBalance())
+            ),
             requiredPoints: Number(res?.data?.requiredPoints ?? costInfo.costPoints),
             levelLabel: res?.data?.levelLabel || costInfo.label,
           });
@@ -2139,6 +2222,10 @@ function StandardExamRoomContent() {
         setOutOfPointsBlocked({
           isBlocked: true,
           currentPoints: Math.max(0, Number(err?.data?.currentPoints ?? 0)),
+          currentDiamonds: Math.max(
+            0,
+            Number(err?.data?.currentDiamonds ?? err?.data?.diamonds ?? getCachedDiamondsBalance())
+          ),
           requiredPoints: Number(err?.data?.requiredPoints ?? costInfo.costPoints),
           levelLabel: err?.data?.levelLabel || costInfo.label,
         });
@@ -2156,9 +2243,10 @@ function StandardExamRoomContent() {
     subjectSlug,
     gradeParam,
     chapterParam,
+    useDiamondsParam,
   ]);
 
-  // Xử lý cộng/trừ điểm thưởng Token khi nộp bài thi (PostgreSQL)
+  // Xử lý thông báo Chúc mừng / Chia buồn & cộng/trừ điểm thưởng Token khi nộp bài thi (PostgreSQL)
   React.useEffect(() => {
     if (isSubmitted && examResult && !hasProcessedRewardRef.current) {
       hasProcessedRewardRef.current = true;
@@ -2168,6 +2256,19 @@ function StandardExamRoomContent() {
         sessionStorage.removeItem(deductedKey);
         sessionStorage.removeItem(examDeductedKey);
       }
+
+      if (examResult.finalScore >= 5.0) {
+        toast.success(`🎉 Chúc mừng! Bạn đạt ${examResult.finalScore}/10 điểm!`, {
+          description: `Bạn đã trả lời đúng ${examResult.correctCount}/${exam.questions.length} câu hỏi. Phong độ rất tuyệt vời!`,
+          duration: 6000,
+        });
+      } else {
+        toast.info(`💙 Chia buồn cùng bạn! Bài thi đạt ${examResult.finalScore}/10 điểm.`, {
+          description: `Đừng nản lòng nhé! Hãy xem Bản đồ lỗ hổng và Luyện bù 5 câu để gỡ điểm ngay.`,
+          duration: 6000,
+        });
+      }
+
       if (!user?.id) {
         return;
       }
@@ -2175,7 +2276,7 @@ function StandardExamRoomContent() {
         .settleSubmissionPoints({
           userId: user?.id,
           score: examResult.finalScore,
-          level: levelParam,
+          level: isAssessment ? 'ASSESSMENT' : levelParam,
           examTitle: exam.title,
         })
         .then((res) => {
@@ -2187,13 +2288,23 @@ function StandardExamRoomContent() {
         })
         .catch(() => {});
     }
-  }, [isSubmitted, examResult, computedExamId, exam.id, exam.title, user?.id, levelParam]);
+  }, [
+    isSubmitted,
+    examResult,
+    computedExamId,
+    exam.id,
+    exam.title,
+    exam.questions.length,
+    user?.id,
+    levelParam,
+    isAssessment,
+  ]);
 
   // Lưu kết quả đánh giá năng lực nếu đây là bài thi chẩn đoán (ASSESSMENT)
   React.useEffect(() => {
     if (isSubmitted && isAssessment && examResult) {
       const assignedLevel: PracticeLevel =
-        examResult.finalScore >= 8.5
+        examResult.finalScore >= 8.0
           ? 'ADVANCED'
           : examResult.finalScore >= 5.0
           ? 'MEDIUM'
@@ -2207,13 +2318,14 @@ function StandardExamRoomContent() {
         }
         localStorage.setItem(`schoolify_competency_guest_${subjectSlug}`, assignedLevel);
       }
+      chapterRoadmapService.notifyUpdated();
     }
   }, [isSubmitted, isAssessment, examResult, user, subjectSlug]);
 
   const currentQ = exam.questions[activeQuestionIdx] || exam.questions[0];
 
   // =========================================================================
-  // VIEW: HẾT TIA SÁNG NĂNG LƯỢNG (CHẶN TẠO ĐỀ & MỞ POPUP ĐĂNG KÝ GÓI)
+  // VIEW: HẾT TIA SÁNG NĂNG LƯỢNG (CHẶN TẠO ĐỀ & MỞ POPUP ĐỔI NGỌC 1:1 HOẶC ĐĂNG KÝ GÓI)
   // =========================================================================
   if (outOfPointsBlocked.isBlocked) {
     return (
@@ -2223,12 +2335,39 @@ function StandardExamRoomContent() {
           isOpen={true}
           onClose={() => {
             examOfflineStorage.clearActiveExamSession().catch(() => {});
-            router.replace('/luyen-thi');
+            router.replace(canonicalTopicMapHref);
           }}
           currentPoints={outOfPointsBlocked.currentPoints}
+          currentDiamonds={outOfPointsBlocked.currentDiamonds}
           requiredPoints={outOfPointsBlocked.requiredPoints}
           levelLabel={outOfPointsBlocked.levelLabel}
-          secondaryLabel="Quay lại Cổng Luyện Thi"
+          secondaryLabel="Quay lại Bản Đồ Chuyên Đề"
+          onUseDiamonds={async () => {
+            const res = await examPointsService.startExamWithPoints({
+              userId: user?.id,
+              level: isAssessment ? 'ASSESSMENT' : levelParam,
+              examTitle: exam.title,
+              subjectSlug,
+              grade: gradeParam,
+              chapterId: chapterParam,
+              useDiamonds: true,
+            });
+            if (res?.ok) {
+              const deductedKey = `schoolify_started_pts_${computedExamId}`;
+              const examDeductedKey = `schoolify_started_pts_${exam.id}`;
+              if (typeof window !== 'undefined') {
+                sessionStorage.setItem(deductedKey, '1');
+                sessionStorage.setItem(examDeductedKey, '1');
+              }
+              setOutOfPointsBlocked((prev) => ({ ...prev, isBlocked: false }));
+              setIsPointsVerified(true);
+              toast.success('Đã mở khóa đề thi bằng Ngọc Tri Thức 💎!', {
+                description: res.message,
+              });
+            } else {
+              toast.error(res?.message || 'Số dư Ngọc Tri Thức không đủ để mở đề.');
+            }
+          }}
           onNavigatePricing={() => {
             examOfflineStorage.clearActiveExamSession().catch(() => {});
             router.replace('/pricing');
@@ -2419,114 +2558,179 @@ function StandardExamRoomContent() {
     const strokeDashoffset = gaugeCircumference - (Math.min(10, Math.max(0, scoreVal)) / 10) * gaugeCircumference;
 
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#070B14] text-slate-900 dark:text-slate-100 flex flex-col pt-20 font-sans overflow-x-hidden w-full max-w-[100vw]">
+      <div className="min-h-screen bg-slate-50 dark:bg-[#070B14] text-slate-900 dark:text-slate-100 flex flex-col pt-20 font-sans overflow-x-clip w-full">
         <Navbar />
 
         <div className="max-w-5xl lg:max-w-6xl mx-auto space-y-6 sm:space-y-8 w-full py-8 px-4 sm:px-6 lg:px-8">
           
           {/* ========================================================================= */}
-          {/* 1. HEADER KHẢO THÍ CHUẨN MỰC                                             */}
+          {/* 1. HEADER KHẢO THÍ CHUẨN MỰC & NÚT VỀ TRANG CHỦ / BẢN ĐỒ CHUYÊN ĐỀ       */}
           {/* ========================================================================= */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
-            <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-              {exam.subjectName} · Khối {exam.grade} · {exam.chapterName}
-            </span>
-
-            <div className="flex items-center gap-3 shrink-0 text-xs text-slate-500 dark:text-slate-400">
-              <span className="inline-flex items-center gap-1.5 font-medium">
-                <CheckCircle2 className="w-4 h-4" />
-                Đã nộp và chấm tự động
+            <div className="space-y-1 min-w-0">
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-300 block">
+                {exam.subjectName} · Khối {exam.grade} · {exam.chapterName}
               </span>
-              {currentAttemptToken && (
-                <span className="font-mono hidden sm:inline text-slate-400">
-                  #{currentAttemptToken.slice(0, 14)}
+              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                <span className="inline-flex items-center gap-1.5 font-medium text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Đã nộp và chấm tự động
                 </span>
-              )}
+                {currentAttemptToken && (
+                  <span className="font-mono text-slate-400">
+                    #{currentAttemptToken.slice(0, 14)}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <Link
+                href="/"
+                onClick={() => {
+                  examOfflineStorage.clearActiveExamSession().catch(() => {});
+                }}
+              >
+                <Button
+                  type="button"
+                  variant="outline"
+                  data-testid="result-back-home-btn"
+                  leftIcon={<Home className="w-4 h-4 text-[#00B8DD]" />}
+                  className="rounded-xl font-bold text-xs min-h-[40px] border-slate-300 dark:border-slate-700 cursor-pointer"
+                >
+                  Về Trang Chủ
+                </Button>
+              </Link>
+              <Link
+                href={canonicalTopicMapHref}
+                onClick={() => {
+                  examOfflineStorage.clearActiveExamSession().catch(() => {});
+                }}
+              >
+                <Button
+                  type="button"
+                  data-testid="result-back-constellation-btn"
+                  leftIcon={<Compass className="w-4 h-4" />}
+                  className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold rounded-xl text-xs min-h-[40px] cursor-pointer shadow-xs"
+                >
+                  Bản Đồ Chuyên Đề
+                </Button>
+              </Link>
             </div>
           </div>
 
           {/* ========================================================================= */}
-          {/* 4 TABS NAVIGATION (1. Tổng quan -> 2. Bản đồ lỗ hổng -> 3. Lộ trình -> 4. Lời giải) */}
+          {/* 1B. BANNER THÔNG BÁO CHÚC MỪNG (ĐẠT) / CHIA BUỒN & KHÍCH LỆ (CHƯA ĐẠT)   */}
+          {/* ========================================================================= */}
+          <div
+            data-testid="exam-emotion-feedback-banner"
+            className={cn(
+              'p-4 sm:p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all',
+              scoreVal >= 5.0
+                ? 'bg-gradient-to-r from-emerald-500/10 via-[#00B8DD]/10 to-teal-500/5 border-emerald-500/40 dark:border-emerald-500/30'
+                : 'bg-gradient-to-r from-rose-500/10 via-amber-500/10 to-slate-500/5 border-rose-500/40 dark:border-rose-500/30'
+            )}
+          >
+            <div className="flex items-start gap-3.5 min-w-0">
+              <div
+                className={cn(
+                  'w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 text-xl font-black shadow-xs',
+                  scoreVal >= 5.0
+                    ? 'bg-emerald-500 text-white shadow-emerald-500/20'
+                    : 'bg-rose-500 text-white shadow-rose-500/20'
+                )}
+              >
+                {scoreVal >= 5.0 ? '🎉' : '💙'}
+              </div>
+              <div className="space-y-1 min-w-0">
+                <h2 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white leading-snug">
+                  {scoreVal >= 8.0
+                    ? `Chúc mừng bạn đã chinh phục xuất sắc đề thi với ${scoreVal}/10 điểm!`
+                    : scoreVal >= 5.0
+                    ? `Chúc mừng bạn đã vượt qua thử thách với ${scoreVal}/10 điểm!`
+                    : `Chia buồn cùng bạn! Bài thi đạt ${scoreVal}/10 điểm — Đừng nản lòng nhé!`}
+                </h2>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  {scoreVal >= 5.0
+                    ? `Bạn đã trả lời chính xác ${examResult.correctCount}/${exam.questions.length} câu hỏi. Hãy tiếp tục phát huy phong độ hoặc xem lời giải chi tiết để tối ưu tốc độ làm bài!`
+                    : `Mỗi câu sai hôm nay là một lỗ hổng được phát hiện kịp thời trước kỳ thi thật. Hãy xem Bản đồ lỗ hổng và bấm "Luyện bù 5 câu" để gỡ điểm ngay!`}
+                </p>
+              </div>
+            </div>
+
+            {scoreVal < 5.0 && weakTopicTagNames.length > 0 && (
+              <Button
+                type="button"
+                onClick={() => handleStartWeakTagRemediation5Q(weakTopicTagNames)}
+                className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl min-h-[40px] shrink-0 cursor-pointer self-start sm:self-center"
+              >
+                ⚡ Phục thù 5 câu ngay
+              </Button>
+            )}
+          </div>
+
+          {/* ========================================================================= */}
+          {/* 4 TABS NAVIGATION                                                         */}
           {/* ========================================================================= */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5 sm:gap-2 p-1.5 bg-slate-100 dark:bg-slate-900/80 rounded-2xl border border-slate-200/80 dark:border-slate-800 w-full">
-            {/* Tab 1 */}
             <button
               type="button"
               data-testid="result-tab-overview"
               onClick={() => setResultActiveTab('overview')}
               className={cn(
-                'flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-2 sm:px-3.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer select-none text-center',
+                'min-h-[44px] flex items-center justify-center py-2.5 sm:py-3 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer select-none text-center',
                 resultActiveTab === 'overview'
                   ? 'bg-white dark:bg-slate-800 text-[#00B8DD] shadow-xs border border-slate-200/60 dark:border-slate-700'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               )}
             >
-              <Award className="w-4 h-4 shrink-0" />
-              <span className="sm:hidden font-bold">1. Tổng quan</span>
-              <span className="hidden sm:inline">1. Tổng quan kết quả</span>
-              <span className="hidden xl:inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300">
-                {scoreVal}/10đ
-              </span>
+              <span className="sm:hidden">Tổng quan</span>
+              <span className="hidden sm:inline">Tổng quan kết quả</span>
             </button>
 
-            {/* Tab 2 */}
             <button
               type="button"
               data-testid="result-tab-gap-analysis"
               onClick={() => setResultActiveTab('gap_analysis')}
               className={cn(
-                'flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-2 sm:px-3.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer select-none text-center',
+                'min-h-[44px] flex items-center justify-center py-2.5 sm:py-3 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer select-none text-center',
                 resultActiveTab === 'gap_analysis'
                   ? 'bg-white dark:bg-slate-800 text-[#00B8DD] shadow-xs border border-slate-200/60 dark:border-slate-700'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               )}
             >
-              <BrainCircuit className="w-4 h-4 shrink-0" />
-              <span className="sm:hidden font-bold">2. Lỗ hổng</span>
-              <span className="hidden sm:inline">2. Bản đồ lỗ hổng</span>
-              <span className="hidden xl:inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300">
-                {weakTopicTagNames.length > 0 ? `${weakTopicTagNames.length} cần ôn` : 'Đạt'}
-              </span>
+              <span className="sm:hidden">Lỗ hổng</span>
+              <span className="hidden sm:inline">Bản đồ lỗ hổng</span>
             </button>
 
-            {/* Tab 3: Lộ trình Học tập Cá nhân hóa (tách riêng theo yêu cầu) */}
             <button
               type="button"
               data-testid="result-tab-roadmap"
               onClick={() => setResultActiveTab('roadmap_sync')}
               className={cn(
-                'flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-2 sm:px-3.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer select-none text-center',
+                'min-h-[44px] flex items-center justify-center py-2.5 sm:py-3 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer select-none text-center',
                 resultActiveTab === 'roadmap_sync'
                   ? 'bg-white dark:bg-slate-800 text-[#00B8DD] shadow-xs border border-slate-200/60 dark:border-slate-700'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               )}
             >
-              <Sparkles className="w-4 h-4 shrink-0" />
-              <span className="sm:hidden font-bold">3. Lộ trình</span>
-              <span className="hidden sm:inline">3. Lộ trình cá nhân</span>
-              <span className="hidden xl:inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#00B8DD]/15 text-[#00B8DD]">
-                {knowledgeUpdate?.topicDeltas?.length || tagDiagnosticGroups.length} chuyên đề
-              </span>
+              <span className="sm:hidden">Lộ trình</span>
+              <span className="hidden sm:inline">Lộ trình cá nhân</span>
             </button>
 
-            {/* Tab 4: Chi tiết lời giải */}
             <button
               type="button"
               data-testid="result-tab-solutions"
               onClick={() => setResultActiveTab('solutions')}
               className={cn(
-                'flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-2 sm:px-3.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer select-none text-center',
+                'min-h-[44px] flex items-center justify-center py-2.5 sm:py-3 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer select-none text-center',
                 resultActiveTab === 'solutions'
                   ? 'bg-white dark:bg-slate-800 text-[#00B8DD] shadow-xs border border-slate-200/60 dark:border-slate-700'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               )}
             >
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span className="sm:hidden font-bold">4. Lời giải</span>
-              <span className="hidden sm:inline">4. Chi tiết lời giải</span>
-              <span className="hidden xl:inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300">
-                {exam.questions.length} câu
-              </span>
+              <span className="sm:hidden">Lời giải</span>
+              <span className="hidden sm:inline">Chi tiết lời giải</span>
             </button>
           </div>
 
@@ -3043,23 +3247,39 @@ function StandardExamRoomContent() {
 
               {/* 3. AI COMPETENCY ASSESSMENT DIAGNOSIS (Nếu là bài đánh giá năng lực) */}
               {isAssessment && (
-                <Card className="p-6 rounded-2xl bg-white dark:bg-[#0B1324] border border-slate-200 dark:border-slate-800 shadow-none text-left space-y-2">
-                  <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                    Kết quả chẩn đoán năng lực
-                  </h3>
-                  <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                    Dựa trên điểm số <strong className="text-slate-950 dark:text-white font-semibold">{examResult.finalScore}/10</strong>, năng lực hiện tại của bạn phù hợp nhất với cấp độ:{' '}
-                    <span className="font-semibold text-slate-900 dark:text-white">
-                      {examResult.finalScore >= 8.5
-                        ? 'Nâng cao (Vận dụng cao 9-10đ)'
-                        : examResult.finalScore >= 5.0
-                        ? 'Trung bình (Học kỳ & Tốt nghiệp)'
-                        : 'Cơ bản (SGK & Lý thuyết)'}
-                    </span>.
+                <Card className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#0B1324] border border-[#00B8DD]/40 shadow-none text-left space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="space-y-1.5">
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                        Kết quả chẩn đoán &amp; Mở khóa lộ trình
+                      </h3>
+                      <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                        Dựa trên điểm số <strong className="text-slate-950 dark:text-white font-semibold">{examResult.finalScore}/10</strong>, hệ thống đã định vị năng lực ở mức:{' '}
+                        <span className="font-bold text-[#009BBD] dark:text-[#5CE1FF]">
+                          {examResult.finalScore >= 8.0
+                            ? 'Nâng cao (đã mở khóa sẵn cấp Trung bình & Nâng cao)'
+                            : examResult.finalScore >= 5.0
+                            ? 'Trung bình (đã mở khóa sẵn cấp Trung bình)'
+                            : 'Cơ bản (củng cố chắc nền tảng SGK)'}
+                        </span>.
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Kết quả và cấp độ mở khóa đã được lưu vào hồ sơ lộ trình môn {exam.subjectName} Lớp {exam.grade}.
+                      </p>
+                    </div>
+                    <Link
+                      href={`/luyen-thi/chuyen-de/${canonicalTopicSubject}`}
+                      onClick={() => {
+                        examOfflineStorage.clearActiveExamSession().catch(() => {});
+                      }}
+                      className="shrink-0"
+                    >
+                      <Button className="min-h-[44px] px-5 rounded-xl bg-[#00B8DD] hover:bg-[#009BBD] text-white font-bold text-xs sm:text-sm cursor-pointer">
+                        <span>Vào Bản Đồ Chòm Sao</span>
+                        <ArrowRight className="w-4 h-4 ml-1.5" />
+                      </Button>
+                    </Link>
                   </div>
-                  <p className="text-xs text-slate-500">
-                    Kết quả đã được cập nhật vào hồ sơ học tập. Kho môn học sẽ ưu tiên đề xuất lộ trình rèn luyện tương ứng.
-                  </p>
                 </Card>
               )}
 
@@ -3127,12 +3347,32 @@ function StandardExamRoomContent() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2.5">
-                  <Link href="/luyen-thi">
+                  <Link
+                    href={canonicalTopicMapHref}
+                    onClick={() => {
+                      examOfflineStorage.clearActiveExamSession().catch(() => {});
+                    }}
+                  >
+                    <Button
+                      variant="outline"
+                      leftIcon={<Compass className="w-4 h-4 text-[#00B8DD]" />}
+                      className="rounded-xl font-semibold min-h-[42px] text-xs sm:text-sm border-[#00B8DD]/40 text-[#00B8DD]"
+                    >
+                      Về Bản Đồ Chuyên Đề
+                    </Button>
+                  </Link>
+                  <Link
+                    href="/"
+                    onClick={() => {
+                      examOfflineStorage.clearActiveExamSession().catch(() => {});
+                    }}
+                  >
                     <Button
                       variant="ghost"
+                      leftIcon={<Home className="w-4 h-4" />}
                       className="rounded-xl font-semibold min-h-[42px] text-xs sm:text-sm text-slate-600 dark:text-slate-400"
                     >
-                      Chọn môn khác
+                      Về Trang Chủ
                     </Button>
                   </Link>
                 </div>
@@ -3338,12 +3578,17 @@ function StandardExamRoomContent() {
                           </p>
                         </div>
 
-                        <Link href={`/student/practice/${exam.subjectSlug}/lop-${exam.grade}`}>
+                        <Link
+                          href={canonicalTopicMapHref}
+                          onClick={() => {
+                            examOfflineStorage.clearActiveExamSession().catch(() => {});
+                          }}
+                        >
                           <Button
                             variant="outline"
                             className="rounded-xl font-semibold text-xs min-h-[40px] border-[#00B8DD]/50 text-[#00B8DD] hover:bg-[#00B8DD]/10 cursor-pointer shrink-0"
                           >
-                            Xem Lộ trình Cá nhân hóa
+                            Về Bản Đồ Chuyên Đề
                           </Button>
                         </Link>
                       </div>
@@ -3804,7 +4049,6 @@ function StandardExamRoomContent() {
                           return (q.statements || []).every((st) => tf[st.subId] === undefined);
                         }
                         if (q.type === 'SHORT_ANSWER') return !(shortAnswers[q.id] || '').trim();
-                        if (q.type === 'ESSAY') return !(essayAnswers[q.id] || '').trim();
                         return false;
                       };
 
@@ -3871,9 +4115,7 @@ function StandardExamRoomContent() {
                                           ? 'Trắc nghiệm 4 lựa chọn'
                                           : q.type === 'TRUE_FALSE'
                                           ? 'Trắc nghiệm Đúng/Sai'
-                                          : q.type === 'SHORT_ANSWER'
-                                          ? 'Điền đáp số'
-                                          : 'Tự luận'}
+                                          : 'Điền đáp số'}
                                       </span>
                                       {renderDifficultyBadge(q.difficulty, false)}
                                       {renderPreviousChapterBadge(q, false)}
@@ -4334,15 +4576,25 @@ function StandardExamRoomContent() {
                   >
                     Làm lại đề này
                   </Button>
-                  <Link href="/luyen-thi">
+                  <Link
+                    href={canonicalTopicMapHref}
+                    onClick={() => {
+                      examOfflineStorage.clearActiveExamSession().catch(() => {});
+                    }}
+                  >
                     <Button
                       className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold rounded-xl min-h-[42px] cursor-pointer text-xs sm:text-sm"
-                      leftIcon={<BookOpen className="w-4 h-4" />}
+                      leftIcon={<Compass className="w-4 h-4" />}
                     >
-                      Chọn luyện đề môn khác
+                      Về Bản Đồ Chuyên Đề
                     </Button>
                   </Link>
-                  <Link href="/">
+                  <Link
+                    href="/"
+                    onClick={() => {
+                      examOfflineStorage.clearActiveExamSession().catch(() => {});
+                    }}
+                  >
                     <Button variant="ghost" className="rounded-xl font-semibold min-h-[42px] text-xs sm:text-sm" leftIcon={<Home className="w-4 h-4" />}>
                       Về trang chủ
                     </Button>
@@ -4953,41 +5205,6 @@ function StandardExamRoomContent() {
       {/* ── Top Question Navigation Bar (List câu hỏi tự động xuống dòng - Không scroll ngang) ── */}
       <div className="shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-2.5 sm:px-6 lg:mr-72 xl:mr-80 shadow-xs">
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 max-w-4xl mx-auto py-2 sm:py-2.5">
-          {quizQuestions.length > 0 && essayQuestions.length > 0 && (
-            <div className="flex items-center gap-1 border-r border-slate-200 dark:border-slate-800 pr-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => {
-                  const firstQuiz = exam.questions.findIndex((q) => q.type !== 'ESSAY');
-                  if (firstQuiz !== -1) handleJumpToQuestion(exam.questions[firstQuiz], firstQuiz);
-                }}
-                className={cn(
-                  'px-2 py-1 rounded-lg text-xs font-bold transition-colors shrink-0',
-                  currentQ?.type !== 'ESSAY'
-                    ? 'bg-[#00B8DD]/15 text-[#007D99] dark:text-[#00B8DD]'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                )}
-              >
-                TN ({answeredQuizCount}/{quizQuestions.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const firstEssay = exam.questions.findIndex((q) => q.type === 'ESSAY');
-                  if (firstEssay !== -1) handleJumpToQuestion(exam.questions[firstEssay], firstEssay);
-                }}
-                className={cn(
-                  'px-2 py-1 rounded-lg text-xs font-bold transition-colors shrink-0',
-                  currentQ?.type === 'ESSAY'
-                    ? 'bg-[#00B8DD]/15 text-[#007D99] dark:text-[#00B8DD]'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                )}
-              >
-                TL ({answeredEssayCount}/{essayQuestions.length})
-              </button>
-            </div>
-          )}
-
           {exam.questions.map((q, idx) => {
             const isActive = activeQuestionIdx === idx;
             const isAnswered = isQuestionAnswered(q);
@@ -5041,9 +5258,7 @@ function StandardExamRoomContent() {
                       ? 'Trắc Nghiệm'
                       : currentQ.type === 'TRUE_FALSE'
                       ? 'Đúng / Sai'
-                      : currentQ.type === 'SHORT_ANSWER'
-                      ? 'Điền Số'
-                      : 'Tự Luận'}
+                      : 'Điền Số'}
                   </span>
                   <Badge variant="outline" className="text-[10px] border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 py-0 h-5">
                     {currentQ.score}đ
@@ -5202,14 +5417,6 @@ function StandardExamRoomContent() {
                               </strong>
                             </span>
                           )}
-                          {currentQ.type === 'ESSAY' && (
-                            <span>
-                              Đáp án mẫu:{' '}
-                              <span className="font-medium text-slate-700 dark:text-slate-200">
-                                {currentQ.essaySampleAnswer || currentQ.explanation || 'Tự luận'}
-                              </span>
-                            </span>
-                          )}
                         </div>
                       </div>
 
@@ -5228,11 +5435,6 @@ function StandardExamRoomContent() {
                               handleShortAnswerChange(
                                 currentQ.id,
                                 currentQ.shortAnswerCorrect || ''
-                              );
-                            } else if (currentQ.type === 'ESSAY') {
-                              handleEssayAnswerChange(
-                                currentQ.id,
-                                currentQ.essaySampleAnswer || currentQ.explanation || ''
                               );
                             }
                             toast.success(`Đã chọn nhanh đáp án đúng cho Câu ${activeQuestionIdx + 1}`);
@@ -5253,7 +5455,6 @@ function StandardExamRoomContent() {
                               ...trueFalseAnswers,
                             };
                             const nextSa: Record<string, string> = { ...shortAnswers };
-                            const nextEs: Record<string, string> = { ...essayAnswers };
 
                             for (const q of exam.questions) {
                               if (q.type === 'MULTIPLE_CHOICE' && q.correctChoice) {
@@ -5266,15 +5467,12 @@ function StandardExamRoomContent() {
                                 nextTf[q.id] = map;
                               } else if (q.type === 'SHORT_ANSWER') {
                                 nextSa[q.id] = q.shortAnswerCorrect || '';
-                              } else if (q.type === 'ESSAY') {
-                                nextEs[q.id] = q.essaySampleAnswer || q.explanation || '';
                               }
                             }
 
                             setMultipleChoices(nextMc);
                             setTrueFalseAnswers(nextTf);
                             setShortAnswers(nextSa);
-                            setEssayAnswers(nextEs);
                             toast.success(
                               `Đã điền tự động đáp án đúng cho toàn bộ ${exam.questions.length} câu!`
                             );
@@ -5795,20 +5993,6 @@ function StandardExamRoomContent() {
                     </div>
                   </div>
                 )}
-
-                {/* 4. ESSAY */}
-                {currentQ.type === 'ESSAY' && (
-                  <div className="space-y-3 pt-2">
-                    <SubjectEssayEditor
-                      subjectSlug={currentQ.subjectSlug || subjectSlug}
-                      value={essayAnswers[currentQ.id] || ''}
-                      onChange={(val) =>
-                        handleEssayAnswerChange(currentQ.id, val)
-                      }
-                      rows={8}
-                    />
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -5921,8 +6105,8 @@ function StandardExamRoomContent() {
 
         {/* Sidebar Content (Scrollable Grid) */}
         <div className="flex-1 overflow-y-auto p-4 space-y-5">
-          {/* Section 1: Trắc nghiệm (nếu có) */}
-          {quizQuestions.length > 0 && (
+          {/* Section 1: Danh sách câu hỏi */}
+          {exam.questions.length > 0 && (
             <div className="space-y-2.5">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-slate-800 dark:text-slate-300 flex items-center gap-1.5">
@@ -5930,61 +6114,11 @@ function StandardExamRoomContent() {
                   Phần Trắc Nghiệm
                 </span>
                 <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">
-                  {answeredQuizCount}/{quizQuestions.length} câu
+                  {answeredCount}/{exam.questions.length} câu
                 </span>
               </div>
               <div className="grid grid-cols-5 gap-2">
-                {quizQuestions.map((q) => {
-                  const globalIdx = exam.questions.findIndex((item) => item.id === q.id);
-                  const isAnswered = isQuestionAnswered(q);
-                  const isFlagged = flaggedIds[q.id];
-                  const isActive = activeQuestionIdx === globalIdx;
-
-                  let btnClass = 'bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-400 hover:border-[#00B8DD] hover:text-[#007D99] dark:hover:text-[#00B8DD]';
-                  if (isActive) {
-                    btnClass = 'ring-2 ring-[#00B8DD] bg-[#00B8DD] text-white font-black border-[#00B8DD] shadow-sm shadow-[#00B8DD]/20';
-                  } else if (isFlagged) {
-                    btnClass = 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-500 font-bold';
-                  } else if (isAnswered) {
-                    btnClass = 'bg-emerald-600 text-white font-bold border border-emerald-500 shadow-xs';
-                  }
-
-                  return (
-                    <button
-                      key={q.id}
-                      type="button"
-                      onClick={() => handleJumpToQuestion(q, globalIdx)}
-                      className={cn(
-                        'h-9 rounded-xl font-bold text-xs flex items-center justify-center relative transition-transform hover:scale-105 cursor-pointer',
-                        btnClass
-                      )}
-                      title={`Câu ${globalIdx + 1}: ${q.title}`}
-                    >
-                      {globalIdx + 1}
-                      {isFlagged && (
-                        <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Section 2: Tự luận (nếu có) */}
-          {essayQuestions.length > 0 && (
-            <div className="space-y-2.5 pt-2 border-t border-slate-200 dark:border-slate-800/80">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-slate-800 dark:text-slate-300 flex items-center gap-1.5">
-                  <PenTool className="w-3.5 h-3.5 text-[#007D99] dark:text-[#00B8DD]" />
-                  Phần Tự Luận
-                </span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">
-                  {answeredEssayCount}/{essayQuestions.length} câu
-                </span>
-              </div>
-              <div className="grid grid-cols-5 gap-2">
-                {essayQuestions.map((q) => {
+                {exam.questions.map((q) => {
                   const globalIdx = exam.questions.findIndex((item) => item.id === q.id);
                   const isAnswered = isQuestionAnswered(q);
                   const isFlagged = flaggedIds[q.id];
@@ -6201,7 +6335,7 @@ function StandardExamRoomContent() {
         onClose={() => setGuestLoginModalOpen(false)}
         reason="ADVANCED_LEVEL"
         targetLevelName={guestLoginTargetLabel}
-        returnUrl={guestLoginReturnUrl || '/student/practice'}
+        returnUrl={guestLoginReturnUrl || canonicalTopicMapHref}
       />
     </div>
   );
@@ -6375,11 +6509,7 @@ function ExamRoomContent() {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(`schoolify_started_pts_${olympiadExam.id}`, '1');
     }
-    if (olympiadExam.examType === 'CODING') {
-      return <CodingExamRoom exam={olympiadExam} />;
-    } else {
-      return <OlympiadEssayExamRoom exam={olympiadExam} />;
-    }
+    return <CodingExamRoom exam={olympiadExam} />;
   }
 
   return <StandardExamRoomContent key={roomInstanceKey} />;

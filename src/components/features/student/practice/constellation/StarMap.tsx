@@ -15,6 +15,7 @@ export type StarState = 'done' | 'cur' | 'open' | 'lock';
 export interface StarChapter {
   id: number;
   order: number;
+  chapterLabel: string;
   shortName: string;
   name: string;
   state: StarState;
@@ -26,6 +27,7 @@ interface StarMapProps {
   chapters: StarChapter[];
   selectedId: number | null;
   onSelect: (id: number) => void;
+  canSelect?: () => boolean;
 }
 
 const STATE_LABEL: Record<StarState, string> = {
@@ -89,7 +91,14 @@ function Star({ state, x, y, k }: { state: StarState; x: number; y: number; k: n
   );
 }
 
-export function StarMap({ layout, mobile, chapters, selectedId, onSelect }: StarMapProps) {
+export function StarMap({
+  layout,
+  mobile,
+  chapters,
+  selectedId,
+  onSelect,
+  canSelect,
+}: StarMapProps) {
   const k = layout.fs;
   const { pos } = layout;
   const wrapAt = mobile ? 22 : 18;
@@ -190,7 +199,10 @@ export function StarMap({ layout, mobile, chapters, selectedId, onSelect }: Star
           c.state === 'lock' ? '#64748B' : c.state === 'cur' ? '#5CE1FF' : c.state === 'done' ? '#34D399' : '#94A3B8';
         const title = c.state === 'lock' ? '#64748B' : c.state === 'cur' ? '#fff' : '#E2E8F0';
         const weight = c.state === 'cur' ? 700 : 600;
-        const select = () => onSelect(c.id);
+        const select = () => {
+          if (canSelect && !canSelect()) return;
+          onSelect(c.id);
+        };
 
         return (
           <g
@@ -198,7 +210,7 @@ export function StarMap({ layout, mobile, chapters, selectedId, onSelect }: Star
             className={styles.st}
             tabIndex={0}
             role="button"
-            aria-label={`Chương ${c.order}: ${c.name} — ${STATE_LABEL[c.state]}`}
+            aria-label={`${c.chapterLabel}: ${c.name} — ${STATE_LABEL[c.state]}`}
             aria-pressed={on}
             onClick={select}
             onKeyDown={(e) => {
@@ -230,10 +242,18 @@ export function StarMap({ layout, mobile, chapters, selectedId, onSelect }: Star
                 />
               </circle>
             )}
-            <circle className={styles.hit} cx={p.x} cy={p.y} r={30 * k} />
+            <circle className={styles.hit} cx={p.x} cy={p.y} r={34 * k} />
+            <rect
+              x={p.lx - 86 * k}
+              y={p.ly - 14 * k}
+              width={172 * k}
+              height={(l2 ? 56 : 38) * k}
+              rx={10 * k}
+              fill="transparent"
+            />
             <g textAnchor="middle">
               <text x={p.lx} y={p.ly} fontSize={10.5 * k} fontWeight={700} letterSpacing={1.2} fill={eyebrow}>
-                CHƯƠNG {c.order}
+                {c.chapterLabel.toUpperCase()}
               </text>
               <text x={p.lx} y={p.ly + 17 * k} fontSize={14 * k} fontWeight={weight} fill={title}>
                 {l1}

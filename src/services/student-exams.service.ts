@@ -8,6 +8,7 @@ import {
   ExamFormat,
 } from '@/services/mock/practice-flow-data';
 import { PracticeLevel } from '@/types/subject';
+import { permuteQuestionChoicesGuaranteedShift } from '@/services/mock/question-matrix-engine';
 
 export interface GenerateExamOptions {
   subjectSlug: string;
@@ -15,11 +16,15 @@ export interface GenerateExamOptions {
   chapterId?: number;
   totalQuestions?: number;
   durationMinutes?: number;
-  practiceMode?: 'TOPIC' | 'MOCK_EXAM';
+  practiceMode?: 'TOPIC' | 'MOCK_EXAM' | 'ASSESSMENT';
   targetDifficulty?: string;
   topicTagFilter?: string;
-  level?: PracticeLevel;
+  level?: PracticeLevel | 'ASSESSMENT';
   format?: ExamFormat;
+  useDiamonds?: boolean;
+  isRetake?: boolean;
+  shuffleAnswers?: boolean;
+  clientSeed?: string;
 }
 
 const SUBJECT_NAME_MAP: Record<string, string> = {
@@ -104,6 +109,19 @@ function getAuthHeaders(): Record<string, string> {
     };
   } catch {
     return {};
+  }
+}
+
+function getOrInitClientSeed(): string {
+  if (typeof window === 'undefined') return 'ssr-seed';
+  try {
+    const existing = window.localStorage.getItem('schoolify_client_seed');
+    if (existing) return existing;
+    const generated = `seed-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
+    window.localStorage.setItem('schoolify_client_seed', generated);
+    return generated;
+  } catch {
+    return `seed-${Date.now().toString(36)}`;
   }
 }
 
@@ -195,10 +213,15 @@ export const studentExamsService = {
       topicTagFilter,
       level = 'BASIC',
       format = 'QUIZ',
+      useDiamonds,
+      isRetake,
+      shuffleAnswers,
+      clientSeed,
     } = options;
 
     try {
       const headers = getAuthHeaders();
+      const resolvedSeed = clientSeed || headers['x-user-id'] || getOrInitClientSeed();
       const res = await fetch('/api/v1/exams/matrix-generate', {
         method: 'POST',
         headers: {
@@ -215,6 +238,10 @@ export const studentExamsService = {
           targetDifficulty: targetDifficulty === 'ALL' ? undefined : targetDifficulty,
           topicTag: topicTagFilter === 'ALL' ? undefined : topicTagFilter,
           level,
+          useDiamonds,
+          isRetake,
+          shuffleAnswers,
+          clientSeed: resolvedSeed,
         }),
       });
 
@@ -237,12 +264,13 @@ export const studentExamsService = {
           const chapter =
             chapters.find((c) => c.id === chapterId) || chapters[0] || MATH_GRADE_12_CHAPTERS[0];
 
-          const mappedQuestions: ExamQuestion[] = data.questions.map((q: any, idx: number) => {
+          const mappedQuestions: ExamQuestion[] = data.questions
+            .filter((q: any) => String(q.questionFormat || '').toUpperCase() !== 'ESSAY')
+            .map((q: any, idx: number) => {
             const rawFormat = String(q.questionFormat || 'SINGLE_CHOICE').toUpperCase();
             let type: ExamQuestion['type'] = 'MULTIPLE_CHOICE';
             if (rawFormat === 'TRUE_FALSE') type = 'TRUE_FALSE';
             else if (rawFormat === 'SHORT_ANSWER') type = 'SHORT_ANSWER';
-            else if (rawFormat === 'ESSAY') type = 'ESSAY';
 
             const bloom = String(q.bloomLevel || 'THONG_HIEU').toUpperCase();
             let difficulty: ExamQuestion['difficulty'] = 'MEDIUM';
@@ -337,12 +365,12 @@ export const studentExamsService = {
             id: `pkg-${subjectSlug}-g${grade}-ch${chapterId}-${Date.now().toString(36)}`,
             subjectSlug,
             subjectName: subjectLabel,
-            level,
+            level: level as PracticeLevel,
             grade: Number(grade),
             chapterId: Number(chapterId),
             chapterName: chapter.name,
             format,
-            practiceMode,
+            practiceMode: practiceMode === 'MOCK_EXAM' ? 'MOCK_EXAM' : 'TOPIC',
             targetDifficulty: targetDifficulty as any,
             topicTagFilter,
             title: data.examTitle || `Đề Luyện Thi Ma Trận ${subjectLabel} - Khối ${grade}`,
@@ -360,14 +388,21 @@ export const studentExamsService = {
     }
 
     // Graceful fallback to client generator
-    return getPracticeExam(subjectSlug, level, grade, chapterId, format, {
+    const fallbackPkg = getPracticeExam(subjectSlug, level as PracticeLevel, grade, chapterId, format, {
       requestedCount: totalQuestions,
       quizCount: totalQuestions,
       durationMinutes,
-      practiceMode,
+      practiceMode: practiceMode === 'MOCK_EXAM' ? 'MOCK_EXAM' : 'TOPIC',
       targetDifficulty: targetDifficulty as any,
       topicTagFilter,
     });
+    if (isRetake || shuffleAnswers) {
+      const salt = `retake-${Date.now()}`;
+      fallbackPkg.questions = fallbackPkg.questions.map((q) =>
+        permuteQuestionChoicesGuaranteedShift(q, salt)
+      );
+    }
+    return fallbackPkg;
   },
 
   /** Nộp bài thi lên Backend API: POST /api/v1/exams/submissions */

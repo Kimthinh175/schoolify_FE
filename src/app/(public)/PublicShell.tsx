@@ -8,6 +8,7 @@ import { Footer } from '@/components/layout/Footer';
 export function PublicShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isHome = pathname === '/';
+  const hideFooter = pathname?.startsWith('/luyen-thi/chuyen-de');
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -46,7 +47,7 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
       <main className="flex-1 pt-20">
         {children}
       </main>
-      <Footer />
+      {!hideFooter && <Footer />}
     </div>
   );
 }

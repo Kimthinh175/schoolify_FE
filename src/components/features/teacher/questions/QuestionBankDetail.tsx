@@ -298,7 +298,6 @@ export function QuestionBankDetail({
             { key: 'SINGLE_CHOICE', label: '1 Đáp án' },
             { key: 'MULTIPLE_CHOICE', label: 'Nhiều đáp án' },
             { key: 'TRUE_FALSE', label: 'Đúng / Sai' },
-            { key: 'ESSAY', label: 'Tự luận' },
           ].map((tab) => (
             <button
               key={tab.key}

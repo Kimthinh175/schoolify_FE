@@ -16,7 +16,6 @@ const TYPE_LABEL: Record<QuestionType, string> = {
   SINGLE_CHOICE: '1 đáp án',
   TRUE_FALSE: 'Đúng/Sai',
   SHORT_ANSWER: 'Trả lời ngắn',
-  ESSAY: 'Tự luận',
   FILL_BLANK: 'Điền khuyết',
   GROUP_QUESTIONS: 'Chùm câu hỏi',
   MATCHING: 'Nối cặp',
@@ -41,7 +40,7 @@ export function QuestionListPanel({
   const [query, setQuery] = React.useState('');
 
   const counts = React.useMemo(() => {
-    const base: Record<string, number> = { MULTIPLE_CHOICE: 0, SINGLE_CHOICE: 0, ESSAY: 0, TRUE_FALSE: 0 };
+    const base: Record<string, number> = { MULTIPLE_CHOICE: 0, SINGLE_CHOICE: 0, TRUE_FALSE: 0 };
     questions.forEach((q) => {
       base[q.type] = (base[q.type] || 0) + 1;
     });
@@ -53,7 +52,6 @@ export function QuestionListPanel({
     { value: 'MULTIPLE_CHOICE', label: TYPE_LABEL.MULTIPLE_CHOICE, count: counts.MULTIPLE_CHOICE },
     { value: 'SINGLE_CHOICE', label: TYPE_LABEL.SINGLE_CHOICE, count: counts.SINGLE_CHOICE },
     { value: 'TRUE_FALSE', label: TYPE_LABEL.TRUE_FALSE, count: counts.TRUE_FALSE },
-    { value: 'ESSAY', label: TYPE_LABEL.ESSAY, count: counts.ESSAY },
   ];
 
   const filtered = questions.filter((q) => {
@@ -127,9 +125,7 @@ export function QuestionListPanel({
                     {q.content || '(Chưa có nội dung)'}
                   </p>
                   <p className="text-[10px] text-slate-400 mt-0.5">
-                    {q.type === 'ESSAY'
-                      ? 'Tự luận'
-                      : `${q.answers?.length || 0} đáp án • ${correctCount} đáp án đúng`}
+                    {`${q.answers?.length || 0} đáp án • ${correctCount} đáp án đúng`}
                   </p>
                 </div>
                 <button

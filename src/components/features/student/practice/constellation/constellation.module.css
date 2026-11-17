@@ -122,7 +122,77 @@
   background: #cbd5e1;
 }
 
-/* ---------- Bản đồ sao ---------- */
+/* ---------- Bản đồ sao & khung lướt ngang (Desktop >= 900px) ---------- */
+.panViewport {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  cursor: grab;
+  user-select: none;
+}
+.panViewport::-webkit-scrollbar {
+  display: none;
+}
+.panViewportDragging {
+  cursor: grabbing;
+}
+
+.panCanvas {
+  position: relative;
+  height: 100%;
+  min-width: 100%;
+}
+
+.floatingCard {
+  position: absolute;
+  z-index: 4;
+  width: 320px;
+  max-width: calc(100vw - 2rem);
+  transition: left 200ms cubic-bezier(0.22, 1, 0.36, 1), top 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.navBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(15, 23, 42, 0.72);
+  color: #e2e8f0;
+  backdrop-filter: blur(12px);
+  transition: background-color 150ms, border-color 150ms, opacity 150ms, transform 150ms;
+  cursor: pointer;
+}
+.navBtn:hover:not(:disabled) {
+  border-color: rgba(92, 225, 255, 0.7);
+  background: rgba(0, 184, 221, 0.22);
+  color: #ffffff;
+}
+.navBtn:focus-visible {
+  outline: 2px solid rgba(0, 184, 221, 0.8);
+  outline-offset: 2px;
+}
+.navBtn:disabled {
+  opacity: 0.28;
+  cursor: not-allowed;
+}
+.navLeft {
+  left: 16px;
+}
+.navRight {
+  right: 16px;
+}
+
 .map {
   position: absolute;
   inset: 0;
@@ -154,7 +224,7 @@
 /* ---------- HUD ---------- */
 .hud {
   position: absolute;
-  z-index: 2;
+  z-index: 3;
 }
 .tl { left: 32px; top: 28px; }
 .tr {
@@ -168,45 +238,48 @@
 }
 .bl {
   left: 32px;
-  bottom: 26px;
+  bottom: 24px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-.br {
-  /* chừa chỗ cho robot Gia sư AI nổi (AgenticChatWidget) ở góc phải dưới */
-  right: 156px;
-  bottom: 24px;
-  width: 320px;
+  pointer-events: auto;
 }
 .hint {
   position: absolute;
   left: 50%;
   bottom: 18px;
   transform: translateX(-50%);
-  z-index: 1;
+  z-index: 2;
   font-size: 12px;
-  color: rgba(148, 163, 184, 0.75);
+  color: rgba(148, 163, 184, 0.78);
   pointer-events: none;
   white-space: nowrap;
 }
 
 /* ---------- Mobile / tablet hẹp: xếp dọc, KHÔNG scroll ngang ---------- */
+.mobileTrack {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 @media (max-width: 899px) {
   .sky {
     height: auto;
     min-height: 0;
-    padding: 20px 16px 16px;
+    padding: 20px 16px 20px;
     gap: 16px;
     --ds: 0.62;
   }
   .hud { position: static; }
   .tl { order: 1; }
   .tr { order: 2; max-width: none; justify-content: flex-start; }
+  .mobileTrack { order: 3; }
   .map { position: relative; order: 3; inset: auto; height: auto; }
   .bl { order: 4; }
-  .br { order: 5; width: auto; }
-  .hint { display: none; }
+  .hint, .navBtn { display: none; }
   .t { opacity: 0.09 !important; }
   .g { opacity: 0.14 !important; }
   .rain { opacity: 0.07 !important; }

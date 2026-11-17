@@ -27,6 +27,7 @@
 
 html {
   scroll-behavior: smooth;
+  scrollbar-gutter: stable;
   overflow-x: clip !important;
   max-width: 100vw !important;
   width: 100% !important;
@@ -63,12 +64,16 @@ body {
 
 /* KaTeX and Math Overflow Protection */
 .math-content,
-.inline-math,
-.katex-display,
-.katex {
+.katex-display {
   max-width: 100% !important;
   overflow-x: auto !important;
-  overflow-y: hidden !important;
+  overflow-y: visible !important;
+  word-break: break-word;
+}
+
+.inline-math,
+.katex {
+  max-width: 100% !important;
   word-break: break-word;
 }
 

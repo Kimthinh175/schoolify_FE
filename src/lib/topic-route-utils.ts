@@ -6,9 +6,12 @@ const TOPIC_SESSION_KEY = 'schoolify_topic_view_ctx_v1';
 
 export type TopicRoadmapLevelCode = 'BASIC' | 'MEDIUM' | 'ADVANCED';
 
+export type TopicRoadmapTrackCode = 'ALL' | 'TOAN_SO' | 'TOAN_HINH' | 'DEFAULT';
+
 export interface SessionTopicContext {
   grade?: 10 | 11 | 12;
-  track?: 'TOAN_SO' | 'TOAN_HINH' | 'DEFAULT';
+  track?: TopicRoadmapTrackCode;
+  trackExplicit?: boolean;
   level?: TopicRoadmapLevelCode;
 }
 
@@ -53,18 +56,20 @@ export function getSessionTopicContext(): SessionTopicContext {
     const parsed = JSON.parse(raw);
     const grade = parseHighSchoolGrade(parsed?.grade) ?? undefined;
     const track =
+      parsed?.track === 'ALL' ||
       parsed?.track === 'TOAN_SO' ||
       parsed?.track === 'TOAN_HINH' ||
       parsed?.track === 'DEFAULT'
         ? parsed.track
         : undefined;
+    const trackExplicit = Boolean(parsed?.trackExplicit);
     const level =
       parsed?.level === 'BASIC' ||
       parsed?.level === 'MEDIUM' ||
       parsed?.level === 'ADVANCED'
         ? parsed.level
         : undefined;
-    return { grade, track, level };
+    return { grade, track, trackExplicit, level };
   } catch {
     return {};
   }
@@ -78,6 +83,9 @@ export function setSessionTopicContext(next: Partial<SessionTopicContext>): void
       ...prev,
       ...(next.grade ? { grade: next.grade } : {}),
       ...(next.track ? { track: next.track } : {}),
+      ...(typeof next.trackExplicit === 'boolean'
+        ? { trackExplicit: next.trackExplicit }
+        : {}),
       ...(next.level ? { level: next.level } : {}),
     };
     window.sessionStorage.setItem(TOPIC_SESSION_KEY, JSON.stringify(merged));

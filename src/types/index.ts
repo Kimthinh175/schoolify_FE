@@ -13,7 +13,6 @@ export type {
   TheoryExample,
   QuizOption,
   QuizQuestion,
-  EssayProblem,
   LessonExamQuestion,
   LessonExamConfig,
   LessonFullContent,

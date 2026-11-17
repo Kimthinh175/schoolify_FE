@@ -214,12 +214,11 @@ export default function AdminDashboardPage() {
   const appPct = totalQuestions ? Math.round((appCount / totalQuestions) * 100) : 20;
   const advPct = totalQuestions ? Math.round((advCount / totalQuestions) * 100) : 10;
 
-  // Phân bố 4 định dạng câu hỏi GDPT 2018
+  // Phân bố 3 định dạng câu hỏi trắc nghiệm GDPT 2018
   const formatDist = systemStats?.formatDistribution || {
     SINGLE_CHOICE: totalQuestions,
     TRUE_FALSE: 0,
     SHORT_ANSWER: 0,
-    ESSAY: 0,
   };
 
   // Phân bố môn học
@@ -728,12 +727,6 @@ export default function AdminDashboardPage() {
                   {formatNumber(Number(formatDist.SHORT_ANSWER || 0))}
                 </strong>
               </div>
-              <div className="px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 flex items-center justify-between">
-                <span className="text-slate-500">Tự luận AI</span>
-                <strong className="text-slate-900 dark:text-white">
-                  {formatNumber(Number(formatDist.ESSAY || 0))}
-                </strong>
-              </div>
             </div>
           </div>
 
@@ -870,7 +863,7 @@ export default function AdminDashboardPage() {
                 </strong>
               </div>
               <div className="px-2.5 py-2 rounded-lg bg-slate-50 dark:bg-slate-800/60">
-                <span className="text-slate-400 block">AI Chấm Tự Luận (Rubric)</span>
+                <span className="text-slate-400 block">Đối soát ngữ nghĩa AI</span>
                 <strong className="text-slate-900 dark:text-white text-xs">
                   {systemStats?.aiMetrics?.semanticCheckpointsGraded ?? 0} lượt chấm
                 </strong>

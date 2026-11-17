@@ -22,7 +22,6 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { MOCK_COURSES, MOCK_QUESTION_BANKS } from '@/services/mock/data';
 import { QuizPracticePanel } from '@/components/features/student/QuizPracticePanel';
-import { EssayPracticePanel } from '@/components/features/student/EssayPracticePanel';
 import { Navbar } from '@/components/layout/Navbar';
 
 export default function FocusLearningPlayerPage() {
@@ -31,16 +30,10 @@ export default function FocusLearningPlayerPage() {
   const course = MOCK_COURSES.find((c) => c.id === params.courseId) || MOCK_COURSES[0];
   const currentLesson = course.chapters?.[0]?.lessons.find(l => l.id === params.lessonId) || course.chapters?.[0]?.lessons?.[0];
   const [completedLessons, setCompletedLessons] = React.useState<string[]>(['ls-01']);
-  const [activeTab, setActiveTab] = React.useState<'video' | 'quiz' | 'essay'>('video');
+  const [activeTab, setActiveTab] = React.useState<'video' | 'quiz'>('video');
 
-  // Sử dụng ngân hàng đề đầu tiên có chứa câu hỏi TỰ LUẬN để dễ test
   const quizQuestions = React.useMemo(
-    () => {
-      const bankWithEssay = MOCK_QUESTION_BANKS.find((bank) => 
-        bank.questions && bank.questions.some(q => q.type === 'ESSAY')
-      );
-      return bankWithEssay?.questions ?? MOCK_QUESTION_BANKS[0]?.questions ?? [];
-    },
+    () => (MOCK_QUESTION_BANKS[0]?.questions ?? []).filter((q) => (q.type as string) !== 'ESSAY'),
     []
   );
 
@@ -120,27 +113,6 @@ export default function FocusLearningPlayerPage() {
                   </span>
                 )}
               </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('essay')}
-                className={`flex items-center gap-2 border-b-2 px-4 py-3.5 text-sm font-semibold transition-colors ${
-                  activeTab === 'essay'
-                    ? 'border-[#00B8DD] text-[#007D99] dark:text-[#00B8DD]'
-                    : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
-                }`}
-              >
-                <PenTool className="h-4 w-4" />
-                Tự Luận
-                {quizQuestions.filter(q => q.type === 'ESSAY').length > 0 && (
-                  <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-                    activeTab === 'essay'
-                      ? 'bg-[#00B8DD]/20 text-[#007D99] dark:text-[#00B8DD]'
-                      : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
-                  }`}>
-                    {quizQuestions.filter(q => q.type === 'ESSAY').length}
-                  </span>
-                )}
-              </button>
             </div>
           </div>
 
@@ -201,16 +173,6 @@ export default function FocusLearningPlayerPage() {
               <QuizPracticePanel
                 questions={quizQuestions}
                 title="Luyện Tập: Hàm Số Lượng Giác"
-              />
-            </div>
-          )}
-
-          {/* ── Tab 3: Tự Luận ── */}
-          {activeTab === 'essay' && (
-            <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6">
-              <EssayPracticePanel
-                questions={quizQuestions}
-                title="Tự Luận Chuyên Sâu: Hàm Số Lượng Giác"
               />
             </div>
           )}

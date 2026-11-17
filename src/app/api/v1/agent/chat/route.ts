@@ -60,7 +60,7 @@ Schoolify xây dựng một hệ sinh thái kết nối trọn vẹn 4 nhóm ng�
 
 1. 🎓 **Dành cho Học sinh (K-12)**:
    - **Luyện thi thích ứng 4 cấp độ**: Từ *Cơ bản* (bám sát SGK, chống liệt), *Trung bình* (thi học kỳ & tốt nghiệp THPT), *Nâng cao* (vận dụng cao 9-10 điểm) đến *Học sinh Giỏi (HSG Cấp Tỉnh & Quốc Gia)*.
-   - **Đa dạng hình thức thi**: Trắc nghiệm 4 lựa chọn, Đúng/Sai, Điền số kết quả ngắn, Tự luận chấm AI đa tầng theo barem, và Lập trình trực tiếp trong phòng thi IDE cho môn Tin học.
+   - **Đa dạng hình thức thi**: 9 dạng trắc nghiệm khách quan (Trắc nghiệm 4 lựa chọn, Nhiều đáp án, Đúng/Sai, Điền khuyết, Trả lời ngắn, Chùm ngữ liệu, Nối cặp, Sắp xếp, Đục lỗ inline) và Lập trình trực tiếp trong phòng thi IDE cho môn Tin học.
    - **Đánh giá năng lực chẩn đoán**: Hệ thống phát hiện chính xác lỗ hổng kiến thức theo chuẩn phân hóa Bloom và đề xuất lộ trình khắc phục.
    - **Góc học tập & Đổi thưởng**: Tích lũy Ngọc Tri Thức 💎 từ kết quả làm bài để đổi vật phẩm và quà tặng độc quyền.
 
@@ -69,7 +69,7 @@ Schoolify xây dựng một hệ sinh thái kết nối trọn vẹn 4 nhóm ng�
 
 3. 👨‍🏫 **Dành cho Giáo viên & Quản trị**:
    - **AI Quét đề thi Word (.docx)**: Bóc tách câu hỏi, công thức Toán học (KaTeX, MathType MTEF, OMML) và tự động sinh câu hỏi tương đương lưu vào Ngân hàng đề.
-   - Thiết kế ma trận đề thi phân hóa Bloom, chấm bài tự luận và quản lý lớp học.
+   - Thiết kế ma trận đề thi phân hóa Bloom, quản lý ngân hàng câu hỏi và theo dõi tiến độ lớp học.
 
 Bạn muốn tớ **hướng dẫn vào phòng luyện thi thử**, **giải đáp một bài toán**, hay **tìm hiểu tính năng nào trước**, cứ nhắn cho tớ nhé! 🚀`;
     emotion = 'excited';

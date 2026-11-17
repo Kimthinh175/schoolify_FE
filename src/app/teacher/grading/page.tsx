@@ -24,10 +24,10 @@ export default function TeacherGradingListPage() {
       <div>
         <Badge variant="purple" className="mb-2">Công Cụ Khảo Thí & Chấm Thi</Badge>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-          Chấm Điểm & Gửi Lời Phê Tự Luận
+          Kiểm Tra & Gửi Lời Phê Bài Làm
         </h1>
         <p className="text-xs text-slate-500 mt-0.5">
-          Xem bài làm của học sinh, chấm điểm câu hỏi tự luận và để lại lời nhận xét động viên hoặc góp ý.
+          Xem chi tiết kết quả chấm tự động trắc nghiệm của học sinh và để lại lời nhận xét động viên hoặc góp ý.
         </p>
       </div>
 
