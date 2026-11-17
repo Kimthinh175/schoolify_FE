@@ -12,15 +12,32 @@ export const answerSchema = z.object({
 /** Form soạn câu hỏi — validation động theo QuestionType */
 export const questionFormSchema = z
   .object({
-    type: z.enum(['MULTIPLE_CHOICE', 'SINGLE_CHOICE', 'ESSAY', 'TRUE_FALSE', 'FILL_BLANK']),
+    type: z.enum([
+      'MULTIPLE_CHOICE',
+      'SINGLE_CHOICE',
+      'TRUE_FALSE',
+      'FILL_BLANK',
+      'SHORT_ANSWER',
+      'GROUP_QUESTIONS',
+      'MATCHING',
+      'ORDERING',
+      'CLOZE_DROPDOWN',
+    ]),
     title: z.string().optional(),
     content: z.string().min(1, 'Vui lòng nhập nội dung câu hỏi'),
     points: z.number().min(0, 'Điểm phải ≥ 0'),
-    sample_essay_answer: z.string().optional(),
     answers: z.array(answerSchema),
   })
   .superRefine((val, ctx) => {
-    if (val.type === 'ESSAY' || val.type === 'FILL_BLANK') return;
+    if (
+      val.type === 'FILL_BLANK' ||
+      val.type === 'SHORT_ANSWER' ||
+      val.type === 'GROUP_QUESTIONS' ||
+      val.type === 'MATCHING' ||
+      val.type === 'ORDERING' ||
+      val.type === 'CLOZE_DROPDOWN'
+    )
+      return;
     if (val.answers.length < 2) {
       ctx.addIssue({ code: 'custom', path: ['answers'], message: 'Cần ít nhất 2 đáp án.' });
       return;

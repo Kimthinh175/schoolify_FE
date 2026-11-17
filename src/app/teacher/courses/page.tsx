@@ -83,7 +83,7 @@ export default function TeacherCoursesPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {courses.map((course) => (
           <Card key={course.id} className="p-0 overflow-hidden flex flex-col justify-between group hover:shadow-xl transition-all">
-            <div className="relative h-44 w-full bg-slate-100 overflow-hidden">
+            <div className="relative h-44 w-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
               <img src={course.thumbnail_url || ''} alt="" className="h-full w-full object-cover group-hover:scale-105 transition-transform" />
               <div className="absolute top-3 right-3">
                 <Badge variant="primary" className="font-bold">

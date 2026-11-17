@@ -11,6 +11,10 @@ export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
 export function Avatar({ src, alt, fallback, size = 'md', className, ...props }: AvatarProps) {
   const [hasError, setHasError] = React.useState(false);
 
+  React.useEffect(() => {
+    setHasError(false);
+  }, [src]);
+
   const sizeClasses = {
     sm: 'h-8 w-8 text-xs',
     md: 'h-10 w-10 text-sm',
@@ -38,6 +42,7 @@ export function Avatar({ src, alt, fallback, size = 'md', className, ...props }:
         <img
           src={src}
           alt={alt || 'Avatar'}
+          referrerPolicy="no-referrer"
           onError={() => setHasError(true)}
           className="h-full w-full object-cover"
         />

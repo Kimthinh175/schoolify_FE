@@ -57,7 +57,7 @@ export default function TeacherRewardsPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {items.map((item) => (
           <Card key={item.id} className="p-0 overflow-hidden flex flex-col justify-between">
-            <div className="relative h-40 w-full bg-slate-100 overflow-hidden">
+            <div className="relative h-40 w-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
               <img src={item.image_url || ''} alt="" className="h-full w-full object-cover" />
               <div className="absolute top-3 right-3">
                 <Badge variant="primary" className="bg-amber-500 font-bold">

@@ -1,0 +1,294 @@
+/*
+ * Bầu trời "Chòm sao Tia Sáng" — nền TĨNH theo chủ đề từng môn.
+ * Bầu trời luôn tối (kể cả khi trang đang ở giao diện sáng) để các ngôi sao nổi bật.
+ * Tông màu bám design/mockups/chuyen-de-chom-sao-v1.html (bản đã chốt).
+ */
+
+.sky {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 560px;
+  overflow: hidden;
+  color: #fff;
+  background: #090d16;
+}
+
+.rounded {
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ---------- Nền theo môn ---------- */
+.tbg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Toán Số: navy–cyan trên lưới chấm (giấy chấm tọa độ) */
+.tbgSo {
+  background:
+    radial-gradient(120% 90% at 20% 110%, #0f2a44 0%, transparent 55%),
+    radial-gradient(90% 80% at 90% -10%, #12203a 0%, transparent 60%),
+    radial-gradient(rgba(125, 211, 252, 0.16) 1px, transparent 1.4px) 0 0 / 32px 32px;
+}
+
+/* Toán Hình: bản vẽ kỹ thuật (blueprint) */
+.tbgHinh {
+  background:
+    radial-gradient(110% 90% at 80% 110%, #0c4a6e 0%, transparent 60%),
+    radial-gradient(90% 80% at 10% -10%, #0b2f55 0%, transparent 60%),
+    linear-gradient(rgba(186, 230, 253, 0.07) 1px, transparent 1px) 0 0 / 116px 116px,
+    linear-gradient(90deg, rgba(186, 230, 253, 0.07) 1px, transparent 1px) 0 0 / 116px 116px,
+    linear-gradient(rgba(186, 230, 253, 0.035) 1px, transparent 1px) 0 0 / 29px 29px,
+    linear-gradient(90deg, rgba(186, 230, 253, 0.035) 1px, transparent 1px) 0 0 / 29px 29px,
+    #08203a;
+}
+
+/* Tin học: terminal chàm–tím + vạch quét mờ (cố ý không dùng xanh lá để không trùng chấm "đã qua") */
+.tbgTin {
+  background:
+    radial-gradient(110% 90% at 15% 110%, #2e1a5c 0%, transparent 58%),
+    radial-gradient(90% 80% at 92% -10%, #1b2155 0%, transparent 62%),
+    repeating-linear-gradient(0deg, rgba(165, 180, 252, 0.045) 0 1px, transparent 1px 4px),
+    #0a0b1e;
+}
+
+/* ---------- Ký hiệu trang trí (tĩnh, rất mờ) ---------- */
+.deco {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.decoSo { color: #7dd3fc; }
+.decoHinh { color: #bae6fd; }
+.decoTin { color: #a5b4fc; }
+
+.t {
+  position: absolute;
+  white-space: nowrap;
+  line-height: 1;
+  user-select: none;
+  font-size: calc(var(--fs, 20) * 1px * var(--ds, 1));
+}
+.decoSo .t {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: italic;
+}
+.decoTin .t {
+  font-family: ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
+  font-weight: 600;
+}
+
+.g {
+  position: absolute;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  overflow: visible;
+}
+.g text {
+  fill: currentColor;
+  stroke: none;
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 10px;
+}
+
+.rain {
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  white-space: pre;
+  font: 600 14px/1.55 ui-monospace, Menlo, Consolas, monospace;
+  color: #a5b4fc;
+  -webkit-mask-image: linear-gradient(transparent, #000 20%, #000 70%, transparent);
+  mask-image: linear-gradient(transparent, #000 20%, #000 70%, transparent);
+}
+
+.stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.stars i {
+  position: absolute;
+  border-radius: 50%;
+  background: #cbd5e1;
+}
+
+/* ---------- Bản đồ sao & khung lướt ngang (Desktop >= 900px) ---------- */
+.panViewport {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  cursor: grab;
+  user-select: none;
+}
+.panViewport::-webkit-scrollbar {
+  display: none;
+}
+.panViewportDragging {
+  cursor: grabbing;
+}
+
+.panCanvas {
+  position: relative;
+  height: 100%;
+  min-width: 100%;
+}
+
+.floatingCard {
+  position: absolute;
+  z-index: 4;
+  width: 320px;
+  max-width: calc(100vw - 2rem);
+  transition: left 200ms cubic-bezier(0.22, 1, 0.36, 1), top 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.navBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(15, 23, 42, 0.72);
+  color: #e2e8f0;
+  backdrop-filter: blur(12px);
+  transition: background-color 150ms, border-color 150ms, opacity 150ms, transform 150ms;
+  cursor: pointer;
+}
+.navBtn:hover:not(:disabled) {
+  border-color: rgba(92, 225, 255, 0.7);
+  background: rgba(0, 184, 221, 0.22);
+  color: #ffffff;
+}
+.navBtn:focus-visible {
+  outline: 2px solid rgba(0, 184, 221, 0.8);
+  outline-offset: 2px;
+}
+.navBtn:disabled {
+  opacity: 0.28;
+  cursor: not-allowed;
+}
+.navLeft {
+  left: 16px;
+}
+.navRight {
+  right: 16px;
+}
+
+.map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.st {
+  cursor: pointer;
+  outline: none;
+}
+.st .hit {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 2;
+}
+.st:focus-visible .hit {
+  stroke: #fff;
+}
+.st .core {
+  transition: transform 0.2s;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.st:hover .core {
+  transform: scale(1.25);
+}
+
+/* ---------- HUD ---------- */
+.hud {
+  position: absolute;
+  z-index: 3;
+}
+.tl { left: 32px; top: 28px; }
+.tr {
+  right: 28px;
+  top: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  max-width: 60%;
+}
+.bl {
+  left: 32px;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: auto;
+}
+.hint {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 2;
+  font-size: 12px;
+  color: rgba(148, 163, 184, 0.78);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* ---------- Mobile / tablet hẹp: xếp dọc, KHÔNG scroll ngang ---------- */
+.mobileTrack {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+@media (max-width: 899px) {
+  .sky {
+    height: auto;
+    min-height: 0;
+    padding: 20px 16px 20px;
+    gap: 16px;
+    --ds: 0.62;
+  }
+  .hud { position: static; }
+  .tl { order: 1; }
+  .tr { order: 2; max-width: none; justify-content: flex-start; }
+  .mobileTrack { order: 3; }
+  .map { position: relative; order: 3; inset: auto; height: auto; }
+  .bl { order: 4; }
+  .hint, .navBtn { display: none; }
+  .t { opacity: 0.09 !important; }
+  .g { opacity: 0.14 !important; }
+  .rain { opacity: 0.07 !important; }
+  .rain:nth-child(even) { display: none; }
+  .rounded { border-radius: 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map :is(animate, animateMotion, animateTransform) {
+    display: none;
+  }
+}

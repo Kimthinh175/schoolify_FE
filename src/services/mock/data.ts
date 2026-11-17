@@ -231,8 +231,7 @@ export const MOCK_COURSES: Course[] = [
         course_id: 'crs-01',
         title: 'Chương 1: Hàm số lượng giác và Phương trình lượng giác',
         order_index: 1,
-        lessons: [
-          {
+        lessons: [          {
             id: 'ls-01',
             chapter_id: 'ch-01',
             title: 'Bài 1: Giá trị lượng giác của góc lượng giác & Công thức lượng giác cốt lõi',
@@ -242,16 +241,7 @@ export const MOCK_COURSES: Course[] = [
             is_free_preview: true,
             order_index: 1,
             is_completed: false,
-            materials: [
-              {
-                id: 'mat-01',
-                lesson_id: 'ls-01',
-                title: 'Tong_Hop_Cong_Thuc_Luong_Giac_11.pdf',
-                file_url: '/downloads/Tong_Hop_Cong_Thuc_Luong_Giac_11.pdf',
-                file_type: 'PDF',
-                file_size_bytes: 2450000,
-              },
-            ],
+            materials: []
           },
           {
             id: 'ls-02',
@@ -743,7 +733,7 @@ export const MOCK_EXAMS: Exam[] = [
     id: 'ex-01',
     course_id: 'crs-01',
     title: 'Kiểm tra 15 phút: Giá trị lượng giác & Công thức cơ bản',
-    description: 'Bài kiểm tra trắc nghiệm kết hợp 1 câu tự luận ngắn giải phương trình sin(2x) = 1/2.',
+    description: 'Bài kiểm tra trắc nghiệm về giá trị lượng giác và công thức cơ bản.',
     duration_minutes: 15,
     pass_score: 5.0,
     max_score: 10.0,
@@ -790,29 +780,11 @@ export const MOCK_EXAMS: Exam[] = [
         ],
       },
       {
-        id: 'q-04',
-        bank_id: 'bank-toan12-luong-giac',
-        type: 'ESSAY',
-        content: 'Hãy trình bày các bước tìm tập nghiệm của phương trình: sin(2x) = 1/2.',
-        points: 2.5,
-        sample_essay_answer: 'Ta có sin(2x) = sin(π/6). Suy ra 2x = π/6 + k2π hoặc 2x = 5π/6 + k2π (k ∈ Z). Vậy x = π/12 + kπ hoặc x = 5π/12 + kπ (k ∈ Z).',
-        hints: [
-          'Bước 1: Chuyển vế phải về dạng sin(α), cụ thể 1/2 = sin(π/6).',
-          'Bước 2: Áp dụng công thức nghiệm của phương trình cơ bản: sin(u) = sin(v).',
-          'Bước 3: Rút gọn để giải ra x và ghi rõ điều kiện của k.'
-        ],
-        rubric: [
-          { criterion: 'Đưa được về phương trình sin(2x) = sin(π/6)', points: 0.5 },
-          { criterion: 'Thiết lập đúng 2 họ nghiệm cơ bản', points: 1.0 },
-          { criterion: 'Giải đúng x và có điều kiện k ∈ Z', points: 1.0 }
-        ]
-      },
-      {
         id: 'q-05',
         bank_id: 'bank-toan12-luong-giac',
         type: 'FILL_BLANK',
         content: 'Giá trị của cos(0) bằng _____.',
-        points: 1,
+        points: 2.5,
         answers: [
           { id: 'q05-a1', question_id: 'q-05', content: '1', is_answer: true },
         ],
@@ -834,7 +806,7 @@ export const MOCK_SUBMISSIONS: ExamSubmission[] = [
     submitted_at: '2026-08-20T14:13:45Z',
     score: 9.5,
     status: 'GRADED',
-    teacher_notes: 'Minh nắm rất vững bản chất công thức lượng giác. Câu tự luận trình bày rõ ràng, đủ điều kiện k thuộc Z. Tiếp tục phát huy!',
+    teacher_notes: 'Minh nắm rất vững bản chất công thức lượng giác và làm bài trắc nghiệm rất chính xác. Tiếp tục phát huy!',
     graded_at: '2026-08-20T16:30:00Z',
     answers: [
       {
@@ -1577,24 +1549,11 @@ export const MOCK_QUESTION_BANKS: QuestionBank[] = [
     status: 'PENDING',
     subject: 'Toán học',
     description: 'Kho câu hỏi nguyên hàm, tích phân và ứng dụng thực tế.',
-    questions_count: 2,
+    questions_count: 1,
     count_used: 36,
     created_at: '2026-07-10T08:00:00Z',
     updated_at: '2026-08-18T10:00:00Z',
     questions: [
-      {
-        id: 'qk-04',
-        bank_id: 'bank-toan12-tich-phan',
-        type: 'ESSAY',
-        title: 'Tính tích phân',
-        content: 'Tính tích phân I = ∫₀¹ (2x + 1) dx và trình bày các bước giải.',
-        points: 3,
-        difficulty: 'ADVANCED',
-        chapter: 'Chương 3: Nguyên hàm và tích phân',
-        sample_essay_answer: 'I = [x² + x]₀¹ = (1 + 1) − 0 = 2.',
-        created_at: '2026-07-10T08:10:00Z',
-        answers: [],
-      },
       {
         id: 'qk-05',
         bank_id: 'bank-toan12-tich-phan',
@@ -1602,12 +1561,6 @@ export const MOCK_QUESTION_BANKS: QuestionBank[] = [
         title: 'Nguyên hàm cơ bản',
         content: 'Nguyên hàm của hàm số f(x) = cos(x) là:',
         points: 2.5,
-        difficulty: 'BASIC',
-        chapter: {
-          id: 'ch-01',
-          title: 'Chương 3: Nguyên hàm và tích phân',
-          href: '/student/learn/crs-01/ls-01',
-        },
         created_at: '2026-07-11T08:10:00Z',
         answers: [
           { id: 'qk-05-a1', question_id: 'qk-05', content: 'sin(x) + C', is_answer: true, explain: 'Đạo hàm của sin(x) là cos(x).' },

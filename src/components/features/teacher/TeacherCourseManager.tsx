@@ -277,7 +277,7 @@ export function TeacherCourseManager({
                       <img
                         src={course.thumbnail_url || ''}
                         alt=""
-                        className="h-11 w-16 rounded-lg object-cover bg-slate-100 shrink-0"
+                        className="h-11 w-16 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 shrink-0"
                       />
                       <div className="min-w-0">
                         <p className="text-sm font-bold text-slate-900 dark:text-white line-clamp-2">

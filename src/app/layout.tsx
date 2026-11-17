@@ -1,6 +1,22 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import "katex/dist/katex.min.css";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { ExamSessionGuardProvider } from "@/components/providers/ExamSessionGuardProvider";
+import { WebVisitTracker } from "@/components/providers/WebVisitTracker";
+import { StudentOnboardingGuard } from "@/components/providers/StudentOnboardingGuard";
+import { Toaster } from "sonner";
+import { GlobalFloatingWidgets } from "@/components/providers/GlobalFloatingWidgets";
+import { SonnerNotificationSync } from "@/components/layout/NotificationBellMenu";
+import { PersistentGlobalNavbar } from "@/components/layout/PersistentGlobalNavbar";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 const inter = Inter({
   variable: "--font-inter",
@@ -35,8 +51,46 @@ export default function RootLayout({
       className={`${inter.variable} font-sans h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
-        {children}
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function() {
+              try {
+                var stored = localStorage.getItem('schoolify_theme');
+                var isDark = stored === 'dark' || (!stored || stored === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (isDark) {
+                  document.documentElement.classList.add('dark');
+                  document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                  document.documentElement.classList.remove('dark');
+                  document.documentElement.setAttribute('data-theme', 'light');
+                }
+                // Dọn dẹp legacy demo data khỏi localStorage của client
+                ['schoolify_question_bug_reports', 'schoolify_system_questions', 'schoolify_deleted_question_ids', 'schoolify_custom_matrix', 'schoolify_previous_chapter_ratio'].forEach(function(k) {
+                  localStorage.removeItem(k);
+                });
+
+                // Preloader session cache check for instant subsequent loads
+                if (sessionStorage.getItem('schoolify_preloader_seen') === '1') {
+                  document.documentElement.classList.add('preloader-cached');
+                }
+              } catch (e) {}
+            })();`,
+          }}
+        />
+      </head>
+      <body className="min-h-full flex flex-col font-sans bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased transition-colors duration-200 overflow-x-hidden w-full max-w-[100vw]" suppressHydrationWarning>
+        <ThemeProvider>
+          <ExamSessionGuardProvider>
+            <PersistentGlobalNavbar />
+            <WebVisitTracker />
+            <StudentOnboardingGuard />
+            {children}
+            <GlobalFloatingWidgets />
+            <SonnerNotificationSync />
+            <Toaster position="top-right" closeButton expand visibleToasts={4} gap={10} />
+          </ExamSessionGuardProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

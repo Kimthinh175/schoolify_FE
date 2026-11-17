@@ -1,19 +1,20 @@
 'use client';
 
 import * as React from 'react';
-import { useParams } from 'next/navigation';
-import { PracticeRoadmapList } from '@/components/features/student/PracticeRoadmapList';
+import { useParams, useRouter } from 'next/navigation';
 
 export default function StudentSubjectLevelPracticeRoadmapPage() {
   const params = useParams();
-  const subjectSlug = (params.subjectSlug as string) || 'toan-hoc';
-  const level = (params.level as string) || 'basic';
+  const router = useRouter();
+  const rawSubject = String(params.subjectSlug || 'toan').toLowerCase();
+  const rawLevel = String(params.level || 'lop-12').toLowerCase();
 
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto">
-        <PracticeRoadmapList currentSubjectSlug={subjectSlug} currentLevelSlug={level} />
-      </div>
-    </div>
-  );
+  React.useEffect(() => {
+    const canonicalSubject = rawSubject.includes('tin') ? 'tin-hoc' : 'toan';
+    const gradeMatch = rawLevel.match(/(10|11|12)/);
+    const gradeQuery = gradeMatch ? `?grade=${gradeMatch[1]}` : '';
+    router.replace(`/luyen-thi/chuyen-de/${canonicalSubject}${gradeQuery}`);
+  }, [rawSubject, rawLevel, router]);
+
+  return null;
 }

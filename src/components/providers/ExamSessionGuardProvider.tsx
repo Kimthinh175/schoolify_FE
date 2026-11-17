@@ -1,0 +1,213 @@
+'use client';
+
+import * as React from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { examOfflineStorage, ActiveExamSession } from '@/services/exam-offline-storage.service';
+import { useAuthStore } from '@/store/auth.store';
+import { toast } from 'sonner';
+import { WifiOff } from 'lucide-react';
+
+interface ExamSessionGuardContextType {
+  activeSession: ActiveExamSession | null;
+  isOnline: boolean;
+  refreshSession: () => Promise<ActiveExamSession | null>;
+  examNavbarVisible: boolean;
+  setExamNavbarVisible: (visible: boolean) => void;
+}
+
+export const ExamSessionGuardContext = React.createContext<ExamSessionGuardContextType>({
+  activeSession: null,
+  isOnline: true,
+  refreshSession: async () => null,
+  examNavbarVisible: false,
+  setExamNavbarVisible: () => {},
+});
+
+export function ExamSessionGuardProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { isAuthenticated, user } = useAuthStore();
+
+  const [activeSession, setActiveSession] = React.useState<ActiveExamSession | null>(null);
+  const [isOnline, setIsOnline] = React.useState<boolean>(true);
+  const [examNavbarVisible, setExamNavbarVisible] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsOnline(navigator.onLine);
+    }
+  }, []);
+
+  const refreshSession = React.useCallback(async () => {
+    try {
+      const session = await examOfflineStorage.getActiveExamSession();
+      setActiveSession(session);
+      return session;
+    } catch {
+      setActiveSession(null);
+      return null;
+    }
+  }, []);
+
+  React.useEffect(() => {
+    const handleOnline = async () => {
+      setIsOnline(true);
+      toast.success('Đã khôi phục kết nối Internet!', {
+        description: 'Đang tự động đồng bộ bài thi offline lên máy chủ...',
+      });
+
+      try {
+        const { syncedCount } = await examOfflineStorage.syncPendingSubmissions();
+        if (syncedCount > 0) {
+          toast.success('Đồng bộ thành công!', {
+            description: `Đã tự động gửi ${syncedCount} bài thi đã lưu về hệ thống an toàn.`,
+          });
+        }
+      } catch (err) {
+        console.error('[ExamSessionGuard] Auto-sync failed on network restore:', err);
+      }
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+      toast.warning('Mất kết nối Internet!', {
+        description: 'Bạn cứ yên tâm tiếp tục làm bài, dữ liệu đang được lưu an toàn liên tục.',
+        duration: 5000,
+      });
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    if (typeof window !== 'undefined' && navigator.onLine) {
+      examOfflineStorage.syncPendingSubmissions().then(({ syncedCount }) => {
+        if (syncedCount > 0) {
+          toast.success(`Đã tự động đồng bộ ${syncedCount} bài thi lưu từ phiên trước lên máy chủ.`);
+        }
+      });
+    }
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // ── KIỂM TRA KHÓA PHÒNG THI (LOCKDOWN ROUTE GUARD) ──
+  React.useEffect(() => {
+    let isCancelled = false;
+
+    if (typeof window !== 'undefined') {
+      // 1. Nếu chưa đăng nhập, xóa ngay mọi khóa phiên thi còn sót để không bao giờ kẹt khách vãng lai
+      if (!isAuthenticated || !user?.id) {
+        examOfflineStorage.clearActiveExamSession().catch(() => {});
+        setActiveSession(null);
+        return;
+      }
+
+      // 2. Nếu URL có attemptToken hoặc token (vừa nộp bài xong đang xem kết quả),
+      // giải phóng ngay toàn bộ khóa phiên thi còn sót trong IndexedDB & LocalStorage!
+      if (
+        window.location.search.includes('attemptToken=') ||
+        window.location.search.includes('token=')
+      ) {
+        examOfflineStorage.clearActiveExamSession().catch(() => {});
+        setActiveSession(null);
+        return;
+      }
+
+      const fastLock = examOfflineStorage.getFastSyncActiveLock();
+
+      const checkAndEnforceLock = (sessionUrl: string, examTitle?: string, examId?: string) => {
+        const currentPath = window.location.pathname;
+        const targetPath = sessionUrl.split('?')[0];
+
+        // Nếu bài thi này chưa được xác thực trừ điểm (hoặc bị chặn hết điểm), giải phóng khóa ngay lập tức!
+        if (examId) {
+          const isStartedPaid = sessionStorage.getItem(`schoolify_started_pts_${examId}`) === '1';
+          const isAdminUser =
+            (user?.role as string) === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+          if (!isStartedPaid && !isAdminUser) {
+            examOfflineStorage.clearActiveExamSession().catch(() => {});
+            setActiveSession(null);
+            return;
+          }
+        }
+
+        if (currentPath === targetPath) {
+          return;
+        }
+
+        toast.warning('Bài thi chưa hoàn thành!', {
+          id: 'exam-lockdown-warning',
+          description: `Bạn đang trong bài thi "${examTitle || 'Đang diễn ra'}". Hệ thống tự động chuyển bạn về phòng thi để tiếp tục làm bài.`,
+          duration: 4000,
+        });
+
+        router.replace(sessionUrl);
+      };
+
+      if (fastLock && fastLock.isActive && fastLock.roomUrl) {
+        checkAndEnforceLock(fastLock.roomUrl, fastLock.examTitle, fastLock.examId);
+      }
+
+      examOfflineStorage.getActiveExamSession().then((session) => {
+        if (isCancelled) return;
+        const latestLock = examOfflineStorage.getFastSyncActiveLock();
+        if (!latestLock || !latestLock.isActive) {
+          setActiveSession(null);
+          return;
+        }
+        setActiveSession(session);
+        if (session && session.status === 'IN_PROGRESS') {
+          checkAndEnforceLock(session.roomUrl, session.examTitle, session.examId);
+        }
+      });
+    }
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [pathname, router, isAuthenticated, user?.id, user?.role]);
+
+  React.useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      const lock = examOfflineStorage.getFastSyncActiveLock();
+      if (lock && lock.isActive) {
+        e.preventDefault();
+        e.returnValue =
+          'Bài thi của bạn đang diễn ra và thời gian vẫn đang được tính. Bạn có chắc chắn muốn rời đi?';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
+  return (
+    <ExamSessionGuardContext.Provider
+      value={{
+        activeSession,
+        isOnline,
+        refreshSession,
+        examNavbarVisible,
+        setExamNavbarVisible,
+      }}
+    >
+      {!isOnline && (
+        <div className="bg-amber-500/90 text-slate-950 px-3 py-1.5 text-xs font-bold flex items-center justify-center gap-2 sticky top-0 z-50 shadow-md">
+          <WifiOff className="w-3.5 h-3.5 shrink-0 animate-pulse" />
+          <span>Mất kết nối mạng. Dữ liệu bài làm đang được lưu an toàn liên tục.</span>
+        </div>
+      )}
+      {children}
+    </ExamSessionGuardContext.Provider>
+  );
+}
+
+export function useExamSessionGuard() {
+  return React.useContext(ExamSessionGuardContext);
+}

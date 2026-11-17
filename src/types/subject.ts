@@ -3,7 +3,8 @@ export type PracticeLevel =
   | 'MEDIUM'                // 2. Trung bình (Học kỳ / Tốt nghiệp)
   | 'ADVANCED'              // 3. Nâng cao (Vận dụng cao 9-10)
   | 'PROVINCIAL_EXCELLENT'  // 4. HSG Tỉnh / Thành phố
-  | 'NATIONAL_EXCELLENT';   // 5. HSG Quốc Gia / Olympic
+  | 'NATIONAL_EXCELLENT'   // 5. HSG Quốc Gia / Olympic
+  | 'ASSESSMENT';           // 6. Đánh giá năng lực
 
 export interface LevelDetail {
   id: PracticeLevel;
@@ -13,7 +14,7 @@ export interface LevelDetail {
   description: string;
   badgeColor: string;
   gradient: string;
-  pointsReward: number; // 💎 Kim cương thưởng
+  pointsReward: number; // 💎 Ngọc Tri Thức thưởng
   totalExams: number;
 }
 
@@ -28,9 +29,11 @@ export interface K12Subject {
   borderColor: string;
   badgeBg: string;
   totalExams: number;
+  totalQuestions?: number;
   completedExams?: number;
   description: string;
   category: 'NATURAL' | 'SOCIAL' | 'LANGUAGE' | 'TECH';
+  status?: 'ACTIVE' | 'PENDING';
 }
 
 export interface PracticeExamItem {
@@ -83,21 +86,6 @@ export interface QuizSection {
   questions: QuizItem[];
 }
 
-export interface EssayItem {
-  id: string;
-  title: string;
-  problem: string;
-  hint: string;
-  solution: string;
-  scoreRubric: { criterion: string; points: number }[];
-  maxPoints: number;
-}
-
-export interface EssaySection {
-  totalExercises: number;
-  exercises: EssayItem[];
-}
-
 export interface LessonExamSection {
   id: string;
   title: string;
@@ -116,9 +104,8 @@ export interface PracticeLesson {
   description: string;
   theory: TheorySection;
   quiz: QuizSection;
-  essay: EssaySection;
   exam: LessonExamSection;
   progressPct: number; // 0 - 100%
-  completedParts: ('theory' | 'quiz' | 'essay' | 'exam')[];
+  completedParts: ('theory' | 'quiz' | 'exam')[];
   estimatedTotalMinutes: number;
 }

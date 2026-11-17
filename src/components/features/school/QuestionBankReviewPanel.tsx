@@ -48,7 +48,8 @@ function questionTypeLabel(type: string) {
   if (type === 'MULTIPLE_CHOICE') return 'Nhiều đáp án đúng';
   if (type === 'SINGLE_CHOICE') return 'Một đáp án đúng';
   if (type === 'TRUE_FALSE') return 'Đúng / Sai';
-  return 'Tự luận';
+  if (type === 'FILL_BLANK' || type === 'SHORT_ANSWER') return 'Trả lời ngắn';
+  return 'Trắc nghiệm';
 }
 
 export function QuestionBankReviewPanel() {
@@ -290,7 +291,7 @@ export function QuestionBankReviewPanel() {
                     <Badge variant="secondary">{question.answers?.length || 0} đáp án</Badge>
                   </div>
                   {question.title && <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">{question.content}</p>}
-                  {question.type === 'ESSAY' ? <div className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950/30 dark:text-amber-200"><span className="font-semibold">Đáp án mẫu:</span> {question.sample_essay_answer || 'Chưa có đáp án mẫu.'}</div> : <div className="mt-3 space-y-2">{(question.answers || []).map((answer) => <div key={answer.id} className={`rounded-lg border px-3 py-2 text-sm ${answer.is_answer ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200' : 'border-slate-200 text-slate-700 dark:border-slate-700 dark:text-slate-300'}`}><div className="flex items-center gap-2"><span className="flex-1">{answer.content}</span>{answer.is_answer && <Badge variant="success" icon={<CheckCircle2 className="h-3 w-3" />}>Đáp án đúng</Badge>}</div>{answer.explain && <p className="mt-1 border-t border-current/10 pt-1 text-xs opacity-80"><span className="font-semibold">Lời giải:</span> {answer.explain}</p>}</div>)}</div>}
+                  <div className="mt-3 space-y-2">{(question.answers || []).map((answer) => <div key={answer.id} className={`rounded-lg border px-3 py-2 text-sm ${answer.is_answer ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200' : 'border-slate-200 text-slate-700 dark:border-slate-700 dark:text-slate-300'}`}><div className="flex items-center gap-2"><span className="flex-1">{answer.content}</span>{answer.is_answer && <Badge variant="success" icon={<CheckCircle2 className="h-3 w-3" />}>Đáp án đúng</Badge>}</div>{answer.explain && <p className="mt-1 border-t border-current/10 pt-1 text-xs opacity-80"><span className="font-semibold">Lời giải:</span> {answer.explain}</p>}</div>)}</div>
                 </div>
               ))}
             </section>

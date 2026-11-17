@@ -32,7 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
-
+!.env.example
+.env.local
+.env.*.local
 # vercel
 .vercel
 
@@ -58,5 +60,13 @@ docker-compose.override.yml
 **/*.md
 docs/*.md
 docs/**/*.md
+
+# AI rules & design tokens
+.cursor
+.cursor/
+design
+design/
+
+
 
 

@@ -2,113 +2,135 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { AuthCardSkeleton } from '@/components/skeletons/page-skeletons';
 import {
   BookOpen,
-  Lock,
-  Mail,
+  Phone,
   ArrowRight,
+  MessageSquare,
+  ShieldCheck,
+  CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/store/auth.store';
-import { MOCK_TEACHER_PROFILE } from '@/services/mock/data';
+import { GoogleLoginButton } from '@/components/features/auth/GoogleLoginButton';
+import { toast } from 'sonner';
+import { initAuthPopupSession, notifyAuthSuccessAndKillPopup } from '@/lib/auth-popup';
 
-function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" {...props}>
-      <path
-        fill="#4285F4"
-        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
-      />
-      <path
-        fill="#34A853"
-        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
-      />
-      <path
-        fill="#EA4335"
-        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-      />
-    </svg>
-  );
-}
-
-export default function TeacherLoginPage() {
+function TeacherLoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get('returnUrl');
+  const isPopup = searchParams.get('popup') === '1';
   const { login } = useAuthStore();
-  const [email, setEmail] = React.useState('teacher.nguyen@schoolify.edu.vn');
-  const [password, setPassword] = React.useState('123456');
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
 
-  const handleLogin = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    setIsLoading(true);
-    setTimeout(() => {
-      login(
-        {
-          id: 'usr-teacher-01',
-          fullname: 'ThS. Nguyễn Văn Hùng',
-          email: email || 'teacher@schoolify.edu.vn',
-          role: 'USER',
-          status: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          teacher_profile: MOCK_TEACHER_PROFILE,
-          school_memberships: [
-            {
-              id: 'mem-01',
-              user_id: 'usr-teacher-01',
-              school_id: 'sch-01',
-              school_name: 'THPT Chuyên Công Nghệ Schoolify',
-              role: 'TEACHER',
-              joined_at: new Date().toISOString(),
-            },
-          ],
-        },
-        'mock-teacher-token',
-        'TEACHER',
-        'sch-01'
-      );
-      router.push('/teacher/dashboard');
-    }, 400);
+  // OTP state
+  const [phone, setPhone] = React.useState('0902000001');
+  const [otpCode, setOtpCode] = React.useState('');
+  const [devOtpHint, setDevOtpHint] = React.useState<string | null>(null);
+  const [otpSent, setOtpSent] = React.useState(false);
+  const [countdown, setCountdown] = React.useState(0);
+
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    initAuthPopupSession();
+  }, []);
+
+  React.useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
+
+  const handleSendOtp = async () => {
+    if (!phone.trim()) {
+      setErrorMsg('Vui lòng nhập số điện thoại giảng viên.');
+      return;
+    }
+    setErrorMsg(null);
+    try {
+      const res = await fetch('/api/v1/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phone.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        const msg = data?.message || 'Không thể gửi mã OTP.';
+        setErrorMsg(msg);
+        toast.error('Gửi OTP thất bại', { description: msg });
+        return;
+      }
+      setOtpSent(true);
+      setCountdown(60);
+      if (data?.devOtp) {
+        setDevOtpHint(data.devOtp);
+        setOtpCode(data.devOtp);
+      }
+      toast.success('Đã gửi mã OTP!', {
+        description: data?.devOtp
+          ? `Mã OTP xác thực của bạn là: ${data.devOtp}`
+          : 'Vui lòng kiểm tra tin nhắn điện thoại.',
+      });
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Lỗi kết nối khi gửi OTP.');
+    }
   };
 
-  const handleGoogleLogin = () => {
-    setIsGoogleLoading(true);
-    setTimeout(() => {
-      login(
-        {
-          id: 'usr-teacher-google',
-          fullname: 'ThS. Trần Thị Mai (Google)',
-          email: 'mai.tran@gmail.com',
-          role: 'USER',
-          status: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          school_memberships: [
-            {
-              id: 'mem-01',
-              user_id: 'usr-teacher-google',
-              school_id: 'sch-01',
-              school_name: 'THPT Chuyên Công Nghệ Schoolify',
-              role: 'TEACHER',
-              joined_at: new Date().toISOString(),
-            },
-          ],
-        },
-        'mock-google-token',
-        'TEACHER',
-        'sch-01'
-      );
+  const handleOtpLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+    if (!otpCode.trim()) {
+      setErrorMsg('Vui lòng nhập mã OTP 6 chữ số.');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/v1/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: phone.trim(),
+          otp: otpCode.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.user) {
+        const msg = data?.message || 'Mã OTP không chính xác hoặc đã hết hạn.';
+        setErrorMsg(msg);
+        toast.error('Xác thực OTP thất bại', { description: msg });
+        return;
+      }
+
+      login(data.user, data.accessToken || '', 'TEACHER');
+
+      // Nếu đang trong subtab/popup: phát tín hiệu về tab cha và KILL ngay lập tức!
+      const killed = notifyAuthSuccessAndKillPopup({
+        user: data.user,
+        token: data.accessToken,
+        role: 'TEACHER',
+      });
+      if (killed) return;
+
+      toast.success('Đăng nhập thành công!', {
+        id: 'schoolify-auth-success',
+        description: `Chào mừng Giảng viên ${data.user.fullname}!`,
+      });
+
       router.push('/teacher/dashboard');
-    }, 500);
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Không thể kết nối đến máy chủ.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -121,95 +143,140 @@ export default function TeacherLoginPage() {
           </div>
           <div>
             <Badge className="mb-2 bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 text-[10px] font-bold">
-              CỔNG GIẢNG DẠY & SÁNG TẠO
+              CỔNG DÀNH CHO GIẢNG VIÊN &amp; CREATOR
             </Badge>
             <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              Đăng Nhập Giáo Viên
+              Đăng Nhập Người Bán Khóa Học
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Quản lý lớp học, soạn khóa học số & chấm bài trực tuyến
+              Đăng nhập an toàn không cần mật khẩu qua Google hoặc mã OTP
             </p>
           </div>
         </div>
 
-        {/* Login Form */}
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-              Email Giáo Viên / Số Điện Thoại
-            </label>
-            <Input
-              type="text"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="teacher@schoolify.edu.vn"
-              leftIcon={<Mail className="w-4 h-4 text-amber-500" />}
-              className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
-              required
-            />
-          </div>
+        {/* Primary Action 1: Google Login */}
+        <div className="space-y-3">
+          <GoogleLoginButton
+            role="TEACHER"
+            returnUrl="/teacher/dashboard"
+            label="Tiếp tục bằng tài khoản Google (Gmail)"
+          />
 
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Mật Khẩu
-              </label>
-              <a href="#" className="text-[11px] text-amber-600 dark:text-amber-400 hover:underline">
-                Quên mật khẩu?
-              </a>
+          {/* Divider */}
+          <div className="relative flex items-center justify-center my-3">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-200 dark:border-slate-800" />
             </div>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              leftIcon={<Lock className="w-4 h-4 text-amber-500" />}
-              className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
-              required
-            />
+            <span className="relative px-3 bg-white dark:bg-slate-900 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+              Hoặc đăng nhập bằng mã OTP
+            </span>
+          </div>
+        </div>
+
+        {errorMsg && (
+          <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
+        {/* Primary Action 2: Phone OTP Form */}
+        <form onSubmit={handleOtpLogin} className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
+              <MessageSquare className="w-3.5 h-3.5 text-amber-500" />
+              <span>Số Điện Thoại Giảng Viên</span>
+            </label>
+            <div className="flex gap-2">
+              <Input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="0902000001"
+                leftIcon={<Phone className="w-4 h-4 text-amber-500" />}
+                className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono flex-1"
+                required
+              />
+              <button
+                type="button"
+                onClick={handleSendOtp}
+                disabled={countdown > 0 || !phone.trim()}
+                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-slate-950 font-bold text-xs transition-all disabled:opacity-50 shrink-0 cursor-pointer shadow-xs"
+              >
+                {countdown > 0 ? `${countdown}s` : otpSent ? 'Gửi lại' : 'Gửi mã OTP'}
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center justify-between text-xs text-slate-500">
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input type="checkbox" defaultChecked className="rounded accent-amber-500" />
-              <span>Ghi nhớ đăng nhập</span>
-            </label>
-          </div>
+          {otpSent ? (
+            <div className="space-y-1.5 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between text-xs">
+                <label className="font-bold text-slate-700 dark:text-slate-300">
+                  Nhập Mã OTP (6 Số)
+                </label>
+                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" />
+                  {devOtpHint ? `Mã OTP: ${devOtpHint}` : 'Đã gửi qua tin nhắn'}
+                </span>
+              </div>
+              <Input
+                type="text"
+                maxLength={6}
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value)}
+                placeholder="Nhập 6 chữ số OTP"
+                leftIcon={<ShieldCheck className="w-4 h-4 text-amber-500" />}
+                className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono text-center tracking-widest text-base font-bold"
+                required
+                autoFocus
+              />
+            </div>
+          ) : (
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 italic">
+              * Bấm &quot;Gửi mã OTP&quot; để nhận mã số đăng nhập bảo mật gửi tới số điện thoại của bạn.
+            </p>
+          )}
 
           <Button
             type="submit"
             isLoading={isLoading}
+            disabled={!otpSent}
             className="w-full justify-center h-11 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-slate-950 font-black text-sm shadow-md shadow-amber-500/20 transition-all cursor-pointer"
             rightIcon={<ArrowRight className="w-4 h-4" />}
           >
-            Vào Không Gian Giảng Dạy
+            Xác Thực OTP &amp; Đăng Nhập
           </Button>
         </form>
 
-        {/* Alternate Logins (Google) */}
-        <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-          {/* Google Login Button */}
-          <button
-            type="button"
-            onClick={handleGoogleLogin}
-            disabled={isGoogleLoading}
-            className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs shadow-xs transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
-          >
-            <GoogleIcon />
-            <span>{isGoogleLoading ? 'Đang xác thực Google...' : 'Đăng nhập bằng tài khoản Google'}</span>
-          </button>
-        </div>
-
         {/* Switch Role Footer */}
-        <div className="text-center text-xs text-slate-500 pt-1">
+        <div className="text-center text-xs text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-1">
           <p>
-            Bạn thuộc phân hệ khác?{' '}
-            <Link href="/login" className="text-[#00B8DD] font-bold hover:underline">
-              Đổi vai trò đăng nhập
+            Bạn là Người Luyện Thi?{' '}
+            <Link
+              href={
+                isPopup
+                  ? returnUrl
+                    ? `/login/student?returnUrl=${encodeURIComponent(returnUrl)}&popup=1`
+                    : '/login/student?popup=1'
+                  : returnUrl
+                    ? `/login/student?returnUrl=${encodeURIComponent(returnUrl)}`
+                    : '/login/student'
+              }
+              className="text-[#00B8DD] font-bold hover:underline"
+            >
+              Sang cổng Học sinh
             </Link>
           </p>
         </div>
       </Card>
     </div>
+  );
+}
+
+export default function TeacherLoginPage() {
+  return (
+    <React.Suspense fallback={<AuthCardSkeleton />}>
+      <TeacherLoginForm />
+    </React.Suspense>
   );
 }

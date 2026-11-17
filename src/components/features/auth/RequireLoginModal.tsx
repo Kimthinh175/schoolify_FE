@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Lock,
   Sparkles,
@@ -11,10 +12,13 @@ import {
   ArrowRight,
   CheckCircle2,
   BookOpen,
+  Zap,
 } from 'lucide-react';
 import { Dialog } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useAuthStore } from '@/store/auth.store';
+import { toast } from 'sonner';
 
 export type RequireLoginReason = 'ADVANCED_LEVEL' | 'LEADERBOARD' | 'STORE' | 'GENERAL';
 
@@ -24,6 +28,8 @@ interface RequireLoginModalProps {
   reason?: RequireLoginReason;
   targetLevelName?: string;
   onContinueGuest?: () => void;
+  returnUrl?: string;
+  onSuccessLogin?: () => void;
 }
 
 export function RequireLoginModal({
@@ -32,20 +38,65 @@ export function RequireLoginModal({
   reason = 'GENERAL',
   targetLevelName,
   onContinueGuest,
+  returnUrl,
+  onSuccessLogin,
 }: RequireLoginModalProps) {
+  const router = useRouter();
+  const { login } = useAuthStore();
+  const [isDemoLoggingIn, setIsDemoLoggingIn] = React.useState(false);
+
+  const handleQuickDemoLogin = () => {
+    setIsDemoLoggingIn(true);
+    setTimeout(() => {
+      login(
+        {
+          id: 'usr-student-01',
+          fullname: 'Nguyễn Hoàng Minh',
+          email: 'student.minh@schoolify.edu.vn',
+          role: 'USER',
+          status: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          school_memberships: [
+            {
+              id: 'mem-01',
+              user_id: 'usr-student-01',
+              school_id: 'sch-01',
+              school_name: 'THPT Chuyên Công Nghệ Schoolify',
+              role: 'STUDENT',
+              joined_at: new Date().toISOString(),
+            },
+          ],
+        },
+        'mock-student-token',
+        'STUDENT',
+        'sch-01'
+      );
+      toast.success('Đăng nhập thành công!', {
+        description: 'Chào mừng Nguyễn Hoàng Minh (THPT Chuyên Công Nghệ Schoolify)',
+      });
+      setIsDemoLoggingIn(false);
+      onClose();
+      if (onSuccessLogin) {
+        onSuccessLogin();
+      } else if (returnUrl) {
+        router.push(returnUrl);
+      }
+    }, 300);
+  };
   const getHeaderInfo = () => {
     switch (reason) {
       case 'ADVANCED_LEVEL':
         return {
           icon: <Crown className="w-7 h-7 text-amber-500" />,
           iconBg: 'bg-amber-100 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800',
-          badge: 'Quyền Lợi Thành Viên',
+          badge: 'Yêu Cầu Đăng Nhập',
           badgeVariant: 'warning' as const,
           title: targetLevelName
-            ? `Mở Khóa Cấp Độ: ${targetLevelName}`
-            : 'Mở Khóa Đề Nâng Cao & HSG',
+            ? `Đăng Nhập Để Tạo Đề: ${targetLevelName}`
+            : 'Đăng Nhập Để Tạo Đề & Luyện Thi',
           description:
-            'Cấp độ Nâng cao, HSG Tỉnh và HSG Quốc gia yêu cầu tài khoản học sinh để ghi nhận điểm số và mở khóa trọn bộ ngân hàng câu hỏi chuyên sâu.',
+            'Bạn cần đăng nhập tài khoản học sinh để tạo đề thi, kiểm tra số dư Tia Sáng và lưu trữ lịch sử làm bài cá nhân hóa.',
         };
       case 'LEADERBOARD':
         return {
@@ -63,19 +114,19 @@ export function RequireLoginModal({
           iconBg: 'bg-rose-100 dark:bg-rose-950/50 border-rose-200 dark:border-rose-800',
           badge: 'Kho Quà Tặng 💎',
           badgeVariant: 'danger' as const,
-          title: 'Đổi Thưởng Kim Cương 💎',
+          title: 'Đổi Thưởng Ngọc Tri Thức 💎',
           description:
-            'Đăng nhập để xem số kim cương tích lũy của bạn và đổi voucher học tập, sách tham khảo hoặc quà tặng hiện vật.',
+            'Đăng nhập để xem số ngọc tri thức tích lũy của bạn và đổi voucher học tập, sách tham khảo hoặc quà tặng hiện vật.',
         };
       default:
         return {
           icon: <Lock className="w-7 h-7 text-[#00B8DD]" />,
           iconBg: 'bg-[#E6F8FC] dark:bg-[#00B8DD]/20 border-[#00B8DD]/30',
-          badge: 'Đăng Nhập Học Sinh',
+          badge: 'Yêu Cầu Đăng Nhập',
           badgeVariant: 'primary' as const,
-          title: 'Trải Nghiệm Toàn Diện Schoolify',
+          title: 'Đăng Nhập Để Tạo Đề Thi',
           description:
-            'Đăng nhập để mở khóa đầy đủ tính năng luyện thi, lưu tiến độ học tập và tham gia cộng đồng luyện thi K-12.',
+            'Vui lòng đăng nhập tài khoản học sinh để tạo đề thi mới, sử dụng Tia Sáng năng lượng và lưu tiến độ học tập K-12.',
         };
     }
   };
@@ -84,16 +135,16 @@ export function RequireLoginModal({
 
   const benefits = [
     {
-      title: 'Mở khóa 100% ngân hàng đề chuyên sâu',
-      desc: 'Hơn 50.000 câu hỏi vận dụng cao và đề thi chọn HSG Tỉnh, Quốc gia qua các năm.',
+      title: 'Tạo đề thi cá nhân hóa theo chương & cấp độ',
+      desc: 'Tự động kiểm tra Tia Sáng năng lượng và sinh đề bám sát chương trình học phổ thông.',
     },
     {
       title: 'Lưu tiến độ & Phân tích lỗ hổng kiến thức',
-      desc: 'Báo cáo radar chỉ rõ chủ đề còn yếu để đề xuất bài tập bổ trợ cá nhân hóa.',
+      desc: 'Báo cáo chỉ rõ chuyên đề còn yếu để đề xuất lộ trình ôn tập cá nhân hóa.',
     },
     {
-      title: 'Tích lũy kim cương 💎 & Đua top toàn quốc',
-      desc: 'Mỗi bài luyện thi hoàn thành đều được cộng điểm và xếp hạng thi đua tuần.',
+      title: 'Tích lũy Ngọc Tri Thức & Đua top toàn quốc',
+      desc: 'Mỗi bài luyện thi hoàn thành đều được ghi nhận điểm số và xếp hạng thi đua.',
     },
   ];
 
@@ -143,27 +194,27 @@ export function RequireLoginModal({
 
         {/* CTA Buttons */}
         <div className="mt-6 space-y-2.5">
-          <Link href="/login/student" className="block w-full">
+          {/* Standard Student Login Page Button */}
+          <Link
+            href={returnUrl ? `/login/student?returnUrl=${encodeURIComponent(returnUrl)}` : '/login/student'}
+            className="block w-full"
+          >
             <Button
               size="lg"
-              className="w-full bg-[#00B8DD] hover:bg-[#009BBD] text-slate-950 font-bold text-sm rounded-xl shadow-lg shadow-[#00B8DD]/20"
+              className="w-full bg-[#00B8DD] hover:bg-[#009dbd] text-white font-bold text-sm rounded-xl shadow-md shadow-cyan-500/20 cursor-pointer"
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
-              Đăng Nhập Tài Khoản Học Sinh
+              Đăng Nhập Tài Khoản Học Sinh Ngay
             </Button>
           </Link>
 
           <Button
             type="button"
             variant="ghost"
-            onClick={() => {
-              onClose();
-              if (onContinueGuest) onContinueGuest();
-            }}
-            className="w-full text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-semibold"
-            leftIcon={<BookOpen className="w-3.5 h-3.5" />}
+            onClick={onClose}
+            className="w-full text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-semibold cursor-pointer"
           >
-            Tiếp Tục Luyện Thử Cấp Độ Cơ Bản (Miễn Phí)
+            Đóng &amp; Quay lại
           </Button>
         </div>
       </div>

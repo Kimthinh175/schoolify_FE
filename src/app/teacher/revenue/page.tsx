@@ -126,7 +126,7 @@ export default function TeacherRevenuePage() {
             </>
           ) : (
             <div className="py-4 flex flex-col items-center text-center space-y-3">
-              <div className="h-14 w-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+              <div className="h-14 w-14 rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 flex items-center justify-center">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white">

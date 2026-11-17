@@ -1,10 +1,28 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 
-export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+export type SkeletonVariant = 'default' | 'brand' | 'amber' | 'subtle';
+
+export interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: SkeletonVariant;
+}
+
+const VARIANT_CLASSES: Record<SkeletonVariant, string> = {
+  default: '',
+  brand: 'sk-bone--brand',
+  amber: 'sk-bone--amber',
+  subtle: 'sk-bone--subtle',
+};
+
+export function Skeleton({
+  className,
+  variant = 'default',
+  ...props
+}: SkeletonProps) {
   return (
     <div
-      className={cn('animate-pulse rounded-xl bg-slate-200/80 dark:bg-slate-800/80', className)}
+      aria-hidden="true"
+      className={cn('sk-bone rounded-xl', VARIANT_CLASSES[variant], className)}
       {...props}
     />
   );

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Plus, Wallet, UserX } from 'lucide-react';
+import { Plus, Wallet, UserX, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -54,7 +54,12 @@ export default function TeacherDashboardPage() {
             Theo dõi thu nhập bán khóa học, số học viên, lớp giảng dạy và quản lý trạng thái mở bán khóa học trên Marketplace.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link href="/profile">
+            <Button variant="outline" leftIcon={<User className="w-4 h-4" />}>
+              Tài Khoản Cá Nhân
+            </Button>
+          </Link>
           <Link href="/teacher/revenue">
             <Button variant="outline" leftIcon={<Wallet className="w-4 h-4" />}>
               Doanh Thu
@@ -67,15 +72,32 @@ export default function TeacherDashboardPage() {
       </div>
 
       {!user || (!!teacherId && !isReady) ? (
-        <>
+        <div className="space-y-6">
           {/* Đang tải hồ sơ giáo viên / dữ liệu */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {Array.from({ length: 4 }).map((_, index) => (
-              <Skeleton key={index} className="h-28" />
+              <div
+                key={index}
+                className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/75 space-y-2.5"
+              >
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-4 w-28 rounded" />
+                  <Skeleton variant="brand" className="w-9 h-9 rounded-xl" />
+                </div>
+                <Skeleton className="h-8 w-24 rounded-xl" />
+                <Skeleton className="h-3 w-36 rounded" />
+              </div>
             ))}
           </div>
-          <Skeleton className="h-96" />
-        </>
+          <div className="p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/75 space-y-4">
+            <Skeleton className="h-6 w-52 rounded-lg" />
+            <div className="space-y-2.5">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} variant="subtle" className="h-14 w-full rounded-xl" />
+              ))}
+            </div>
+          </div>
+        </div>
       ) : !teacherId || !stats ? (
         /* Không có hồ sơ giáo viên -> chặn rò dữ liệu của giáo viên khác */
         <Card className="p-10 flex flex-col items-center text-center space-y-3">

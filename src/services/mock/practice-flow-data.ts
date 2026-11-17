@@ -1,6 +1,10 @@
 import { PracticeLevel } from '@/types/subject';
+import { generateQuestionsByMatrix } from './question-matrix-engine';
+import questionsDb from '@/data/questions-db.json';
 
-export type ExamFormat = 'QUIZ' | 'ESSAY' | 'MIXED';
+export type ExamFormat = 'QUIZ';
+export type QuestionDifficulty = 'EASY' | 'MEDIUM' | 'HARD' | 'VERY_HARD';
+export type PracticeMode = 'TOPIC' | 'MOCK_EXAM';
 
 export interface GradeItem {
   id: number;
@@ -19,73 +23,1243 @@ export const K12_GRADES: GradeItem[] = [
   { id: 7, label: 'Lớp 7', levelGroup: 'SECONDARY' },
   { id: 8, label: 'Lớp 8', levelGroup: 'SECONDARY' },
   { id: 9, label: 'Lớp 9', levelGroup: 'SECONDARY' },
-  { id: 10, label: 'Lớp 10', levelGroup: 'HIGH' },
-  { id: 11, label: 'Lớp 11', levelGroup: 'HIGH' },
+  { id: 10, label: 'Lớp 10', levelGroup: 'HIGH', isDemoReady: true },
+  { id: 11, label: 'Lớp 11', levelGroup: 'HIGH', isDemoReady: true },
   { id: 12, label: 'Lớp 12', levelGroup: 'HIGH', isDemoReady: true },
 ];
+
+export type ChapterTrack = 'TOAN_SO' | 'TOAN_HINH' | 'DEFAULT';
 
 export interface ChapterItem {
   id: number;
   slug: string;
   name: string;
+  shortName?: string;
+  sgkLabel?: string;
   description: string;
   lessonCount: number;
   examCount: number;
+  semester?: 1 | 2;
+  track?: ChapterTrack;
+  trackLabel?: string;
+  trackOrder?: number;
   isDemoReady?: boolean;
 }
 
-// 6 Chương Toán 12 theo Chương trình GDPT 2018 (Kết Nối Tri Thức / Cánh Diều)
-export const MATH_GRADE_12_CHAPTERS: ChapterItem[] = [
+// ============================================================================
+// TOÁN LỚP 10 — CHƯƠNG TRÌNH GDPT 2018 (TÁCH 2 NHÁNH: TOÁN SỐ & TOÁN HÌNH)
+// ============================================================================
+export const MATH_GRADE_10_CHAPTERS: ChapterItem[] = [
+  // 🧮 NHÁNH TOÁN SỐ LỚP 10 (6 CHƯƠNG)
   {
     id: 1,
-    slug: 'ung-dung-dao-ham-khao-sat-do-thi',
-    name: 'Chương 1: Ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số',
-    description: 'Tính đơn điệu, cực trị, GTLN-GTNN, đường tiệm cận (đứng, ngang, xiên), đồ thị hàm số và bài toán thực tế.',
-    lessonCount: 5,
-    examCount: 24,
+    slug: 'toan10-ch1-menh-de-va-tap-hop',
+    name: 'Chương 1: Mệnh đề và Tập hợp',
+    shortName: 'Mệnh đề & Tập hợp',
+    sgkLabel: 'SGK Tập 1 · Chương I',
+    description: 'Mệnh đề toán học, mệnh đề phủ định/kéo theo và các phép toán giao, hợp, hiệu trên tập hợp số.',
+    lessonCount: 4,
+    examCount: 18,
+    semester: 1,
+    track: 'TOAN_SO',
+    trackLabel: 'Toán Số',
+    trackOrder: 1,
     isDemoReady: true,
   },
   {
     id: 2,
-    slug: 'vecto-va-he-toa-do-trong-khong-gian',
-    name: 'Chương 2: Tọa độ của vectơ trong không gian',
-    description: 'Vectơ trong không gian, các phép toán vectơ, hệ trục tọa độ Oxyz và ứng dụng hình học.',
+    slug: 'toan10-ch2-bat-phuong-trinh-bac-nhat-hai-an',
+    name: 'Chương 2: Bất phương trình và hệ BPT bậc nhất hai ẩn',
+    shortName: 'Hệ BPT bậc nhất hai ẩn',
+    sgkLabel: 'SGK Tập 1 · Chương II',
+    description: 'Biểu diễn miền nghiệm trên mặt phẳng tọa độ Oxy và bài toán tối ưu thực tế (quy hoạch tuyến tính).',
+    lessonCount: 3,
+    examCount: 16,
+    semester: 1,
+    track: 'TOAN_SO',
+    trackLabel: 'Toán Số',
+    trackOrder: 2,
+    isDemoReady: true,
+  },
+  {
+    id: 5,
+    slug: 'toan10-ch5-cac-so-dac-trung-mau-so-lieu',
+    name: 'Chương 5: Các số đặc trưng của mẫu số liệu không ghép nhóm',
+    shortName: 'Thống kê mẫu không ghép nhóm',
+    sgkLabel: 'SGK Tập 1 · Chương V',
+    description: 'Số gần đúng và sai số; số trung bình, trung vị, tứ phân vị, mốt; phương sai và độ lệch chuẩn.',
+    lessonCount: 4,
+    examCount: 15,
+    semester: 1,
+    track: 'TOAN_SO',
+    trackLabel: 'Toán Số',
+    trackOrder: 3,
+    isDemoReady: true,
+  },
+  {
+    id: 6,
+    slug: 'toan10-ch6-ham-so-do-thi-va-ung-dung',
+    name: 'Chương 6: Hàm số, đồ thị và ứng dụng',
+    shortName: 'Hàm số bậc hai & Tam thức',
+    sgkLabel: 'SGK Tập 2 · Chương VI',
+    description: 'Tập xác định, khảo sát hàm số bậc hai (Parabol), xét dấu tam thức bậc hai và phương trình quy về bậc hai.',
+    lessonCount: 5,
+    examCount: 22,
+    semester: 2,
+    track: 'TOAN_SO',
+    trackLabel: 'Toán Số',
+    trackOrder: 4,
+    isDemoReady: true,
+  },
+  {
+    id: 8,
+    slug: 'toan10-ch8-dai-so-to-hop',
+    name: 'Chương 8: Đại số tổ hợp',
+    shortName: 'Quy tắc đếm & Tổ hợp',
+    sgkLabel: 'SGK Tập 2 · Chương VIII',
+    description: 'Quy tắc cộng – quy tắc nhân, hoán vị, chỉnh hợp, tổ hợp và khai triển Nhị thức Newton.',
+    lessonCount: 4,
+    examCount: 20,
+    semester: 2,
+    track: 'TOAN_SO',
+    trackLabel: 'Toán Số',
+    trackOrder: 5,
+    isDemoReady: true,
+  },
+  {
+    id: 9,
+    slug: 'toan10-ch9-xac-suat-co-dien',
+    name: 'Chương 9: Tính xác suất theo định nghĩa cổ điển',
+    shortName: 'Xác suất cổ điển',
+    sgkLabel: 'SGK Tập 2 · Chương IX',
+    description: 'Không gian mẫu, biến cố đối và thực hành tính xác suất theo định nghĩa cổ điển kết hợp tổ hợp.',
+    lessonCount: 3,
+    examCount: 16,
+    semester: 2,
+    track: 'TOAN_SO',
+    trackLabel: 'Toán Số',
+    trackOrder: 6,
+    isDemoReady: true,
+  },
+
+  // 📐 NHÁNH TOÁN HÌNH LỚP 10 (4 CHƯƠNG)
+  {
+    id: 3,
+    slug: 'toan10-ch3-he-thuc-luong-trong-tam-giac',
+    name: 'Chương 3: Hệ thức lượng trong tam giác',
+    shortName: 'Hệ thức lượng tam giác',
+    sgkLabel: 'SGK Tập 1 · Chương III',
+    description: 'Giá trị lượng giác góc từ 0° đến 180°, Định lý Côsin, Định lý Sin và các công thức diện tích tam giác.',
     lessonCount: 4,
     examCount: 18,
+    semester: 1,
+    track: 'TOAN_HINH',
+    trackLabel: 'Toán Hình',
+    trackOrder: 1,
+    isDemoReady: true,
+  },
+  {
+    id: 4,
+    slug: 'toan10-ch4-vecto',
+    name: 'Chương 4: Vectơ trong mặt phẳng',
+    shortName: 'Vectơ & Tích vô hướng',
+    sgkLabel: 'SGK Tập 1 · Chương IV',
+    description: 'Tổng và hiệu hai vectơ, tích vectơ với một số, vectơ trong mặt phẳng tọa độ và tích vô hướng.',
+    lessonCount: 5,
+    examCount: 20,
+    semester: 1,
+    track: 'TOAN_HINH',
+    trackLabel: 'Toán Hình',
+    trackOrder: 2,
+    isDemoReady: true,
+  },
+  {
+    id: 7,
+    slug: 'toan10-ch7a-duong-thang-va-duong-tron-oxy',
+    name: 'Chương 7A: Đường thẳng và Đường tròn trong mặt phẳng Oxy',
+    shortName: 'Đường thẳng & Đường tròn Oxy',
+    sgkLabel: 'SGK Tập 2 · Chương VII (P1)',
+    description: 'Phương trình tham số/tổng quát đường thẳng, góc – khoảng cách, phương trình đường tròn và tiếp tuyến.',
+    lessonCount: 4,
+    examCount: 20,
+    semester: 2,
+    track: 'TOAN_HINH',
+    trackLabel: 'Toán Hình',
+    trackOrder: 3,
+    isDemoReady: true,
+  },
+  {
+    id: 10,
+    slug: 'toan10-ch7b-ba-duong-conic-oxy',
+    name: 'Chương 7B: Ba đường Conic trong mặt phẳng Oxy',
+    shortName: 'Elip, Hypebol & Parabol',
+    sgkLabel: 'SGK Tập 2 · Chương VII (P2)',
+    description: 'Phương trình chính tắc, tiêu điểm, tiêu cự và ứng dụng thực tế của Elip, Hypebol, Parabol.',
+    lessonCount: 3,
+    examCount: 15,
+    semester: 2,
+    track: 'TOAN_HINH',
+    trackLabel: 'Toán Hình',
+    trackOrder: 4,
+    isDemoReady: true,
+  },
+];
+
+// ============================================================================
+// TOÁN LỚP 11 — CHƯƠNG TRÌNH GDPT 2018 (TÁCH 2 NHÁNH: TOÁN SỐ & TOÁN HÌNH)
+// ============================================================================
+export const MATH_GRADE_11_CHAPTERS: ChapterItem[] = [
+  // 🧮 NHÁNH TOÁN SỐ LỚP 11 (7 CHƯƠNG)
+  {
+    id: 1,
+    slug: 'toan11-ch1-ham-so-va-phuong-trinh-luong-giac',
+    name: 'Chương 1: Hàm số lượng giác và phương trình lượng giác',
+    shortName: 'Hàm số & PT Lượng giác',
+    sgkLabel: 'SGK Tập 1 · Chương I',
+    description: 'Góc lượng giác, công thức biến đổi lượng giác, tập giá trị hàm lượng giác và phương trình lượng giác.',
+    lessonCount: 5,
+    examCount: 22,
+    semester: 1,
+    track: 'TOAN_SO',
+    trackLabel: 'Toán Số',
+    trackOrder: 1,
+    isDemoReady: true,
+  },
+  {
+    id: 2,
+    slug: 'toan11-ch2-day-so-cap-so-cong-cap-so-nhan',
+    name: 'Chương 2: Dãy số. Cấp số cộng và cấp số nhân',
+    shortName: 'Dãy số, CSC & CSN',
+    sgkLabel: 'SGK Tập 1 · Chương II',
+    description: 'Tính đơn điệu, bị chặn của dãy số; số hạng tổng quát và tổng n số hạng đầu của CSC, CSN.',
+    lessonCount: 4,
+    examCount: 18,
+    semester: 1,
+    track: 'TOAN_SO',
+    trackLabel: 'Toán Số',
+    trackOrder: 2,
+    isDemoReady: true,
+  },
+  {
+    id: 3,
+    slug: 'toan11-ch3-mau-so-lieu-ghep-nhom',
+    name: 'Chương 3: Mẫu số liệu ghép nhóm (Xu thế trung tâm)',
+    shortName: 'Mẫu số liệu ghép nhóm',
+    sgkLabel: 'SGK Tập 1 · Chương III',
+    description: 'Bảng tần số ghép nhóm, ước lượng số trung bình, trung vị, tứ phân vị và mốt.',
+    lessonCount: 3,
+    examCount: 14,
+    semester: 1,
+    track: 'TOAN_SO',
+    trackLabel: 'Toán Số',
+    trackOrder: 3,
+    isDemoReady: true,
+  },
+  {
+    id: 5,
+    slug: 'toan11-ch5-gioi-han-ham-so-lien-tuc',
+    name: 'Chương 5: Giới hạn. Hàm số liên tục',
+    shortName: 'Giới hạn & Liên tục',
+    sgkLabel: 'SGK Tập 1 · Chương V',
+    description: 'Giới hạn dãy số, giới hạn hàm số (khử dạng vô định 0/0, ∞/∞) và xét tính liên tục của hàm số.',
+    lessonCount: 4,
+    examCount: 20,
+    semester: 1,
+    track: 'TOAN_SO',
+    trackLabel: 'Toán Số',
+    trackOrder: 4,
+    isDemoReady: true,
+  },
+  {
+    id: 6,
+    slug: 'toan11-ch6-ham-so-mu-va-logarit',
+    name: 'Chương 6: Hàm số mũ và hàm số lôgarit',
+    shortName: 'Hàm số Mũ & Lôgarit',
+    sgkLabel: 'SGK Tập 2 · Chương VI',
+    description: 'Phép tính lũy thừa – lôgarit, đồ thị hàm mũ – lôgarit, phương trình và bất phương trình mũ – lôgarit.',
+    lessonCount: 5,
+    examCount: 22,
+    semester: 2,
+    track: 'TOAN_SO',
+    trackLabel: 'Toán Số',
+    trackOrder: 5,
+    isDemoReady: true,
+  },
+  {
+    id: 8,
+    slug: 'toan11-ch8-cac-quy-tac-tinh-xac-suat',
+    name: 'Chương 8: Các quy tắc tính xác suất',
+    shortName: 'Quy tắc cộng & nhân Xác suất',
+    sgkLabel: 'SGK Tập 2 · Chương VIII',
+    description: 'Biến cố hợp, giao, xung khắc, độc lập; công thức cộng xác suất và công thức nhân xác suất.',
+    lessonCount: 4,
+    examCount: 16,
+    semester: 2,
+    track: 'TOAN_SO',
+    trackLabel: 'Toán Số',
+    trackOrder: 6,
+    isDemoReady: true,
+  },
+  {
+    id: 9,
+    slug: 'toan11-ch9-dao-ham',
+    name: 'Chương 9: Đạo hàm',
+    shortName: 'Đạo hàm & Tiếp tuyến',
+    sgkLabel: 'SGK Tập 2 · Chương IX',
+    description: 'Định nghĩa đạo hàm, phương trình tiếp tuyến đồ thị, quy tắc đạo hàm hàm hợp và đạo hàm cấp hai.',
+    lessonCount: 4,
+    examCount: 20,
+    semester: 2,
+    track: 'TOAN_SO',
+    trackLabel: 'Toán Số',
+    trackOrder: 7,
+    isDemoReady: true,
+  },
+
+  // 📐 NHÁNH TOÁN HÌNH LỚP 11 (4 CHƯƠNG HÌNH KHÔNG GIAN)
+  {
+    id: 4,
+    slug: 'toan11-ch4a-duong-thang-mat-phang-hai-duong-song-song',
+    name: 'Chương 4A: Đại cương mặt phẳng & Hai đường thẳng song song',
+    shortName: 'Giao tuyến & Hai đường song song',
+    sgkLabel: 'SGK Tập 1 · Chương IV (P1)',
+    description: 'Giao tuyến hai mặt phẳng, giao điểm đường – mặt, vị trí tương đối hai đường thẳng trong không gian.',
+    lessonCount: 4,
+    examCount: 18,
+    semester: 1,
+    track: 'TOAN_HINH',
+    trackLabel: 'Toán Hình',
+    trackOrder: 1,
+    isDemoReady: true,
+  },
+  {
+    id: 10,
+    slug: 'toan11-ch4b-song-song-khong-gian-phep-chieu',
+    name: 'Chương 4B: Đường thẳng, mặt phẳng song song & Phép chiếu',
+    shortName: 'Đường // Mặt & Hai mặt song song',
+    sgkLabel: 'SGK Tập 1 · Chương IV (P2)',
+    description: 'Đường thẳng song song mặt phẳng, hai mặt phẳng song song, thiết diện, hình lăng trụ và hình hộp.',
+    lessonCount: 4,
+    examCount: 18,
+    semester: 1,
+    track: 'TOAN_HINH',
+    trackLabel: 'Toán Hình',
+    trackOrder: 2,
+    isDemoReady: true,
+  },
+  {
+    id: 7,
+    slug: 'toan11-ch7a-quan-he-vuong-goc-va-goc-khong-gian',
+    name: 'Chương 7A: Quan hệ vuông góc & Góc trong không gian',
+    shortName: 'Vuông góc & Góc không gian',
+    sgkLabel: 'SGK Tập 2 · Chương VII (P1)',
+    description: 'Đường thẳng vuông góc mặt phẳng, hai mặt phẳng vuông góc, góc đường – mặt và góc nhị diện.',
+    lessonCount: 5,
+    examCount: 20,
+    semester: 2,
+    track: 'TOAN_HINH',
+    trackLabel: 'Toán Hình',
+    trackOrder: 3,
+    isDemoReady: true,
+  },
+  {
+    id: 11,
+    slug: 'toan11-ch7b-khoang-cach-va-the-tich-khoi-da-dien',
+    name: 'Chương 7B: Khoảng cách & Thể tích khối đa diện',
+    shortName: 'Khoảng cách & Thể tích chóp/lăng trụ',
+    sgkLabel: 'SGK Tập 2 · Chương VII (P2)',
+    description: 'Khoảng cách từ điểm đến mặt phẳng, hai đường chéo nhau và tính thể tích khối chóp, khối lăng trụ.',
+    lessonCount: 5,
+    examCount: 22,
+    semester: 2,
+    track: 'TOAN_HINH',
+    trackLabel: 'Toán Hình',
+    trackOrder: 4,
+    isDemoReady: true,
+  },
+];
+
+// ============================================================================
+// TOÁN LỚP 12 — CHƯƠNG TRÌNH GDPT 2018 (TÁCH 2 NHÁNH: TOÁN SỐ & TOÁN HÌNH)
+// ============================================================================
+export const MATH_GRADE_12_CHAPTERS: ChapterItem[] = [
+  // 🧮 NHÁNH TOÁN SỐ LỚP 12 (4 CHƯƠNG)
+  {
+    id: 1,
+    slug: 'ung-dung-dao-ham-khao-sat-do-thi',
+    name: 'Chương 1: Ứng dụng đạo hàm để khảo sát và vẽ đồ thị hàm số',
+    shortName: 'Khảo sát hàm số & Đồ thị',
+    sgkLabel: 'SGK Tập 1 · Chương I',
+    description: 'Tính đơn điệu, cực trị, GTLN-GTNN, đường tiệm cận (đứng, ngang, xiên), đồ thị hàm số và bài toán thực tế.',
+    lessonCount: 5,
+    examCount: 24,
+    semester: 1,
+    track: 'TOAN_SO',
+    trackLabel: 'Toán Số',
+    trackOrder: 1,
+    isDemoReady: true,
   },
   {
     id: 3,
     slug: 'cac-so-dac-trung-do-phan-tan-mau-so-lieu',
-    name: 'Chương 3: Các số đặc trưng đo mức độ phân tán của mẫu số liệu ghép nhóm',
-    description: 'Khoảng biến thiên, khoảng tứ vị phân, phương sai và độ lệch chuẩn của mẫu số liệu ghép nhóm.',
+    name: 'Chương 3: Các số đặc trưng đo mức độ phân tán mẫu số liệu ghép nhóm',
+    shortName: 'Độ phân tán mẫu ghép nhóm',
+    sgkLabel: 'SGK Tập 1 · Chương III',
+    description: 'Khoảng biến thiên, khoảng tứ phân vị, phương sai và độ lệch chuẩn của mẫu số liệu ghép nhóm.',
     lessonCount: 3,
-    examCount: 12,
+    examCount: 14,
+    semester: 1,
+    track: 'TOAN_SO',
+    trackLabel: 'Toán Số',
+    trackOrder: 2,
+    isDemoReady: true,
   },
   {
     id: 4,
     slug: 'nguyen-ham-va-tich-phan',
     name: 'Chương 4: Nguyên hàm và tích phân',
+    shortName: 'Nguyên hàm & Tích phân',
+    sgkLabel: 'SGK Tập 2 · Chương IV',
     description: 'Định nghĩa nguyên hàm, bảng nguyên hàm cơ bản, phương pháp tính tích phân và tính diện tích, thể tích.',
     lessonCount: 4,
     examCount: 20,
-  },
-  {
-    id: 5,
-    slug: 'phuong-phap-toa-do-trong-khong-gian',
-    name: 'Chương 5: Phương pháp tọa độ trong không gian',
-    description: 'Phương trình mặt phẳng, phương trình đường thẳng và phương trình mặt cầu trong không gian Oxyz.',
-    lessonCount: 4,
-    examCount: 22,
+    semester: 2,
+    track: 'TOAN_SO',
+    trackLabel: 'Toán Số',
+    trackOrder: 3,
+    isDemoReady: true,
   },
   {
     id: 6,
     slug: 'xac-suat-co-dieu-kien',
-    name: 'Chương 6: Xác suất có điều kiện',
-    description: 'Khái niệm xác suất có điều kiện, công thức xác suất toàn phần và công thức Bayes.',
+    name: 'Chương 6: Xác suất có điều kiện & Công thức Bayes',
+    shortName: 'Xác suất có điều kiện & Bayes',
+    sgkLabel: 'SGK Tập 2 · Chương VI',
+    description: 'Khái niệm xác suất có điều kiện, sơ đồ hình cây, công thức xác suất toàn phần và công thức Bayes.',
     lessonCount: 3,
-    examCount: 15,
+    examCount: 16,
+    semester: 2,
+    track: 'TOAN_SO',
+    trackLabel: 'Toán Số',
+    trackOrder: 4,
+    isDemoReady: true,
+  },
+
+  // 📐 NHÁNH TOÁN HÌNH LỚP 12 (4 CHƯƠNG HÌNH OXYZ)
+  {
+    id: 2,
+    slug: 'vecto-va-he-toa-do-trong-khong-gian',
+    name: 'Chương 2A: Vectơ và các phép toán vectơ trong không gian',
+    shortName: 'Vectơ trong không gian',
+    sgkLabel: 'SGK Tập 1 · Chương II (P1)',
+    description: 'Vectơ trong không gian, quy tắc hình hộp, trọng tâm tứ diện và tích vô hướng hai vectơ không gian.',
+    lessonCount: 4,
+    examCount: 18,
+    semester: 1,
+    track: 'TOAN_HINH',
+    trackLabel: 'Toán Hình',
+    trackOrder: 1,
+    isDemoReady: true,
+  },
+  {
+    id: 7,
+    slug: 'he-truc-toa-do-oxyz-bieu-thuc-toa-do',
+    name: 'Chương 2B: Hệ trục tọa độ Oxyz & Biểu thức tọa độ vectơ',
+    shortName: 'Tọa độ điểm & vectơ Oxyz',
+    sgkLabel: 'SGK Tập 1 · Chương II (P2)',
+    description: 'Tọa độ của điểm và vectơ trên hệ trục Oxyz, biểu thức tọa độ tích vô hướng, tích có hướng và ứng dụng.',
+    lessonCount: 4,
+    examCount: 18,
+    semester: 1,
+    track: 'TOAN_HINH',
+    trackLabel: 'Toán Hình',
+    trackOrder: 2,
+    isDemoReady: true,
+  },
+  {
+    id: 5,
+    slug: 'phuong-phap-toa-do-trong-khong-gian',
+    name: 'Chương 5A: Phương trình mặt phẳng và đường thẳng trong Oxyz',
+    shortName: 'Mặt phẳng & Đường thẳng Oxyz',
+    sgkLabel: 'SGK Tập 2 · Chương V (P1)',
+    description: 'Vectơ pháp tuyến, vectơ chỉ phương, phương trình mặt phẳng, phương trình đường thẳng và vị trí tương đối.',
+    lessonCount: 4,
+    examCount: 22,
+    semester: 2,
+    track: 'TOAN_HINH',
+    trackLabel: 'Toán Hình',
+    trackOrder: 3,
+    isDemoReady: true,
+  },
+  {
+    id: 8,
+    slug: 'phuong-trinh-mat-cau-goc-khoang-cach-oxyz',
+    name: 'Chương 5B: Phương trình mặt cầu, Góc & Khoảng cách trong Oxyz',
+    shortName: 'Mặt cầu & Góc – Khoảng cách Oxyz',
+    sgkLabel: 'SGK Tập 2 · Chương V (P2)',
+    description: 'Phương trình mặt cầu, tiếp diện mặt cầu, công thức góc – khoảng cách và bài toán cực trị tọa độ Oxyz.',
+    lessonCount: 4,
+    examCount: 18,
+    semester: 2,
+    track: 'TOAN_HINH',
+    trackLabel: 'Toán Hình',
+    trackOrder: 4,
+    isDemoReady: true,
   },
 ];
+
+// Bản đồ chương học chuẩn GDPT 2018 cho 12 môn K-12
+export const CHAPTERS_BY_SUBJECT: Record<string, ChapterItem[]> = {
+  'toan-hoc': MATH_GRADE_12_CHAPTERS,
+  'vat-ly': [
+    {
+      id: 1,
+      slug: 'vat-ly-nhiet',
+      name: 'Chương 1: Vật lý nhiệt',
+      description: 'Nhiệt độ, thang nhiệt độ Kelvin - Celsius, nhiệt dung riêng, nhiệt nóng chảy và nhiệt hóa hơi riêng.',
+      lessonCount: 5,
+      examCount: 22,
+      isDemoReady: true,
+    },
+    {
+      id: 2,
+      slug: 'khi-ly-tuong',
+      name: 'Chương 2: Khí lý tưởng',
+      description: 'Mô hình động học phân tử chất khí, định luật Boyle, định luật Charles và phương trình Clapeyron.',
+      lessonCount: 4,
+      examCount: 18,
+    },
+    {
+      id: 3,
+      slug: 'tu-truong-va-cam-ung-dien-tu',
+      name: 'Chương 3: Từ trường & Cảm ứng điện từ',
+      description: 'Từ trường, lực từ, từ thông, hiện tượng cảm ứng điện từ và năng lượng từ trường.',
+      lessonCount: 5,
+      examCount: 25,
+    },
+    {
+      id: 4,
+      slug: 'vat-ly-hat-nhan',
+      name: 'Chương 4: Vật lý hạt nhân',
+      description: 'Cấu trúc hạt nhân, độ hụt khối, năng lượng liên kết, hiện tượng phóng xạ và phản ứng phân hạch.',
+      lessonCount: 4,
+      examCount: 20,
+    },
+    {
+      id: 5,
+      slug: 'dao-dong-dieu-hoa-va-song-co',
+      name: 'Chương 5: Dao động điều hòa & Sóng cơ',
+      description: 'Phương trình dao động, con lắc đơn, con lắc lò xo, sự truyền sóng và hiện tượng giao thoa sóng.',
+      lessonCount: 4,
+      examCount: 20,
+    },
+    {
+      id: 6,
+      slug: 'dong-dien-xoay-chieu',
+      name: 'Chương 6: Dòng điện xoay chiều',
+      description: 'Mạch RLC mắc nối tiếp, hiện tượng cộng hưởng điện, công suất và máy biến áp.',
+      lessonCount: 4,
+      examCount: 16,
+    },
+  ],
+  'hoa-hoc': [
+    {
+      id: 1,
+      slug: 'este-lipit-chat-giat-rua',
+      name: 'Chương 1: Este - Lipit & Chất giặt rửa',
+      description: 'Khái niệm, cấu trúc este, phản ứng xà phòng hóa chất béo và cơ chế tẩy rửa tổng hợp.',
+      lessonCount: 4,
+      examCount: 24,
+      isDemoReady: true,
+    },
+    {
+      id: 2,
+      slug: 'carbohydrate',
+      name: 'Chương 2: Carbohydrate',
+      description: 'Glucose, Fructose, Saccharose, Maltose, Tinh bột và Cellulose trong đời sống.',
+      lessonCount: 4,
+      examCount: 20,
+    },
+    {
+      id: 3,
+      slug: 'hop-chat-chua-nitrogen',
+      name: 'Chương 3: Hợp chất chứa Nitrogen',
+      description: 'Amine, Amino acid, Peptide, Protein và cấu trúc enzyme sinh học.',
+      lessonCount: 5,
+      examCount: 22,
+    },
+    {
+      id: 4,
+      slug: 'polymer-va-vat-lieu-polymer',
+      name: 'Chương 4: Polymer & Vật liệu polymer',
+      description: 'Phản ứng trùng hợp, trùng ngưng, chất dẻo, tơ sợi nhân tạo và cao su tổng hợp.',
+      lessonCount: 3,
+      examCount: 16,
+    },
+    {
+      id: 5,
+      slug: 'pin-dien-va-dien-phan',
+      name: 'Chương 5: Pin điện & Điện phân',
+      description: 'Thế điện cực chuẩn, cấu tạo pin Galvani, sự ăn mòn kim loại và ứng dụng điện phân công nghiệp.',
+      lessonCount: 4,
+      examCount: 18,
+    },
+    {
+      id: 6,
+      slug: 'kim-loai-chuyen-tiep',
+      name: 'Chương 6: Kim loại chuyển tiếp',
+      description: 'Cấu hình electron phân lớp d, số oxi hóa và ứng dụng của phức chất.',
+      lessonCount: 3,
+      examCount: 14,
+    },
+  ],
+  'sinh-hoc': [
+    {
+      id: 1,
+      slug: 'di-truyen-phan-tu-va-te-bao',
+      name: 'Chương 1: Di truyền phân tử & Di truyền tế bào',
+      description: 'Nhân đôi DNA, phiên mã, dịch mã, điều hòa hoạt động của operon Lac và đột biến gen.',
+      lessonCount: 5,
+      examCount: 26,
+      isDemoReady: true,
+    },
+    {
+      id: 2,
+      slug: 'tinh-quy-luat-hien-tuong-di-truyen',
+      name: 'Chương 2: Tính quy luật của hiện tượng di truyền',
+      description: 'Quy luật phân ly Mendel, tương tác gen, liên kết gen hoàn toàn và hoán vị gen.',
+      lessonCount: 5,
+      examCount: 22,
+    },
+    {
+      id: 3,
+      slug: 'di-truyen-quan-the-va-nguoi',
+      name: 'Chương 3: Di truyền quần thể & Di truyền người',
+      description: 'Cấu trúc di truyền quần thể, định luật Hardy - Weinberg và nghiên cứu phả hệ di truyền.',
+      lessonCount: 4,
+      examCount: 18,
+    },
+    {
+      id: 4,
+      slug: 'bang-chung-va-co-che-tien-hoa',
+      name: 'Chương 4: Bằng chứng & Cơ chế tiến hóa',
+      description: 'Học thuyết Darwin, thuyết tiến hóa hiện đại, các nhân tố tiến hóa và quá trình hình thành loài.',
+      lessonCount: 4,
+      examCount: 16,
+    },
+    {
+      id: 5,
+      slug: 'sinh-thai-hoc',
+      name: 'Chương 5: Sinh thái học & Môi trường',
+      description: 'Quần thể sinh vật, quần xã sinh vật, hệ sinh thái và chu trình tuần hoàn vật chất sinh địa hóa.',
+      lessonCount: 4,
+      examCount: 18,
+    },
+    {
+      id: 6,
+      slug: 'vi-sinh-vat-va-cong-nghe-sinh-hoc',
+      name: 'Chương 6: Vi sinh vật & Công nghệ sinh học',
+      description: 'Chuyển hóa vật chất vi sinh vật, sinh trưởng và ứng dụng trong nông nghiệp, y học.',
+      lessonCount: 3,
+      examCount: 14,
+    },
+  ],
+  'tieng-anh': [
+    {
+      id: 1,
+      slug: 'unit-1-life-stories',
+      name: 'Unit 1: Life Stories',
+      description: 'Past Simple vs Past Continuous, vocabulary about inspirational historical figures and achievers.',
+      lessonCount: 5,
+      examCount: 24,
+      isDemoReady: true,
+    },
+    {
+      id: 2,
+      slug: 'unit-2-a-multicultural-world',
+      name: 'Unit 2: A Multicultural World',
+      description: 'Cultural diversity, traditions, international festivals, comparative structures and idioms.',
+      lessonCount: 4,
+      examCount: 20,
+    },
+    {
+      id: 3,
+      slug: 'unit-3-green-living',
+      name: 'Unit 3: Green Living',
+      description: 'Environmental protection, passive voice forms, carbon footprint and sustainable lifestyles.',
+      lessonCount: 4,
+      examCount: 22,
+    },
+    {
+      id: 4,
+      slug: 'unit-4-urbanisation',
+      name: 'Unit 4: Urbanisation',
+      description: 'Relative clauses, rapid urban growth, challenges and development in modern megacities.',
+      lessonCount: 4,
+      examCount: 18,
+    },
+    {
+      id: 5,
+      slug: 'unit-5-the-world-of-work',
+      name: 'Unit 5: The World of Work',
+      description: 'Reported speech, future career choices, resume preparation and mock interview dialogues.',
+      lessonCount: 4,
+      examCount: 20,
+    },
+    {
+      id: 6,
+      slug: 'unit-6-lifelong-learning',
+      name: 'Unit 6: Lifelong Learning',
+      description: 'Conditional sentences, self-directed learning skills, digital education and future competencies.',
+      lessonCount: 3,
+      examCount: 16,
+    },
+  ],
+  'lich-su': [
+    {
+      id: 1,
+      slug: 'the-gioi-sau-chien-tranh-lanh',
+      name: 'Chuyên đề 1: Thế giới trong và sau Chiến tranh Lạnh',
+      description: 'Trật tự hai cực Ianta, xu thế đa cực, hợp tác quốc tế và toàn cầu hóa.',
+      lessonCount: 4,
+      examCount: 20,
+      isDemoReady: true,
+    },
+    {
+      id: 2,
+      slug: 'asean-nhung-chang-duong-lich-su',
+      name: 'Chuyên đề 2: ASEAN: Những chặng đường lịch sử',
+      description: 'Quá trình hình thành, phát triển từ ASEAN 5 đến ASEAN 10 và vai trò trung tâm khu vực.',
+      lessonCount: 3,
+      examCount: 16,
+    },
+    {
+      id: 3,
+      slug: 'cach-mang-thang-tam-dien-bien-phu',
+      name: 'Chuyên đề 3: Cách mạng tháng Tám 1945 & Chiến thắng Điện Biên Phủ',
+      description: 'Nghệ thuật chớp thời cơ, xây dựng căn cứ địa và cuộc kháng chiến chống thực dân Pháp.',
+      lessonCount: 5,
+      examCount: 24,
+    },
+    {
+      id: 4,
+      slug: 'khang-chien-chong-my-cuu-nuoc',
+      name: 'Chuyên đề 4: Cuộc kháng chiến chống Mỹ cứu nước (1954 - 1975)',
+      description: 'Các chiến lược chiến tranh của Mỹ, Hiệp định Paris 1973 và Đại thắng mùa Xuân 1975.',
+      lessonCount: 5,
+      examCount: 25,
+    },
+  ],
+  'dia-ly': [
+    {
+      id: 1,
+      slug: 'dia-ly-tu-nhien-viet-nam',
+      name: 'Chuyên đề 1: Địa lý tự nhiên Việt Nam',
+      description: 'Vị trí địa lý, phạm vi lãnh thổ biển đảo, đặc điểm địa hình, khí hậu nhiệt đới ẩm gió mùa.',
+      lessonCount: 4,
+      examCount: 22,
+      isDemoReady: true,
+    },
+    {
+      id: 2,
+      slug: 'dan-cu-va-do-thi-hoa',
+      name: 'Chuyên đề 2: Địa lý dân cư & Đô thị hóa',
+      description: 'Cơ cấu dân số vàng, phân bố dân cư, nguồn lao động và quá trình đô thị hóa tại Việt Nam.',
+      lessonCount: 3,
+      examCount: 18,
+    },
+    {
+      id: 3,
+      slug: 'cac-nganh-kinh-te-trong-diem',
+      name: 'Chuyên đề 3: Địa lý các ngành kinh tế trọng điểm',
+      description: 'Nông nghiệp công nghệ cao, các ngành công nghiệp chủ chốt và giao thông vận tải, du lịch.',
+      lessonCount: 5,
+      examCount: 24,
+    },
+    {
+      id: 4,
+      slug: 'cac-vung-kinh-te-trong-diem',
+      name: 'Chuyên đề 4: Địa lý các vùng kinh tế trọng điểm',
+      description: 'Đồng bằng sông Hồng, Đông Nam Bộ, Đồng bằng sông Cửu Long và vấn đề biển đảo.',
+      lessonCount: 4,
+      examCount: 20,
+    },
+  ],
+  'gdcd': [
+    {
+      id: 1,
+      slug: 'kinh-te-va-chu-the-kinh-te',
+      name: 'Chuyên đề 1: Nền kinh tế và các chủ thể kinh tế',
+      description: 'Cơ chế thị trường, quy luật cung cầu, giá cả và trách nhiệm xã hội của doanh nghiệp.',
+      lessonCount: 3,
+      examCount: 18,
+      isDemoReady: true,
+    },
+    {
+      id: 2,
+      slug: 'thi-truong-lao-dong-viec-lam',
+      name: 'Chuyên đề 2: Thị trường lao động và khởi nghiệp',
+      description: 'Cung cầu lao động, chính sách hỗ trợ việc làm, kỹ năng định hướng nghề nghiệp thời đại số.',
+      lessonCount: 3,
+      examCount: 16,
+    },
+    {
+      id: 3,
+      slug: 'quyen-binh-dang-cua-cong-dan',
+      name: 'Chuyên đề 3: Quyền bình đẳng của công dân trước pháp luật',
+      description: 'Bình đẳng về quyền, nghĩa vụ và trách nhiệm pháp lý trong gia đình, lao động và kinh doanh.',
+      lessonCount: 4,
+      examCount: 20,
+    },
+    {
+      id: 4,
+      slug: 'phap-luat-voi-phat-trien-ben-vung',
+      name: 'Chuyên đề 4: Pháp luật với phát triển bền vững đất nước',
+      description: 'Pháp luật về bảo vệ môi trường, quốc phòng an ninh và hội nhập quốc tế.',
+      lessonCount: 3,
+      examCount: 16,
+    },
+  ],
+  'tin-hoc': [
+    {
+      id: 1,
+      slug: 'tin12-ch1-tri-tue-nhan-tao-ai',
+      name: 'Chương 1: Trí tuệ nhân tạo (AI) trong khoa học và đời sống',
+      shortName: 'Trí tuệ nhân tạo (AI)',
+      sgkLabel: 'SGK 12 · Chủ đề 1',
+      description: 'Khái niệm AI hẹp/AI tổng quát, Học máy (Machine Learning), NLP, Thị giác máy tính và đạo đức AI.',
+      lessonCount: 4,
+      examCount: 20,
+      semester: 1,
+      track: 'DEFAULT',
+      trackOrder: 1,
+      isDemoReady: true,
+    },
+    {
+      id: 2,
+      slug: 'tin12-ch2-mang-may-tinh-va-giao-thuc',
+      name: 'Chương 2: Thiết bị mạng, Giao thức TCP/IP & Chia sẻ tài nguyên',
+      shortName: 'Thiết bị mạng & Giao thức TCP/IP',
+      sgkLabel: 'SGK 12 · Chủ đề 2',
+      description: 'Access Point, Switch, Router, Modem; giao thức IPv4/IPv6, TCP, DNS và chia sẻ tài nguyên mạng LAN.',
+      lessonCount: 4,
+      examCount: 20,
+      semester: 1,
+      track: 'DEFAULT',
+      trackOrder: 2,
+      isDemoReady: true,
+    },
+    {
+      id: 3,
+      slug: 'tin12-ch3-dao-duc-ung-xu-khong-gian-mang',
+      name: 'Chương 3: Giữ gìn tính nhân văn trong thế giới ảo',
+      shortName: 'Ứng xử nhân văn không gian mạng',
+      sgkLabel: 'SGK 12 · Chủ đề 3',
+      description: 'Ưu – nhược điểm giao tiếp trực tuyến, tính nhân văn, thấu cảm và tuân thủ pháp luật môi trường số.',
+      lessonCount: 3,
+      examCount: 15,
+      semester: 1,
+      track: 'DEFAULT',
+      trackOrder: 3,
+      isDemoReady: true,
+    },
+    {
+      id: 4,
+      slug: 'tin12-ch4-ngon-ngu-danh-dau-html',
+      name: 'Chương 4: Tạo trang web với ngôn ngữ đánh dấu HTML',
+      shortName: 'Ngôn ngữ đánh dấu HTML',
+      sgkLabel: 'SGK 12 · Chủ đề 4 (P1)',
+      description: 'Cấu trúc DOM trang web, văn bản, danh sách, bảng, liên kết, đa phương tiện và biểu mẫu <form>.',
+      lessonCount: 5,
+      examCount: 22,
+      semester: 2,
+      track: 'DEFAULT',
+      trackOrder: 4,
+      isDemoReady: true,
+    },
+    {
+      id: 5,
+      slug: 'tin12-ch5-dinh-dang-trang-web-css',
+      name: 'Chương 5: Định dạng và bố cục trang web với CSS',
+      shortName: 'Định dạng trang web CSS',
+      sgkLabel: 'SGK 12 · Chủ đề 4 (P2)',
+      description: 'Bộ chọn CSS (tag, .class, #id), quy tắc kế thừa – độ ưu tiên và mô hình hộp Box Model.',
+      lessonCount: 4,
+      examCount: 20,
+      semester: 2,
+      track: 'DEFAULT',
+      trackOrder: 5,
+      isDemoReady: true,
+    },
+    {
+      id: 6,
+      slug: 'tin12-ch6-huong-nghiep-sql-giai-thuat',
+      name: 'Chương 6: Hướng nghiệp CNTT, CSDL SQL & Giải thuật nâng cao',
+      shortName: 'Hướng nghiệp, SQL & Giải thuật',
+      sgkLabel: 'SGK 12 · Chủ đề 5 & Định hướng CS/ICT',
+      description: 'Nhóm nghề Quản trị mạng/Bảo mật hệ thống, kết hợp ôn luyện SQL quan hệ và Giải thuật Python THPT.',
+      lessonCount: 5,
+      examCount: 24,
+      semester: 2,
+      track: 'DEFAULT',
+      trackOrder: 6,
+      isDemoReady: true,
+    },
+  ],
+  'cong-nghe': [
+    {
+      id: 1,
+      slug: 've-ky-thuat-cad',
+      name: 'Chuyên đề 1: Vẽ kỹ thuật & Bản vẽ cơ khí CAD',
+      description: 'Các phép chiếu vuông góc, hình cắt, mặt cắt và đọc bản vẽ lắp ráp chi tiết cơ khí.',
+      lessonCount: 3,
+      examCount: 16,
+      isDemoReady: true,
+    },
+    {
+      id: 2,
+      slug: 'dien-tu-ung-dung-vi-dieu-khien',
+      name: 'Chuyên đề 2: Điện tử ứng dụng & Vi điều khiển',
+      description: 'Linh kiện bán dẫn Diode, Transistor, IC khuếch đại thuật toán và vi điều khiển nhúng.',
+      lessonCount: 4,
+      examCount: 18,
+    },
+    {
+      id: 3,
+      slug: 'tu-dong-hoa-robotics',
+      name: 'Chuyên đề 3: Tự động hóa & Hệ thống Robotics',
+      description: 'Cơ cấu chấp hành khí nén, động cơ bước, cảm biến công nghiệp và lập trình điều khiển tự động.',
+      lessonCount: 3,
+      examCount: 16,
+    },
+    {
+      id: 4,
+      slug: 'nang-luong-tai-tao',
+      name: 'Chuyên đề 4: Công nghệ năng lượng tái tạo',
+      description: 'Công nghệ điện mặt trời quang điện, tuabin điện gió và bảo tồn năng lượng trong công nghiệp.',
+      lessonCount: 3,
+      examCount: 14,
+    },
+  ],
+  'ngu-van': [
+    {
+      id: 1,
+      slug: 'doc-hieu-truyen-va-ky-hien-dai',
+      name: 'Chuyên đề 1: Đọc hiểu văn bản truyện & ký hiện đại',
+      description: 'Nghệ thuật xây dựng điểm nhìn trần thuật, tình huống truyện độc đáo và diễn biến tâm lý nhân vật.',
+      lessonCount: 4,
+      examCount: 20,
+      isDemoReady: true,
+    },
+    {
+      id: 2,
+      slug: 'tho-tru-tinh-va-tho-tuong-trung',
+      name: 'Chuyên đề 2: Thơ trữ tình & Thơ tượng trưng',
+      description: 'Cấu tứ bài thơ, hình ảnh tượng trưng, nhịp điệu và phong cách nghệ thuật của các nhà thơ lớn.',
+      lessonCount: 4,
+      examCount: 18,
+    },
+    {
+      id: 3,
+      slug: 'nghi-luan-xa-hoi',
+      name: 'Chuyên đề 3: Kỹ năng viết bài Nghị luận xã hội',
+      description: 'Kỹ năng giải thích tư tưởng, chứng minh dẫn chứng thực tế và bình luận bài học hành động trong kỷ nguyên số.',
+      lessonCount: 4,
+      examCount: 22,
+    },
+    {
+      id: 4,
+      slug: 'nghi-luan-van-hoc-so-sanh',
+      name: 'Chuyên đề 4: Nghị luận văn học so sánh & Bình diện thi pháp',
+      description: 'So sánh hai đoạn trích, liên hệ phong cách sáng tác và chiều sâu giá trị nhân đạo tác phẩm.',
+      lessonCount: 4,
+      examCount: 24,
+    },
+  ],
+  'khoa-hoc-tu-nhien': [
+    {
+      id: 1,
+      slug: 'chat-va-su-bien-doi-chat',
+      name: 'Chủ đề 1: Chất và sự biến đổi của chất',
+      description: 'Cấu tạo nguyên tử, bảng tuần hoàn, liên kết ion, liên kết cộng hóa trị và các loại phản ứng hóa học.',
+      lessonCount: 4,
+      examCount: 20,
+      isDemoReady: true,
+    },
+    {
+      id: 2,
+      slug: 'nang-luong-va-bien-doi-nang-luong',
+      name: 'Chủ đề 2: Năng lượng và các dạng năng lượng',
+      description: 'Động năng, thế năng, nhiệt năng, công và công suất cơ học, định luật bảo toàn năng lượng.',
+      lessonCount: 4,
+      examCount: 20,
+    },
+    {
+      id: 3,
+      slug: 'trai-dat-va-bau-troi',
+      name: 'Chủ đề 3: Trái Đất và bầu trời',
+      description: 'Hệ Mặt Trời, chuyển động tự quay và quanh Mặt Trời của Trái Đất, các hiện tượng khí tượng.',
+      lessonCount: 3,
+      examCount: 16,
+    },
+    {
+      id: 4,
+      slug: 'su-song-va-moi-truong-sinh-thai',
+      name: 'Chủ đề 4: Sự sống & Môi trường sinh thái',
+      description: 'Cấu trúc tế bào, trao đổi chất ở cơ thể thực vật, động vật và cân bằng sinh thái tự nhiên.',
+      lessonCount: 4,
+      examCount: 18,
+    },
+  ],
+};
+
+// ============================================================================
+// TIN HỌC LỚP 10 & LỚP 11 — CHƯƠNG TRÌNH GDPT 2018 (KẾT NỐI TRI THỨC)
+// ============================================================================
+export const INFORMATICS_GRADE_10_CHAPTERS: ChapterItem[] = [
+  {
+    id: 1,
+    slug: 'tin10-ch1-may-tinh-va-xa-hoi-tri-thuc',
+    name: 'Chương 1: Máy tính và xã hội tri thức',
+    shortName: 'Thông tin, Hệ nhị phân & Lôgic',
+    sgkLabel: 'SGK 10 · Chủ đề 1',
+    description: 'Thông tin và dữ liệu, đơn vị lưu trữ số, biểu diễn số nhị phân, phép toán lôgic mệnh đề (AND, OR, NOT).',
+    lessonCount: 5,
+    examCount: 18,
+    semester: 1,
+    track: 'DEFAULT',
+    trackOrder: 1,
+    isDemoReady: true,
+  },
+  {
+    id: 2,
+    slug: 'tin10-ch2-mang-may-tinh-va-internet',
+    name: 'Chương 2: Mạng máy tính và Internet',
+    shortName: 'Mạng LAN, Cloud, IoT & An toàn mạng',
+    sgkLabel: 'SGK 10 · Chủ đề 2',
+    description: 'Mạng LAN và Internet, dịch vụ Điện toán đám mây, Internet vạn vật (IoT) và phòng chống phần mềm độc hại.',
+    lessonCount: 4,
+    examCount: 16,
+    semester: 1,
+    track: 'DEFAULT',
+    trackOrder: 2,
+    isDemoReady: true,
+  },
+  {
+    id: 3,
+    slug: 'tin10-ch3-dao-duc-phap-luat-moi-truong-so',
+    name: 'Chương 3: Đạo đức, pháp luật và văn hóa trong môi trường số',
+    shortName: 'Bản quyền & Luật An ninh mạng',
+    sgkLabel: 'SGK 10 · Chủ đề 3',
+    description: 'Quyền tác giả đối với sản phẩm số, Luật An ninh mạng, ứng xử văn minh và bảo vệ dữ liệu cá nhân.',
+    lessonCount: 3,
+    examCount: 14,
+    semester: 1,
+    track: 'DEFAULT',
+    trackOrder: 3,
+    isDemoReady: true,
+  },
+  {
+    id: 4,
+    slug: 'tin10-ch4-ung-dung-thiet-ke-do-hoa-vecto',
+    name: 'Chương 4: Ứng dụng tin học – Thiết kế đồ họa vectơ',
+    shortName: 'Thiết kế đồ họa vectơ',
+    sgkLabel: 'SGK 10 · Chủ đề 4',
+    description: 'Phân biệt đồ họa điểm ảnh (bitmap) và đồ họa vectơ (Inkscape), phép ghép hình khối và đường cong Bézier.',
+    lessonCount: 4,
+    examCount: 15,
+    semester: 1,
+    track: 'DEFAULT',
+    trackOrder: 4,
+    isDemoReady: true,
+  },
+  {
+    id: 5,
+    slug: 'tin10-ch5-lap-trinh-python-co-ban-cau-truc-dieu-khien',
+    name: 'Chương 5: Lập trình Python cơ bản & Cấu trúc điều khiển',
+    shortName: 'Python cơ bản, If-Else & Vòng lặp',
+    sgkLabel: 'SGK 10 · Chủ đề 5 (P1)',
+    description: 'Biến, kiểu dữ liệu, lệnh input()/print(), rẽ nhánh if-elif-else, vòng lặp for/range() và while trong Python.',
+    lessonCount: 6,
+    examCount: 24,
+    semester: 2,
+    track: 'DEFAULT',
+    trackOrder: 5,
+    isDemoReady: true,
+  },
+  {
+    id: 6,
+    slug: 'tin10-ch6-danh-sach-xau-ky-tu-ham-python',
+    name: 'Chương 6: Danh sách (List), Xâu ký tự, Hàm & Kiểm thử Python',
+    shortName: 'List, String, Hàm def & Debug',
+    sgkLabel: 'SGK 10 · Chủ đề 5 (P2)',
+    description: 'Thao tác trên kiểu list, xử lý xâu ký tự str, định nghĩa hàm def, phạm vi biến và kỹ thuật gỡ lỗi chương trình.',
+    lessonCount: 6,
+    examCount: 24,
+    semester: 2,
+    track: 'DEFAULT',
+    trackOrder: 6,
+    isDemoReady: true,
+  },
+  {
+    id: 7,
+    slug: 'tin10-ch7-huong-nghiep-voi-tin-hoc',
+    name: 'Chương 7: Hướng nghiệp với Tin học',
+    shortName: 'Hướng nghiệp Thiết kế & Phần mềm',
+    sgkLabel: 'SGK 10 · Chủ đề 6',
+    description: 'Đặc điểm công việc, yêu cầu năng lực và triển vọng nghề Thiết kế đồ họa máy tính & Phát triển phần mềm.',
+    lessonCount: 3,
+    examCount: 12,
+    semester: 2,
+    track: 'DEFAULT',
+    trackOrder: 7,
+    isDemoReady: true,
+  },
+];
+
+export const INFORMATICS_GRADE_11_CHAPTERS: ChapterItem[] = [
+  {
+    id: 1,
+    slug: 'tin11-ch1-he-dieu-hanh-kien-truc-may-tinh',
+    name: 'Chương 1: Hệ điều hành, Phần mềm nguồn mở & Kiến trúc máy tính',
+    shortName: 'Hệ điều hành & Bên trong máy tính',
+    sgkLabel: 'SGK 11 · Chủ đề 1',
+    description: 'Hệ điều hành PC/Mobile, giấy phép phần mềm nguồn mở, CPU – RAM – ROM, mạch logic cộng nhị phân.',
+    lessonCount: 5,
+    examCount: 18,
+    semester: 1,
+    track: 'DEFAULT',
+    trackOrder: 1,
+    isDemoReady: true,
+  },
+  {
+    id: 2,
+    slug: 'tin11-ch2-luu-tru-tim-kiem-giao-tiep-an-toan',
+    name: 'Chương 2: Lưu trữ trực tuyến, Tìm kiếm & Giao tiếp an toàn số',
+    shortName: 'Lưu trữ đám mây & An toàn số',
+    sgkLabel: 'SGK 11 · Chủ đề 2 & 3',
+    description: 'Lưu trữ và chia sẻ tệp trên đám mây, tìm kiếm nâng cao và nhận diện lừa đảo trực tuyến (Phishing).',
+    lessonCount: 4,
+    examCount: 15,
+    semester: 1,
+    track: 'DEFAULT',
+    trackOrder: 2,
+    isDemoReady: true,
+  },
+  {
+    id: 3,
+    slug: 'tin11-ch3-co-so-du-lieu-va-mo-hinh-quan-he',
+    name: 'Chương 3: Cơ sở dữ liệu & Mô hình dữ liệu quan hệ',
+    shortName: 'Cơ sở dữ liệu & Khóa quan hệ',
+    sgkLabel: 'SGK 11 · Chủ đề 4 (P1)',
+    description: 'Hệ quản trị CSDL, bảng – bản ghi – trường, khóa chính (Primary Key), khóa ngoại (Foreign Key) và liên kết bảng.',
+    lessonCount: 4,
+    examCount: 20,
+    semester: 1,
+    track: 'DEFAULT',
+    trackOrder: 3,
+    isDemoReady: true,
+  },
+  {
+    id: 4,
+    slug: 'tin11-ch4-ngon-ngu-truy-van-sql-va-bao-mat',
+    name: 'Chương 4: Ngôn ngữ truy vấn SQL, Bảo mật & Quản trị CSDL',
+    shortName: 'Truy vấn SQL & Quản trị CSDL',
+    sgkLabel: 'SGK 11 · Chủ đề 4 (P2) & CĐ 5',
+    description: 'Câu lệnh SELECT, WHERE, INNER JOIN, ORDER BY, phân quyền bảo mật CSDL và định hướng nghề Quản trị CSDL.',
+    lessonCount: 5,
+    examCount: 22,
+    semester: 2,
+    track: 'DEFAULT',
+    trackOrder: 4,
+    isDemoReady: true,
+  },
+  {
+    id: 5,
+    slug: 'tin11-ch5-mang-va-thuat-toan-tim-kiem-sap-xep',
+    name: 'Chương 5: Mảng 1D/2D & Thuật toán Tìm kiếm – Sắp xếp',
+    shortName: 'Mảng, Tìm kiếm nhị phân & Sắp xếp',
+    sgkLabel: 'SGK 11 · Chủ đề 6 (P1)',
+    description: 'Cấu trúc mảng 1 chiều, 2 chiều, Tìm kiếm tuần tự/nhị phân, Sắp xếp chọn, Sắp xếp chèn và Sắp xếp nổi bọt.',
+    lessonCount: 5,
+    examCount: 22,
+    semester: 2,
+    track: 'DEFAULT',
+    trackOrder: 5,
+    isDemoReady: true,
+  },
+  {
+    id: 6,
+    slug: 'tin11-ch6-do-phuc-tap-thuat-toan-va-thiet-ke-mo-dun',
+    name: 'Chương 6: Độ phức tạp thuật toán O(n) & Thiết kế chương trình mô đun',
+    shortName: 'Độ phức tạp Big-O & Thiết kế mô đun',
+    sgkLabel: 'SGK 11 · Chủ đề 6 (P2)',
+    description: 'Kiểm thử chương trình, đánh giá độ phức tạp thời gian O(1), O(log n), O(n), O(n²), làm mịn dần và thư viện.',
+    lessonCount: 5,
+    examCount: 20,
+    semester: 2,
+    track: 'DEFAULT',
+    trackOrder: 6,
+    isDemoReady: true,
+  },
+];
+
+export const INFORMATICS_GRADE_12_CHAPTERS: ChapterItem[] = CHAPTERS_BY_SUBJECT['tin-hoc'];
+
+export const CHAPTERS_BY_SUBJECT_AND_GRADE: Record<string, Record<number, ChapterItem[]>> = {
+  'toan-hoc': {
+    10: MATH_GRADE_10_CHAPTERS,
+    11: MATH_GRADE_11_CHAPTERS,
+    12: MATH_GRADE_12_CHAPTERS,
+  },
+  'tin-hoc': {
+    10: INFORMATICS_GRADE_10_CHAPTERS,
+    11: INFORMATICS_GRADE_11_CHAPTERS,
+    12: INFORMATICS_GRADE_12_CHAPTERS,
+  },
+};
+
+export function getChaptersBySubject(
+  subjectSlug: string,
+  grade = 12,
+  trackFilter?: ChapterTrack | 'ALL'
+): ChapterItem[] {
+  const slug = (subjectSlug || '').toLowerCase().trim();
+  if (slug === 'gdkt' || slug === 'gdkt-phap-luat' || slug === 'giao-duc-kinh-te-va-phap-luat') {
+    return CHAPTERS_BY_SUBJECT['gdcd'] || [];
+  }
+
+  const normalizedGrade = [10, 11, 12].includes(Number(grade)) ? Number(grade) : 12;
+  const byGrade = CHAPTERS_BY_SUBJECT_AND_GRADE[slug]?.[normalizedGrade];
+  const baseList = byGrade || CHAPTERS_BY_SUBJECT[slug] || MATH_GRADE_12_CHAPTERS;
+
+  if (trackFilter && trackFilter !== 'ALL') {
+    return baseList
+      .filter((ch) => (ch.track || 'DEFAULT') === trackFilter)
+      .sort((a, b) => (a.trackOrder || a.id) - (b.trackOrder || b.id));
+  }
+
+  return baseList;
+}
+
+export function getNextChapterInTrack(
+  subjectSlug: string,
+  grade: number,
+  currentChapterId: number
+): ChapterItem | null {
+  const allChapters = getChaptersBySubject(subjectSlug, grade);
+  const current = allChapters.find((c) => c.id === Number(currentChapterId));
+  if (!current) return null;
+
+  const targetTrack = current.track || 'DEFAULT';
+  const sameTrackList = allChapters
+    .filter((c) => (c.track || 'DEFAULT') === targetTrack)
+    .sort((a, b) => (a.trackOrder || a.id) - (b.trackOrder || b.id));
+
+  const idx = sameTrackList.findIndex((c) => c.id === current.id);
+  if (idx < 0 || idx + 1 >= sameTrackList.length) return null;
+  return sameTrackList[idx + 1];
+}
 
 export interface QuestionChoice {
   key: 'A' | 'B' | 'C' | 'D';
@@ -101,7 +1275,19 @@ export interface TrueFalseStatement {
 
 export interface ExamQuestion {
   id: string;
-  type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'ESSAY';
+  type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';
+  difficulty: QuestionDifficulty;
+  grade: number;
+  chapterId: number;
+  subjectSlug?: string;
+  subjectName?: string;
+  topic?: string;
+  // Hệ thống Tag 4 Trục (Đồ án Tốt nghiệp THPT Toán & Tin)
+  topicTag?: string;     // Trục 2: Chuyên đề / Dạng bài cụ thể
+  cognitiveTag?: string; // Trục 3: Mức độ nhận thức (Nhận biết | Thông hiểu | Vận dụng | Vận dụng cao)
+  trapTag?: string;      // Trục 4: Bẫy sai lầm phổ biến (Trap Tag)
+  relatedChapterIds?: number[];
+  isPreviousChapterReview?: boolean;
   title: string;
   content: string;
   score: number;
@@ -114,8 +1300,6 @@ export interface ExamQuestion {
   shortAnswerCorrect?: string;
   // Lời giải chi tiết
   explanation: string;
-  // Barem điểm tự luận
-  gradingRubric?: { step: string; point: number; detail: string }[];
 }
 
 export interface PracticeExamPackage {
@@ -127,18 +1311,24 @@ export interface PracticeExamPackage {
   chapterId: number;
   chapterName: string;
   format: ExamFormat;
+  practiceMode?: PracticeMode;
+  targetDifficulty?: QuestionDifficulty | 'ALL';
+  topicTagFilter?: string;
   title: string;
   durationMinutes: number;
   totalPoints: number;
   questions: ExamQuestion[];
 }
 
-// Ngân hàng câu hỏi mẫu Chuẩn SGK Mới GDPT 2018 (Toán 12 - Chương 1)
+// Ngân hàng câu hỏi mẫu Chuẩn SGK Mới GDPT 2018 (Toán 12 - Chương 1: Ứng dụng đạo hàm)
 export const MOCK_EXAM_QUESTIONS_CH1: ExamQuestion[] = [
-  // 1. Trắc nghiệm 4 lựa chọn - Đơn điệu
+  // 1. Trắc nghiệm 4 lựa chọn - Đơn điệu (Nhận biết)
   {
     id: 'q-01',
     type: 'MULTIPLE_CHOICE',
+    difficulty: 'EASY',
+    grade: 12,
+    chapterId: 1,
     title: 'Câu 1 (Nhận biết): Tính đơn điệu của hàm số bậc ba',
     content: 'Cho hàm số $y = x^3 - 3x^2 + 2$. Khoảng đồng biến của hàm số đã cho là:',
     score: 0.5,
@@ -153,10 +1343,13 @@ export const MOCK_EXAM_QUESTIONS_CH1: ExamQuestion[] = [
       'Ta có đạo hàm $y\' = 3x^2 - 6x = 3x(x - 2)$.\\nCho $y\' = 0 \\Leftrightarrow x = 0$ hoặc $x = 2$.\\nXét dấu của $y\':\\n• $y\' > 0$ trên $(-\\infty; 0)$ và $(2; +\\infty)$ ⇒ hàm số đồng biến trên các khoảng $(-\\infty; 0)$ và $(2; +\\infty)$.\\n• $y\' < 0$ trên $(0; 2)$ ⇒ hàm số nghịch biến trên $(0; 2)$.\\nVậy đáp án đúng là B.',
   },
 
-  // 2. Trắc nghiệm 4 lựa chọn - Cực trị
+  // 2. Trắc nghiệm 4 lựa chọn - Cực trị (Thông hiểu)
   {
     id: 'q-02',
     type: 'MULTIPLE_CHOICE',
+    difficulty: 'MEDIUM',
+    grade: 12,
+    chapterId: 1,
     title: 'Câu 2 (Thông hiểu): Tìm điểm cực đại của đồ thị hàm số',
     content: 'Cho hàm số $y = -x^4 + 2x^2 + 3$. Tọa độ điểm cực đại của đồ thị hàm số là:',
     score: 0.5,
@@ -171,10 +1364,13 @@ export const MOCK_EXAM_QUESTIONS_CH1: ExamQuestion[] = [
       'Đạo hàm $y\' = -4x^3 + 4x = -4x(x^2 - 1)$.\\nCho $y\' = 0 \\Leftrightarrow x = 0$ hoặc $x = \\pm 1$.\\nBảng biến thiên cho thấy $y\'$ đổi dấu từ dương sang âm khi qua $x = -1$ và $x = 1$.\\nVới $x = \\pm 1 \\Rightarrow y = -1 + 2 + 3 = 4$.\\nVậy đồ thị có hai điểm cực đại là $(-1; 4)$ và $(1; 4)$. Chọn B.',
   },
 
-  // 3. Trắc nghiệm 4 lựa chọn - GTLN, GTNN
+  // 3. Trắc nghiệm 4 lựa chọn - GTLN, GTNN (Thông hiểu)
   {
     id: 'q-03',
     type: 'MULTIPLE_CHOICE',
+    difficulty: 'MEDIUM',
+    grade: 12,
+    chapterId: 1,
     title: 'Câu 3 (Thông hiểu): Giá trị lớn nhất trên đoạn',
     content: 'Giá trị lớn nhất của hàm số $f(x) = x + \\frac{4}{x}$ trên đoạn $[1; 3]$ bằng:',
     score: 0.5,
@@ -189,10 +1385,13 @@ export const MOCK_EXAM_QUESTIONS_CH1: ExamQuestion[] = [
       'Hàm số liên tục trên $[1; 3]$.\\nĐạo hàm $f\'(x) = 1 - \\frac{4}{x^2} = \\frac{x^2 - 4}{x^2}$.\\nCho $f\'(x) = 0 \\Leftrightarrow x = 2$ (vì $x \\in [1; 3]$).\\nTính các giá trị:\\n• $f(1) = 1 + 4 = 5$\\n• $f(2) = 2 + 2 = 4$\\n• $f(3) = 3 + \\frac{4}{3} = \\frac{13}{3} \\approx 4.33$\\nSo sánh suy ra $\\max_{[1; 3]} f(x) = f(1) = 5$. Chọn A.',
   },
 
-  // 4. Trắc nghiệm 4 lựa chọn - Tiệm cận xiên (Điểm mới SGK 2018)
+  // 4. Trắc nghiệm 4 lựa chọn - Tiệm cận xiên (Vận dụng)
   {
     id: 'q-04',
     type: 'MULTIPLE_CHOICE',
+    difficulty: 'HARD',
+    grade: 12,
+    chapterId: 1,
     title: 'Câu 4 (Vận dụng): Đường tiệm cận xiên của đồ thị hàm số',
     content: 'Đường tiệm cận xiên của đồ thị hàm số $y = \\frac{x^2 + 2x - 1}{x - 1}$ có phương trình là:',
     score: 0.5,
@@ -207,11 +1406,14 @@ export const MOCK_EXAM_QUESTIONS_CH1: ExamQuestion[] = [
       'Chia đa thức tử cho mẫu:\\n$y = \\frac{x^2 + 2x - 1}{x - 1} = (x + 3) + \\frac{2}{x - 1}$.\\nKhi $x \\to \\pm\\infty$, $\\lim_{x \\to \\pm\\infty} [y - (x + 3)] = \\lim_{x \\to \\pm\\infty} \\frac{2}{x - 1} = 0$.\\nVậy đường thẳng $y = x + 3$ là tiệm cận xiên của đồ thị. Chọn A.',
   },
 
-  // 5. Trắc nghiệm Đúng/Sai (Định dạng đề thi Bộ GD&ĐT 2025)
+  // 5. Trắc nghiệm Đúng/Sai (Định dạng đề thi Bộ GD&ĐT 2025 - Thông hiểu)
   {
     id: 'q-05',
     type: 'TRUE_FALSE',
-    title: 'Câu 5 (Định dạng Đúng/Sai 2025): Khảo sát hàm phân thức hữu tỉ bậc nhất trên bậc nhất',
+    difficulty: 'MEDIUM',
+    grade: 12,
+    chapterId: 1,
+    title: 'Câu 5 (Định dạng Đúng/Sai 2025): Khảo sát hàm phân thức hữu tỉ',
     content: 'Cho hàm số $y = f(x) = \\frac{2x - 1}{x + 1}$. Xét tính đúng hoặc sai của các khẳng định sau:',
     score: 1.0,
     explanation:
@@ -244,10 +1446,13 @@ export const MOCK_EXAM_QUESTIONS_CH1: ExamQuestion[] = [
     ],
   },
 
-  // 6. Trắc nghiệm Trả lời ngắn (Điền số - Định dạng 2025)
+  // 6. Trắc nghiệm Trả lời ngắn (Điền số - Vận dụng)
   {
     id: 'q-06',
     type: 'SHORT_ANSWER',
+    difficulty: 'HARD',
+    grade: 12,
+    chapterId: 1,
     title: 'Câu 6 (Điền đáp số): Số điểm cực trị của hàm số',
     content:
       'Biết đồ thị hàm số $y = x^3 - 6x^2 + 9x + 1$ có hai điểm cực trị là $A(x_1; y_1)$ và $B(x_2; y_2)$. Tính tổng giá trị tung độ $y_1 + y_2$ của hai điểm cực trị này.',
@@ -257,64 +1462,1293 @@ export const MOCK_EXAM_QUESTIONS_CH1: ExamQuestion[] = [
       'Đạo hàm $y\' = 3x^2 - 12x + 9 = 3(x^2 - 4x + 3)$.\\n$y\' = 0 \\Leftrightarrow x = 1$ hoặc $x = 3$.\\n• Với $x_1 = 1 \\Rightarrow y_1 = 1 - 6 + 9 + 1 = 5 \\Rightarrow A(1; 5)$.\\n• Với $x_2 = 3 \\Rightarrow y_2 = 27 - 54 + 27 + 1 = 1 \\Rightarrow B(3; 1)$.\\nTổng giá trị tung độ cực trị: $y_1 + y_2 = 5 + 1 = 6$.\\nĐáp số điền: 6.',
   },
 
-  // 7. Bài toán Tự Luận - Khảo sát và tìm tham số m (Có barem điểm chi tiết)
+  // 8. Trắc nghiệm 4 lựa chọn - Liên môn Vật lý (Vận dụng)
   {
-    id: 'q-07',
-    type: 'ESSAY',
-    title: 'Câu 7 (Tự luận): Tìm tham số m để hàm số đạt cực tiểu tại điểm cho trước',
+    id: 'q-08',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'HARD',
+    grade: 12,
+    chapterId: 1,
+    title: 'Câu 8 (Vận dụng liên môn Vật lý): Vận tốc tức thời từ đạo hàm quãng đường',
     content:
-      'Cho hàm số $y = f(x) = \\frac{1}{3}x^3 - mx^2 + (m^2 - m + 1)x + 1$ (với $m$ là tham số thực).\\n\\na) Khi $m = 2$, hãy lập bảng biến thiên và tìm các khoảng đơn điệu của hàm số.\\nb) Tìm tất cả các giá trị của tham số $m$ để hàm số đạt cực tiểu tại điểm $x = 1$.',
-    score: 6.0,
+      'Một chất điểm chuyển động theo phương trình $s(t) = (1)/(3)t^[3] - 2t^[2] + 3t + 10$ (với $t \\geq 0$, $s$ tính bằng mét, $t$ tính bằng giây). Vận tốc tức thời $v(t) = s\'(t)$ đạt giá trị nhỏ nhất tại thời điểm nào và bằng bao nhiêu?',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '$t = 2$ s và $v_{min} = -1$ m/s' },
+      { key: 'B', content: '$t = 1$ s và $v_{min} = 0$ m/s' },
+      { key: 'C', content: '$t = 3$ s và $v_{min} = 0$ m/s' },
+      { key: 'D', content: '$t = 2$ s và $v_{min} = 3$ m/s' },
+    ],
+    correctChoice: 'A',
     explanation:
-      'Lời giải mẫu tự luận:\\n\\n' +
-      'a) Với $m = 2$, hàm số trở thành: $y = \\frac{1}{3}x^3 - 2x^2 + 3x + 1$.\\n' +
-      '• TXĐ: $D = \\mathbb{R}$.\\n' +
-      '• Đạo hàm: $y\' = x^2 - 4x + 3$.\\n' +
-      '• $y\' = 0 \\Leftrightarrow x = 1$ hoặc $x = 3$.\\n' +
-      '• Bảng biến thiên: $y\' > 0$ trên $(-\\infty; 1) \\cup (3; +\\infty)$, $y\' < 0$ trên $(1; 3)$.\\n' +
-      '• Kết luận: Hàm số đồng biến trên $(-\\infty; 1)$ và $(3; +\\infty)$; nghịch biến trên $(1; 3)$.\\n\\n' +
-      'b) Tìm $m$ để hàm số đạt cực tiểu tại $x = 1$:\\n' +
-      '• Ta có: $y\' = x^2 - 2mx + (m^2 - m + 1)$.\\n' +
-      '• Đạo hàm cấp hai: $y\'\' = 2x - 2m$.\\n' +
-      '• Điều kiện cần để hàm số đạt cực trị tại $x = 1$ là $y\'(1) = 0$:\\n' +
-      '  $1^2 - 2m(1) + m^2 - m + 1 = 0 \\Leftrightarrow m^2 - 3m + 2 = 0 \\Leftrightarrow m = 1$ hoặc $m = 2$.\\n' +
-      '• Thử lại với điều kiện đủ:\\n' +
-      '  - Với $m = 1$: $y\' = x^2 - 2x + 1 = (x - 1)^2 \\geq 0, \\forall x$. Do $y\'$ không đổi dấu qua $x = 1$ nên $x = 1$ không phải là cực trị (loại $m = 1$).\\n' +
-      '  - Với $m = 2$: $y\' = x^2 - 4x + 3 = (x - 1)(x - 3)$. Qua $x = 1$, $y\'$ đổi dấu từ dương sang âm nên $x = 1$ là điểm cực đại (loại $m = 2$).\\n' +
-      '  (Hoặc kiểm tra $y\'\'(1) = 2 - 2m$):\\n' +
-      '  + Với $m = 2 \\Rightarrow y\'\'(1) = -2 < 0 \\Rightarrow$ cực đại.\\n' +
-      '• Kết luận: Không tồn tại giá trị $m$ nào để hàm số đạt cực tiểu tại $x = 1$.',
-    gradingRubric: [
+      'Vận tốc tức thời là đạo hàm của quãng đường: $v(t) = s\'(t) = t^[2] - 4t + 3 = (t - 2)^[2] - 1 \\geq -1$. Dấu "=" khi $t = 2$ s. Chọn A.',
+  },
+
+  // 10. Trắc nghiệm 4 lựa chọn - Nhận biết tiệm cận ngang
+  {
+    id: 'q-10',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'EASY',
+    grade: 12,
+    chapterId: 1,
+    title: 'Câu 10 (Nhận biết): Tìm đường tiệm cận ngang',
+    content: 'Đường tiệm cận ngang của đồ thị hàm số $y = \\frac{3x - 1}{x + 2}$ có phương trình là:',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '$y = 3$' },
+      { key: 'B', content: '$x = -2$' },
+      { key: 'C', content: '$y = -\\frac{1}{2}$' },
+      { key: 'D', content: '$x = 3$' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Ta có $\\lim_{x \\to \\pm\\infty} \\frac{3x - 1}{x + 2} = 3$. Vậy đường tiệm cận ngang là $y = 3$. Chọn A.',
+  },
+
+  // 11. Trắc nghiệm 4 lựa chọn - Nhận biết cực tiểu từ đạo hàm
+  {
+    id: 'q-11',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'EASY',
+    grade: 12,
+    chapterId: 1,
+    title: 'Câu 11 (Nhận biết): Điểm cực tiểu của hàm số',
+    content: 'Cho hàm số $y = f(x)$ có đạo hàm $f\'(x) = (x - 1)(x + 2)$. Điểm cực tiểu của hàm số đã cho là:',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '$x = 1$' },
+      { key: 'B', content: '$x = -2$' },
+      { key: 'C', content: '$x = 0$' },
+      { key: 'D', content: '$x = 2$' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Ta có $f\'(x) = 0 \\Leftrightarrow x = 1$ hoặc $x = -2$. Qua $x = 1$, $f\'(x)$ đổi dấu từ âm sang dương nên $x = 1$ là điểm cực tiểu. Chọn A.',
+  },
+
+  // 12. Trắc nghiệm 4 lựa chọn - Vận dụng cao tối ưu hóa
+  {
+    id: 'q-12',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'VERY_HARD',
+    grade: 12,
+    chapterId: 1,
+    title: 'Câu 12 (Vận dụng cao): Tối ưu hóa chi phí sản xuất thùng chứa',
+    content:
+      'Một công ty cần sản xuất một thùng chứa dạng hình hộp chữ nhật không nắp có thể tích $V = 500$ m$^3$, đáy là hình vuông cạnh $x$ mét. Chi phí làm vật liệu mặt đáy là $100.000$ đ/m$^2$, chi phí làm các mặt bên là $50.000$ đ/m$^2$. Để tổng chi phí vật liệu là nhỏ nhất thì cạnh đáy $x$ bằng bao nhiêu mét?',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '$x = 10$ m' },
+      { key: 'B', content: '$x = 5$ m' },
+      { key: 'C', content: '$x = 15$ m' },
+      { key: 'D', content: '$x = 20$ m' },
+    ],
+    correctChoice: 'A',
+    explanation:
+      'Chiều cao $h = \\frac{500}{x^2}$. Diện tích đáy $x^2$, diện tích 4 mặt bên $4xh = \\frac{2000}{x}$.\\nTổng chi phí $C(x) = 100(x^2 + \\frac{1000}{x})$ nghìn đồng.\\nĐạo hàm $C\'(x) = 100(2x - \\frac{1000}{x^2}) = 0 \\Leftrightarrow 2x^3 = 1000 \\Leftrightarrow x = 10$ m. Chọn A.',
+  },
+];
+
+// =========================================================================
+// Ngân hàng câu hỏi mẫu Chuẩn SGK Mới GDPT 2018 (Toán 12 - Chương 2: Vectơ & Tọa độ Oxyz)
+// =========================================================================
+export const MOCK_EXAM_QUESTIONS_CH2: ExamQuestion[] = [
+  // 1. Nhận biết (Dễ)
+  {
+    id: 'q2-01',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'EASY',
+    grade: 12,
+    chapterId: 2,
+    title: 'Tọa độ của vectơ trong không gian Oxyz',
+    content: 'Trong không gian $Oxyz$, cho vectơ $\\vec{u} = 2\\vec{i} - 3\\vec{j} + 5\\vec{k}$. Tọa độ của vectơ $\\vec{u}$ là:',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '$(2; -3; 5)$' },
+      { key: 'B', content: '$(2; 3; 5)$' },
+      { key: 'C', content: '$(-3; 2; 5)$' },
+      { key: 'D', content: '$(2; -3; -5)$' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Theo định nghĩa hệ trục $Oxyz$, $\\vec{u} = x\\vec{i} + y\\vec{j} + z\\vec{k} \\Rightarrow \\vec{u} = (2; -3; 5)$. Chọn A.',
+  },
+
+  // 2. Nhận biết (Dễ)
+  {
+    id: 'q2-02',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'EASY',
+    grade: 12,
+    chapterId: 2,
+    title: 'Độ dài của vectơ trong không gian',
+    content: 'Trong không gian $Oxyz$, cho vectơ $\\vec{a} = (1; -2; 2)$. Độ dài của vectơ $\\vec{a}$ bằng:',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '$3$' },
+      { key: 'B', content: '$9$' },
+      { key: 'C', content: '$\\sqrt{5}$' },
+      { key: 'D', content: '$5$' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Độ dài $|\vec{a}| = \\sqrt{1^2 + (-2)^2 + 2^2} = \\sqrt{1 + 4 + 4} = 3$. Chọn A.',
+  },
+
+  // 3. Thông hiểu (Trung bình)
+  {
+    id: 'q2-03',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'MEDIUM',
+    grade: 12,
+    chapterId: 2,
+    title: 'Tích vô hướng của hai vectơ trong không gian',
+    content: 'Trong không gian $Oxyz$, cho hai vectơ $\\vec{a} = (1; 2; -1)$ và $\\vec{b} = (2; -1; 3)$. Giá trị của tích vô hướng $\\vec{a}.\\vec{b}$ là:',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '$-3$' },
+      { key: 'B', content: '$3$' },
+      { key: 'C', content: '$7$' },
+      { key: 'D', content: '$-1$' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Ta có $\\vec{a}.\\vec{b} = 1(2) + 2(-1) + (-1)(3) = 2 - 2 - 3 = -3$. Chọn A.',
+  },
+
+  // 4. Thông hiểu (Trung bình)
+  {
+    id: 'q2-04',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'MEDIUM',
+    grade: 12,
+    chapterId: 2,
+    title: 'Tìm tọa độ trung điểm của đoạn thẳng',
+    content: 'Trong không gian $Oxyz$, cho hai điểm $A(1; 3; -2)$ và $B(3; -1; 4)$. Tọa độ trung điểm $M$ của đoạn thẳng $AB$ là:',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '$M(2; 1; 1)$' },
+      { key: 'B', content: '$M(4; 2; 2)$' },
+      { key: 'C', content: '$M(1; -2; 3)$' },
+      { key: 'D', content: '$M(2; -2; 1)$' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Tọa độ trung điểm $M = (\\frac{1+3}{2}; \\frac{3-1}{2}; \\frac{-2+4}{2}) = (2; 1; 1)$. Chọn A.',
+  },
+
+  // 5. Vận dụng (Khó) - TÍCH HỢP ÔN TẬP CHƯƠNG 1 (Cực trị khoảng cách dùng đạo hàm)
+  {
+    id: 'q2-05',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'HARD',
+    grade: 12,
+    chapterId: 2,
+    isPreviousChapterReview: true,
+    relatedChapterIds: [1],
+    title: 'Cực trị khoảng cách điểm di động trên trục tọa độ (Ứng dụng Đạo hàm Chương 1)',
+    content: 'Trong không gian $Oxyz$, cho hai điểm $A(1; 2; 3)$ và $B(3; 4; 1)$. Điểm $M(x; 0; 0)$ nằm trên trục $Ox$ sao cho biểu thức $P = MA^[2] + MB^[2]$ đạt giá trị nhỏ nhất khi hoành độ $x$ bằng:',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '$x = 2$' },
+      { key: 'B', content: '$x = 1$' },
+      { key: 'C', content: '$x = 3$' },
+      { key: 'D', content: '$x = 4$' },
+    ],
+    correctChoice: 'A',
+    explanation:
+      'Ta có $P(x) = (x-1)^2 + 2^2 + 3^2 + (x-3)^2 + 4^2 + 1^2 = 2x^2 - 8x + 40$.\\nXét hàm số $P(x) = 2x^2 - 8x + 40$ có đạo hàm $P\'(x) = 4x - 8$.\\nCho $P\'(x) = 0 \\Leftrightarrow x = 2$.\\nVì hệ số bậc hai dương nên hàm số đạt GTNN tại $x = 2$. Chọn A.',
+  },
+
+  // 6. Vận dụng (Khó)
+  {
+    id: 'q2-06',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'HARD',
+    grade: 12,
+    chapterId: 2,
+    title: 'Tích có hướng và tính diện tích tam giác',
+    content: 'Trong không gian $Oxyz$, cho ba điểm $A(1; 0; 0)$, $B(0; 2; 0)$, $C(0; 0; 3)$. Diện tích của tam giác $ABC$ bằng:',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '$\\frac{7}{2}$' },
+      { key: 'B', content: '$\\frac{\\sqrt{61}}{2}$' },
+      { key: 'C', content: '$7$' },
+      { key: 'D', content: '$\\sqrt{61}$' },
+    ],
+    correctChoice: 'A',
+    explanation:
+      'Ta có $\\vec{AB} = (-1; 2; 0)$, $\\vec{AC} = (-1; 0; 3)$.\\nTích có hướng $[\\vec{AB}, \\vec{AC}] = (6; 3; 2)$.\\nDiện tích $S_{\\triangle ABC} = \\frac{1}{2}|[\\vec{AB}, \\vec{AC}]| = \\frac{1}{2}\\sqrt{6^2 + 3^2 + 2^2} = \\frac{1}{2}\\sqrt{49} = \\frac{7}{2}$. Chọn A.',
+  },
+
+  // 7. Vận dụng cao (Rất khó) - Bài toán thực tế 3D
+  {
+    id: 'q2-07',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'VERY_HARD',
+    grade: 12,
+    chapterId: 2,
+    title: 'Bài toán thực tế định vị rađa hàng không (Không gian 3D)',
+    content:
+      'Tại một trung tâm kiểm soát không lưu, trạm radar đặt tại gốc $O(0; 0; 0)$. Máy bay thứ nhất đang bay tại vị trí $A(100; 200; 10)$ km, máy bay thứ hai tại $B(120; 200; 12)$ km. Khoảng cách trực tiếp giữa hai máy bay là bao nhiêu km?',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '$2\\sqrt{101}$ km' },
+      { key: 'B', content: '$20$ km' },
+      { key: 'C', content: '$22$ km' },
+      { key: 'D', content: '$15$ km' },
+    ],
+    correctChoice: 'A',
+    explanation:
+      'Khoảng cách $AB = \\sqrt{(120-100)^2 + (200-200)^2 + (12-10)^2} = \\sqrt{20^2 + 0 + 2^2} = \\sqrt{404} = 2\\sqrt{101}$ km. Chọn A.',
+  },
+
+  // 8. Đúng/Sai (Thông hiểu & Vận dụng)
+  {
+    id: 'q2-08',
+    type: 'TRUE_FALSE',
+    difficulty: 'MEDIUM',
+    grade: 12,
+    chapterId: 2,
+    title: 'Khảo sát 4 điểm và hình học không gian Oxyz',
+    content: 'Trong không gian $Oxyz$, cho 4 điểm $A(1; 0; 1)$, $B(0; 1; 2)$, $C(2; 1; 0)$ và $D(1; 2; 3)$. Xét tính đúng hoặc sai của các mệnh đề sau:',
+    score: 1.0,
+    explanation:
+      '• a) $\\vec{AB} = (0-1; 1-0; 2-1) = (-1; 1; 1) \\Rightarrow$ Đúng.\\n• b) $\\vec{AC} = (2-1; 1-0; 0-1) = (1; 1; -1) \\Rightarrow$ Đúng.\\n• c) $\\vec{AB}.\\vec{AC} = -1(1) + 1(1) + 1(-1) = -1 \\neq 0 \\Rightarrow$ Hai vectơ không vuông góc $\\Rightarrow$ Sai.\\n• d) Tính $[\\vec{AB}, \\vec{AC}].\\vec{AD} \\neq 0 \\Rightarrow 4$ điểm $A, B, C, D$ không đồng phẳng, tạo thành tứ diện $\\Rightarrow$ Đúng.',
+    statements: [
       {
-        step: 'Bước 1 (1.5 điểm)',
-        point: 1.5,
-        detail: 'Thay đúng $m = 2$, tính đúng $y\' = x^2 - 4x + 3$, tìm đúng nghiệm $x = 1, x = 3$.',
+        subId: 'a',
+        statement: 'Tọa độ của vectơ $\\vec{AB}$ là $(-1; 1; 1)$.',
+        isCorrect: true,
+        explanation: 'Tính hiệu tọa độ các điểm $B - A = (-1; 1; 1)$.',
       },
       {
-        step: 'Bước 2 (1.5 điểm)',
-        point: 1.5,
-        detail: 'Lập đúng bảng xét dấu/bảng biến thiên và kết luận chính xác các khoảng đồng biến, nghịch biến.',
+        subId: 'b',
+        statement: 'Tọa độ của vectơ $\\vec{AC}$ là $(1; 1; -1)$.',
+        isCorrect: true,
+        explanation: 'Tính hiệu tọa độ các điểm $C - A = (1; 1; -1)$.',
       },
       {
-        step: 'Bước 3 (1.5 điểm)',
-        point: 1.5,
-        detail: 'Tính $y\'(1) = m^2 - 3m + 2 = 0$, giải ra $m = 1$ hoặc $m = 2$.',
+        subId: 'c',
+        statement: 'Hai vectơ $\\vec{AB}$ và $\\vec{AC}$ vuông góc với nhau vì có tích vô hướng bằng 0.',
+        isCorrect: false,
+        explanation: 'Tích vô hướng $\\vec{AB}.\\vec{AC} = -1 + 1 - 1 = -1 \\neq 0$ nên chúng không vuông góc.',
       },
       {
-        step: 'Bước 4 (1.5 điểm)',
-        point: 1.5,
-        detail: 'Thử lại bằng dấu $y\'$ hoặc $y\'\'(1)$ chỉ ra $m = 1$ không là cực trị, $m = 2$ là cực đại và kết luận không có $m$ thỏa mãn.',
+        subId: 'd',
+        statement: 'Bốn điểm $A, B, C, D$ không đồng phẳng và tạo thành bốn đỉnh của một tứ diện.',
+        isCorrect: true,
+        explanation: 'Thể tích khối tứ diện $V > 0$ do tích hỗn tạp khác 0.',
       },
+    ],
+  },
+
+  // 9. Điền số (Vận dụng)
+  {
+    id: 'q2-09',
+    type: 'SHORT_ANSWER',
+    difficulty: 'HARD',
+    grade: 12,
+    chapterId: 2,
+    title: 'Góc giữa hai vectơ trong không gian',
+    content: 'Trong không gian $Oxyz$, cho hai vectơ $\\vec{u} = (1; 1; 0)$ và $\\vec{v} = (0; 1; 1)$. Tính số đo góc $(\\vec{u}, \\vec{v})$ theo đơn vị độ.',
+    score: 1.0,
+    shortAnswerCorrect: '60',
+    explanation:
+      'Ta có $\\cos(\\vec{u}, \\vec{v}) = \\frac{\\vec{u}.\\vec{v}}{|\\vec{u}|.|\\vec{v}|} = \\frac{1(0) + 1(1) + 0(1)}{\\sqrt{1^2+1^2}.\\sqrt{1^2+1^2}} = \\frac{1}{\\sqrt{2}.\\sqrt{2}} = \\frac{1}{2}$.\\nSuy ra góc $(\\vec{u}, \\vec{v}) = 60^\\circ$.\\nĐáp số điền: 60.',
+  },
+
+  // 11. Nhận biết (Dễ) - ÔN TẬP CHƯƠNG 1
+  {
+    id: 'q2-11',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'EASY',
+    grade: 12,
+    chapterId: 1,
+    isPreviousChapterReview: true,
+    relatedChapterIds: [1],
+    title: 'Đường tiệm cận đứng của đồ thị hàm phân thức (Ôn tập Chương 1)',
+    content: 'Phương trình đường tiệm cận đứng của đồ thị hàm số $y = \\frac{2x + 1}{x - 3}$ là:',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '$x = 3$' },
+      { key: 'B', content: '$x = -3$' },
+      { key: 'C', content: '$y = 2$' },
+      { key: 'D', content: '$y = 3$' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Tiệm cận đứng tại nghiệm của mẫu $x - 3 = 0 \\Leftrightarrow x = 3$. Chọn A.',
+  },
+
+  // 12. Thông hiểu (Trung bình) - ÔN TẬP CHƯƠNG 1
+  {
+    id: 'q2-12',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'MEDIUM',
+    grade: 12,
+    chapterId: 1,
+    isPreviousChapterReview: true,
+    relatedChapterIds: [1],
+    title: 'Giá trị nhỏ nhất của hàm số trên đoạn (Ôn tập Chương 1)',
+    content: 'Giá trị nhỏ nhất của hàm số $y = x^3 - 3x + 4$ trên đoạn $[0; 2]$ bằng:',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '$2$' },
+      { key: 'B', content: '$4$' },
+      { key: 'C', content: '$6$' },
+      { key: 'D', content: '$0$' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Đạo hàm $y\' = 3x^2 - 3 = 0 \\Leftrightarrow x = 1 \\in [0; 2]$.\\n$y(0) = 4, y(1) = 2, y(2) = 6 \\Rightarrow \\min_{[0; 2]} y = y(1) = 2$. Chọn A.',
+  },
+];
+
+// =========================================================================
+// SUBJECT METADATA & TOPICS CLASSIFICATION
+// =========================================================================
+export interface SubjectCategoryItem {
+  id: string;
+  name: string;
+}
+
+export interface SubjectMetadata {
+  slug: string;
+  name: string;
+  shortCode: string;
+  themeColor: string;
+  badgeBg: string;
+  categories: SubjectCategoryItem[];
+}
+
+export const SUBJECT_METADATA_LIST: SubjectMetadata[] = [
+  {
+    slug: 'toan-hoc',
+    name: 'Toán Học',
+    shortCode: 'TOAN',
+    themeColor: 'text-[#00B8DD]',
+    badgeBg: 'bg-[#00B8DD]/10 text-[#009bbd] border-[#00B8DD]/30',
+    categories: [
+      { id: 'dao-ham', name: 'Ứng dụng đạo hàm & Khảo sát đồ thị' },
+      { id: 'vecto-oxyz', name: 'Tọa độ vectơ & Không gian Oxyz' },
+      { id: 'thong-ke', name: 'Số đặc trưng mẫu số liệu ghép nhóm' },
+      { id: 'tich-phan', name: 'Nguyên hàm & Tích phân' },
+      { id: 'toa-do-khong-gian', name: 'Phương trình mặt phẳng & đường thẳng' },
+      { id: 'xac-suat', name: 'Xác suất có điều kiện' },
+    ],
+  },
+  {
+    slug: 'vat-ly',
+    name: 'Vật Lý',
+    shortCode: 'LY',
+    themeColor: 'text-indigo-600',
+    badgeBg: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 border-indigo-200 dark:border-indigo-900',
+    categories: [
+      { id: 'dao-dong-co', name: 'Dao động điều hòa & Con lắc' },
+      { id: 'song-co', name: 'Sóng cơ và Sóng âm' },
+      { id: 'dien-xoay-chieu', name: 'Dòng điện xoay chiều & Mạch RLC' },
+      { id: 'song-anh-sang', name: 'Sóng ánh sáng & Giao thoa' },
+      { id: 'luong-tu', name: 'Lượng tử ánh sáng & Quang điện' },
+      { id: 'hat-nhan', name: 'Vật lý hạt nhân & Phóng xạ' },
+    ],
+  },
+  {
+    slug: 'hoa-hoc',
+    name: 'Hóa Học',
+    shortCode: 'HOA',
+    themeColor: 'text-emerald-600',
+    badgeBg: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900',
+    categories: [
+      { id: 'este-lipit', name: 'Este - Lipit & Chất béo' },
+      { id: 'cacbohidrat', name: 'Cacbohidrat (Glucozơ, Saccarozơ)' },
+      { id: 'amin-protein', name: 'Amin, Amino Axit & Peptit' },
+      { id: 'polime', name: 'Polime & Vật liệu polime' },
+      { id: 'dai-cuong-kim-loai', name: 'Đại cương kim loại & Điện phân' },
+      { id: 'kim-loai-kiem', name: 'Kim loại kiềm, kiềm thổ & Nhôm' },
+    ],
+  },
+  {
+    slug: 'tieng-anh',
+    name: 'Tiếng Anh',
+    shortCode: 'ANH',
+    themeColor: 'text-amber-600',
+    badgeBg: 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border-amber-200 dark:border-amber-900',
+    categories: [
+      { id: 'ngu-phap', name: 'Thì động từ & Sự hòa hợp ngữ pháp' },
+      { id: 'ngu-am', name: 'Ngữ âm, Nguyên âm & Trọng âm từ' },
+      { id: 'doc-hieu', name: 'Đọc hiểu văn bản (Reading)' },
+      { id: 'dien-tu', name: 'Điền từ đoạn văn (Cloze Test)' },
+      { id: 'tu-vung', name: 'Từ vựng chuyên sâu & Thành ngữ' },
+      { id: 'viet-cau', name: 'Viết lại câu & Mệnh đề quan hệ' },
+    ],
+  },
+  {
+    slug: 'sinh-hoc',
+    name: 'Sinh Học',
+    shortCode: 'SINH',
+    themeColor: 'text-teal-600',
+    badgeBg: 'bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-300 border-teal-200 dark:border-teal-900',
+    categories: [
+      { id: 'di-truyen-pt', name: 'Di truyền phân tử & Mã di truyền' },
+      { id: 'menden', name: 'Quy luật di truyền Menđen' },
+      { id: 'quan-the', name: 'Di truyền quần thể & Chọn giống' },
+      { id: 'tien-hoa', name: 'Tiến hóa & Sinh thái học' },
+    ],
+  },
+  {
+    slug: 'ngu-van',
+    name: 'Ngữ Văn',
+    shortCode: 'VAN',
+    themeColor: 'text-rose-600',
+    badgeBg: 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border-rose-200 dark:border-rose-900',
+    categories: [
+      { id: 'doc-tho', name: 'Đọc hiểu thơ trữ tình' },
+      { id: 'doc-van-xuoi', name: 'Đọc hiểu truyện & Ký' },
+      { id: 'nlxh', name: 'Nghị luận xã hội' },
+      { id: 'nlvh', name: 'Nghị luận văn học' },
+    ],
+  },
+  {
+    slug: 'lich-su',
+    name: 'Lịch Sử',
+    shortCode: 'SU',
+    themeColor: 'text-orange-600',
+    badgeBg: 'bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300 border-orange-200 dark:border-orange-900',
+    categories: [
+      { id: 'tg-hien-dai', name: 'Lịch sử thế giới hiện đại' },
+      { id: 'cm-thang-tam', name: 'Cách mạng tháng Tám (1930 - 1945)' },
+      { id: 'khang-chien', name: 'Kháng chiến chống Pháp & Mỹ' },
+      { id: 'doi-moi', name: 'Thời kỳ Đổi mới và Hội nhập' },
+    ],
+  },
+  {
+    slug: 'tin-hoc',
+    name: 'Tin Học',
+    shortCode: 'TIN',
+    themeColor: 'text-cyan-600',
+    badgeBg: 'bg-cyan-50 text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300 border-cyan-200 dark:border-cyan-900',
+    categories: [
+      { id: 'python-ds', name: 'Lập trình Python & Cấu trúc dữ liệu' },
+      { id: 'sql-db', name: 'Cơ sở dữ liệu quan hệ & SQL' },
+      { id: 'mang-internet', name: 'Mạng máy tính & An ninh mạng' },
     ],
   },
 ];
 
-// Helper lấy đề thi theo cấu hình
+// Ngân hàng câu hỏi mẫu môn Vật Lý
+export const MOCK_PHYSICS_QUESTIONS: ExamQuestion[] = [
+  {
+    id: 'q-ly-01',
+    subjectSlug: 'vat-ly',
+    subjectName: 'Vật Lý',
+    topic: 'Dao động điều hòa & Con lắc',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'EASY',
+    grade: 12,
+    chapterId: 1,
+    title: 'Câu 1 (Nhận biết): Chu kì dao động của con lắc lò xo',
+    content: 'Một con lắc lò xo gồm vật nặng khối lượng $m$ và lò xo nhẹ có độ cứng $k$. Chu kì dao động điều hòa của con lắc là:',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '$T = 2\\pi \\sqrt{\\frac{m}{k}}$' },
+      { key: 'B', content: '$T = 2\\pi \\sqrt{\\frac{k}{m}}$' },
+      { key: 'C', content: '$T = \\frac{1}{2\\pi} \\sqrt{\\frac{m}{k}}$' },
+      { key: 'D', content: '$T = 2\\pi \\sqrt{\\frac{l}{g}}$' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Công thức tính chu kì dao động điều hòa của con lắc lò xo là $T = 2\\pi \\sqrt{\\frac{m}{k}}$. Chọn A.',
+  },
+  {
+    id: 'q-ly-02',
+    subjectSlug: 'vat-ly',
+    subjectName: 'Vật Lý',
+    topic: 'Sóng cơ và Sóng âm',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'MEDIUM',
+    grade: 12,
+    chapterId: 2,
+    title: 'Câu 2 (Thông hiểu): Khoảng cách giữa hai điểm ngược pha trên phương truyền sóng',
+    content: 'Một sóng cơ hình sin truyền theo một phương với bước sóng $\\lambda = 20\\text{ cm}$. Khoảng cách ngắn nhất giữa hai điểm dao động ngược pha nhau là:',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '$10\\text{ cm}$' },
+      { key: 'B', content: '$20\\text{ cm}$' },
+      { key: 'C', content: '$5\\text{ cm}$' },
+      { key: 'D', content: '$40\\text{ cm}$' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Hai điểm dao động ngược pha nhau gần nhau nhất trên phương truyền sóng cách nhau $d = \\frac{\\lambda}{2} = \\frac{20}{2} = 10\\text{ cm}$. Chọn A.',
+  },
+  {
+    id: 'q-ly-03',
+    subjectSlug: 'vat-ly',
+    subjectName: 'Vật Lý',
+    topic: 'Dòng điện xoay chiều & Mạch RLC',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'HARD',
+    grade: 12,
+    chapterId: 3,
+    title: 'Câu 3 (Vận dụng): Cường độ dòng điện hiệu dụng mạch RLC',
+    content: 'Đặt điện áp xoay chiều $u = 200\\sqrt{2} \\cos(100\\pi t)\\text{ (V)}$ vào hai đầu đoạn mạch gồm $R = 100\\ \\Omega$ và tụ điện có dung kháng $Z_C = 100\\ \\Omega$ mắc nối tiếp. Cường độ dòng điện hiệu dụng trong mạch là:',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '$1\\text{ A}$' },
+      { key: 'B', content: '$\\sqrt{2}\\text{ A}$' },
+      { key: 'C', content: '$2\\text{ A}$' },
+      { key: 'D', content: '$2\\sqrt{2}\\text{ A}$' },
+    ],
+    correctChoice: 'B',
+    explanation: 'Tổng trở đoạn mạch: $Z = \\sqrt{R^2 + Z_C^2} = \\sqrt{100^2 + 100^2} = 100\\sqrt{2}\\ \\Omega$.\\nĐiện áp hiệu dụng $U = 200\\text{ V}$. Suy ra $I = \\frac{U}{Z} = \\frac{200}{100\\sqrt{2}} = \\sqrt{2}\\text{ A}$. Chọn B.',
+  },
+  {
+    id: 'q-ly-04',
+    subjectSlug: 'vat-ly',
+    subjectName: 'Vật Lý',
+    topic: 'Sóng ánh sáng & Giao thoa',
+    type: 'SHORT_ANSWER',
+    difficulty: 'VERY_HARD',
+    grade: 12,
+    chapterId: 4,
+    title: 'Câu 4 (Vận dụng cao): Khoảng vân trong thí nghiệm Young',
+    content: 'Trong thí nghiệm Young về giao thoa ánh sáng, khoảng cách giữa hai khe là $a = 1\\text{ mm}$, khoảng cách từ mặt phẳng chứa hai khe đến màn quan sát là $D = 2\\text{ m}$. Ánh sáng đơn sắc có bước sóng $\\lambda = 0,6\\ \\mu\\text{m}$. Tính khoảng vân $i$ theo đơn vị mm (chỉ ghi giá trị số thập phân, ví dụ 1.2):',
+    score: 1.0,
+    shortAnswerCorrect: '1.2',
+    explanation: 'Khoảng vân $i = \\frac{\\lambda D}{a} = \\frac{0,6 \\cdot 10^{-6} \\times 2}{10^{-3}} = 1,2 \\cdot 10^{-3}\\text{ m} = 1,2\\text{ mm}$. Đáp án: 1.2',
+  },
+];
+
+// Ngân hàng câu hỏi mẫu môn Hóa Học
+export const MOCK_CHEMISTRY_QUESTIONS: ExamQuestion[] = [
+  {
+    id: 'q-hoa-01',
+    subjectSlug: 'hoa-hoc',
+    subjectName: 'Hóa Học',
+    topic: 'Este - Lipit & Chất béo',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'EASY',
+    grade: 12,
+    chapterId: 1,
+    title: 'Câu 1 (Nhận biết): Công thức phân tử este no, đơn chức, mạch hở',
+    content: 'Chất nào sau đây là este no, đơn chức, mạch hở?',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '$\\text{CH}_3\\text{COOCH}_3$' },
+      { key: 'B', content: '$\\text{CH}_3\\text{COOH}$' },
+      { key: 'C', content: '$\\text{C}_2\\text{H}_5\\text{OH}$' },
+      { key: 'D', content: '$\\text{CH}_2=\\text{CH}-\\text{COOCH}_3$' },
+    ],
+    correctChoice: 'A',
+    explanation: '$\\text{CH}_3\\text{COOCH}_3$ (metyl axetat) có công thức tổng quát $\\text{C}_n\\text{H}_{2n}\\text{O}_2$ ($n=3$), là este no, đơn chức, mạch hở. Chọn A.',
+  },
+  {
+    id: 'q-hoa-02',
+    subjectSlug: 'hoa-hoc',
+    subjectName: 'Hóa Học',
+    topic: 'Cacbohidrat (Glucozơ, Saccarozơ)',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'MEDIUM',
+    grade: 12,
+    chapterId: 2,
+    title: 'Câu 2 (Thông hiểu): Thủy phân saccarozơ',
+    content: 'Thủy phân hoàn toàn $34,2\\text{ gam}$ saccarozơ với hiệu suất $100\\%$ thu được $m\\text{ gam}$ glucozơ. Giá trị của $m$ là:',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '$18,0\\text{ g}$' },
+      { key: 'B', content: '$36,0\\text{ g}$' },
+      { key: 'C', content: '$9,0\\text{ g}$' },
+      { key: 'D', content: '$27,0\\text{ g}$' },
+    ],
+    correctChoice: 'A',
+    explanation: '$n_{\\text{saccarozơ}} = \\frac{34,2}{342} = 0,1\\text{ mol}$.\\nPhương trình: $\\text{C}_{12}\\text{H}_{22}\\text{O}_{11} + \\text{H}_2\\text{O} \\to \\text{C}_6\\text{H}_{12}\\text{O}_6\\text{ (glucozơ)} + \\text{C}_6\\text{H}_{12}\\text{O}_6\\text{ (fructozơ)}$.\\n$\\Rightarrow n_{\\text{glucozơ}} = 0,1\\text{ mol} \\Rightarrow m = 0,1 \\times 180 = 18,0\\text{ g}$. Chọn A.',
+  },
+  {
+    id: 'q-hoa-03',
+    subjectSlug: 'hoa-hoc',
+    subjectName: 'Hóa Học',
+    topic: 'Amin, Amino Axit & Peptit',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'HARD',
+    grade: 12,
+    chapterId: 3,
+    title: 'Câu 3 (Vận dụng): Phản ứng của amino axit lưỡng tính',
+    content: 'Cho $0,1\\text{ mol}$ axit glutamic tác dụng vừa đủ với dung dịch chứa $\\text{NaOH}$ $1\\text{M}$. Thể tích dung dịch $\\text{NaOH}$ tối thiểu cần dùng là:',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '$100\\text{ mL}$' },
+      { key: 'B', content: '$200\\text{ mL}$' },
+      { key: 'C', content: '$300\\text{ mL}$' },
+      { key: 'D', content: '$150\\text{ mL}$' },
+    ],
+    correctChoice: 'B',
+    explanation: 'Axit glutamic có $2$ nhóm $-\\text{COOH}$ nên tác dụng với $\\text{NaOH}$ theo tỉ lệ mol $1:2$.\\n$n_{\\text{NaOH}} = 2 \\times 0,1 = 0,2\\text{ mol} \\Rightarrow V = \\frac{0,2}{1} = 0,2\\text{ lít} = 200\\text{ mL}$. Chọn B.',
+  },
+];
+
+// Ngân hàng câu hỏi mẫu môn Tiếng Anh
+export const MOCK_ENGLISH_QUESTIONS: ExamQuestion[] = [
+  {
+    id: 'q-anh-01',
+    subjectSlug: 'tieng-anh',
+    subjectName: 'Tiếng Anh',
+    topic: 'Thì động từ & Sự hòa hợp ngữ pháp',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'EASY',
+    grade: 12,
+    chapterId: 1,
+    title: 'Question 1: Past Perfect Tense & Time Clauses',
+    content: 'By the time the teacher entered the classroom, all the students ______ their homework.',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: 'had finished' },
+      { key: 'B', content: 'finished' },
+      { key: 'C', content: 'have finished' },
+      { key: 'D', content: 'were finishing' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Cấu trúc "By the time + S + V(quá khứ đơn), S + had + V(pII)" diễn tả hành động hoàn thành trước một thời điểm/hành động trong quá khứ. Chọn A.',
+  },
+  {
+    id: 'q-anh-02',
+    subjectSlug: 'tieng-anh',
+    subjectName: 'Tiếng Anh',
+    topic: 'Ngữ âm, Nguyên âm & Trọng âm từ',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'MEDIUM',
+    grade: 12,
+    chapterId: 2,
+    title: 'Question 2: Word Stress Pattern',
+    content: 'Mark the letter A, B, C, or D to indicate the word that differs from the other three in the position of primary stress:',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: 'economic' },
+      { key: 'B', content: 'photography' },
+      { key: 'C', content: 'electronic' },
+      { key: 'D', content: 'biological' },
+    ],
+    correctChoice: 'B',
+    explanation: 'photography có trọng âm rơi vào âm tiết thứ 2 (/fəˈtɒɡrəfi/). Ba từ còn lại trọng âm rơi vào âm tiết thứ 3: economic (/ˌiːkəˈnɒmɪk/), electronic (/ɪˌlekˈtrɒnɪk/), biological (/ˌbaɪəˈlɒdʒɪkl/). Chọn B.',
+  },
+  {
+    id: 'q-anh-03',
+    subjectSlug: 'tieng-anh',
+    subjectName: 'Tiếng Anh',
+    topic: 'Từ vựng chuyên sâu & Thành ngữ',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'HARD',
+    grade: 12,
+    chapterId: 3,
+    title: 'Question 3: Collocations & Fixed Expressions',
+    content: 'The new environmental policy is aimed at ______ awareness among teenagers about climate change.',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: 'raising' },
+      { key: 'B', content: 'rising' },
+      { key: 'C', content: 'heightening' },
+      { key: 'D', content: 'boosting' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Cụm từ cố định: "raise awareness (about/of something)" có nghĩa là nâng cao nhận thức. "Rise" là nội động từ không có tân ngữ phía sau. Chọn A.',
+  },
+];
+
+// Ngân hàng câu hỏi mẫu môn Sinh Học
+export const MOCK_BIOLOGY_QUESTIONS: ExamQuestion[] = [
+  {
+    id: 'q-sinh-01',
+    subjectSlug: 'sinh-hoc',
+    subjectName: 'Sinh Học',
+    topic: 'Di truyền phân tử & Mã di truyền',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'EASY',
+    grade: 12,
+    chapterId: 1,
+    title: 'Câu 1 (Nhận biết): Bộ ba mở đầu mã di truyền',
+    content: 'Trên mARN, bộ ba nào sau đây quy định tín hiệu mở đầu dịch mã và mã hóa axit amin mêtiônin ở sinh vật nhân thực?',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '5\'AUG3\'' },
+      { key: 'B', content: '5\'UAA3\'' },
+      { key: 'C', content: '5\'UAG3\'' },
+      { key: 'D', content: '5\'UGA3\'' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Codon 5\'AUG3\' trên mARN là bộ ba mở đầu quy định axit amin Metionin (ở sinh vật nhân thực). Ba bộ ba UAA, UAG, UGA là bộ ba kết thúc. Chọn A.',
+  },
+];
+
+// Ngân hàng câu hỏi mẫu môn Ngữ Văn
+export const MOCK_LITERATURE_QUESTIONS: ExamQuestion[] = [
+  {
+    id: 'q-van-01',
+    subjectSlug: 'ngu-van',
+    subjectName: 'Ngữ Văn',
+    topic: 'Đọc hiểu thơ trữ tình',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'MEDIUM',
+    grade: 12,
+    chapterId: 1,
+    title: 'Câu 1 (Thông hiểu): Biện pháp tu từ trong thơ',
+    content: 'Trong câu thơ "Chao ôi, tiếng hót trong veo như một viên pha lê thả vào lòng giếng cạn", tác giả đã sử dụng biện pháp tu từ nào nổi bật?',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: 'So sánh và ẩn dụ chuyển đổi cảm giác' },
+      { key: 'B', content: 'Nhân hóa và phóng đại' },
+      { key: 'C', content: 'Chơi chữ và đảo ngữ' },
+      { key: 'D', content: 'Điệp từ và nói giảm nói tránh' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Tác giả so sánh tiếng hót (thính giác) "như một viên pha lê" (thị giác) và cảm nhận độ "trong veo", đây là sự kết hợp giữa so sánh và ẩn dụ chuyển đổi cảm giác. Chọn A.',
+  },
+];
+
+// Bộ câu hỏi mẫu môn Tin Học K-12 (Lập trình, Thuật toán, Cấu trúc dữ liệu & CSDL)
+export const MOCK_INFORMATICS_QUESTIONS: ExamQuestion[] = [
+  {
+    id: 'tin-q-01',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'EASY',
+    grade: 12,
+    chapterId: 1,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Cú pháp Python & Kiểu dữ liệu',
+    title: 'Câu 1 (Nhận biết): Kiểu dữ liệu trong Python',
+    content: 'Trong ngôn ngữ lập trình Python, kết quả của biểu thức `type(3.14)` là gì?',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: "<class 'float'>" },
+      { key: 'B', content: "<class 'int'>" },
+      { key: 'C', content: "<class 'double'>" },
+      { key: 'D', content: "<class 'number'>" },
+    ],
+    correctChoice: 'A',
+    explanation: 'Trong Python, số thực có phần thập phân thuộc kiểu float. Do đó type(3.14) trả về <class \'float\'>. Chọn A.',
+  },
+  {
+    id: 'tin-q-02',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'MEDIUM',
+    grade: 12,
+    chapterId: 1,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Thuật toán tìm kiếm nhị phân',
+    title: 'Câu 2 (Thông hiểu): Độ phức tạp tìm kiếm nhị phân',
+    content: 'Thuật toán Tìm kiếm nhị phân (Binary Search) trên dãy đã được sắp xếp gồm $N$ phần tử có độ phức tạp thời gian trong trường hợp xấu nhất là:',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '$O(\\log N)$' },
+      { key: 'B', content: '$O(N)$' },
+      { key: 'C', content: '$O(N \\log N)$' },
+      { key: 'D', content: '$O(1)$' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Ở mỗi bước, không gian tìm kiếm giảm đi một nửa. Do đó số phép so sánh tối đa là log2(N), tương ứng độ phức tạp O(log N). Chọn A.',
+  },
+  {
+    id: 'tin-q-03',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'MEDIUM',
+    grade: 12,
+    chapterId: 1,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Đệ quy và Call Stack',
+    title: 'Câu 3 (Thông hiểu): Vấn đề tràn ngăn xếp trong đệ quy',
+    content: 'Khi một hàm đệ quy tự gọi chính nó vô hạn lần mà không chạm đến điểm dừng (Base Case), chương trình sẽ gặp lỗi ngoại lệ nào?',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: 'RecursionError: maximum recursion depth exceeded (Tràn Call Stack)' },
+      { key: 'B', content: 'ZeroDivisionError: division by zero' },
+      { key: 'C', content: 'IndexError: list index out of range' },
+      { key: 'D', content: 'KeyError: key not found in dictionary' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Mỗi lần gọi hàm đệ quy, một khung ngăn xếp (stack frame) được đẩy vào Call Stack. Không có điều kiện dừng sẽ làm đầy bộ nhớ stack, dẫn đến lỗi tràn ngăn xếp RecursionError. Chọn A.',
+  },
+  {
+    id: 'tin-q-04',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'HARD',
+    grade: 12,
+    chapterId: 2,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Cơ sở dữ liệu quan hệ SQL',
+    title: 'Câu 4 (Vận dụng): Mệnh đề SQL nhóm dữ liệu',
+    content: 'Để đếm số lượng học sinh theo từng lớp trong bảng `HocSinh`, câu lệnh SQL nào sau đây là chính xác?',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: 'SELECT Lop, COUNT(*) FROM HocSinh GROUP BY Lop;' },
+      { key: 'B', content: 'SELECT Lop, SUM(*) FROM HocSinh ORDER BY Lop;' },
+      { key: 'C', content: 'SELECT Lop, COUNT(*) FROM HocSinh WHERE COUNT(*) > 0;' },
+      { key: 'D', content: 'SELECT DISTINCT Lop FROM HocSinh GROUP BY Lop;' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Để thống kê theo nhóm, ta sử dụng mệnh đề GROUP BY kết hợp hàm tổng hợp COUNT(*). Chọn A.',
+  },
+  {
+    id: 'tin-q-05',
+    type: 'TRUE_FALSE',
+    difficulty: 'MEDIUM',
+    grade: 12,
+    chapterId: 1,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Cấu trúc dữ liệu Ngăn xếp & Hàng đợi',
+    title: 'Câu 5 (Đúng/Sai): Đặc tính của Stack và Queue',
+    content: 'Xét các phát biểu sau đây về hai cấu trúc dữ liệu cơ bản Ngăn xếp (Stack) và Hàng đợi (Queue):',
+    score: 1.0,
+    statements: [
+      {
+        subId: 'a',
+        statement: 'Ngăn xếp (Stack) hoạt động theo nguyên tắc Vào sau - Ra trước (LIFO).',
+        isCorrect: true,
+        explanation: 'Đúng. Phần tử đưa vào sau cùng sẽ được lấy ra đầu tiên.',
+      },
+      {
+        subId: 'b',
+        statement: 'Hàng đợi (Queue) hoạt động theo nguyên tắc Vào trước - Ra trước (FIFO).',
+        isCorrect: true,
+        explanation: 'Đúng. Giống như hàng người xếp hàng chờ thanh toán.',
+      },
+      {
+        subId: 'c',
+        statement: 'Thao tác đẩy phần tử (push) và lấy phần tử (pop) trên Stack đỉnh cao có độ phức tạp thời gian O(1).',
+        isCorrect: true,
+        explanation: 'Đúng. Thao tác tại đỉnh ngăn xếp chỉ mất thời gian hằng số O(1).',
+      },
+      {
+        subId: 'd',
+        statement: 'Thuật toán duyệt đồ thị theo chiều rộng (BFS) sử dụng cấu trúc dữ liệu Ngăn xếp (Stack).',
+        isCorrect: false,
+        explanation: 'Sai. Thuật toán BFS sử dụng Hàng đợi (Queue), còn DFS mới sử dụng Ngăn xếp (Stack) hoặc đệ quy.',
+      },
+    ],
+    explanation: 'Ý a đúng, ý b đúng, ý c đúng, ý d sai.',
+  },
+  {
+    id: 'tin-q-06',
+    type: 'SHORT_ANSWER',
+    difficulty: 'MEDIUM',
+    grade: 12,
+    chapterId: 1,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Tính toán giá trị Fibonacci',
+    title: 'Câu 6 (Điền đáp án): Giá trị hàm Fibonacci đệ quy',
+    content: 'Cho dãy số Fibonacci xác định bởi $F(1) = 1, F(2) = 1, F(n) = F(n-1) + F(n-2)$ với mọi $n \\ge 3$. Giá trị của số hạng thứ 7 ($F(7)$) bằng bao nhiêu?',
+    score: 1.0,
+    shortAnswerCorrect: '13',
+    explanation: 'Dãy số: F(1)=1, F(2)=1, F(3)=2, F(4)=3, F(5)=5, F(6)=8, F(7)=13. Đáp số: 13.',
+  },
+  {
+    id: 'tin-q-07',
+    type: 'SHORT_ANSWER',
+    difficulty: 'EASY',
+    grade: 12,
+    chapterId: 1,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Tính tổng phần tử chẵn',
+    title: 'Câu 7 (Điền đáp án): Tổng số chẵn trong mảng',
+    content: 'Cho mảng gồm các số nguyên: `A = [2, 7, 4, 9, 6]`. Tổng giá trị của tất cả các phần tử là số chẵn trong mảng bằng bao nhiêu?',
+    score: 1.0,
+    shortAnswerCorrect: '12',
+    explanation: 'Các phần tử chẵn là 2, 4, 6. Tổng = 2 + 4 + 6 = 12.',
+  },
+  {
+    id: 'tin-q-09',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'HARD',
+    grade: 12,
+    chapterId: 1,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Đọc hiểu code Python & Vòng lặp',
+    topicTag: 'Truy vết vòng lặp & Mảng 1 chiều Python',
+    trapTag: 'Bẫy lệch chỉ số biên trong hàm range(start, stop)',
+    title: 'Câu 9 (Vận dụng): Truy vết kết quả đoạn chương trình Python',
+    content: 'Cho đoạn mã Python sau: `s = 0; A = [3, 5, 2, 8, 1];` với vòng lặp `for i in range(1, 4): s += A[i]`. Sau khi thực hiện xong, giá trị của biến `s` bằng bao nhiêu?',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '15' },
+      { key: 'B', content: '10' },
+      { key: 'C', content: '18' },
+      { key: 'D', content: '16' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Hàm range(1, 4) duyệt qua các chỉ số i = 1, 2, 3 (không bao gồm 4). Khi đó A[1] = 5, A[2] = 2, A[3] = 8. Tổng s = 5 + 2 + 8 = 15. Chọn A.',
+  },
+  {
+    id: 'tin-q-10',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'VERY_HARD',
+    grade: 12,
+    chapterId: 1,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Đệ quy có nhớ & Độ phức tạp thuật toán',
+    topicTag: 'Đệ quy & Tối ưu Quy hoạch động',
+    trapTag: 'Bẫy nhầm độ phức tạp hàm đệ quy phân nhánh O(2^n) với O(n^2)',
+    title: 'Câu 10 (Vận dụng cao): Phân tích số lần gọi hàm đệ quy',
+    content: 'Xét hàm Python `def f(n): return 1 if n <= 1 else f(n-1) + f(n-2)`. Để tính `f(5)`, hàm `f` được gọi tổng cộng bao nhiêu lần (tính cả lời gọi ban đầu `f(5)`)?',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '15 lần' },
+      { key: 'B', content: '9 lần' },
+      { key: 'C', content: '8 lần' },
+      { key: 'D', content: '5 lần' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Số lần gọi C(n): C(0)=1, C(1)=1, C(2)=1+C(1)+C(0)=3, C(3)=1+3+1=5, C(4)=1+5+3=9, C(5)=1+9+5=15 lần. Chọn A.',
+  },
+  {
+    id: 'tin-q-11',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'VERY_HARD',
+    grade: 12,
+    chapterId: 2,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Truy vấn SQL nâng cao (HAVING vs WHERE)',
+    topicTag: 'Truy vấn SQL & GROUP BY / HAVING',
+    trapTag: 'Bẫy dùng hàm tổng hợp AVG/COUNT trực tiếp trong mệnh đề WHERE',
+    title: 'Câu 11 (Vận dụng cao): Lọc nhóm dữ liệu bằng HAVING trong SQL',
+    content: 'Cho bảng `DiemThi(MaHS, MaLop, DiemToan)`. Câu truy vấn SQL nào trả về danh sách các lớp (`MaLop`) có điểm trung bình môn Toán từ 8.0 trở lên?',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: 'SELECT MaLop, AVG(DiemToan) FROM DiemThi GROUP BY MaLop HAVING AVG(DiemToan) >= 8.0;' },
+      { key: 'B', content: 'SELECT MaLop, AVG(DiemToan) FROM DiemThi WHERE AVG(DiemToan) >= 8.0 GROUP BY MaLop;' },
+      { key: 'C', content: 'SELECT MaLop FROM DiemThi HAVING AVG(DiemToan) >= 8.0;' },
+      { key: 'D', content: 'SELECT MaLop, COUNT(DiemToan) >= 8.0 FROM DiemThi GROUP BY MaLop;' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Mệnh đề WHERE không được chứa hàm tổng hợp (AVG, COUNT, SUM) để lọc sau khi gom nhóm. Phải dùng GROUP BY MaLop kết hợp HAVING AVG(DiemToan) >= 8.0. Chọn A.',
+  },
+  {
+    id: 'tin-q-12',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'EASY',
+    grade: 12,
+    chapterId: 3,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Trí tuệ nhân tạo (AI) & Học máy',
+    topicTag: 'Trí tuệ nhân tạo (AI) & Học máy cơ bản',
+    trapTag: 'Bẫy nhầm lẫn giữa Học có giám sát (Supervised) và Không giám sát',
+    title: 'Câu 12 (Nhận biết): Phân loại bài toán Học có giám sát',
+    content: 'Trong Học máy (Machine Learning), bài toán huấn luyện mô hình phân biệt email "Spam" và "Không Spam" dựa trên tập dữ liệu đã được gán nhãn sẵn thuộc nhóm nào?',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: 'Học có giám sát (Supervised Learning)' },
+      { key: 'B', content: 'Học không giám sát (Unsupervised Learning)' },
+      { key: 'C', content: 'Học tăng cường (Reinforcement Learning)' },
+      { key: 'D', content: 'Hệ chuyên gia tĩnh không cần dữ liệu' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Khi dữ liệu huấn luyện đã có nhãn đầu ra (Spam / Không Spam), mô hình học ánh xạ từ đầu vào sang nhãn gọi là Học có giám sát (Supervised Learning). Chọn A.',
+  },
+  {
+    id: 'tin-q-13',
+    type: 'MULTIPLE_CHOICE',
+    difficulty: 'MEDIUM',
+    grade: 12,
+    chapterId: 4,
+    subjectSlug: 'tin-hoc',
+    subjectName: 'Tin Học',
+    topic: 'Mạng máy tính & Giao thức TCP/IP',
+    topicTag: 'Mạng máy tính & An toàn thông tin',
+    trapTag: 'Bẫy nhầm địa chỉ IPv4 không hợp lệ (octet > 255)',
+    title: 'Câu 13 (Thông hiểu): Kiểm tra tính hợp lệ của địa chỉ IPv4',
+    content: 'Trong các địa chỉ dưới đây, địa chỉ nào là một địa chỉ IPv4 hợp lệ?',
+    score: 0.5,
+    choices: [
+      { key: 'A', content: '192.168.1.254' },
+      { key: 'B', content: '192.168.256.1' },
+      { key: 'C', content: '10.0.1' },
+      { key: 'D', content: '172.16.0.1.5' },
+    ],
+    correctChoice: 'A',
+    explanation: 'Địa chỉ IPv4 gồm 4 số nguyên (octet) cách nhau bởi dấu chấm, mỗi số nằm trong đoạn từ 0 đến 255. Do đó 192.168.1.254 hợp lệ, còn 256 vượt quá 255. Chọn A.',
+  },
+];
+
+// Hàm tự động chuẩn hóa & bổ sung Hệ thống Tag 4 Trục cho toàn bộ câu hỏi trong Ngân hàng
+const COGNITIVE_LABEL_MAP: Record<QuestionDifficulty, string> = {
+  EASY: 'Nhận biết',
+  MEDIUM: 'Thông hiểu',
+  HARD: 'Vận dụng',
+  VERY_HARD: 'Vận dụng cao',
+};
+
+function inferTopicAndTrapTags(q: ExamQuestion): { topicTag: string; trapTag: string } {
+  const slug = (q.subjectSlug || '').toLowerCase();
+  const text = `${q.title || ''} ${q.content || ''} ${q.topic || ''}`.toLowerCase();
+
+  if (slug.includes('tin')) {
+    if (text.includes('sql') || text.includes('select') || text.includes('group by') || q.chapterId === 2) {
+      return {
+        topicTag: q.topicTag || 'Truy vấn SQL & Cơ sở dữ liệu quan hệ',
+        trapTag: q.trapTag || 'Bẫy nhầm lẫn mệnh đề lọc WHERE và HAVING trong SQL',
+      };
+    }
+    if (text.includes('đệ quy') || text.includes('recursion') || text.includes('fibonacci')) {
+      return {
+        topicTag: q.topicTag || 'Đệ quy & Ngăn xếp Call Stack',
+        trapTag: q.trapTag || 'Bẫy thiếu điều kiện dừng (Base Case) gây tràn bộ nhớ Stack',
+      };
+    }
+    if (text.includes('nhị phân') || text.includes('binary') || text.includes('độ phức tạp')) {
+      return {
+        topicTag: q.topicTag || 'Thuật toán Tìm kiếm & Độ phức tạp O(log N)',
+        trapTag: q.trapTag || 'Bẫy áp dụng tìm kiếm nhị phân trên mảng chưa sắp xếp',
+      };
+    }
+    if (text.includes('ai') || text.includes('học máy') || q.chapterId === 3) {
+      return {
+        topicTag: q.topicTag || 'Trí tuệ nhân tạo (AI) & Học máy cơ bản',
+        trapTag: q.trapTag || 'Bẫy nhầm giữa dữ liệu gán nhãn và dữ liệu phân cụm',
+      };
+    }
+    if (text.includes('ip') || text.includes('mạng') || q.chapterId === 4) {
+      return {
+        topicTag: q.topicTag || 'Mạng máy tính & Giao thức TCP/IP',
+        trapTag: q.trapTag || 'Bẫy vượt ngưỡng giá trị 255 của octet địa chỉ IPv4',
+      };
+    }
+    return {
+      topicTag: q.topicTag || q.topic || 'Lập trình Python & Cấu trúc dữ liệu',
+      trapTag: q.trapTag || 'Bẫy lệch chỉ số biên vòng lặp range() và kiểu dữ liệu động',
+    };
+  }
+
+  // Mặc định môn Toán Học (Toán 10, 11, 12)
+  if (text.includes('tiệm cận')) {
+    return {
+      topicTag: q.topicTag || 'Đường tiệm cận của đồ thị hàm số',
+      trapTag: q.trapTag || 'Bẫy quên rút gọn nghiệm tử số và mẫu số trước khi kết luận tiệm cận đứng',
+    };
+  }
+  if (text.includes('cực trị') || text.includes('cực đại') || text.includes('cực tiểu')) {
+    return {
+      topicTag: q.topicTag || 'Cực trị của hàm số & Tham số m',
+      trapTag: q.trapTag || 'Bẫy kết luận cực trị khi đạo hàm y\' = 0 nhưng không đổi dấu (nghiệm bội chẵn)',
+    };
+  }
+  if (text.includes('đồng biến') || text.includes('nghịch biến') || text.includes('đơn điệu')) {
+    return {
+      topicTag: q.topicTag || 'Tính đơn điệu (Đồng biến - Nghịch biến)',
+      trapTag: q.trapTag || 'Bẫy dùng ký hiệu hợp ∪ thay vì từ "và" giữa các khoảng đơn điệu rời nhau',
+    };
+  }
+  if (text.includes('lớn nhất') || text.includes('nhỏ nhất') || text.includes('gtln') || text.includes('gtnn') || text.includes('max') || text.includes('min')) {
+    return {
+      topicTag: q.topicTag || 'Giá trị lớn nhất - Giá trị nhỏ nhất (GTLN - GTNN)',
+      trapTag: q.trapTag || 'Bẫy quên tính và so sánh giá trị hàm số tại hai đầu mút của đoạn [a; b]',
+    };
+  }
+  if (text.includes('nguyên hàm') || text.includes('tích phân') || q.chapterId === 4) {
+    return {
+      topicTag: q.topicTag || 'Nguyên hàm - Tích phân & Ứng dụng diện tích',
+      trapTag: q.trapTag || 'Bẫy quên dấu giá trị tuyệt đối |f(x)| khi tính diện tích hình phẳng',
+    };
+  }
+  if (text.includes('vectơ') || text.includes('oxyz') || text.includes('mặt phẳng') || text.includes('mặt cầu') || q.chapterId === 2 || q.chapterId === 5) {
+    return {
+      topicTag: q.topicTag || 'Hệ tọa độ không gian Oxyz & Phương trình mặt phẳng',
+      trapTag: q.trapTag || 'Bẫy nhầm dấu tọa độ tâm mặt cầu I(a; b; c) và vectơ pháp tuyến',
+    };
+  }
+  if (text.includes('xác suất') || text.includes('bayes') || q.chapterId === 6) {
+    return {
+      topicTag: q.topicTag || 'Xác suất có điều kiện & Công thức Bayes',
+      trapTag: q.trapTag || 'Bẫy nhầm không gian mẫu thu hẹp trong xác suất có điều kiện P(A|B)',
+    };
+  }
+
+  return {
+    topicTag: q.topicTag || q.topic || 'Khảo sát hàm số & Tư duy đại số',
+    trapTag: q.trapTag || 'Bẫy quên điều kiện xác định và sai dấu khi biến đổi đại số',
+  };
+}
+
+export function enrichQuestionWith4AxisTags(q: ExamQuestion): ExamQuestion {
+  const { topicTag, trapTag } = inferTopicAndTrapTags(q);
+  return {
+    ...q,
+    topicTag,
+    trapTag,
+    cognitiveTag: q.cognitiveTag || COGNITIVE_LABEL_MAP[q.difficulty] || 'Thông hiểu',
+  };
+}
+
+// Gán metadata chuẩn cho bộ câu hỏi Toán 12
+const INITIAL_MATH_QUESTIONS: ExamQuestion[] = [
+  ...MOCK_EXAM_QUESTIONS_CH1.map((q) => ({
+    ...q,
+    subjectSlug: 'toan-hoc',
+    subjectName: 'Toán Học',
+    topic: q.topic || 'Ứng dụng đạo hàm & Khảo sát đồ thị',
+  })),
+  ...MOCK_EXAM_QUESTIONS_CH2.map((q) => ({
+    ...q,
+    subjectSlug: 'toan-hoc',
+    subjectName: 'Toán Học',
+    topic: q.topic || 'Tọa độ vectơ & Không gian Oxyz',
+  })),
+];
+
+// =========================================================================
+// TOÀN BỘ KHO CÂU HỎI MẪU TOÀN DIỆN (QUESTION BANK)
+// =========================================================================
+const ALL_RAW_QUESTIONS: ExamQuestion[] = [
+  ...(questionsDb as unknown as ExamQuestion[]),
+  ...INITIAL_MATH_QUESTIONS,
+  ...MOCK_INFORMATICS_QUESTIONS,
+  ...MOCK_PHYSICS_QUESTIONS,
+  ...MOCK_CHEMISTRY_QUESTIONS,
+  ...MOCK_ENGLISH_QUESTIONS,
+  ...MOCK_BIOLOGY_QUESTIONS,
+  ...MOCK_LITERATURE_QUESTIONS,
+].map(enrichQuestionWith4AxisTags);
+
+const QUESTION_BANK_MAP = new Map<string, ExamQuestion>();
+for (const q of ALL_RAW_QUESTIONS) {
+  if (!QUESTION_BANK_MAP.has(q.id)) {
+    QUESTION_BANK_MAP.set(q.id, q);
+  }
+}
+
+export const MOCK_QUESTION_BANK: ExamQuestion[] = Array.from(QUESTION_BANK_MAP.values());
+
+export function getSystemQuestionBank(): ExamQuestion[] {
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem('schoolify_system_questions');
+      const deletedStr = localStorage.getItem('schoolify_deleted_question_ids');
+      const deletedIds = new Set<string>(deletedStr ? JSON.parse(deletedStr) : []);
+      const customList: ExamQuestion[] = saved ? JSON.parse(saved) : [];
+
+      const customMap = new Map<string, ExamQuestion>();
+      for (const q of customList) {
+        customMap.set(q.id, enrichQuestionWith4AxisTags(q));
+      }
+
+      const result: ExamQuestion[] = [];
+      const visited = new Set<string>();
+
+      // Chèn các câu hỏi tùy biến hoặc đã được chỉnh sửa trước
+      for (const q of customList) {
+        if (!deletedIds.has(q.id) && !visited.has(q.id)) {
+          result.push(enrichQuestionWith4AxisTags(q));
+          visited.add(q.id);
+        }
+      }
+
+      // Sau đó chèn các câu hỏi mẫu chuẩn (nếu đã bị chỉnh sửa thì lấy từ customMap, nếu bị xóa thì bỏ qua)
+      for (const q of MOCK_QUESTION_BANK) {
+        if (!deletedIds.has(q.id) && !visited.has(q.id)) {
+          const actualQ = customMap.get(q.id) || q;
+          result.push(actualQ);
+          visited.add(q.id);
+        }
+      }
+
+      return result;
+    } catch (e) {
+      // fallback
+    }
+  }
+  return MOCK_QUESTION_BANK;
+}
+
+export function addSystemQuestions(newQuestions: ExamQuestion[]) {
+  if (typeof window !== 'undefined') {
+    try {
+      const existing = localStorage.getItem('schoolify_system_questions');
+      const list: ExamQuestion[] = existing ? JSON.parse(existing) : [];
+
+      // Phục hồi lại nếu câu hỏi có id từng nằm trong danh sách đã xóa
+      const deletedStr = localStorage.getItem('schoolify_deleted_question_ids');
+      if (deletedStr) {
+        let deletedIds: string[] = JSON.parse(deletedStr);
+        const newIds = new Set(newQuestions.map((q) => q.id));
+        deletedIds = deletedIds.filter((id) => !newIds.has(id));
+        localStorage.setItem('schoolify_deleted_question_ids', JSON.stringify(deletedIds));
+      }
+
+      localStorage.setItem('schoolify_system_questions', JSON.stringify([...newQuestions, ...list]));
+    } catch (e) {
+      // fallback
+    }
+  }
+}
+
+export function updateSystemQuestion(updatedQuestion: ExamQuestion) {
+  if (typeof window !== 'undefined') {
+    try {
+      const existing = localStorage.getItem('schoolify_system_questions');
+      let list: ExamQuestion[] = existing ? JSON.parse(existing) : [];
+
+      const idx = list.findIndex((q) => q.id === updatedQuestion.id);
+      if (idx !== -1) {
+        list[idx] = updatedQuestion;
+      } else {
+        // Nếu là câu hỏi mẫu ban đầu từ MOCK_QUESTION_BANK, đẩy vào danh sách custom để override
+        list = [updatedQuestion, ...list];
+      }
+
+      // Xóa khỏi danh sách deleted nếu có
+      const deletedStr = localStorage.getItem('schoolify_deleted_question_ids');
+      if (deletedStr) {
+        let deletedIds: string[] = JSON.parse(deletedStr);
+        deletedIds = deletedIds.filter((id) => id !== updatedQuestion.id);
+        localStorage.setItem('schoolify_deleted_question_ids', JSON.stringify(deletedIds));
+      }
+
+      localStorage.setItem('schoolify_system_questions', JSON.stringify(list));
+    } catch (e) {
+      // fallback
+    }
+  }
+}
+
+export function deleteSystemQuestion(questionId: string) {
+  if (typeof window !== 'undefined') {
+    try {
+      const existing = localStorage.getItem('schoolify_system_questions');
+      if (existing) {
+        const list: ExamQuestion[] = JSON.parse(existing);
+        const filtered = list.filter((q) => q.id !== questionId);
+        localStorage.setItem('schoolify_system_questions', JSON.stringify(filtered));
+      }
+
+      // Ghi nhận ID đã xóa để loại bỏ cả trong trường hợp câu hỏi thuộc MOCK_QUESTION_BANK
+      const deletedStr = localStorage.getItem('schoolify_deleted_question_ids');
+      const deletedIds: string[] = deletedStr ? JSON.parse(deletedStr) : [];
+      if (!deletedIds.includes(questionId)) {
+        deletedIds.push(questionId);
+        localStorage.setItem('schoolify_deleted_question_ids', JSON.stringify(deletedIds));
+      }
+    } catch (e) {
+      // fallback
+    }
+  }
+}
+
+export function resetSystemQuestionBank() {
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.removeItem('schoolify_system_questions');
+      localStorage.removeItem('schoolify_deleted_question_ids');
+    } catch (e) {
+      // fallback
+    }
+  }
+}
+
+// Helper lấy đề thi theo cấu hình ma trận
 export interface PracticeExamOptions {
   requestedCount?: number;
   quizCount?: number;
-  essayCount?: number;
   durationMinutes?: number;
+  practiceMode?: PracticeMode;
+  targetDifficulty?: QuestionDifficulty | 'ALL';
+  topicTagFilter?: string;
 }
 
 export function getPracticeExam(
@@ -328,95 +2762,69 @@ export function getPracticeExam(
   const opts: PracticeExamOptions =
     typeof options === 'number' ? { requestedCount: options } : options || {};
 
-  let questions: ExamQuestion[] = [];
-  let duration = opts.durationMinutes || 45;
+  const chapters = getChaptersBySubject(subjectSlug, grade);
+  const chapter = chapters.find((c) => c.id === chapterId) || chapters[0] || MATH_GRADE_12_CHAPTERS[0];
+
+  const targetTotal =
+    opts.quizCount && opts.quizCount >= 5 && opts.quizCount <= 50
+      ? opts.quizCount
+      : opts.requestedCount && opts.requestedCount >= 5 && opts.requestedCount <= 50
+      ? opts.requestedCount
+      : 10;
+
+  // Sinh câu hỏi theo Ma trận tạo đề từ Kho câu hỏi hệ thống (bao gồm cả các câu admin đã import)
+  const questionBank = getSystemQuestionBank();
+  const questions = generateQuestionsByMatrix(questionBank, {
+    subjectSlug,
+    grade,
+    chapterId,
+    level,
+    format,
+    totalQuestions: targetTotal,
+    quizCount: opts.quizCount,
+    practiceMode: opts.practiceMode,
+    targetDifficulty: opts.targetDifficulty,
+    topicTagFilter: opts.topicTagFilter,
+  });
+
+  const duration =
+    typeof opts.durationMinutes === 'number' && opts.durationMinutes >= 0
+      ? opts.durationMinutes || Math.max(10, Math.round(questions.length * 1.5))
+      : Math.max(10, Math.round(questions.length * 1.5));
+
+  const subjectNameMap: Record<string, string> = {
+    'toan-hoc': 'Toán Học',
+    'vat-ly': 'Vật Lý',
+    'hoa-hoc': 'Hóa Học',
+    'sinh-hoc': 'Sinh Học',
+    'tieng-anh': 'Tiếng Anh',
+    'lich-su': 'Lịch Sử',
+    'dia-ly': 'Địa Lý',
+    'gdcd': 'GDKT & Pháp Luật',
+    'gdkt': 'GDKT & Pháp Luật',
+    'gdkt-phap-luat': 'GDKT & Pháp Luật',
+    'giao-duc-kinh-te-va-phap-luat': 'GDKT & Pháp Luật',
+    'tin-hoc': 'Tin Học',
+    'cong-nghe': 'Công Nghệ',
+    'ngu-van': 'Ngữ Văn',
+    'khoa-hoc-tu-nhien': 'Khoa Học Tự Nhiên',
+  };
+
+  const subjectLabel = subjectNameMap[subjectSlug] || 'Môn Học K-12';
+
   let title = '';
-
-  const chapter = MATH_GRADE_12_CHAPTERS.find((c) => c.id === chapterId) || MATH_GRADE_12_CHAPTERS[0];
-  const baseQuiz = MOCK_EXAM_QUESTIONS_CH1.filter((q) => q.type !== 'ESSAY');
-  const baseEssay = MOCK_EXAM_QUESTIONS_CH1.filter((q) => q.type === 'ESSAY');
-
-  if (format === 'QUIZ') {
-    const targetCount =
-      opts.quizCount && opts.quizCount >= 10 && opts.quizCount <= 30
-        ? opts.quizCount
-        : opts.requestedCount && opts.requestedCount >= 10 && opts.requestedCount <= 30
-        ? opts.requestedCount
-        : 10;
-
-    const generated: ExamQuestion[] = [];
-    for (let i = 0; i < targetCount; i++) {
-      const baseQ = baseQuiz[i % baseQuiz.length];
-      const repIdx = Math.floor(i / baseQuiz.length);
-      generated.push({
-        ...baseQ,
-        id: repIdx > 0 ? `${baseQ.id}_v${repIdx + 1}` : baseQ.id,
-        title: `Câu ${i + 1}: ${baseQ.title.replace(/^Câu \d+(\s*\([^)]*\))?:\s*/, '')}`,
-        score: Math.round((10 / targetCount) * 100) / 100,
-      });
-    }
-
-    questions = generated;
-    duration = opts.durationMinutes || Math.max(15, Math.round(targetCount * 1.5));
-    title = `Đề Luyện Trắc Nghiệm (${targetCount} Câu) - ${chapter.name}`;
-  } else if (format === 'ESSAY') {
-    const targetCount =
-      opts.essayCount && opts.essayCount >= 5 && opts.essayCount <= 10
-        ? opts.essayCount
-        : opts.requestedCount && opts.requestedCount >= 5 && opts.requestedCount <= 10
-        ? opts.requestedCount
-        : 5;
-
-    const generated: ExamQuestion[] = [];
-    for (let i = 0; i < targetCount; i++) {
-      const baseQ = baseEssay[i % baseEssay.length];
-      const repIdx = Math.floor(i / baseEssay.length);
-      generated.push({
-        ...baseQ,
-        id: repIdx > 0 ? `${baseQ.id}_v${repIdx + 1}` : baseQ.id,
-        title: `Câu ${i + 1} (Tự luận): ${baseQ.title.replace(/^Câu \d+(\s*\([^)]*\))?:\s*/, '')}`,
-        score: Math.round((10 / targetCount) * 100) / 100,
-      });
-    }
-
-    questions = generated;
-    duration = opts.durationMinutes || 45;
-    title = `Đề Luyện Tự Luận (${targetCount} Câu) - ${chapter.name}`;
+  if (opts.practiceMode === 'MOCK_EXAM') {
+    title = `Đề Thi Thử Chuẩn Cấu Trúc THPT (${questions.length} Câu) - ${subjectLabel} Lớp ${grade}`;
+  } else if (opts.practiceMode === 'TOPIC') {
+    const diffLabel =
+      opts.targetDifficulty && opts.targetDifficulty !== 'ALL'
+        ? ` [${COGNITIVE_LABEL_MAP[opts.targetDifficulty]}]`
+        : '';
+    title = `Luyện Tập Chuyên Đề (${questions.length} Câu)${diffLabel} - ${opts.topicTagFilter || chapter.name}`;
+  } else if ((level as string)?.toUpperCase() === 'ASSESSMENT') {
+    title = `Đề Khảo Thí Đánh Giá Năng Lực (${questions.length} Câu) - Lớp ${grade}`;
   } else {
-    // MIXED: Cả Trắc Nghiệm & Tự Luận
-    const targetQuizCount =
-      opts.quizCount && opts.quizCount >= 5 && opts.quizCount <= 30 ? opts.quizCount : 10;
-    const targetEssayCount =
-      opts.essayCount && opts.essayCount >= 1 && opts.essayCount <= 10 ? opts.essayCount : 2;
-
-    const generated: ExamQuestion[] = [];
-    const quizScorePerQ = Math.round((7 / targetQuizCount) * 100) / 100;
-    for (let i = 0; i < targetQuizCount; i++) {
-      const baseQ = baseQuiz[i % baseQuiz.length];
-      const repIdx = Math.floor(i / baseQuiz.length);
-      generated.push({
-        ...baseQ,
-        id: repIdx > 0 ? `${baseQ.id}_tn_v${repIdx + 1}` : `${baseQ.id}_tn`,
-        title: `Câu ${i + 1} (Trắc nghiệm): ${baseQ.title.replace(/^Câu \d+(\s*\([^)]*\))?:\s*/, '')}`,
-        score: quizScorePerQ,
-      });
-    }
-
-    const essayScorePerQ = Math.round((3 / targetEssayCount) * 100) / 100;
-    for (let j = 0; j < targetEssayCount; j++) {
-      const baseQ = baseEssay[j % baseEssay.length];
-      const repIdx = Math.floor(j / baseEssay.length);
-      generated.push({
-        ...baseQ,
-        id: repIdx > 0 ? `${baseQ.id}_tl_v${repIdx + 1}` : `${baseQ.id}_tl`,
-        title: `Câu ${targetQuizCount + j + 1} (Tự luận): ${baseQ.title.replace(/^Câu \d+(\s*\([^)]*\))?:\s*/, '')}`,
-        score: essayScorePerQ,
-      });
-    }
-
-    questions = generated;
-    duration = opts.durationMinutes || 45;
-    title = `Đề Luyện Tổng Hợp (${targetQuizCount} TN + ${targetEssayCount} TL) - ${chapter.name}`;
+    title = `Đề Luyện Trắc Nghiệm (${questions.length} Câu) - ${chapter.name}`;
   }
 
   const totalPoints = questions.reduce((sum, q) => sum + q.score, 0);
@@ -424,12 +2832,15 @@ export function getPracticeExam(
   return {
     id: `exam-${subjectSlug}-${level.toLowerCase()}-g${grade}-ch${chapterId}-${format.toLowerCase()}`,
     subjectSlug,
-    subjectName: subjectSlug === 'toan-hoc' ? 'Toán Học' : 'Môn Học K-12',
+    subjectName: subjectLabel,
     level,
     grade,
     chapterId,
-    chapterName: chapter.name,
+    chapterName: opts.practiceMode === 'MOCK_EXAM' ? `Tổng hợp toàn bộ chương trình ${subjectLabel} Lớp ${grade}` : chapter.name,
     format,
+    practiceMode: opts.practiceMode,
+    targetDifficulty: opts.targetDifficulty,
+    topicTagFilter: opts.topicTagFilter,
     title,
     durationMinutes: duration,
     totalPoints: Math.round(totalPoints * 10) / 10,
