@@ -30,6 +30,8 @@ import {
   Sparkles,
   User,
   Activity,
+  Newspaper,
+  Trophy,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth.store';
@@ -68,6 +70,20 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Quản Lý Ma Trận Đề Thi',
     href: '/admin/exams',
     icon: <FileCheck2 className="w-5 h-5" />,
+    roles: ['SUPER_ADMIN'],
+  },
+  {
+    label: 'Tin Tức & Bài Viết',
+    href: '/admin/news',
+    icon: <Newspaper className="w-5 h-5" />,
+    badge: 'CMS',
+    roles: ['SUPER_ADMIN'],
+  },
+  {
+    label: 'Bảng Xếp Hạng & Mùa Giải',
+    href: '/admin/leaderboard',
+    icon: <Trophy className="w-5 h-5 text-amber-500" />,
+    badge: 'Mùa 1',
     roles: ['SUPER_ADMIN'],
   },
   {

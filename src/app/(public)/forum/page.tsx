@@ -118,7 +118,7 @@ export default function ForumPage() {
     let isMounted = true;
     async function fetchPosts() {
       try {
-        const res = await fetch('http://localhost:3005/api/v1/forum/posts');
+        const res = await fetch('/api/v1/forum/posts');
         if (!res.ok) return;
         const json = await res.json();
         if (json?.data && Array.isArray(json.data) && json.data.length > 0) {

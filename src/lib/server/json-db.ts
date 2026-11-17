@@ -15,6 +15,8 @@ export const DB_COLLECTIONS = [
   'gradedSubmissions',
   'offlineSubmissions',
   'generatedQuestions',
+  'newsCategories',
+  'newsArticles',
 ] as const;
 
 export type DbCollection = (typeof DB_COLLECTIONS)[number];

@@ -212,7 +212,7 @@ export function ForumCommentSection({
       try {
         const idOrSlug = postSlug || postId;
         const res = await fetch(
-          `http://localhost:3005/api/v1/forum/posts/${idOrSlug}/comments?sort=best`
+          `/api/v1/forum/posts/${idOrSlug}/comments?sort=best`
         );
         if (!res.ok) return;
         const json = await res.json();
@@ -364,7 +364,7 @@ export function ForumCommentSection({
   const handleDeleteComment = async (commentId: string, parentId?: string | null) => {
     if (!confirm('Bạn có chắc chắn muốn xóa bình luận / lời giải này không?')) return;
     try {
-      await fetch(`http://localhost:3005/api/v1/forum/comments/${commentId}`, {
+      await fetch(`/api/v1/forum/comments/${commentId}`, {
         method: 'DELETE',
       });
     } catch {
@@ -403,7 +403,7 @@ export function ForumCommentSection({
     try {
       const idOrSlug = postSlug || postId;
       const res = await fetch(
-        `http://localhost:3005/api/v1/forum/posts/${idOrSlug}/comments`,
+        `/api/v1/forum/posts/${idOrSlug}/comments`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -479,7 +479,7 @@ export function ForumCommentSection({
     try {
       const idOrSlug = postSlug || postId;
       const res = await fetch(
-        `http://localhost:3005/api/v1/forum/posts/${idOrSlug}/comments`,
+        `/api/v1/forum/posts/${idOrSlug}/comments`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
