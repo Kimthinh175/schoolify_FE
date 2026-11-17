@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import { usePathname } from 'next/navigation';
-import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 
 export function PublicShell({ children }: { children: React.ReactNode }) {
@@ -33,7 +32,6 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
   if (isHome) {
     return (
       <div className="w-full min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-        <Navbar />
         {children}
         <Footer />
       </div>
@@ -42,8 +40,7 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-      <Navbar />
-      {/* pt-20 để bù cho fixed header cao 80px cho các trang con */}
+      {/* pt-20 để bù cho fixed global header cao 80px cho các trang con */}
       <main className="flex-1 pt-20">
         {children}
       </main>

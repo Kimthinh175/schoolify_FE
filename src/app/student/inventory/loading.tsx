@@ -1,5 +1,5 @@
-import { RewardsPageSkeleton } from '@/components/skeletons/page-skeletons';
+import { InventoryPageSkeleton } from "@/components/skeletons/page-skeletons";
 
-export default function StudentInventoryLoading() {
-  return <RewardsPageSkeleton />;
+export default function InventoryLoading() {
+  return <InventoryPageSkeleton />;
 }

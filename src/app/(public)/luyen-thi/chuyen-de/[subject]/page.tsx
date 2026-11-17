@@ -407,6 +407,7 @@ export default function ChuyenDeSubjectPage() {
         subjectSlug={fullSubjectSlug}
         subjectName={displaySubjectName}
         grade={diagnosticGate.grade}
+        onClose={() => router.push('/luyen-thi')}
         onReadyToEnterExam={(examUrl) => {
           router.push(examUrl);
         }}

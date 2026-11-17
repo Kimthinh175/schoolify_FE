@@ -4,7 +4,6 @@ import * as React from 'react';
 import {
   Sparkles,
   GraduationCap,
-  CalendarClock,
   ArrowRight,
   CheckCircle2,
   User as UserIcon,
@@ -197,26 +196,6 @@ export function GradeOnboardingModal({
       </div>
 
       <form onSubmit={handleSubmit} className="p-5 sm:p-7 space-y-5">
-        {/* Kỳ học tự động tính theo thời gian thực */}
-        <div className="flex flex-wrap items-center justify-between gap-2 p-3.5 rounded-2xl bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/15 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-              <CalendarClock className="w-5 h-5" />
-            </div>
-            <div className="min-w-0">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
-                Kỳ học tính theo thời gian thực
-              </div>
-              <div className="text-sm font-extrabold text-slate-900 dark:text-white break-words">
-                {semesterInfo.badgeText}
-              </div>
-            </div>
-          </div>
-          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500 text-white shrink-0">
-            Tự động đồng bộ
-          </span>
-        </div>
-
         {/* Nhập tên (Bắt buộc ở GUEST_TRIAL, hiển thị gọn nếu user chưa đặt tên rõ ở FIRST_LOGIN) */}
         {mode === 'GUEST_TRIAL' && (
           <div className="space-y-1.5">
@@ -224,7 +203,7 @@ export function GradeOnboardingModal({
               htmlFor="onboarding-fullname"
               className="block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200"
             >
-              Tên gọi của bạn <span className="text-rose-500">*</span>
+              Tên của bạn <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
               <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />

@@ -1,4 +1,4 @@
-import { StudentAccountSkeleton } from '@/components/skeletons/page-skeletons';
+import { StudentAccountSkeleton } from "@/components/skeletons/page-skeletons";
 
 export default function StudentLoading() {
   return <StudentAccountSkeleton />;

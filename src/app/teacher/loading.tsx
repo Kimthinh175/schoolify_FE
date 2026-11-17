@@ -1,5 +1,5 @@
-import { AdminDashboardSkeleton } from '@/components/skeletons/page-skeletons';
+import { TeacherDashboardSkeleton } from "@/components/skeletons/page-skeletons";
 
 export default function TeacherLoading() {
-  return <AdminDashboardSkeleton />;
+  return <TeacherDashboardSkeleton />;
 }

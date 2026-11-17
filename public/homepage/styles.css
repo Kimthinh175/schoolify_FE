@@ -1639,6 +1639,19 @@ html.preloader-cached body.is-loading .sky-hero__bottom {
   width: clamp(250px, 28vw, 390px);
   margin-bottom: -10px;
   will-change: transform;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+#heroShipRig:focus-visible {
+  outline: 2px solid #00D4FF;
+  outline-offset: 6px;
+  border-radius: 18px;
+}
+
+#heroShipRig:hover .hero-glider-svg,
+#heroShipRig:focus-visible .hero-glider-svg {
+  filter: drop-shadow(0 0 24px rgba(0, 212, 255, 0.5));
 }
 
 @media (max-width: 767px) {
@@ -1652,6 +1665,7 @@ html.preloader-cached body.is-loading .sky-hero__bottom {
   width: 100%;
   height: auto;
   overflow: visible;
+  transition: filter 0.22s ease;
 }
 
 .glider-body-float {
@@ -1676,6 +1690,14 @@ html.preloader-cached body.is-loading .sky-hero__bottom {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  pointer-events: none;
+}
+
+.sky-hero__headline a,
+.sky-hero__headline button,
+.sky-hero__bottom a,
+.sky-hero__bottom button {
+  pointer-events: auto;
 }
 
 @media (min-width: 768px) {

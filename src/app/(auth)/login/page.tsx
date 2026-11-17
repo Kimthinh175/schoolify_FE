@@ -7,6 +7,7 @@ import {
   BookOpen,
   ArrowRight,
 } from 'lucide-react';
+import { AuthCardSkeleton } from '@/components/skeletons/page-skeletons';
 
 const LOGIN_PORTALS = [
   {
@@ -104,13 +105,7 @@ function CentralLoginForm() {
 
 export default function CentralLoginPage() {
   return (
-    <React.Suspense
-      fallback={
-        <div className="max-w-2xl w-full my-auto text-center text-slate-400 text-xs">
-          Đang tải cổng đăng nhập...
-        </div>
-      }
-    >
+    <React.Suspense fallback={<AuthCardSkeleton />}>
       <CentralLoginForm />
     </React.Suspense>
   );

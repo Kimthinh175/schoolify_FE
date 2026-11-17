@@ -22,7 +22,6 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { MOCK_COURSES, MOCK_QUESTION_BANKS } from '@/services/mock/data';
 import { QuizPracticePanel } from '@/components/features/student/QuizPracticePanel';
-import { Navbar } from '@/components/layout/Navbar';
 
 export default function FocusLearningPlayerPage() {
   const params = useParams();
@@ -46,9 +45,6 @@ export default function FocusLearningPlayerPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white flex flex-col pt-20 transition-colors">
-      {/* ── HEADER GIỐNG TRANG CHỦ ── */}
-      <Navbar />
-
       {/* Top Focus Sub-bar */}
       <div className="sticky top-20 z-20 px-4 sm:px-6 py-2.5 bg-white/95 dark:bg-slate-950/95 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between backdrop-blur-md">
         <div className="flex items-center gap-3 min-w-0">
