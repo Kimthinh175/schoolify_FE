@@ -87,6 +87,13 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['SUPER_ADMIN'],
   },
   {
+    label: 'Diễn Đàn & Kiểm Duyệt',
+    href: '/admin/forum',
+    icon: <MessageSquare className="w-5 h-5 text-[#00B8DD]" />,
+    badge: 'Mới',
+    roles: ['SUPER_ADMIN'],
+  },
+  {
     label: 'Gói Đăng Ký',
     href: '/admin/packages',
     icon: <Package className="w-5 h-5" />,
@@ -248,11 +255,13 @@ export function AppSidebar({
                 <img
                   src="/schoolify-logo.png"
                   alt="Schoolify"
+                  suppressHydrationWarning
                   className="h-11 sm:h-12 w-auto object-contain dark:hidden"
                 />
                 <img
                   src="/am-ban.png"
                   alt="Schoolify"
+                  suppressHydrationWarning
                   className="h-11 sm:h-12 w-auto object-contain hidden dark:block"
                 />
               </div>

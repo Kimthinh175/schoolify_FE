@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   Image as ImageIcon,
   X,
-  Upload,
   Send,
   Sparkles,
   Eye,
@@ -17,9 +16,11 @@ import {
   ShieldCheck,
   Clock,
   HelpCircle,
-  Pin,
   Lock,
   Trash2,
+  Flag,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,9 @@ import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { MathRenderer } from '@/components/ui/math-renderer';
 import { cn } from '@/lib/utils';
+import { useNotificationsStore } from '@/store/notifications.store';
+import { useAuthStore } from '@/store/auth.store';
+import { ReportModal } from './ReportModal';
 
 export type ForumReactionType = 'LIKE' | 'HELPFUL' | 'LOVE' | 'HAHA';
 
@@ -71,9 +75,12 @@ export interface ForumCommentSectionProps {
   postId: string;
   postSlug?: string;
   postTitle?: string;
+  postAuthorId?: string;
   className?: string;
   initialComments?: ForumCommentItem[];
   isLocked?: boolean;
+  isLoggedIn?: boolean;
+  currentUser?: { id?: string; name?: string; role?: string } | null;
 }
 
 // Các mẫu công thức toán học nhanh để học sinh chèn vào lời giải KaTeX
@@ -89,104 +96,127 @@ const QUICK_MATH_SNIPPETS = [
   { label: 'Hệ pt', insert: '$$\\begin{cases} x + y = 1 \\\\ x - y = 3 \\end{cases}$$', desc: 'Hệ phương trình' },
 ];
 
-const DEFAULT_SAMPLE_COMMENTS: ForumCommentItem[] = [
-  {
-    id: 'cmt-accepted-01',
-    postId: 'sample-post',
-    parentId: null,
-    depth: 1,
-    author: {
-      id: 'teacher-hung',
-      name: 'ThS. Nguyễn Văn Hùng',
-      avatar: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=120&auto=format&fit=crop&q=80',
-      role: 'Giáo viên Toán',
-      grade: 'Tổ Toán THPT Chuyên',
-    },
-    content:
-      '**Lời giải chi tiết:**\n\nTa có đạo hàm hàm số bậc ba:\n$$y\' = 3x^2 - 6mx + 3(2m - 1) = 3(x - 1)(x - 2m + 1)$$\n\nĐể hàm số đồng biến trên khoảng $(0; +\\infty)$ thì $y\' \\ge 0, \\forall x \\in (0; +\\infty)$, tương đương:\n$$2m(x - 1) \\le x^2 - 1 = (x - 1)(x + 1), \\quad \\forall x > 0$$\n\nVì biểu thức $(x - 1)$ đổi dấu khi đi qua điểm $x = 1 \\in (0; +\\infty)$, nên để bất phương trình nghiệm đúng với mọi $x > 0$ thì hai nghiệm của $y\' = 0$ phải trùng nhau tại $x = 1$ (nghiệm kép):\n$$2m - 1 = 1 \\iff m = 1$$\n\nKhi $m = 1$, ta có $y\' = 3(x - 1)^2 \\ge 0, \\forall x \\in \\mathbb{R}$ (thỏa mãn yêu cầu bài toán). Vậy **$m = 1$** là giá trị duy nhất cần tìm.',
-    attachments: null,
-    timeAgo: '45 phút trước',
-    likesCount: 38,
-    isLiked: true,
-    isAccepted: true,
-    replies: [
-      {
-        id: 'reply-01-01',
-        postId: 'sample-post',
-        parentId: 'cmt-accepted-01',
-        depth: 2,
-        replyToUserName: 'ThS. Nguyễn Văn Hùng',
-        author: {
-          id: 'student-minh',
-          name: 'Nguyễn Minh Anh',
-          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80',
-          role: 'Học sinh',
-          grade: 'Lớp 12A1 KHTN',
-        },
-        content:
-          'Em cảm ơn thầy nhiều ạ! Cách phân tích thành nhân tử $(x - 1)(x - 2m + 1)$ rồi biện luận nghiệm kép ở điểm đổi dấu $x = 1$ nhanh và dễ hiểu hơn cách em lập bảng biến thiên rất nhiều ạ.',
-        timeAgo: '30 phút trước',
-        likesCount: 12,
-        isLiked: false,
-      },
-      {
-        id: 'reply-01-02',
-        postId: 'sample-post',
-        parentId: 'cmt-accepted-01',
-        depth: 2,
-        replyToUserName: 'Nguyễn Minh Anh',
-        author: {
-          id: 'student-bao',
-          name: 'Trần Gia Bảo',
-          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
-          role: 'Học sinh',
-          grade: 'Lớp 12 Lý',
-        },
-        content:
-          'Chuẩn luôn, bài này nếu cô lập $m$ chia trường hợp $x \\in (0; 1)$ và $x \\in (1; +\\infty)$ cũng ra $m \\ge 1$ và $m \\le 1 \\implies m = 1$ nhưng dài dòng hơn.',
-        timeAgo: '20 phút trước',
-        likesCount: 5,
-        isLiked: false,
-      },
-    ],
-  },
-  {
-    id: 'cmt-normal-02',
-    postId: 'sample-post',
-    parentId: null,
-    depth: 1,
-    author: {
-      id: 'teacher-nam',
-      name: 'Thầy Lê Hoàng Nam',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
-      role: 'Giáo viên',
-      grade: 'Tổ Toán',
-    },
-    content:
-      'Ngoài ra các em có thể dùng phương pháp Tam thức bậc hai $g(x) = x^2 - 2mx + 2m - 1$:\n- TH1: $\\Delta\' = m^2 - 2m + 1 = (m - 1)^2 \\le 0 \\iff m = 1$.\n- TH2: $\\Delta\' > 0$, hai nghiệm $x_1 < x_2 \\le 0$ (vô lý vì $x_1 = 1 > 0$).\nDo đó chỉ có $m = 1$.',
-    attachments: null,
-    timeAgo: '1 giờ trước',
-    likesCount: 16,
-    isLiked: false,
-    isAccepted: false,
-    replies: [],
-  },
-];
-
 export function ForumCommentSection({
   postId,
   postSlug,
   postTitle,
+  postAuthorId,
   className,
   initialComments,
   isLocked = false,
+  currentUser,
 }: ForumCommentSectionProps) {
-  const [comments, setComments] = React.useState<ForumCommentItem[]>(
-    initialComments && initialComments.length > 0
-      ? initialComments
-      : DEFAULT_SAMPLE_COMMENTS
+  const { user: authUser, currentRole } = useAuthStore();
+  const currentUserId = currentUser?.id || authUser?.id || 'seed-student-01';
+  const currentUserName = currentUser?.name || authUser?.fullname || 'Bạn (Học Sinh)';
+
+  const [postAuthorIdState, setPostAuthorIdState] = React.useState<string | undefined>(postAuthorId);
+  const [commentError, setCommentError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (postAuthorId) {
+      setPostAuthorIdState(postAuthorId);
+    }
+  }, [postAuthorId]);
+
+  const isPrivileged =
+    currentRole === 'SUPER_ADMIN' ||
+    currentRole === 'TEACHER' ||
+    currentRole === 'PRINCIPAL' ||
+    currentRole === 'HEAD_OF_DEPARTMENT' ||
+    (authUser as any)?.role === 'SUPER_ADMIN' ||
+    (authUser as any)?.role === 'ADMIN' ||
+    (authUser as any)?.role === 'TEACHER';
+
+  const effectivePostAuthorId = postAuthorId || postAuthorIdState;
+  const isPostAuthor = Boolean(
+    effectivePostAuthorId &&
+      (currentUserId === effectivePostAuthorId ||
+        (effectivePostAuthorId === 'seed-student-01' && currentUserName === 'Bạn (Học Sinh)'))
   );
-  const [isLockedState, setIsLockedState] = React.useState(isLocked);
+
+  // Chỉ Chủ bài viết hoặc Thầy cô / Quản trị viên mới có quyền công nhận Lời giải đúng
+  const canAcceptComment = isPostAuthor || isPrivileged;
+
+  const [highlightedCommentId, setHighlightedCommentId] = React.useState<string | null>(null);
+
+  const [comments, setComments] = React.useState<ForumCommentItem[]>(() => {
+    return initialComments && initialComments.length > 0 ? initialComments : [];
+  });
+
+  // Luôn đồng bộ khi initialComments thay đổi (khi mở bất kỳ câu nào trong 20 câu seed)
+  React.useEffect(() => {
+    if (initialComments && initialComments.length > 0) {
+      setComments(initialComments);
+    }
+  }, [initialComments]);
+
+  const updateAndPersistComments = React.useCallback(
+    (updater: (prev: ForumCommentItem[]) => ForumCommentItem[]) => {
+      setComments((prev) => {
+        const next = updater(prev);
+        if (typeof window !== 'undefined') {
+          try {
+            if (postSlug) {
+              localStorage.setItem(`schoolify_forum_comments_${postSlug}`, JSON.stringify(next));
+            }
+            if (postId) {
+              localStorage.setItem(`schoolify_forum_comments_${postId}`, JSON.stringify(next));
+            }
+          } catch {}
+        }
+        return next;
+      });
+    },
+    [postId, postSlug]
+  );
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const checkHashAndScroll = () => {
+      const hash = window.location.hash;
+      if (hash && hash.length > 1) {
+        const rawTarget = hash.replace(/^#/, '');
+        const targetCommentId = rawTarget.replace(/^comment-/, '');
+
+        const candidates = [
+          rawTarget,
+          `comment-${rawTarget}`,
+          targetCommentId,
+          `comment-${targetCommentId}`,
+        ];
+
+        let foundEl: HTMLElement | null = null;
+        for (const cid of candidates) {
+          const el = document.getElementById(cid);
+          if (el) {
+            foundEl = el;
+            setHighlightedCommentId(targetCommentId);
+            break;
+          }
+        }
+
+        if (foundEl) {
+          setTimeout(() => {
+            foundEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 300);
+          setTimeout(() => setHighlightedCommentId(null), 5000);
+        }
+      }
+    };
+
+    checkHashAndScroll();
+    window.addEventListener('hashchange', checkHashAndScroll);
+    window.addEventListener('schoolify:open-forum-post', checkHashAndScroll);
+    return () => {
+      window.removeEventListener('hashchange', checkHashAndScroll);
+      window.removeEventListener('schoolify:open-forum-post', checkHashAndScroll);
+    };
+  }, [postId, postSlug]);
+
+  const [lockedByApi, setLockedByApi] = React.useState(false);
+  const isLockedState = isLocked || lockedByApi;
   const [apiSuccessMessage, setApiSuccessMessage] = React.useState<string | null>(null);
   const [content, setContent] = React.useState('');
   const [activeTab, setActiveTab] = React.useState<'write' | 'preview'>('write');
@@ -196,16 +226,30 @@ export function ForumCommentSection({
   const [replyImages, setReplyImages] = React.useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [replyActiveTab, setReplyActiveTab] = React.useState<'write' | 'preview'>('write');
+  const [isUploadingImage, setIsUploadingImage] = React.useState(false);
+  const [isUploadingReplyImage, setIsUploadingReplyImage] = React.useState(false);
+  const [uploadProgressText, setUploadProgressText] = React.useState<string | null>(null);
+
+  const addNotification = useNotificationsStore((s) => s.addNotification);
+
+  // Modal báo cáo vi phạm
+  const [isReportModalOpen, setIsReportModalOpen] = React.useState(false);
+  const [reportTarget, setReportTarget] = React.useState<{
+    type: 'POST' | 'COMMENT';
+    id: string;
+    title?: string;
+  }>({ type: 'COMMENT', id: '' });
+
+  const handleOpenReport = (type: 'POST' | 'COMMENT', id: string, title?: string) => {
+    setReportTarget({ type, id, title });
+    setIsReportModalOpen(true);
+  };
 
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const replyFileInputRef = React.useRef<HTMLInputElement | null>(null);
   const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
 
-  React.useEffect(() => {
-    setIsLockedState(isLocked);
-  }, [isLocked]);
-
-  // Thử tải dữ liệu bình luận từ API Backend (Stack ngày 14/11)
+  // Thử tải dữ liệu bình luận từ API Backend
   React.useEffect(() => {
     let isMounted = true;
     async function fetchComments() {
@@ -216,53 +260,92 @@ export function ForumCommentSection({
         );
         if (!res.ok) return;
         const json = await res.json();
-        if (json?.data?.post?.is_locked !== undefined) {
-          setIsLockedState(Boolean(json.data.post.is_locked));
+        if (json?.data?.post?.is_locked !== undefined && isMounted) {
+          setLockedByApi(Boolean(json.data.post.is_locked));
+        }
+        if (json?.data?.post?.author_id) {
+          setPostAuthorIdState(json.data.post.author_id);
         }
         if (json?.data?.items && Array.isArray(json.data.items) && json.data.items.length > 0) {
           if (!isMounted) return;
-          const mapped: ForumCommentItem[] = json.data.items.map((item: any) => ({
-            id: item.id,
-            postId: item.post_id || postId,
-            parentId: item.parent_id || null,
-            depth: item.depth || 1,
-            author: {
-              name: item.author?.fullname || 'Thành viên Schoolify',
-              avatar: item.author?.avatar_url || undefined,
-              role: item.author?.role === 'TEACHER' ? 'Giáo viên' : 'Học sinh',
-              grade: item.author?.role === 'TEACHER' ? 'Tổ Chuyên Môn' : 'Lớp 12',
-            },
-            content: item.content || '',
-            attachments: Array.isArray(item.attachments) ? item.attachments : null,
-            timeAgo: 'Gần đây',
-            likesCount: item.likes_count || item.reaction_summary?.total || 0,
-            isLiked: Boolean(item.reaction_summary?.user_reaction),
-            isAccepted: Boolean(item.is_accepted || item.is_pinned_best_answer),
-            replies: Array.isArray(item.replies)
-              ? item.replies.map((r: any) => ({
-                  id: r.id,
-                  postId: r.post_id || postId,
-                  parentId: r.parent_id,
-                  depth: 2,
-                  replyToUserName: r.reply_to_user?.fullname || undefined,
+          const mapped: ForumCommentItem[] = json.data.items.map((item: Record<string, unknown>) => {
+            const rawAuthor = (item.author as Record<string, unknown>) || {};
+            const rawReaction = (item.reaction_summary as Record<string, unknown>) || {};
+            const rawReplies = Array.isArray(item.replies)
+              ? (item.replies as Record<string, unknown>[])
+              : [];
+
+            return {
+              id: String(item.id || ''),
+              postId: String(item.post_id || item.postId || postId),
+              parentId: item.parent_id ? String(item.parent_id) : null,
+              depth: (item.depth === 2 ? 2 : 1) as 1 | 2,
+              author: {
+                name: String(rawAuthor.fullname || rawAuthor.name || 'Thành viên Schoolify'),
+                avatar: (rawAuthor.avatar_url || rawAuthor.avatar) as string | undefined,
+                role:
+                  rawAuthor.role === 'TEACHER' || rawAuthor.role === 'Giáo viên'
+                    ? 'Giáo viên'
+                    : String(rawAuthor.role || 'Học sinh'),
+                grade:
+                  rawAuthor.role === 'TEACHER'
+                    ? 'Tổ Chuyên Môn'
+                    : String(rawAuthor.grade || 'Lớp 12'),
+              },
+              content: String(item.content || ''),
+              attachments: Array.isArray(item.attachments)
+                ? (item.attachments as string[])
+                : null,
+              timeAgo: String(item.timeAgo || 'Gần đây'),
+              likesCount: Number(
+                item.likes_count ?? item.likesCount ?? rawReaction.total ?? 0
+              ),
+              isLiked: Boolean(item.isLiked ?? rawReaction.user_reaction),
+              isAccepted: Boolean(
+                item.is_accepted ?? item.isAccepted ?? item.is_pinned_best_answer
+              ),
+              replies: rawReplies.map((r: Record<string, unknown>) => {
+                const rAuthor = (r.author as Record<string, unknown>) || {};
+                const rReplyTo = (r.reply_to_user as Record<string, unknown>) || {};
+                return {
+                  id: String(r.id || ''),
+                  postId: String(r.post_id || r.postId || postId),
+                  parentId: String(r.parent_id || r.parentId || item.id || ''),
+                  depth: 2 as const,
+                  replyToUserName: (r.replyToUserName || rReplyTo.fullname) as
+                    | string
+                    | undefined,
                   author: {
-                    name: r.author?.fullname || 'Học sinh',
-                    avatar: r.author?.avatar_url || undefined,
-                    role: r.author?.role === 'TEACHER' ? 'Giáo viên' : 'Học sinh',
-                    grade: 'Lớp 12',
+                    name: String(rAuthor.fullname || rAuthor.name || 'Học sinh'),
+                    avatar: (rAuthor.avatar_url || rAuthor.avatar) as string | undefined,
+                    role:
+                      rAuthor.role === 'TEACHER' || rAuthor.role === 'Giáo viên'
+                        ? 'Giáo viên'
+                        : String(rAuthor.role || 'Học sinh'),
+                    grade: String(rAuthor.grade || 'Lớp 12'),
                   },
-                  content: r.content || '',
-                  attachments: Array.isArray(r.attachments) ? r.attachments : null,
-                  timeAgo: 'Gần đây',
-                  likesCount: r.likes_count || 0,
-                  isLiked: false,
-                }))
-              : [],
-          }));
-          setComments(mapped);
+                  content: String(r.content || ''),
+                  attachments: Array.isArray(r.attachments)
+                    ? (r.attachments as string[])
+                    : null,
+                  timeAgo: String(r.timeAgo || 'Gần đây'),
+                  likesCount: Number(r.likes_count ?? r.likesCount ?? 0),
+                  isLiked: Boolean(r.isLiked),
+                };
+              }),
+            };
+          });
+          setComments((prev) => {
+            const localOnly = prev.filter(
+              (p) =>
+                !mapped.some((m) => m.id === p.id) &&
+                (p.id.startsWith('user-') || p.id.startsWith('reply-') || p.id.startsWith('cmt-'))
+            );
+            return [...localOnly, ...mapped];
+          });
         }
       } catch {
-        // Fallback sang danh sách mẫu
+        // Fallback giữ nguyên initialComments
       }
     }
 
@@ -284,30 +367,85 @@ export function ForumCommentSection({
     }
   };
 
-  // Xử lý chọn ảnh từ máy (chụp vở bài giải)
-  const handleImageUpload = (
+  // Xử lý chọn ảnh từ máy (chụp vở bài giải <= 5MB) và tải lên lưu trữ
+  const handleImageUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
     isReply = false
   ) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    Array.from(files).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-        if (result) {
-          if (isReply) {
-            setReplyImages((prev) => [...prev, result]);
-          } else {
-            setAttachedImages((prev) => [...prev, result]);
-          }
-        }
-      };
-      reader.readAsDataURL(file);
+    const MAX_BYTES = 5 * 1024 * 1024; // 5MB
+    const fileList = Array.from(files).filter((file) => {
+      if (file.size > MAX_BYTES) {
+        alert(`Ảnh "${file.name}" vượt quá dung lượng tối đa 5MB cho phép!`);
+        return false;
+      }
+      return true;
     });
 
     e.target.value = '';
+    if (fileList.length === 0) return;
+
+    if (isReply) {
+      setIsUploadingReplyImage(true);
+    } else {
+      setIsUploadingImage(true);
+      setUploadProgressText(`Đang tải ${fileList.length} ảnh lên...`);
+    }
+
+    try {
+      for (let i = 0; i < fileList.length; i++) {
+        const file = fileList[i];
+        if (!isReply) {
+          setUploadProgressText(`Đang tải ảnh ${i + 1}/${fileList.length}...`);
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const res = await fetch('/api/v1/upload/cloudinary', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const json = await res.json().catch(() => null);
+
+        if (json?.success && json?.url) {
+          const cloudinaryUrl = json.url;
+          if (isReply) {
+            setReplyImages((prev) => [...prev, cloudinaryUrl]);
+          } else {
+            setAttachedImages((prev) => [...prev, cloudinaryUrl]);
+          }
+        } else {
+          // Fallback FileReader an toàn nếu gặp sự cố mạng
+          const fallbackData = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => resolve(ev.target?.result as string);
+            reader.readAsDataURL(file);
+          });
+          if (fallbackData) {
+            if (isReply) {
+              setReplyImages((prev) => [...prev, fallbackData]);
+            } else {
+              setAttachedImages((prev) => [...prev, fallbackData]);
+            }
+          }
+        }
+      }
+
+      if (!isReply) {
+        setApiSuccessMessage('Đã đính kèm ảnh bài giải thành công!');
+        setTimeout(() => setApiSuccessMessage(null), 3500);
+      }
+    } catch {
+      // offline fallback
+    } finally {
+      setIsUploadingImage(false);
+      setIsUploadingReplyImage(false);
+      setUploadProgressText(null);
+    }
   };
 
   const handleRemoveImage = (index: number, isReply = false) => {
@@ -318,9 +456,9 @@ export function ForumCommentSection({
     }
   };
 
-  // Toggle Hữu ích (Like/ThumbsUp) cho lời giải cấp 1
-  const handleToggleLike = (commentId: string) => {
-    setComments((prev) =>
+  // Toggle Hữu ích (ThumbsUp) cho lời giải cấp 1 (Atomic update không race condition)
+  const handleToggleLike = async (commentId: string) => {
+    updateAndPersistComments((prev) =>
       prev.map((c) => {
         if (c.id === commentId) {
           const nextIsLiked = !c.isLiked;
@@ -333,11 +471,25 @@ export function ForumCommentSection({
         return c;
       })
     );
+
+    try {
+      await fetch('http://localhost:3005/api/v1/forum/reactions/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetType: 'COMMENT',
+          targetId: commentId,
+          userId: 'seed-student-01',
+        }),
+      });
+    } catch {
+      // offline fallback
+    }
   };
 
   // Toggle Hữu ích cho phản hồi cấp 2
-  const handleToggleReplyLike = (rootCommentId: string, replyId: string) => {
-    setComments((prev) =>
+  const handleToggleReplyLike = async (rootCommentId: string, replyId: string) => {
+    updateAndPersistComments((prev) =>
       prev.map((c) => {
         if (c.id === rootCommentId && c.replies) {
           return {
@@ -358,9 +510,99 @@ export function ForumCommentSection({
         return c;
       })
     );
+
+    try {
+      await fetch('http://localhost:3005/api/v1/forum/reactions/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetType: 'COMMENT',
+          targetId: replyId,
+          userId: 'seed-student-01',
+        }),
+      });
+    } catch {
+      // offline fallback
+    }
   };
 
-  // Xóa bình luận / phản hồi an toàn (Stack #16)
+  // Chốt Lời giải chuẩn nhất & Thưởng Ngọc Tri Thức (kèm chống gian lận)
+  const handleAcceptComment = async (commentId: string) => {
+    if (!canAcceptComment) {
+      alert('Chỉ chủ bài viết hoặc Thầy cô / Quản trị viên mới có quyền công nhận Lời giải đúng.');
+      return;
+    }
+
+    const targetComment = comments.find((c) => c.id === commentId);
+    const isOwn = Boolean(
+      targetComment &&
+        (targetComment.author.id === currentUserId ||
+          targetComment.author.name === currentUserName ||
+          (currentUserName === 'Bạn (Học Sinh)' && targetComment.author.name === 'Bạn (Học Sinh)'))
+    );
+
+    if (isOwn) {
+      alert(
+        'Cảnh báo chống gian lận điểm thưởng: Bạn không thể tự công nhận câu trả lời của chính mình để nhận thưởng Ngọc Tri Thức!'
+      );
+      return;
+    }
+
+    try {
+      const idOrSlug = postSlug || postId;
+      const res = await fetch(
+        `/api/v1/forum/posts/${idOrSlug}/accept-comment/${commentId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: currentUserId,
+            rewardGems: 10,
+          }),
+        }
+      );
+
+      const json = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        alert(
+          json?.message ||
+            'Không thể công nhận lời giải này (lỗi quyền hạn hoặc chống gian lận).'
+        );
+        return;
+      }
+
+      const isAcceptedNow = Boolean(json?.data?.is_accepted);
+      updateAndPersistComments((prev) =>
+        prev.map((c) => ({
+          ...c,
+          isAccepted: c.id === commentId ? isAcceptedNow : false,
+        }))
+      );
+
+      if (isAcceptedNow) {
+        setApiSuccessMessage(
+          '🎉 Chúc mừng bạn đã công nhận lời giải đúng! Đã cộng thưởng +10 Ngọc Tri Thức cho tác giả bài giải.'
+        );
+        const targetSlugOrId = postSlug || postId;
+        addNotification({
+          id: `notif-reward-${Date.now()}`,
+          type: 'success',
+          title: '🎉 Nhận thưởng +10 Ngọc Tri Thức!',
+          description: `Lời giải trong bài "${postTitle || 'Hỏi đáp diễn đàn'}" đã được công nhận là Lời giải chuẩn nhất (+10 Ngọc).`,
+          link: `/forum?post=${targetSlugOrId}#comment-${commentId}`,
+          category: 'FORUM_REWARD',
+        });
+      } else {
+        setApiSuccessMessage('Đã hủy công nhận lời giải đúng.');
+      }
+      setTimeout(() => setApiSuccessMessage(null), 4000);
+    } catch {
+      // fallback
+    }
+  };
+
+  // Xóa bình luận / phản hồi an toàn
   const handleDeleteComment = async (commentId: string, parentId?: string | null) => {
     if (!confirm('Bạn có chắc chắn muốn xóa bình luận / lời giải này không?')) return;
     try {
@@ -372,7 +614,7 @@ export function ForumCommentSection({
     }
 
     if (parentId) {
-      setComments((prev) =>
+      updateAndPersistComments((prev) =>
         prev.map((c) => {
           if (c.id === parentId && c.replies) {
             return {
@@ -384,18 +626,45 @@ export function ForumCommentSection({
         })
       );
     } else {
-      setComments((prev) => prev.filter((c) => c.id !== commentId));
+      updateAndPersistComments((prev) => prev.filter((c) => c.id !== commentId));
     }
   };
 
-  // Gửi lời giải mới (Cấp 1) - Stack #16: Gửi API kèm cập nhật comments_count & bắn Notification
+  // Gửi lời giải mới (Cấp 1): Gửi API kèm cập nhật comments_count & bắn Notification
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim() && attachedImages.length === 0) return;
+
     if (isLockedState) {
       alert('Bài viết này đã bị Quản trị viên khóa bình luận (is_locked = true).');
       return;
     }
+
+    const trimmed = content.trim();
+    const hasAttachments = attachedImages.length > 0;
+
+    // Bộ lọc kiểm tra chất lượng lời giải & chống bình luận tào lao / spam
+    if (!hasAttachments) {
+      if (!trimmed) {
+        setCommentError('Vui lòng nhập nội dung lời giải chi tiết hoặc đính kèm ảnh bài giải.');
+        return;
+      }
+      if (trimmed.length < 15) {
+        setCommentError(
+          'Lời giải quá ngắn hoặc chưa rõ ràng (tối thiểu 15 ký tự). Vui lòng trình bày chi tiết các bước biến đổi hoặc giải thích cụ thể để hỗ trợ bạn học nhé!'
+        );
+        return;
+      }
+      if (/(.)\1{5,}/.test(trimmed)) {
+        setCommentError('Nội dung chứa chuỗi ký tự lặp vô nghĩa (spam). Vui lòng nhập lời giải nghiêm túc!');
+        return;
+      }
+      const spamPatterns = ['asdfgh', 'qwerty', '123456', 'aaaaaa', 'bbbbbb', 'test test'];
+      if (spamPatterns.some((p) => trimmed.toLowerCase().includes(p))) {
+        setCommentError('Nội dung chứa ký tự gõ phím vô nghĩa (spam). Vui lòng nhập lời giải chi tiết!');
+        return;
+      }
+    }
+    setCommentError(null);
 
     setIsSubmitting(true);
     let createdCommentId = `user-cmt-${Date.now()}`;
@@ -408,7 +677,7 @@ export function ForumCommentSection({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            content: content.trim(),
+            content: trimmed,
             attachments: attachedImages.length > 0 ? attachedImages : undefined,
           }),
         }
@@ -422,7 +691,11 @@ export function ForumCommentSection({
             json?.message ||
               'Bài viết này đã bị Admin khóa bình luận (is_locked = true).'
           );
-          setIsLockedState(true);
+          setLockedByApi(true);
+          setIsSubmitting(false);
+          return;
+        } else if (res.status === 400 && json?.message) {
+          setCommentError(json.message);
           setIsSubmitting(false);
           return;
         }
@@ -443,14 +716,15 @@ export function ForumCommentSection({
       parentId: null,
       depth: 1,
       author: {
-        id: 'seed-student-01',
-        name: 'Bạn (Học Sinh)',
+        id: currentUserId,
+        name: currentUserName,
         avatar:
+          authUser?.avatar_url ||
           'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
-        role: 'Học sinh',
+        role: currentRole === 'TEACHER' ? 'Giáo viên' : 'Học sinh',
         grade: 'Lớp 12',
       },
-      content: content.trim(),
+      content: trimmed,
       attachments: attachedImages.length > 0 ? [...attachedImages] : null,
       timeAgo: 'Vừa xong',
       likesCount: 1,
@@ -459,19 +733,65 @@ export function ForumCommentSection({
       replies: [],
     };
 
-    setComments((prev) => [newComment, ...prev]);
+    updateAndPersistComments((prev) => [newComment, ...prev]);
     setContent('');
     setAttachedImages([]);
     setActiveTab('write');
     setIsSubmitting(false);
+
+    // Kích hoạt viền sáng nổi bật và tự động cuộn tới lời giải vừa đăng
+    setHighlightedCommentId(createdCommentId);
+    setTimeout(() => {
+      const el =
+        document.getElementById(`comment-${createdCommentId}`) ||
+        document.getElementById(createdCommentId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 250);
+    setTimeout(() => setHighlightedCommentId(null), 5000);
+
+    const targetSlugOrId = postSlug || postId;
+    addNotification({
+      id: `notif-cmt-${Date.now()}`,
+      type: 'info',
+      title: '💬 Bạn vừa gửi lời giải mới',
+      description: `Đã gửi lời giải cho bài viết "${postTitle || 'Hỏi đáp diễn đàn'}".`,
+      link: `/forum?post=${targetSlugOrId}#comment-${createdCommentId}`,
+      category: 'FORUM_COMMENT',
+    });
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('schoolify:forum-comment-added', {
+          detail: { postId, postSlug, commentId: createdCommentId },
+        })
+      );
+    }
   };
 
-  // Gửi phản hồi lồng cấp 2 - Stack #16: Gửi API kèm cập nhật replies_count & bắn Notification
+  // Gửi phản hồi lồng cấp 2: Gửi API kèm cập nhật replies_count & bắn Notification
   const handleSubmitReply = async (rootCommentId: string, replyToName: string) => {
-    if (!replyContent.trim() && replyImages.length === 0) return;
     if (isLockedState) {
       alert('Bài viết này đã bị Quản trị viên khóa bình luận (is_locked = true).');
       return;
+    }
+
+    const trimmedReply = replyContent.trim();
+    const hasReplyImages = replyImages.length > 0;
+    if (!hasReplyImages) {
+      if (!trimmedReply) {
+        alert('Vui lòng nhập nội dung phản hồi thảo luận.');
+        return;
+      }
+      if (trimmedReply.length < 3) {
+        alert('Nội dung phản hồi quá ngắn (tối thiểu 3 ký tự).');
+        return;
+      }
+      if (/(.)\1{5,}/.test(trimmedReply)) {
+        alert('Nội dung chứa ký tự lặp vô nghĩa (spam). Vui lòng nhập thảo luận nghiêm túc!');
+        return;
+      }
     }
 
     let createdReplyId = `reply-${Date.now()}`;
@@ -484,7 +804,7 @@ export function ForumCommentSection({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            content: replyContent.trim(),
+            content: trimmedReply,
             parentId: rootCommentId,
             attachments: replyImages.length > 0 ? replyImages : undefined,
           }),
@@ -499,7 +819,10 @@ export function ForumCommentSection({
             json?.message ||
               'Bài viết này đã bị Admin khóa bình luận (is_locked = true).'
           );
-          setIsLockedState(true);
+          setLockedByApi(true);
+          return;
+        } else if (json?.message) {
+          alert(json.message);
           return;
         }
       } else if (json?.data?.comment?.id) {
@@ -520,11 +843,12 @@ export function ForumCommentSection({
       depth: 2,
       replyToUserName: replyToName,
       author: {
-        id: 'seed-student-01',
-        name: 'Bạn (Học Sinh)',
+        id: currentUserId,
+        name: currentUserName,
         avatar:
+          authUser?.avatar_url ||
           'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
-        role: 'Học sinh',
+        role: currentRole === 'TEACHER' ? 'Giáo viên' : 'Học sinh',
         grade: 'Lớp 12',
       },
       content: replyContent.trim(),
@@ -534,7 +858,7 @@ export function ForumCommentSection({
       isLiked: false,
     };
 
-    setComments((prev) =>
+    updateAndPersistComments((prev) =>
       prev.map((c) => {
         if (c.id === rootCommentId) {
           return {
@@ -550,6 +874,36 @@ export function ForumCommentSection({
     setReplyContent('');
     setReplyImages([]);
     setReplyActiveTab('write');
+
+    // Kích hoạt viền sáng nổi bật và tự động cuộn tới phản hồi vừa gửi
+    setHighlightedCommentId(createdReplyId);
+    setTimeout(() => {
+      const el =
+        document.getElementById(`comment-${createdReplyId}`) ||
+        document.getElementById(createdReplyId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 250);
+    setTimeout(() => setHighlightedCommentId(null), 5000);
+
+    const targetSlugOrId = postSlug || postId;
+    addNotification({
+      id: `notif-reply-${Date.now()}`,
+      type: 'info',
+      title: `💬 Đã gửi phản hồi cho ${replyToName}`,
+      description: `Đã gửi câu trả lời cấp 2 trong bài "${postTitle || 'Hỏi đáp diễn đàn'}".`,
+      link: `/forum?post=${targetSlugOrId}#comment-${createdReplyId}`,
+      category: 'FORUM_COMMENT',
+    });
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('schoolify:forum-comment-added', {
+          detail: { postId, postSlug, commentId: createdReplyId },
+        })
+      );
+    }
   };
 
   // Sắp xếp: Luôn đưa Lời giải được công nhận (isAccepted = true) lên trên cùng
@@ -600,7 +954,7 @@ export function ForumCommentSection({
         )}
       </div>
 
-      {/* Thông báo thao tác thành công (Stack #16) */}
+      {/* Thông báo thao tác thành công */}
       {apiSuccessMessage && (
         <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs sm:text-sm font-semibold flex items-center gap-2.5 animate-in fade-in">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -608,7 +962,7 @@ export function ForumCommentSection({
         </div>
       )}
 
-      {/* ── STACK #16 & #12: XỬ LÝ KHÓA BÌNH LUẬN AN TOÀN HOẶC KHUNG VIẾT LỜI GIẢI ── */}
+      {/* ── XỬ LÝ KHÓA BÌNH LUẬN AN TOÀN HOẶC KHUNG VIẾT LỜI GIẢI ── */}
       {isLockedState ? (
         <Card className="p-4 sm:p-5 rounded-2xl border-2 border-amber-300/80 dark:border-amber-700/60 bg-amber-50/70 dark:bg-amber-950/30 shadow-sm flex items-start gap-3.5">
           <div className="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
@@ -693,7 +1047,10 @@ export function ForumCommentSection({
                 ref={textareaRef}
                 rows={4}
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={(e) => {
+                  setContent(e.target.value);
+                  if (commentError) setCommentError(null);
+                }}
                 placeholder="Nhập lời giải chi tiết của bạn tại đây... Dùng $...$ cho công thức toán inline hoặc $$...$$ cho khối công thức riêng..."
                 className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00B8DD] transition-all font-sans leading-relaxed"
               />
@@ -707,6 +1064,14 @@ export function ForumCommentSection({
                   Chưa có nội dung. Chuyển sang tab &quot;Soạn thảo&quot; để gõ lời giải và công thức KaTeX...
                 </span>
               )}
+            </div>
+          )}
+
+          {/* Trạng thái đang tải ảnh lên */}
+          {isUploadingImage && (
+            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-[#00B8DD]/30 text-xs text-[#007D99] dark:text-[#00B8DD] font-semibold animate-pulse">
+              <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+              <span>{uploadProgressText || 'Đang tải ảnh lên...'}</span>
             </div>
           )}
 
@@ -737,6 +1102,14 @@ export function ForumCommentSection({
             </div>
           )}
 
+          {/* Cảnh báo lỗi nội dung nếu chưa đạt chất lượng / spam */}
+          {commentError && (
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 text-xs text-amber-800 dark:text-amber-300 font-medium animate-in fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
+              <span>{commentError}</span>
+            </div>
+          )}
+
           {/* Footer nút hành động: Tải ảnh & Gửi lời giải */}
           <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
             <div>
@@ -752,11 +1125,15 @@ export function ForumCommentSection({
                 type="button"
                 variant="outline"
                 size="sm"
+                disabled={isUploadingImage}
+                isLoading={isUploadingImage}
                 onClick={() => fileInputRef.current?.click()}
                 leftIcon={<ImageIcon className="w-3.5 h-3.5 text-[#007D99] dark:text-[#00B8DD]" />}
                 className="rounded-xl text-xs font-semibold border-slate-200 dark:border-slate-700 hover:border-[#00B8DD]"
               >
-                Đính kèm ảnh bài giải ({attachedImages.length})
+                {isUploadingImage
+                  ? 'Đang tải ảnh lên...'
+                  : `Đính kèm ảnh (${attachedImages.length})`}
               </Button>
             </div>
 
@@ -774,7 +1151,7 @@ export function ForumCommentSection({
       </Card>
       )}
 
-      {/* ── STACK #11: DANH SÁCH LỜI GIẢI PHÂN CẤP 2 CẤP & KHUNG NỔI BẬT LỜI GIẢI ĐƯỢC CÔNG NHẬN (#10B981) ── */}
+      {/* ── DANH SÁCH LỜI GIẢI PHÂN CẤP 2 CẤP & KHUNG NỔI BẬT LỜI GIẢI ĐƯỢC CÔNG NHẬN (#10B981) ── */}
       <div className="space-y-5">
         {sortedComments.length === 0 ? (
           <div className="p-8 text-center rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
@@ -786,20 +1163,33 @@ export function ForumCommentSection({
         ) : (
           sortedComments.map((rootCmt) => {
             const isAccepted = Boolean(rootCmt.isAccepted);
+            const isCommentAuthor = Boolean(
+              (rootCmt.author.id && rootCmt.author.id === currentUserId) ||
+              rootCmt.author.name === currentUserName ||
+              (currentUserName === 'Bạn (Học Sinh)' && rootCmt.author.name === 'Bạn (Học Sinh)')
+            );
+            const domId = rootCmt.id.startsWith('comment-') ? rootCmt.id : `comment-${rootCmt.id}`;
+            const isHighlighted =
+              highlightedCommentId === rootCmt.id ||
+              highlightedCommentId === domId ||
+              (rootCmt.id.startsWith('comment-') && highlightedCommentId === rootCmt.id.replace('comment-', ''));
 
             return (
               <div key={rootCmt.id} className="space-y-3">
                 {/* ── THẺ LỜI GIẢI CẤP 1 (GỐC) ── */}
                 <Card
+                  id={domId}
                   className={cn(
                     'p-5 sm:p-6 rounded-2xl transition-all relative overflow-hidden',
-                    // STACK #11: Khung nổi bật Lời giải được công nhận có viền xanh ngọc lục bảo #10B981
+                    isHighlighted &&
+                      'ring-4 ring-[#00B8DD] border-[#00B8DD] shadow-xl animate-pulse scale-[1.005]',
+                    // Khung nổi bật Lời giải được công nhận có viền xanh ngọc lục bảo #10B981
                     isAccepted
                       ? 'border-2 border-[#10B981] bg-gradient-to-br from-emerald-50/70 via-white to-emerald-50/30 dark:from-emerald-950/30 dark:via-slate-900 dark:to-emerald-950/20 shadow-lg shadow-emerald-500/10'
                       : 'border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
                   )}
                 >
-                  {/* STACK #11: Huy hiệu xác thực Lời giải được công nhận */}
+                  {/* Huy hiệu xác thực Lời giải được công nhận */}
                   {isAccepted && (
                     <div className="mb-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-[#10B981] text-white shadow-md shadow-emerald-600/20">
                       <ShieldCheck className="w-4 h-4" />
@@ -869,7 +1259,7 @@ export function ForumCommentSection({
                   {/* Footer tương tác: Nút Hữu ích (Like) & Nút Trả lời */}
                   <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-100 dark:border-slate-800/80 mt-4">
                     <div className="flex items-center gap-2">
-                      {/* STACK #11: Nút Hữu ích (Like/ThumbsUp) với bộ đếm */}
+                      {/* Nút Hữu ích (Like/ThumbsUp) với bộ đếm */}
                       <button
                         type="button"
                         onClick={() => handleToggleLike(rootCmt.id)}
@@ -885,6 +1275,48 @@ export function ForumCommentSection({
                         <ThumbsUp className="w-3.5 h-3.5" />
                         <span>Hữu ích ({rootCmt.likesCount})</span>
                       </button>
+
+                      {/* ── Trạng thái / Nút Chốt Lời giải chuẩn nhất (+10 Ngọc) ── */}
+                      {isAccepted ? (
+                        // ĐÃ ĐƯỢC DUYỆT: Hiển thị huy hiệu xanh lá trang trọng cho TẤT CẢ mọi người
+                        <div className="inline-flex items-center gap-1.5">
+                          <span
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 text-white border border-emerald-600 shadow-xs"
+                            title="Lời giải này đã được công nhận là Lời giải chuẩn nhất (+10 Ngọc Tri Thức)"
+                          >
+                            <ShieldCheck className="w-3.5 h-3.5 text-white" />
+                            <span>Lời giải được công nhận (+10 Ngọc) ✓</span>
+                          </span>
+
+                          {/* Chủ bài viết hoặc Thầy cô có thể hủy công nhận nếu muốn */}
+                          {canAcceptComment && !isLockedState && (
+                            <button
+                              type="button"
+                              onClick={() => handleAcceptComment(rootCmt.id)}
+                              className="text-[11px] text-slate-400 hover:text-rose-500 underline transition-colors cursor-pointer px-1"
+                              title="Hủy công nhận lời giải này"
+                            >
+                              Hủy duyệt
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        // CHƯA ĐƯỢC DUYỆT:
+                        // 1. Chỉ hiển thị NÚT DUYỆT nếu là Chủ câu hỏi hoặc Giáo viên/Admin, VÀ KHÔNG PHẢI bài của chính mình!
+                        // 2. Không tô xanh lá khi chưa duyệt để tránh nhầm lẫn; dùng style trung tính rõ ràng.
+                        // 3. Học sinh khác & chính người bình luận: TUYỆT ĐỐI KHÔNG HIỂN THỊ (không có dòng xanh)
+                        canAcceptComment && !isCommentAuthor && !isLockedState && (
+                          <button
+                            type="button"
+                            onClick={() => handleAcceptComment(rootCmt.id)}
+                            title="Bạn là chủ câu hỏi / Thầy cô: Bấm để duyệt lời giải này và thưởng 10 Ngọc Tri Thức cho người giải"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 transition-all cursor-pointer shadow-2xs"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5 text-slate-400" />
+                            <span>Duyệt lời giải đúng (+10 Ngọc)</span>
+                          </button>
+                        )
+                      )}
 
                       {/* Nút phản hồi mở form Cấp 2 (chỉ hiện khi chưa khóa) */}
                       {!isLockedState && (
@@ -902,7 +1334,18 @@ export function ForumCommentSection({
                         </button>
                       )}
 
-                      {/* Nút Xóa bình luận cấp 1 (Stack #16) */}
+                      {/* Nút Báo cáo vi phạm lời giải */}
+                      <button
+                        type="button"
+                        onClick={() => handleOpenReport('COMMENT', rootCmt.id, rootCmt.content)}
+                        title="Báo cáo vi phạm lời giải này"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+                      >
+                        <Flag className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Báo cáo</span>
+                      </button>
+
+                      {/* Nút Xóa bình luận cấp 1 */}
                       {(rootCmt.author.id === 'seed-student-01' ||
                         rootCmt.author.id === 'me' ||
                         rootCmt.id.startsWith('user-cmt')) && (
@@ -917,16 +1360,12 @@ export function ForumCommentSection({
                         </button>
                       )}
                     </div>
-
-                    <span className="text-[11px] text-slate-400">
-                      Cấp 1 • Lời giải chính
-                    </span>
                   </div>
                 </Card>
 
                 {/* ── FORM TRẢ LỜI LỒNG CẤP 2 (KHI BẤM NÚT TRẢ LỜI) ── */}
                 {replyingToId === rootCmt.id && (
-                  <Card className="ml-6 sm:ml-12 p-4 rounded-xl border border-[#00B8DD]/40 bg-slate-50/80 dark:bg-slate-850/80 space-y-3 shadow-xs">
+                  <Card className="ml-2.5 sm:ml-10 p-3 sm:p-4 rounded-xl border border-[#00B8DD]/40 bg-slate-50/80 dark:bg-slate-850/80 space-y-3 shadow-xs max-w-full overflow-hidden">
                     <div className="flex items-center justify-between gap-2 border-b border-slate-200/60 dark:border-slate-700/60 pb-2">
                       <span className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
                         <CornerDownRight className="w-3.5 h-3.5 text-[#007D99] dark:text-[#00B8DD]" />
@@ -963,6 +1402,14 @@ export function ForumCommentSection({
                       className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00B8DD]"
                     />
 
+                    {/* Trạng thái tải ảnh phản hồi */}
+                    {isUploadingReplyImage && (
+                      <div className="flex items-center gap-2 p-2 rounded-lg bg-sky-50 dark:bg-sky-950/40 border border-[#00B8DD]/30 text-[11px] text-[#007D99] dark:text-[#00B8DD] font-semibold animate-pulse">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                        <span>Đang tải ảnh lên...</span>
+                      </div>
+                    )}
+
                     {replyImages.length > 0 && (
                       <div className="flex flex-wrap gap-2 pt-1">
                         {replyImages.map((img, i) => (
@@ -993,11 +1440,13 @@ export function ForumCommentSection({
                         type="button"
                         variant="ghost"
                         size="sm"
+                        disabled={isUploadingReplyImage}
+                        isLoading={isUploadingReplyImage}
                         onClick={() => replyFileInputRef.current?.click()}
                         leftIcon={<ImageIcon className="w-3.5 h-3.5 text-slate-500" />}
                         className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white"
                       >
-                        Đính kèm ảnh
+                        {isUploadingReplyImage ? 'Đang tải lên...' : 'Đính kèm ảnh'}
                       </Button>
 
                       <div className="flex items-center gap-2">
@@ -1023,14 +1472,26 @@ export function ForumCommentSection({
                   </Card>
                 )}
 
-                {/* ── STACK #11: DANH SÁCH BÌNH LUẬN PHẢN HỒI LỒNG CẤP 2 (NESTED REPLIES) ── */}
+                {/* ── DANH SÁCH BÌNH LUẬN PHẢN HỒI LỒNG CẤP 2 (NESTED REPLIES) ── */}
                 {rootCmt.replies && rootCmt.replies.length > 0 && (
-                  <div className="ml-6 sm:ml-12 pl-4 border-l-2 border-[#00B8DD]/30 dark:border-[#00B8DD]/20 space-y-3 pt-1">
-                    {rootCmt.replies.map((reply) => (
-                      <Card
-                        key={reply.id}
-                        className="p-3.5 sm:p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/70 space-y-2 hover:border-slate-300 dark:hover:border-slate-700 transition-all"
-                      >
+                  <div className="ml-2.5 sm:ml-10 pl-2 sm:pl-4 border-l-2 border-[#00B8DD]/30 dark:border-[#00B8DD]/20 space-y-3 pt-1 max-w-full overflow-hidden">
+                    {rootCmt.replies.map((reply) => {
+                      const replyDomId = reply.id.startsWith('comment-') ? reply.id : `comment-${reply.id}`;
+                      const isReplyHighlighted =
+                        highlightedCommentId === reply.id ||
+                        highlightedCommentId === replyDomId ||
+                        (reply.id.startsWith('comment-') && highlightedCommentId === reply.id.replace('comment-', ''));
+
+                      return (
+                        <Card
+                          id={replyDomId}
+                          key={reply.id}
+                          className={cn(
+                            'p-3.5 sm:p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/70 space-y-2 hover:border-slate-300 dark:hover:border-slate-700 transition-all',
+                            isReplyHighlighted &&
+                              'ring-4 ring-[#00B8DD] border-[#00B8DD] shadow-xl animate-pulse scale-[1.005]'
+                          )}
+                        >
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2.5">
                             <Avatar
@@ -1053,10 +1514,6 @@ export function ForumCommentSection({
                               </span>
                             </div>
                           </div>
-
-                          <span className="text-[10px] text-slate-400 font-medium">
-                            Cấp 2 • Thảo luận
-                          </span>
                         </div>
 
                         {/* Nội dung phản hồi có @mention và MathRenderer */}
@@ -1115,6 +1572,16 @@ export function ForumCommentSection({
                               </button>
                             )}
 
+                            <button
+                              type="button"
+                              onClick={() => handleOpenReport('COMMENT', reply.id, reply.content)}
+                              title="Báo cáo vi phạm phản hồi này"
+                              className="inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"
+                            >
+                              <Flag className="w-3 h-3" />
+                              <span>Báo cáo</span>
+                            </button>
+
                             {!isLockedState && (
                               <button
                                 type="button"
@@ -1130,7 +1597,8 @@ export function ForumCommentSection({
                           </div>
                         </div>
                       </Card>
-                    ))}
+                    );
+                  })}
                   </div>
                 )}
               </div>
@@ -1138,6 +1606,19 @@ export function ForumCommentSection({
           })
         )}
       </div>
+
+      {/* Modal Báo cáo vi phạm quy tắc cộng đồng */}
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        targetType={reportTarget.type}
+        targetId={reportTarget.id}
+        targetTitle={reportTarget.title}
+        onSuccess={(msg) => {
+          setApiSuccessMessage(msg);
+          setTimeout(() => setApiSuccessMessage(null), 4000);
+        }}
+      />
     </div>
   );
 }

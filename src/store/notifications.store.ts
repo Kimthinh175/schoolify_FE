@@ -9,6 +9,8 @@ export interface AppNotificationItem {
   type: AppNotificationType;
   title: string;
   description?: string;
+  link?: string;
+  category?: 'FORUM_COMMENT' | 'FORUM_REWARD' | 'EXAM' | 'SYSTEM';
   createdAt: string;
   read: boolean;
 }
@@ -16,15 +18,67 @@ export interface AppNotificationItem {
 const STORAGE_KEY = 'schoolify_notifications_v1';
 const MAX_ITEMS = 30;
 
+const DEFAULT_FORUM_NOTIFICATIONS: AppNotificationItem[] = [
+  {
+    id: 'seed-forum-reward-01',
+    type: 'success',
+    title: '🎉 Nhận thưởng +10 Ngọc Tri Thức!',
+    description: 'Lời giải của bạn trong bài "Toán 12: Tìm m để hàm số bậc ba đồng biến" đã được công nhận là Lời giải chuẩn nhất!',
+    link: '/forum?post=hoi-bai-toan-12-tim-m-de-ham-so-bac-ba-dong-bien#comment-comment-forum-seed-post-02-root',
+    category: 'FORUM_REWARD',
+    createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+    read: false,
+  },
+  {
+    id: 'seed-forum-comment-02',
+    type: 'info',
+    title: '💬 Bài viết có lời giải mới',
+    description: 'ThS. Nguyễn Văn Hùng vừa bình luận: "Em lưu ý xét dấu hệ số a khi khảo sát hàm số bậc ba nhé."',
+    link: '/forum?post=hoi-bai-toan-12-tim-m-de-ham-so-bac-ba-dong-bien#comment-comment-forum-seed-post-02-root',
+    category: 'FORUM_COMMENT',
+    createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+    read: false,
+  },
+];
+
 function readInitialNotifications(): AppNotificationItem[] {
   if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.slice(0, MAX_ITEMS) : [];
+    let items = DEFAULT_FORUM_NOTIFICATIONS;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        items = parsed.map((it: AppNotificationItem) => {
+          if (
+            it.link &&
+            (it.link.includes('/forum/toan-12-tim-m-de-ham-so-bac-ba-dong-bien') ||
+              it.link.includes('/forum/hoi-bai-toan-12-tim-m-de-ham-so-bac-ba-dong-bien') ||
+              it.link.includes('post=hoi-bai-toan-12-tim-m-de-ham-so-bac-ba-dong-bien'))
+          ) {
+            return {
+              ...it,
+              link: '/forum?post=hoi-bai-toan-12-tim-m-de-ham-so-bac-ba-dong-bien#comment-comment-forum-seed-post-02-root',
+            };
+          }
+          if (it.link && it.link.startsWith('/forum/') && !it.link.includes('?')) {
+            const slug = it.link.replace('/forum/', '');
+            return {
+              ...it,
+              link: `/forum?post=${slug}`,
+            };
+          }
+          return it;
+        });
+      }
+    }
+    const hasForum = items.some((it) => it.link?.includes('/forum'));
+    if (!hasForum) {
+      items = [...DEFAULT_FORUM_NOTIFICATIONS, ...items];
+    }
+    return items.slice(0, MAX_ITEMS);
   } catch {
-    return [];
+    return DEFAULT_FORUM_NOTIFICATIONS;
   }
 }
 
@@ -44,6 +98,8 @@ interface NotificationsState {
     type: AppNotificationType;
     title: string;
     description?: string;
+    link?: string;
+    category?: 'FORUM_COMMENT' | 'FORUM_REWARD' | 'EXAM' | 'SYSTEM';
   }) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
@@ -60,7 +116,7 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
     set({ items: initial, hydrated: true });
   },
 
-  addNotification: ({ id, type, title, description }) => {
+  addNotification: ({ id, type, title, description, link, category }) => {
     const cleanTitle = title.trim();
     if (!cleanTitle) return;
 
@@ -74,6 +130,8 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
           type,
           title: cleanTitle,
           description: description?.trim() || undefined,
+          link: link?.trim() || undefined,
+          category: category || undefined,
           createdAt: new Date().toISOString(),
           read: false,
         },
