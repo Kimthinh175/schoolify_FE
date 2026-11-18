@@ -28,6 +28,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { MathRenderer } from '@/components/ui/math-renderer';
 import { cn } from '@/lib/utils';
+import { useNotificationsStore } from '@/store/notifications.store';
 import { ReportModal } from './ReportModal';
 import { RequireLoginModal } from './RequireLoginModal';
 
@@ -203,6 +204,8 @@ export function ForumCommentSection({
   const [replyImages, setReplyImages] = React.useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [replyActiveTab, setReplyActiveTab] = React.useState<'write' | 'preview'>('write');
+
+  const addNotification = useNotificationsStore((s) => s.addNotification);
 
   // Modal kiểm soát đăng nhập & báo cáo vi phạm
   const [isLoginModalOpen, setIsLoginModalOpen] = React.useState(false);
@@ -464,6 +467,14 @@ export function ForumCommentSection({
         setApiSuccessMessage(
           '🎉 Chúc mừng bạn đã công nhận lời giải đúng! Đã cộng thưởng +10 Ngọc Tri Thức cho tác giả bài giải.'
         );
+        addNotification({
+          id: `notif-reward-${Date.now()}`,
+          type: 'success',
+          title: '🎉 Nhận thưởng +10 Ngọc Tri Thức!',
+          description: `Lời giải trong bài "${postTitle || 'Hỏi đáp diễn đàn'}" đã được công nhận là Lời giải chuẩn nhất (+10 Ngọc).`,
+          link: postSlug ? `/forum/${postSlug}` : `/forum`,
+          category: 'FORUM_REWARD',
+        });
       } else {
         setApiSuccessMessage('Đã hủy công nhận lời giải đúng.');
       }
@@ -578,6 +589,15 @@ export function ForumCommentSection({
     setAttachedImages([]);
     setActiveTab('write');
     setIsSubmitting(false);
+
+    addNotification({
+      id: `notif-cmt-${Date.now()}`,
+      type: 'info',
+      title: '💬 Bạn vừa gửi lời giải mới',
+      description: `Đã gửi lời giải cho bài viết "${postTitle || 'Hỏi đáp diễn đàn'}".`,
+      link: postSlug ? `/forum/${postSlug}` : `/forum`,
+      category: 'FORUM_COMMENT',
+    });
   };
 
   // Gửi phản hồi lồng cấp 2: Gửi API kèm cập nhật replies_count & bắn Notification
@@ -665,6 +685,15 @@ export function ForumCommentSection({
     setReplyContent('');
     setReplyImages([]);
     setReplyActiveTab('write');
+
+    addNotification({
+      id: `notif-reply-${Date.now()}`,
+      type: 'info',
+      title: `💬 Đã gửi phản hồi cho ${replyToName}`,
+      description: `Đã gửi câu trả lời cấp 2 trong bài "${postTitle || 'Hỏi đáp diễn đàn'}".`,
+      link: postSlug ? `/forum/${postSlug}` : `/forum`,
+      category: 'FORUM_COMMENT',
+    });
   };
 
   // Sắp xếp: Luôn đưa Lời giải được công nhận (isAccepted = true) lên trên cùng

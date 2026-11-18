@@ -1,7 +1,19 @@
 'use client';
 
 import * as React from 'react';
-import { Bell, CheckCheck, Trash2, CheckCircle2, Info, AlertTriangle, AlertCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import {
+  Bell,
+  CheckCheck,
+  Trash2,
+  CheckCircle2,
+  Info,
+  AlertTriangle,
+  AlertCircle,
+  MessageSquare,
+  Award,
+  ArrowRight,
+} from 'lucide-react';
 import { useSonner } from 'sonner';
 import {
   useNotificationsStore,
@@ -79,22 +91,47 @@ export function SonnerNotificationSync() {
   return null;
 }
 
-function NotificationTypeBadge({ type }: { type: AppNotificationItem['type'] }) {
-  if (type === 'success') {
+function NotificationTypeBadge({ item }: { item: AppNotificationItem }) {
+  if (
+    item.category === 'FORUM_REWARD' ||
+    item.title.includes('Ngọc') ||
+    item.title.includes('thưởng')
+  ) {
+    return (
+      <span className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 shadow-xs">
+        <Award className="w-4 h-4" />
+      </span>
+    );
+  }
+
+  if (
+    item.category === 'FORUM_COMMENT' ||
+    item.title.toLowerCase().includes('lời giải') ||
+    item.title.toLowerCase().includes('bình luận') ||
+    item.title.toLowerCase().includes('phản hồi')
+  ) {
+    return (
+      <span className="w-8 h-8 rounded-xl bg-[#00B8DD]/15 text-[#007D99] dark:text-[#00B8DD] flex items-center justify-center shrink-0 shadow-xs">
+        <MessageSquare className="w-4 h-4" />
+      </span>
+    );
+  }
+
+  if (item.type === 'success') {
     return (
       <span className="w-8 h-8 rounded-xl bg-emerald-500/12 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
         <CheckCircle2 className="w-4 h-4" />
       </span>
     );
   }
-  if (type === 'warning') {
+  if (item.type === 'warning') {
     return (
       <span className="w-8 h-8 rounded-xl bg-amber-500/12 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
         <AlertTriangle className="w-4 h-4" />
       </span>
     );
   }
-  if (type === 'error') {
+  if (item.type === 'error') {
     return (
       <span className="w-8 h-8 rounded-xl bg-rose-500/12 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
         <AlertCircle className="w-4 h-4" />
@@ -109,6 +146,7 @@ function NotificationTypeBadge({ type }: { type: AppNotificationItem['type'] }) 
 }
 
 export function NotificationBellMenu() {
+  const router = useRouter();
   const [isOpen, setIsOpen] = React.useState(false);
   const [isMounted, setIsMounted] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -118,6 +156,14 @@ export function NotificationBellMenu() {
   const markAsRead = useNotificationsStore((s) => s.markAsRead);
   const markAllAsRead = useNotificationsStore((s) => s.markAllAsRead);
   const clearAll = useNotificationsStore((s) => s.clearAll);
+
+  const handleItemClick = (item: AppNotificationItem) => {
+    markAsRead(item.id);
+    if (item.link) {
+      setIsOpen(false);
+      router.push(item.link);
+    }
+  };
 
   React.useEffect(() => {
     setIsMounted(true);
@@ -231,13 +277,13 @@ export function NotificationBellMenu() {
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => markAsRead(item.id)}
+                  onClick={() => handleItemClick(item)}
                   className={cn(
-                    'w-full text-left px-4 py-3 flex items-start gap-3 transition-colors cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60',
+                    'group w-full text-left px-4 py-3 flex items-start gap-3 transition-colors cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60',
                     !item.read && 'bg-[#00B8DD]/[0.04] dark:bg-[#00B8DD]/[0.07]',
                   )}
                 >
-                  <NotificationTypeBadge type={item.type} />
+                  <NotificationTypeBadge item={item} />
                   <div className="min-w-0 flex-1 space-y-0.5">
                     <div className="flex items-start justify-between gap-2">
                       <p
@@ -259,9 +305,17 @@ export function NotificationBellMenu() {
                         {item.description}
                       </p>
                     )}
-                    <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 pt-0.5">
-                      {formatRelativeTime(item.createdAt)}
-                    </p>
+                    <div className="flex items-center justify-between pt-1">
+                      <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500">
+                        {formatRelativeTime(item.createdAt)}
+                      </p>
+                      {item.link && (
+                        <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#007D99] dark:text-[#00B8DD] group-hover:underline">
+                          <span>Xem bài viết</span>
+                          <ArrowRight className="w-2.5 h-2.5 group-hover:translate-x-0.5 transition-transform" />
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </button>
               ))
