@@ -230,6 +230,7 @@ export default function ForumDetailPage() {
               postId={post.id}
               postSlug={post.slug}
               postTitle={post.title}
+              postAuthorId={(post as any).author?.id || (post as any).author_id || 'seed-student-01'}
               initialComments={(post as any).initialComments}
               isLocked={Boolean((post as any).isLocked || (post as any).is_locked)}
             />

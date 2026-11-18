@@ -22,6 +22,7 @@ import {
   Trash2,
   Flag,
   Loader2,
+  AlertCircle,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ import { Badge } from '@/components/ui/badge';
 import { MathRenderer } from '@/components/ui/math-renderer';
 import { cn } from '@/lib/utils';
 import { useNotificationsStore } from '@/store/notifications.store';
+import { useAuthStore } from '@/store/auth.store';
 import { ReportModal } from './ReportModal';
 import { RequireLoginModal } from './RequireLoginModal';
 
@@ -76,6 +78,7 @@ export interface ForumCommentSectionProps {
   postId: string;
   postSlug?: string;
   postTitle?: string;
+  postAuthorId?: string;
   className?: string;
   initialComments?: ForumCommentItem[];
   isLocked?: boolean;
@@ -184,12 +187,45 @@ export function ForumCommentSection({
   postId,
   postSlug,
   postTitle,
+  postAuthorId,
   className,
   initialComments,
   isLocked = false,
   isLoggedIn = true,
   currentUser,
 }: ForumCommentSectionProps) {
+  const { user: authUser, currentRole } = useAuthStore();
+  const currentUserId = currentUser?.id || authUser?.id || 'seed-student-01';
+  const currentUserName = currentUser?.name || authUser?.fullname || 'Bạn (Học Sinh)';
+
+  const [postAuthorIdState, setPostAuthorIdState] = React.useState<string | undefined>(postAuthorId);
+  const [commentError, setCommentError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (postAuthorId) {
+      setPostAuthorIdState(postAuthorId);
+    }
+  }, [postAuthorId]);
+
+  const isPrivileged =
+    currentRole === 'SUPER_ADMIN' ||
+    currentRole === 'TEACHER' ||
+    currentRole === 'PRINCIPAL' ||
+    currentRole === 'HEAD_OF_DEPARTMENT' ||
+    (authUser as any)?.role === 'SUPER_ADMIN' ||
+    (authUser as any)?.role === 'ADMIN' ||
+    (authUser as any)?.role === 'TEACHER';
+
+  const effectivePostAuthorId = postAuthorId || postAuthorIdState;
+  const isPostAuthor = Boolean(
+    effectivePostAuthorId &&
+      (currentUserId === effectivePostAuthorId ||
+        (effectivePostAuthorId === 'seed-student-01' && currentUserName === 'Bạn (Học Sinh)'))
+  );
+
+  // Chỉ Chủ bài viết hoặc Thầy cô / Quản trị viên mới có quyền công nhận Lời giải đúng
+  const canAcceptComment = isPostAuthor || isPrivileged;
+
   const [highlightedCommentId, setHighlightedCommentId] = React.useState<string | null>(null);
 
   const [comments, setComments] = React.useState<ForumCommentItem[]>(() => {
@@ -359,6 +395,9 @@ export function ForumCommentSection({
         const json = await res.json();
         if (json?.data?.post?.is_locked !== undefined) {
           setIsLockedState(Boolean(json.data.post.is_locked));
+        }
+        if (json?.data?.post?.author_id) {
+          setPostAuthorIdState(json.data.post.author_id);
         }
         if (json?.data?.items && Array.isArray(json.data.items) && json.data.items.length > 0) {
           if (!isMounted) return;
@@ -590,15 +629,35 @@ export function ForumCommentSection({
   const handleAcceptComment = async (commentId: string) => {
     if (!requireAuth('công nhận Lời giải đúng (+10 Ngọc)')) return;
 
+    if (!canAcceptComment) {
+      alert('Chỉ chủ bài viết hoặc Thầy cô / Quản trị viên mới có quyền công nhận Lời giải đúng.');
+      return;
+    }
+
+    const targetComment = comments.find((c) => c.id === commentId);
+    const isOwn = Boolean(
+      targetComment &&
+        (targetComment.author.id === currentUserId ||
+          targetComment.author.name === currentUserName ||
+          (currentUserName === 'Bạn (Học Sinh)' && targetComment.author.name === 'Bạn (Học Sinh)'))
+    );
+
+    if (isOwn) {
+      alert(
+        'Cảnh báo chống gian lận điểm thưởng: Bạn không thể tự công nhận câu trả lời của chính mình để nhận thưởng Ngọc Tri Thức!'
+      );
+      return;
+    }
+
     try {
       const idOrSlug = postSlug || postId;
       const res = await fetch(
-        `http://localhost:3005/api/v1/forum/posts/${idOrSlug}/accept-comment/${commentId}`,
+        `/api/v1/forum/posts/${idOrSlug}/accept-comment/${commentId}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            userId: 'seed-student-01',
+            userId: currentUserId,
             rewardGems: 10,
           }),
         }
@@ -676,11 +735,38 @@ export function ForumCommentSection({
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!requireAuth('gửi lời giải / bình luận mới')) return;
-    if (!content.trim() && attachedImages.length === 0) return;
+
     if (isLockedState) {
       alert('Bài viết này đã bị Quản trị viên khóa bình luận (is_locked = true).');
       return;
     }
+
+    const trimmed = content.trim();
+    const hasAttachments = attachedImages.length > 0;
+
+    // Bộ lọc kiểm tra chất lượng lời giải & chống bình luận tào lao / spam
+    if (!hasAttachments) {
+      if (!trimmed) {
+        setCommentError('Vui lòng nhập nội dung lời giải chi tiết hoặc đính kèm ảnh bài giải.');
+        return;
+      }
+      if (trimmed.length < 15) {
+        setCommentError(
+          'Lời giải quá ngắn hoặc chưa rõ ràng (tối thiểu 15 ký tự). Vui lòng trình bày chi tiết các bước biến đổi hoặc giải thích cụ thể để hỗ trợ bạn học nhé!'
+        );
+        return;
+      }
+      if (/(.)\1{5,}/.test(trimmed)) {
+        setCommentError('Nội dung chứa chuỗi ký tự lặp vô nghĩa (spam). Vui lòng nhập lời giải nghiêm túc!');
+        return;
+      }
+      const spamPatterns = ['asdfgh', 'qwerty', '123456', 'aaaaaa', 'bbbbbb', 'test test'];
+      if (spamPatterns.some((p) => trimmed.toLowerCase().includes(p))) {
+        setCommentError('Nội dung chứa ký tự gõ phím vô nghĩa (spam). Vui lòng nhập lời giải chi tiết!');
+        return;
+      }
+    }
+    setCommentError(null);
 
     setIsSubmitting(true);
     let createdCommentId = `user-cmt-${Date.now()}`;
@@ -693,7 +779,7 @@ export function ForumCommentSection({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            content: content.trim(),
+            content: trimmed,
             attachments: attachedImages.length > 0 ? attachedImages : undefined,
           }),
         }
@@ -708,6 +794,10 @@ export function ForumCommentSection({
               'Bài viết này đã bị Admin khóa bình luận (is_locked = true).'
           );
           setIsLockedState(true);
+          setIsSubmitting(false);
+          return;
+        } else if (res.status === 400 && json?.message) {
+          setCommentError(json.message);
           setIsSubmitting(false);
           return;
         }
@@ -728,14 +818,15 @@ export function ForumCommentSection({
       parentId: null,
       depth: 1,
       author: {
-        id: 'seed-student-01',
-        name: 'Bạn (Học Sinh)',
+        id: currentUserId,
+        name: currentUserName,
         avatar:
+          authUser?.avatar_url ||
           'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
-        role: 'Học sinh',
+        role: currentRole === 'TEACHER' ? 'Giáo viên' : 'Học sinh',
         grade: 'Lớp 12',
       },
-      content: content.trim(),
+      content: trimmed,
       attachments: attachedImages.length > 0 ? [...attachedImages] : null,
       timeAgo: 'Vừa xong',
       likesCount: 1,
@@ -784,10 +875,27 @@ export function ForumCommentSection({
   // Gửi phản hồi lồng cấp 2: Gửi API kèm cập nhật replies_count & bắn Notification
   const handleSubmitReply = async (rootCommentId: string, replyToName: string) => {
     if (!requireAuth('gửi phản hồi thảo luận')) return;
-    if (!replyContent.trim() && replyImages.length === 0) return;
+
     if (isLockedState) {
       alert('Bài viết này đã bị Quản trị viên khóa bình luận (is_locked = true).');
       return;
+    }
+
+    const trimmedReply = replyContent.trim();
+    const hasReplyImages = replyImages.length > 0;
+    if (!hasReplyImages) {
+      if (!trimmedReply) {
+        alert('Vui lòng nhập nội dung phản hồi thảo luận.');
+        return;
+      }
+      if (trimmedReply.length < 3) {
+        alert('Nội dung phản hồi quá ngắn (tối thiểu 3 ký tự).');
+        return;
+      }
+      if (/(.)\1{5,}/.test(trimmedReply)) {
+        alert('Nội dung chứa ký tự lặp vô nghĩa (spam). Vui lòng nhập thảo luận nghiêm túc!');
+        return;
+      }
     }
 
     let createdReplyId = `reply-${Date.now()}`;
@@ -800,7 +908,7 @@ export function ForumCommentSection({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            content: replyContent.trim(),
+            content: trimmedReply,
             parentId: rootCommentId,
             attachments: replyImages.length > 0 ? replyImages : undefined,
           }),
@@ -816,6 +924,9 @@ export function ForumCommentSection({
               'Bài viết này đã bị Admin khóa bình luận (is_locked = true).'
           );
           setIsLockedState(true);
+          return;
+        } else if (json?.message) {
+          alert(json.message);
           return;
         }
       } else if (json?.data?.comment?.id) {
@@ -836,11 +947,12 @@ export function ForumCommentSection({
       depth: 2,
       replyToUserName: replyToName,
       author: {
-        id: 'seed-student-01',
-        name: 'Bạn (Học Sinh)',
+        id: currentUserId,
+        name: currentUserName,
         avatar:
+          authUser?.avatar_url ||
           'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
-        role: 'Học sinh',
+        role: currentRole === 'TEACHER' ? 'Giáo viên' : 'Học sinh',
         grade: 'Lớp 12',
       },
       content: replyContent.trim(),
@@ -1039,7 +1151,10 @@ export function ForumCommentSection({
                 ref={textareaRef}
                 rows={4}
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={(e) => {
+                  setContent(e.target.value);
+                  if (commentError) setCommentError(null);
+                }}
                 placeholder="Nhập lời giải chi tiết của bạn tại đây... Dùng $...$ cho công thức toán inline hoặc $$...$$ cho khối công thức riêng..."
                 className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00B8DD] transition-all font-sans leading-relaxed"
               />
@@ -1088,6 +1203,14 @@ export function ForumCommentSection({
                   </button>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Cảnh báo lỗi nội dung nếu chưa đạt chất lượng / spam */}
+          {commentError && (
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 text-xs text-amber-800 dark:text-amber-300 font-medium animate-in fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
+              <span>{commentError}</span>
             </div>
           )}
 
@@ -1144,6 +1267,11 @@ export function ForumCommentSection({
         ) : (
           sortedComments.map((rootCmt) => {
             const isAccepted = Boolean(rootCmt.isAccepted);
+            const isCommentAuthor = Boolean(
+              (rootCmt.author.id && rootCmt.author.id === currentUserId) ||
+              rootCmt.author.name === currentUserName ||
+              (currentUserName === 'Bạn (Học Sinh)' && rootCmt.author.name === 'Bạn (Học Sinh)')
+            );
             const domId = rootCmt.id.startsWith('comment-') ? rootCmt.id : `comment-${rootCmt.id}`;
             const isHighlighted =
               highlightedCommentId === rootCmt.id ||
@@ -1252,22 +1380,46 @@ export function ForumCommentSection({
                         <span>Hữu ích ({rootCmt.likesCount})</span>
                       </button>
 
-                      {/* Nút Chốt Lời giải chuẩn nhất (+10 Ngọc Tri Thức) */}
-                      {!isLockedState && (
-                        <button
-                          type="button"
-                          onClick={() => handleAcceptComment(rootCmt.id)}
-                          title="Chốt lời giải đúng & cộng thưởng 10 Ngọc Tri Thức"
-                          className={cn(
-                            'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border',
-                            isAccepted
-                              ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
-                              : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/40'
+                      {/* ── Trạng thái / Nút Chốt Lời giải chuẩn nhất (+10 Ngọc) ── */}
+                      {isAccepted ? (
+                        // ĐÃ ĐƯỢC DUYỆT: Hiển thị huy hiệu xanh lá trang trọng cho TẤT CẢ mọi người
+                        <div className="inline-flex items-center gap-1.5">
+                          <span
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 text-white border border-emerald-600 shadow-xs"
+                            title="Lời giải này đã được công nhận là Lời giải chuẩn nhất (+10 Ngọc Tri Thức)"
+                          >
+                            <ShieldCheck className="w-3.5 h-3.5 text-white" />
+                            <span>Lời giải được công nhận (+10 Ngọc) ✓</span>
+                          </span>
+
+                          {/* Chủ bài viết hoặc Thầy cô có thể hủy công nhận nếu muốn */}
+                          {canAcceptComment && !isLockedState && (
+                            <button
+                              type="button"
+                              onClick={() => handleAcceptComment(rootCmt.id)}
+                              className="text-[11px] text-slate-400 hover:text-rose-500 underline transition-colors cursor-pointer px-1"
+                              title="Hủy công nhận lời giải này"
+                            >
+                              Hủy duyệt
+                            </button>
                           )}
-                        >
-                          <ShieldCheck className="w-3.5 h-3.5" />
-                          <span>{isAccepted ? 'Đã công nhận đúng (+10 Ngọc) ✓' : 'Công nhận lời giải đúng (+10 Ngọc)'}</span>
-                        </button>
+                        </div>
+                      ) : (
+                        // CHƯA ĐƯỢC DUYỆT:
+                        // 1. Chỉ hiển thị NÚT DUYỆT nếu là Chủ câu hỏi hoặc Giáo viên/Admin, VÀ KHÔNG PHẢI bài của chính mình!
+                        // 2. Không tô xanh lá khi chưa duyệt để tránh nhầm lẫn; dùng style trung tính rõ ràng.
+                        // 3. Học sinh khác & chính người bình luận: TUYỆT ĐỐI KHÔNG HIỂN THỊ (không có dòng xanh)
+                        canAcceptComment && !isCommentAuthor && !isLockedState && (
+                          <button
+                            type="button"
+                            onClick={() => handleAcceptComment(rootCmt.id)}
+                            title="Bạn là chủ câu hỏi / Thầy cô: Bấm để duyệt lời giải này và thưởng 10 Ngọc Tri Thức cho người giải"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 transition-all cursor-pointer shadow-2xs"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5 text-slate-400" />
+                            <span>Duyệt lời giải đúng (+10 Ngọc)</span>
+                          </button>
+                        )
                       )}
 
                       {/* Nút phản hồi mở form Cấp 2 (chỉ hiện khi chưa khóa) */}
