@@ -1,5 +1,5 @@
-// File sinh tự động từ 20 câu hỏi seed chuẩn của Backend (schoolify_BE/prisma/seed.ts)
-// Dành cho Diễn đàn học tập Schoolify GDPT 2018
+// File sinh tá»± Ä‘á»™ng tá»« 20 cĂ¢u há»i seed chuáº©n cá»§a Backend (schoolify_BE/prisma/seed.ts)
+// DĂ nh cho Diá»…n Ä‘Ă n há»c táº­p Schoolify GDPT 2018
 
 export interface ForumCommentItemDef {
   id: string;
@@ -84,7 +84,7 @@ interface RawSeedPost {
 }
 
 const FORUM_SEED_TOPICS: RawSeedPost[] = [
-  // 1. NỘI QUY GHIM ĐẦU TRANG
+  // 1. NỘI QUY GHIM ĐẦU TRANG (HỆ THỐNG)
   {
     slug: 'noi-quy-dien-dan-huong-dan-dang-cau-hoi-va-go-cong-thuc-latex',
     title:
@@ -94,7 +94,7 @@ const FORUM_SEED_TOPICS: RawSeedPost[] = [
     content_plain:
       'Chào mừng các bạn học sinh đến với Diễn Đàn Học Tập Schoolify! Để câu hỏi được thầy cô và cộng đồng hỗ trợ nhanh nhất, vui lòng chọn đúng Môn / Khối / Chương và gõ công thức toán học trong cặp dấu LaTeX.',
     has_math: true,
-    subject: 'Toán Học',
+    subject: 'Hệ Thống',
     grade: 12,
     chapter_id: 1,
     chapter_name: 'Hướng dẫn chung & Nội quy Diễn Đàn',
@@ -119,7 +119,7 @@ const FORUM_SEED_TOPICS: RawSeedPost[] = [
     },
   },
 
-  // 2. TOÁN 12 - CHƯƠNG 1
+  // 2. TOÁN HỌC 12 - CHƯƠNG 1 (KHẢO SÁT HÀM SỐ)
   {
     slug: 'hoi-bai-toan-12-tim-m-de-ham-so-bac-ba-dong-bien',
     title:
@@ -153,7 +153,7 @@ const FORUM_SEED_TOPICS: RawSeedPost[] = [
     },
   },
 
-  // 3. TOÁN 12 - CHƯƠNG 4 (TÍCH PHÂN)
+  // 3. TOÁN HỌC 12 - CHƯƠNG 4 (NGUYÊN HÀM & TÍCH PHÂN)
   {
     slug: 'toan-12-ung-dung-tich-phan-tinh-the-tich-khoi-tron-xoay-parabol',
     title:
@@ -193,7 +193,7 @@ const FORUM_SEED_TOPICS: RawSeedPost[] = [
     },
   },
 
-  // 4. TOÁN 12 - CHƯƠNG 5 (OXYZ)
+  // 4. TOÁN HỌC 12 - CHƯƠNG 5 (HÌNH HỌC KHÔNG GIAN OXYZ)
   {
     slug: 'toan-12-phuong-trinh-mat-cau-tiep-xuc-voi-mat-phang-trong-khong-gian-oxyz',
     title:
@@ -227,7 +227,41 @@ const FORUM_SEED_TOPICS: RawSeedPost[] = [
     },
   },
 
-  // 5. TOÁN 11 - LƯỢNG GIÁC & CẤP SỐ CỘNG
+  // 5. TOÁN HỌC 12 - CHƯƠNG 6 (XÁC SUẤT CÓ ĐIỀU KIỆN & CÔNG THỨC BAYES - GDPT 2018 MỚI)
+  {
+    slug: 'toan-12-cong-thuc-xac-suat-toan-phan-va-dinh-ly-bayes-trong-de-thi-thpt',
+    title:
+      'Toán 12 (GDPT 2018): Phân biệt Công thức xác suất toàn phần và Công thức Bayes $P(A|B) = \\frac{P(A)P(B|A)}{P(B)}$',
+    content:
+      'Trong chương trình Toán 12 mới có chuyên đề Xác suất có điều kiện. Một xét nghiệm y tế có độ nhạy $P(D^+ | B) = 0{,}98$ (tỷ lệ dương tính thật khi mắc bệnh $B$), tỷ lệ dương tính giả $P(D^+ | \\overline{B}) = 0{,}03$ và tỷ lệ mắc bệnh trong cộng đồng là $P(B) = 0{,}01$. Làm sao tính xác suất một người thực sự mắc bệnh khi có kết quả dương tính $P(B | D^+)$ ạ?',
+    content_plain:
+      'Trong chương trình Toán 12 mới có chuyên đề Xác suất có điều kiện. Làm sao áp dụng công thức xác suất toàn phần và công thức Bayes để tính P(B | D+)?',
+    has_math: true,
+    subject: 'Toán Học',
+    grade: 12,
+    chapter_id: 6,
+    chapter_name: 'Chương 6: Xác suất có điều kiện và Công thức Bayes',
+    tags: ['Xác suất điều kiện', 'Công thức Bayes', 'GDPT 2018', 'Lớp 12'],
+    is_solved: true,
+    views_count: 305,
+    likes_count: 36,
+    author_type: 'STUDENT',
+    root_comment: {
+      author_type: 'TEACHER',
+      content:
+        'Bài toán kinh điển của Chương 6 Toán 12! Em giải qua 2 bước:\n1. **Công thức xác suất toàn phần** tính $P(D^+)$:\n$$P(D^+) = P(B)P(D^+|B) + P(\\overline{B})P(D^+|\\overline{B}) = 0{,}01 \\cdot 0{,}98 + 0{,}99 \\cdot 0{,}03 = 0{,}0395$$\n2. **Công thức Bayes** tính xác suất hậu nghiệm $P(B|D^+)$:\n$$P(B|D^+) = \\frac{P(B)P(D^+|B)}{P(D^+)} = \\frac{0{,}0098}{0{,}0395} = \\frac{98}{395} \\approx 24{,}81\\%$$',
+      is_accepted: true,
+      likes_count: 28,
+      nested_reply: {
+        author_type: 'STUDENT',
+        content:
+          'Vẽ sơ đồ hình cây (Tree Diagram) ra 2 nhánh $B$ ($0{,}01$) và $\\overline{B}$ ($0{,}99$) rồi nhân dọc cộng ngang theo hướng dẫn của thầy là không bao giờ nhầm công thức Bayes luôn ạ!',
+        likes_count: 11,
+      },
+    },
+  },
+
+  // 6. TOÁN HỌC 11 - CHƯƠNG 1 (PHƯƠNG TRÌNH LƯỢNG GIÁC)
   {
     slug: 'toan-11-tim-so-nghiem-phuong-trinh-luong-giac-tren-doan',
     title:
@@ -243,7 +277,6 @@ const FORUM_SEED_TOPICS: RawSeedPost[] = [
     chapter_name: 'Chương 1: Hàm số lượng giác và phương trình lượng giác',
     tags: ['Lượng giác', 'Phương trình', 'Lớp 11'],
     is_solved: true,
-    is_locked: true,
     views_count: 195,
     likes_count: 19,
     author_type: 'STUDENT',
@@ -262,7 +295,41 @@ const FORUM_SEED_TOPICS: RawSeedPost[] = [
     },
   },
 
-  // 6. TOÁN 10 - HÀM SỐ BẬC HAI & BẤT ĐẲNG THỨC
+  // 7. TOÁN HỌC 11 - CHƯƠNG 6 (MŨ & LOGARIT - GDPT 2018 ĐƯA VỀ LỚP 11)
+  {
+    slug: 'toan-11-bat-phuong-trinh-logarit-chua-tham-so-va-dieu-kien-xac-dinh',
+    title:
+      'Toán 11: Giải bất phương trình $\\log_2(x^2 - 3x + 2) + \\log_{\\frac{1}{2}}(x - 1) \\le 1$ và điều kiện xác định',
+    content:
+      'Khi giải bất phương trình logarit có cơ số $0 < a = \\frac{1}{2} < 1$, em đưa $\\log_{\\frac{1}{2}}(x - 1) = -\\log_2(x - 1)$ rồi gộp thành:\n$$\\log_2\\left(\\frac{x^2 - 3x + 2}{x - 1}\\right) \\le 1$$\nCho em hỏi mình có được rút gọn $\\frac{(x-1)(x-2)}{x-1} = x - 2$ ngay không hay phải đặt điều kiện $x > 2$ trước ạ?',
+    content_plain:
+      'Khi giải bất phương trình logarit log2(x^2 - 3x + 2) + log1/2(x - 1) <= 1, cho em hỏi điều kiện xác định trước khi rút gọn phân thức bên trong logarit như thế nào?',
+    has_math: true,
+    subject: 'Toán Học',
+    grade: 11,
+    chapter_id: 6,
+    chapter_name: 'Chương 6: Hàm số mũ và hàm số lôgarit',
+    tags: ['Logarit', 'Bất phương trình', 'Lớp 11'],
+    is_solved: true,
+    views_count: 235,
+    likes_count: 27,
+    author_type: 'STUDENT',
+    root_comment: {
+      author_type: 'TEACHER',
+      content:
+        'Bắt buộc phải đặt **điều kiện xác định của từng biểu thức logarit ban đầu** trước khi rút gọn nhé:\n$$\\begin{cases} x^2 - 3x + 2 > 0 \\\\ x - 1 > 0 \\end{cases} \\iff \\begin{cases} x < 1 \\text{ hoặc } x > 2 \\\\ x > 1 \\end{cases} \\iff x > 2$$\nVới $x > 2$, bất phương trình tương đương $\\log_2(x - 2) \\le 1 \\iff x - 2 \\le 2^1 \\iff x \\le 4$. Kết hợp điều kiện ta được tập nghiệm $S = (2; 4]$.',
+      is_accepted: true,
+      likes_count: 20,
+      nested_reply: {
+        author_type: 'STUDENT',
+        content:
+          'Nếu rút gọn trước mà chỉ đặt $x - 2 > 0$ thì vẫn may mắn trùng $x > 2$, nhưng gặp bài $\\log_2(x^2 - 1)$ mà tách ra là dễ bị mở rộng miền xác định sai ngay. Em nhớ kỹ quy tắc đặt ĐKXĐ đầu tiên rồi ạ!',
+        likes_count: 8,
+      },
+    },
+  },
+
+  // 8. TOÁN HỌC 10 - CHƯƠNG 3 (TAM THỨC BẬC HAI)
   {
     slug: 'toan-10-tim-tham-so-m-de-bat-phuong-trinh-bac-hai-nghiem-dung-voi-moi-x',
     title:
@@ -296,7 +363,178 @@ const FORUM_SEED_TOPICS: RawSeedPost[] = [
     },
   },
 
-  // 7. VẬT LÝ 12 - NHIỆT HỌC (GDPT 2018)
+  // 9. TIN HỌC 12 - ĐỘ PHỨC TẠP THUẬT TOÁN TÌM KIẾM & SẮP XẾP
+  {
+    slug: 'tin-hoc-12-so-sanh-do-phuc-tap-thuat-toan-tim-kiem-nhi-phan-va-sap-xep',
+    title:
+      'Tin Học 12: Đánh giá độ phức tạp thời gian $\\mathcal{O}(\\log_2 n)$ của Tìm kiếm nhị phân và $\\mathcal{O}(n \\log_2 n)$ của Merge Sort',
+    content:
+      'Với dãy số đã sắp xếp gồm $n = 10^6$ phần tử, thuật toán tìm kiếm nhị phân (Binary Search) chỉ cần tối đa $\\lceil \\log_2(10^6) \\rceil = 20$ phép so sánh thay vì $T(n) = \\mathcal{O}(n)$ của tìm kiếm tuần tự. Làm sao chứng minh công thức truy hồi:\n$$T(n) = T\\left(\\frac{n}{2}\\right) + \\mathcal{O}(1) \\implies T(n) = \\mathcal{O}(\\log_2 n)$$\nđể trình bày tự luận ngắn gọn ạ?',
+    content_plain:
+      'Với dãy số đã sắp xếp gồm n = 10^6 phần tử, thuật toán tìm kiếm nhị phân chỉ cần tối đa 20 phép so sánh. Làm sao chứng minh công thức truy hồi T(n) = O(log2 n)?',
+    has_math: true,
+    subject: 'Tin Học',
+    grade: 12,
+    chapter_id: 2,
+    chapter_name: 'Chủ đề F: Giải quyết vấn đề với sự trợ giúp của máy tính',
+    tags: ['Độ phức tạp Big-O', 'Binary Search', 'Thuật toán', 'Lớp 12'],
+    is_solved: true,
+    views_count: 265,
+    likes_count: 30,
+    author_type: 'STUDENT',
+    root_comment: {
+      author_type: 'TEACHER',
+      content:
+        'Giả sử $n = 2^k \\implies k = \\log_2 n$. Sau mỗi bước chia đôi, kích thước miền tìm kiếm giảm từ $2^k \\to 2^{k-1} \\to \\dots \\to 2^0 = 1$ sau đúng $k$ bước. Mỗi bước tốn $\\mathcal{O}(1)$ phép so sánh nên tổng thời gian là:\n$$T(n) = T(1) + \\sum_{i=1}^{k} c = c_0 + c \\log_2 n = \\mathcal{O}(\\log_2 n)$$',
+      is_accepted: true,
+      likes_count: 22,
+      nested_reply: {
+        author_type: 'STUDENT',
+        content:
+          'Còn với Merge Sort thì mỗi tầng đệ quy tốn $\\mathcal{O}(n)$ để trộn và có $\\log_2 n$ tầng nên $T(n) = 2T(n/2) + \\mathcal{O}(n) = \\mathcal{O}(n \\log_2 n)$ đúng không thầy?',
+        likes_count: 9,
+      },
+    },
+  },
+
+  // 10. TIN HỌC 12 - ĐỒ THỊ & THUẬT TOÁN DIJKSTRA / BFS-DFS
+  {
+    slug: 'tin-hoc-12-thuat-toan-dijkstra-tim-duong-di-ngan-nhat-tren-do-thi-trong-so',
+    title:
+      'Tin Học 12: Công thức cập nhật nhãn $d[v] = \\min(d[v],\\; d[u] + w(u, v))$ trong thuật toán Dijkstra và cấu trúc hàng đợi ưu tiên',
+    content:
+      'Khi cài đặt thuật toán Dijkstra tìm đường đi ngắn nhất từ đỉnh nguồn $s$ trên đồ thị có $V$ đỉnh và $E$ cạnh với trọng số không âm $w(u, v) \\ge 0$, nếu dùng mảng thường thì độ phức tạp là $\\mathcal{O}(V^2)$. Khi dùng `priority_queue` (Min-Heap) thì vì sao độ phức tạp giảm xuống còn:\n$$T(V, E) = \\mathcal{O}((V + E)\\log_2 V)$$\nvà tại sao Dijkstra không chạy đúng khi có cạnh trọng số âm $w(u, v) < 0$ ạ?',
+    content_plain:
+      'Khi cài đặt thuật toán Dijkstra tìm đường đi ngắn nhất từ đỉnh nguồn s trên đồ thị có V đỉnh và E cạnh, khi dùng priority_queue Min-Heap thì vì sao độ phức tạp giảm xuống O((V + E) log2 V)?',
+    has_math: true,
+    subject: 'Tin Học',
+    grade: 12,
+    chapter_id: 4,
+    chapter_name:
+      'Chủ đề CS: Cấu trúc dữ liệu Đồ thị và Thuật toán tìm đường đi',
+    tags: ['Đồ thị - Graph', 'Dijkstra', 'Min-Heap', 'Lớp 12'],
+    is_solved: true,
+    views_count: 250,
+    likes_count: 29,
+    author_type: 'STUDENT',
+    root_comment: {
+      author_type: 'TEACHER',
+      content:
+        'Với Min-Heap (`priority_queue`), thao tác lấy đỉnh $u$ có $d[u]$ nhỏ nhất tốn $\\mathcal{O}(\\log_2 V)$ cho $V$ đỉnh, và mỗi cạnh $(u, v) \\in E$ thực hiện tối đa $1$ lần nới lỏng (relaxation) đẩy vào Heap tốn $\\mathcal{O}(\\log_2 V)$, nên tổng thời gian là $\\mathcal{O}((V + E)\\log_2 V)$. Khi có cạnh âm $w(u, v) < 0$, tính chất tham lam ($d[u]$ đã cố định không thể nhỏ hơn nữa) bị phá vỡ nên phải dùng **Bellman-Ford** $\\mathcal{O}(V \\cdot E)$ nhé!',
+      is_accepted: true,
+      likes_count: 21,
+      nested_reply: {
+        author_type: 'STUDENT',
+        content:
+          'Giải thích về tính chất tham lam $w(u, v) \\ge 0 \\implies d[u] + w(u, v) \\ge d[u]$ quá dễ hiểu luôn ạ! Em cảm ơn thầy!',
+        likes_count: 8,
+      },
+    },
+  },
+
+  // 11. TIN HỌC 11 - QUY HOẠCH ĐỘNG DÃY CON TĂNG DÀI NHẤT (LIS)
+  {
+    slug: 'tin-hoc-11-cong-thuc-truy-hoi-quy-hoach-dong-day-con-tang-dai-nhat-lis',
+    title:
+      'Tin Học 11: Công thức truy hồi Quy hoạch động $dp[i] = \\max_{j < i,\\, a_j < a_i}(dp[j] + 1)$ cho bài toán Dãy con tăng dài nhất (LIS)',
+    content:
+      'Em đang ôn chuyên đề Quy hoạch động Tin học 11. Với công thức cơ bản:\n$$dp[i] = 1 + \\max(\\{dp[j] \\mid 1 \\le j < i,\\; a_j < a_i\\} \\cup \\{0\\})$$\nthì độ phức tạp là $\\mathcal{O}(n^2)$. Khi $n \\le 10^5$, làm sao kết hợp mảng phụ và chặt nhị phân `lower_bound` để tối ưu xuống $\\mathcal{O}(n \\log_2 n)$ ạ?',
+    content_plain:
+      'Em đang ôn chuyên đề Quy hoạch động Tin học 11 bài toán Dãy con tăng dài nhất (LIS). Khi n <= 10^5, làm sao kết hợp chặt nhị phân để tối ưu từ O(n^2) xuống O(n log n)?',
+    has_math: true,
+    subject: 'Tin Học',
+    grade: 11,
+    chapter_id: 3,
+    chapter_name: 'Chủ đề F: Thuật toán và Cấu trúc dữ liệu',
+    tags: ['Quy hoạch động', 'Thuật toán', 'Big-O', 'Lớp 11'],
+    is_solved: true,
+    views_count: 220,
+    likes_count: 25,
+    author_type: 'STUDENT',
+    root_comment: {
+      author_type: 'TEACHER',
+      content:
+        'Em duy trì mảng `tail[len]` lưu giá trị kết thúc **nhỏ nhất** của một dãy con tăng độ dài `len`. Vì mảng `tail` luôn đơn điệu tăng nghiêm ngặt ($tail[1] < tail[2] < \\dots < tail[L]$), với mỗi $a_i$ ta chỉ tốn $\\mathcal{O}(\\log_2 L)$ để tìm vị trí đầu tiên $tail[pos] \\ge a_i$ bằng chặt nhị phân, tổng thời gian là $\\sum_{i=1}^n \\mathcal{O}(\\log_2 i) = \\mathcal{O}(n \\log_2 n)$.',
+      is_accepted: true,
+      likes_count: 19,
+      nested_reply: {
+        author_type: 'STUDENT',
+        content:
+          'Nếu đề yêu cầu dãy con không giảm ($a_j \\le a_i$) thì mình chỉ cần đổi `lower_bound` ($\\ge a_i$) thành `upper_bound` ($> a_i$) là xong đúng không thầy?',
+        likes_count: 8,
+      },
+    },
+  },
+
+  // 12. TIN HỌC 11 - ĐỆ QUY CHIA ĐỂ TRỊ & LŨY THỪA NHỊ PHÂN MODULO
+  {
+    slug: 'tin-hoc-11-thuat-toan-luy-thua-nhi-phan-chia-de-tri-va-so-hoc-modulo',
+    title:
+      'Tin Học 11: Thuật toán Lũy thừa nhị phân (Binary Exponentiation) tính $a^n \\bmod M$ trong thời gian $\\mathcal{O}(\\log_2 n)$',
+    content:
+      'Khi tính $a^n \\bmod M$ với $n \\le 10^{18}$ và $M = 10^9 + 7$, nếu nhân lặp tuần tự sẽ bị quá thời gian (TLE). Công thức đệ quy Chia để trị:\n$$a^n = \\begin{cases} (a^{n/2})^2 & \\text{nếu } n \\text{ chẵn} \\\\ a \\cdot (a^{(n-1)/2})^2 & \\text{nếu } n \\text{ lẻ} \\end{cases}$$\nkhi chuyển sang vòng lặp `while (n > 0)` dùng phép dịch bit `n >>= 1` và `n & 1` viết như thế nào để tránh tràn số nguyên $64\\text{-bit}$ ạ?',
+    content_plain:
+      'Khi tính a^n mod M với n <= 10^18 và M = 10^9 + 7, làm sao áp dụng công thức lũy thừa nhị phân Chia để trị trong thời gian O(log2 n) mà không bị tràn số?',
+    has_math: true,
+    subject: 'Tin Học',
+    grade: 11,
+    chapter_id: 2,
+    chapter_name: 'Chủ đề F: Kỹ thuật Thiết kế Thuật toán Chia để trị',
+    tags: ['Chia để trị', 'Lũy thừa nhị phân', 'Modulo', 'Lớp 11'],
+    is_solved: true,
+    views_count: 205,
+    likes_count: 23,
+    author_type: 'STUDENT',
+    root_comment: {
+      author_type: 'TEACHER',
+      content:
+        'Bản chất là khai triển $n$ theo hệ nhị phân $n = \\sum b_k 2^k$. Ở mỗi bước lặp: nếu bit cuối `(n & 1) == 1` thì cập nhật `res = (res * a) % M`, sau đó luôn bình phương cơ số `a = (a * a) % M` và dịch phải `n >>= 1`. Vì $M = 10^9 + 7 < 2^{30}$ nên tích `(a * a)` tối đa $\\approx 10^{18} < 2^{63} - 1$, vừa khít kiểu `long long` ($64\\text{-bit}$) không lo tràn số!',
+      is_accepted: true,
+      likes_count: 17,
+      nested_reply: {
+        author_type: 'STUDENT',
+        content:
+          'Áp dụng kèm Định lý Fermat nhỏ $a^{-1} \\equiv a^{M-2} \\pmod M$ (khi $M$ nguyên tố) để tính nghịch đảo modulo cho tổ hợp $C_n^k \\bmod (10^9+7)$ cực kỳ tiện luôn ạ!',
+        likes_count: 7,
+      },
+    },
+  },
+
+  // 13. TIN HỌC 10 - HỆ ĐẾM NHỊ PHÂN & BIỂU DIỄN DỮ LIỆU MÃ BÙ 2
+  {
+    slug: 'tin-hoc-10-chuyen-doi-he-nhi-phan-va-thap-luc-phan-theo-luy-thua-co-so-2',
+    title:
+      'Tin Học 10: Công thức chuyển đổi số nhị phân $N_{(2)} = \\sum_{i=0}^{k-1} b_i \\cdot 2^i$ sang hệ thập phân và bù 2 (Two’s Complement)',
+    content:
+      'Trong bài Biểu diễn dữ liệu trong máy tính (Tin 10 GDPT 2018), một số nguyên không dấu $8\\text{ bit}$ có giá trị từ $0$ đến $2^8 - 1 = 255$. Khi biểu diễn số nguyên có dấu bằng mã bù $2$ trên $n = 8\\text{ bit}$, vì sao dải giá trị lại là $[-2^{n-1},\\; 2^{n-1} - 1] = [-128,\\; 127]$ mà phần âm nhiều hơn phần dương $1$ số ạ?',
+    content_plain:
+      'Trong bài Biểu diễn dữ liệu trong máy tính Tin 10, khi biểu diễn số nguyên có dấu bằng mã bù 2 trên 8 bit, vì sao dải giá trị lại từ -128 đến 127?',
+    has_math: true,
+    subject: 'Tin Học',
+    grade: 10,
+    chapter_id: 1,
+    chapter_name: 'Chủ đề A: Máy tính và xã hội tri thức - Biểu diễn thông tin',
+    tags: ['Hệ nhị phân', 'Mã bù 2', 'Biểu diễn số', 'Lớp 10'],
+    is_solved: true,
+    views_count: 175,
+    likes_count: 15,
+    author_type: 'STUDENT',
+    root_comment: {
+      author_type: 'TEACHER',
+      content:
+        'Trên $n = 8\\text{ bit}$ có tổng cộng $2^8 = 256$ tổ hợp bit, được chia đôi: $128$ tổ hợp có bit dấu $b_7 = 0$ (gồm số $0$ và các số dương $1 \\dots 127$) và $128$ tổ hợp có bit dấu $b_7 = 1$ (biểu diễn từ $-1$ đến $-128$). Công thức trọng số tổng quát của mã bù $2$ là:\n$$V = -b_{n-1} \\cdot 2^{n-1} + \\sum_{i=0}^{n-2} b_i \\cdot 2^i$$\nVì số $0$ (`00000000`) đã chiếm mất $1$ vị trí bên nhánh không âm nên nhánh dương chỉ tới $2^{n-1} - 1 = 127$, còn `10000000` ứng với $-1 \\cdot 2^7 + 0 = -128$.',
+      is_accepted: true,
+      likes_count: 14,
+      nested_reply: {
+        author_type: 'STUDENT',
+        content:
+          'Công thức trọng số $V = -b_7 \\cdot 2^7 + \\sum_{i=0}^6 b_i \\cdot 2^i$ giải thích quá rõ ràng vì sao `11111111` bằng $-128 + 127 = -1$ luôn ạ!',
+        likes_count: 6,
+      },
+    },
+  },
+
+  // 14. VẬT LÝ 12 - NHIỆT HỌC (GDPT 2018)
   {
     slug: 'vat-ly-12-phuong-trinh-trang-thai-khi-ly-tuong-va-noi-nang',
     title:
@@ -330,41 +568,7 @@ const FORUM_SEED_TOPICS: RawSeedPost[] = [
     },
   },
 
-  // 8. VẬT LÝ 12 - TỪ TRƯỜNG & CẢM ỨNG ĐIỆN TỪ
-  {
-    slug: 'vat-ly-12-suat-dien-dong-cam-ung-faraday-va-luc-tu-lorentz',
-    title:
-      'Vật Lý 12: Tính suất điện động cảm ứng $e_c = -\\frac{\\Delta \\Phi}{\\Delta t}$ khi khung dây quay trong từ trường đều',
-    content:
-      'Một khung dây phẳng gồm $N = 100$ vòng, diện tích $S = 20\\text{ cm}^2$ đặt trong từ trường đều $B = 0{,}2\\text{ T}$. Ban đầu pháp tuyến $\\vec{n}$ hợp với $\\vec{B}$ góc $\\alpha = 60^\\circ$. Nếu cho $B$ giảm đều về $0$ trong $\\Delta t = 0{,}05\\text{ s}$ thì độ lớn $|e_c|$ tính như thế nào ạ?',
-    content_plain:
-      'Một khung dây phẳng gồm N = 100 vòng, diện tích S = 20 cm2 đặt trong từ trường đều B = 0,2 T. Ban đầu pháp tuyến hợp với B góc 60 độ. Nếu cho B giảm đều về 0 trong 0,05 s thì độ lớn suất điện động cảm ứng tính như thế nào?',
-    has_math: true,
-    subject: 'Vật Lý',
-    grade: 12,
-    chapter_id: 3,
-    chapter_name: 'Chương 3: Từ trường',
-    tags: ['Cảm ứng điện từ', 'Từ thông', 'Lớp 12'],
-    is_solved: true,
-    views_count: 215,
-    likes_count: 20,
-    author_type: 'STUDENT',
-    root_comment: {
-      author_type: 'TEACHER',
-      content:
-        'Ta đổi đơn vị diện tích $S = 20 \\times 10^{-4}\\text{ m}^2$. Từ thông ban đầu qua khung dây là:\n$$\\Phi_1 = NBS\\cos 60^\\circ = 100 \\cdot 0{,}2 \\cdot (20 \\times 10^{-4}) \\cdot 0{,}5 = 0{,}02\\text{ Wb}$$\nKhi $B$ giảm về $0$ thì $\\Phi_2 = 0$, suy ra $|e_c| = \\left|\\frac{\\Phi_2 - \\Phi_1}{\\Delta t}\\right| = \\frac{0{,}02}{0{,}05} = 0{,}4\\text{ V}$ nhé!',
-      is_accepted: true,
-      likes_count: 15,
-      nested_reply: {
-        author_type: 'STUDENT',
-        content:
-          'Nếu đề cho góc giữa mặt phẳng khung dây và $\\vec{B}$ là $30^\\circ$ thì góc hợp bởi pháp tuyến $\\vec{n}$ và $\\vec{B}$ vẫn là $\\alpha = 90^\\circ - 30^\\circ = 60^\\circ$ đúng không thầy?',
-        likes_count: 6,
-      },
-    },
-  },
-
-  // 9. VẬT LÝ 11 - DAO ĐỘNG ĐIỀU HÒA (GDPT 2018 ĐƯA DAO ĐỘNG VỀ LỚP 11)
+  // 15. VẬT LÝ 11 - DAO ĐỘNG ĐIỀU HÒA (GDPT 2018 ĐƯA DAO ĐỘNG VỀ LỚP 11)
   {
     slug: 'vat-ly-11-chu-ky-con-lac-lo-xo-va-he-thuc-doc-lap-thoi-gian',
     title:
@@ -398,41 +602,7 @@ const FORUM_SEED_TOPICS: RawSeedPost[] = [
     },
   },
 
-  // 10. VẬT LÝ 10 - ĐỊNH LUẬT II NEWTON & ĐỘNG LỰC HỌC
-  {
-    slug: 'vat-ly-10-bai-toan-vat-truot-tren-mat-phang-nghieng-co-ma-sat',
-    title:
-      'Vật Lý 10: Phân tích lực và tính gia tốc vật trượt trên mặt phẳng nghiêng góc $\\alpha$ có ma sát',
-    content:
-      'Một vật khối lượng $m = 2\\text{ kg}$ trượt không vận tốc đầu từ đỉnh mặt phẳng nghiêng góc $\\alpha = 30^\\circ$ so với phương ngang, hệ số ma sát trượt $\\mu_t = \\frac{\\sqrt{3}}{6}$. Công thức gia tốc $a = g(\\sin\\alpha - \\mu_t\\cos\\alpha)$ được suy ra từ định luật II Newton $\\vec{P} + \\vec{N} + \\vec{F}_{mst} = m\\vec{a}$ như thế nào ạ?',
-    content_plain:
-      'Một vật khối lượng m = 2 kg trượt không vận tốc đầu từ đỉnh mặt phẳng nghiêng góc 30 độ, hệ số ma sát trượt. Công thức gia tốc suy ra từ định luật II Newton như thế nào?',
-    has_math: true,
-    subject: 'Vật Lý',
-    grade: 10,
-    chapter_id: 3,
-    chapter_name: 'Chương 3: Động lực học',
-    tags: ['Định luật Newton', 'Mặt phẳng nghiêng', 'Ma sát', 'Lớp 10'],
-    is_solved: true,
-    views_count: 180,
-    likes_count: 16,
-    author_type: 'STUDENT',
-    root_comment: {
-      author_type: 'TEACHER',
-      content:
-        'Chiếu phương trình $\\vec{P} + \\vec{N} + \\vec{F}_{mst} = m\\vec{a}$ lên trục $Oy$ vuông góc mặt nghiêng ta được $N = mg\\cos\\alpha \\implies F_{mst} = \\mu_t mg\\cos\\alpha$. Chiếu lên trục $Ox$ dọc theo mặt nghiêng:\n$$mg\\sin\\alpha - \\mu_t mg\\cos\\alpha = ma \\implies a = g(\\sin 30^\\circ - \\frac{\\sqrt{3}}{6}\\cos 30^\\circ) = 9{,}8 \\cdot \\left(\\frac{1}{2} - \\frac{1}{4}\\right) = 2{,}45\\text{ m/s}^2$$',
-      is_accepted: true,
-      likes_count: 14,
-      nested_reply: {
-        author_type: 'STUDENT',
-        content:
-          'Hay quá thầy ơi, khối lượng $m = 2\\text{ kg}$ tự triệt tiêu ở cả hai vế nên gia tốc trượt $a$ không phụ thuộc vào khối lượng vật!',
-        likes_count: 5,
-      },
-    },
-  },
-
-  // 11. HÓA HỌC 12 - ESTE & LIPIT
+  // 16. HÓA HỌC 12 - ESTE & LIPIT
   {
     slug: 'hoa-hoc-12-phuong-phap-dong-dang-hoa-va-quy-doi-este-da-chuc',
     title:
@@ -472,41 +642,7 @@ const FORUM_SEED_TOPICS: RawSeedPost[] = [
     },
   },
 
-  // 12. HÓA HỌC 12 - PIN ĐIỆN & ĐIỆN PHÂN
-  {
-    slug: 'hoa-hoc-12-tinh-suc-dien-dong-chuan-cua-pin-galvani-va-dinh-luat-faraday',
-    title:
-      'Hóa Học 12: Tính sức điện động chuẩn $E^\\circ_{\\text{pin}}$ của pin Galvani $\\text{Zn}-\\text{Cu}$ và khối lượng kim loại điện phân',
-    content:
-      'Cho thế điện cực chuẩn $E^\\circ_{\\text{Zn}^{2+}/\\text{Zn}} = -0{,}76\\text{ V}$ và $E^\\circ_{\\text{Cu}^{2+}/\\text{Cu}} = +0{,}34\\text{ V}$. Khi ghép thành pin Galvani thì sức điện động chuẩn tính theo:\n$$E^\\circ_{\\text{pin}} = E^\\circ_{\\text{cathode}} - E^\\circ_{\\text{anode}}$$\nvà khi điện phân dung dịch $\\text{CuSO}_4$ với dòng $I = 1{,}93\\text{ A}$ trong $t = 1000\\text{ s}$ thì $m_{\\text{Cu}} = \\frac{AIt}{nF}$ bằng bao nhiêu ạ?',
-    content_plain:
-      'Cho thế điện cực chuẩn của Zn2+/Zn và Cu2+/Cu. Khi ghép thành pin Galvani thì sức điện động chuẩn và khối lượng kim loại Cu thu được khi điện phân tính như thế nào?',
-    has_math: true,
-    subject: 'Hóa Học',
-    grade: 12,
-    chapter_id: 5,
-    chapter_name: 'Chương 5: Pin điện và Điện phân',
-    tags: ['Pin Galvani', 'Điện phân', 'Faraday', 'Lớp 12'],
-    is_solved: true,
-    views_count: 230,
-    likes_count: 24,
-    author_type: 'STUDENT',
-    root_comment: {
-      author_type: 'TEACHER',
-      content:
-        'Ta có $E^\\circ_{\\text{pin}} = 0{,}34 - (-0{,}76) = 1{,}10\\text{ V}$. Ở bài điện phân, số mol electron trao đổi tính theo định luật Faraday:\n$$n_e = \\frac{It}{F} = \\frac{1{,}93 \\times 1000}{96500} = 0{,}02\\text{ mol} \\implies n_{\\text{Cu}} = \\frac{1}{2}n_e = 0{,}01\\text{ mol} \\implies m_{\\text{Cu}} = 0{,}64\\text{ g}$$',
-      is_accepted: true,
-      likes_count: 17,
-      nested_reply: {
-        author_type: 'STUDENT',
-        content:
-          'Dạ ở anode (cực dương) có phản ứng $2\\text{H}_2\\text{O} \\to \\text{O}_2 + 4\\text{H}^+ + 4e$ nên số mol khí $\\text{O}_2$ thoát ra là $n_{\\text{O}_2} = \\frac{n_e}{4} = 0{,}005\\text{ mol}$ đúng không thầy?',
-        likes_count: 8,
-      },
-    },
-  },
-
-  // 13. HÓA HỌC 11 - CÂN BẰNG HÓA HỌC & pH
+  // 17. HÓA HỌC 11 - CÂN BẰNG HÓA HỌC & pH
   {
     slug: 'hoa-hoc-11-hang-so-can-bang-kc-va-tinh-ph-dung-dich-axit-yeu',
     title:
@@ -536,142 +672,6 @@ const FORUM_SEED_TOPICS: RawSeedPost[] = [
         content:
           'Còn vì phản ứng tỏa nhiệt ($\\Delta_r H^\\circ_{298} < 0$) nên nếu tăng nhiệt độ $T$ thì cân bằng dịch chuyển theo chiều nghịch và $K_C$ giảm xuống ạ!',
         likes_count: 7,
-      },
-    },
-  },
-
-  // 14. HÓA HỌC 10 - NHIỆT HÓA HỌC (ENTHALPY)
-  {
-    slug: 'hoa-hoc-10-tinh-bien-thien-enthalpy-chuan-cua-phan-ung-tu-nhiet-tao-thanh',
-    title:
-      'Hóa Học 10: Cách tính biến thiên enthalpy chuẩn $\\Delta_r H^\\circ_{298}$ theo nhiệt tạo thành $\\Delta_f H^\\circ_{298}$ và năng lượng liên kết $E_b$',
-    content:
-      'Em hay bị nhầm dấu giữa 2 công thức tính biến thiên enthalpy chuẩn của phản ứng:\n1. Tính theo nhiệt tạo thành: $\\Delta_r H^\\circ_{298} = \\sum \\Delta_f H^\\circ_{298}(\\text{sản phẩm}) - \\sum \\Delta_f H^\\circ_{298}(\\text{chất đầu})$\n2. Tính theo năng lượng liên kết: $\\Delta_r H^\\circ_{298} = \\sum E_b(\\text{chất đầu}) - \\sum E_b(\\text{sản phẩm})$\nThầy cô có mẹo nào để nhớ không bị ngược thứ tự trừ không ạ?',
-    content_plain:
-      'Em hay bị nhầm dấu giữa 2 công thức tính biến thiên enthalpy chuẩn của phản ứng theo nhiệt tạo thành và theo năng lượng liên kết Eb. Thầy cô có mẹo nào để nhớ không ạ?',
-    has_math: true,
-    subject: 'Hóa Học',
-    grade: 10,
-    chapter_id: 5,
-    chapter_name: 'Chương 5: Năng lượng hóa học',
-    tags: ['Enthalpy', 'Nhiệt hóa học', 'GDPT 2018', 'Lớp 10'],
-    is_solved: true,
-    views_count: 190,
-    likes_count: 18,
-    author_type: 'STUDENT',
-    root_comment: {
-      author_type: 'TEACHER',
-      content:
-        'Mẹo cực dễ nhớ nhé em:\n- Với **nhiệt tạo thành ($\\Delta_f H^\\circ_{298}$)**: Đúng định nghĩa độ biến thiên $\\Delta = \\text{Sau} - \\text{Đầu} = \\sum \\Delta_f H^\\circ_{298}(\\text{sản phẩm}) - \\sum \\Delta_f H^\\circ_{298}(\\text{chất đầu})$.\n- Với **năng lượng liên kết ($E_b$)**: Phá vỡ liên kết chất đầu cần **thu nhiệt** ($+E_b$), hình thành liên kết sản phẩm **tỏa nhiệt** ($-E_b$), nên $\\Delta_r H^\\circ_{298} = \\sum E_b(\\text{đầu}) - \\sum E_b(\\text{sau})$. Lưu ý công thức $E_b$ chỉ áp dụng cho các chất ở thể khí $(g)$!',
-      is_accepted: true,
-      likes_count: 15,
-      nested_reply: {
-        author_type: 'STUDENT',
-        content:
-          'Hiểu bản chất phá liên kết thu nhiệt ($+$) và tạo liên kết tỏa nhiệt ($-$) là không bao giờ nhầm thứ tự $\\sum E_b(\\text{đầu}) - \\sum E_b(\\text{sau})$ nữa. Em cảm ơn thầy!',
-        likes_count: 6,
-      },
-    },
-  },
-
-  // 15. TIN HỌC 12 - ĐỘ PHỨC TẠP THUẬT TOÁN & AI/MẠNG
-  {
-    slug: 'tin-hoc-12-so-sanh-do-phuc-tap-thuat-toan-tim-kiem-nhi-phan-va-sap-xep',
-    title:
-      'Tin Học 12: Đánh giá độ phức tạp thời gian $\\mathcal{O}(\\log_2 n)$ của Tìm kiếm nhị phân và $\\mathcal{O}(n \\log_2 n)$ của Merge Sort',
-    content:
-      'Với dãy số đã sắp xếp gồm $n = 10^6$ phần tử, thuật toán tìm kiếm nhị phân (Binary Search) chỉ cần tối đa $\\lceil \\log_2(10^6) \\rceil = 20$ phép so sánh thay vì $T(n) = \\mathcal{O}(n)$ của tìm kiếm tuần tự. Làm sao chứng minh công thức truy hồi:\n$$T(n) = T\\left(\\frac{n}{2}\\right) + \\mathcal{O}(1) \\implies T(n) = \\mathcal{O}(\\log_2 n)$$\nđể trình bày tự luận ngắn gọn ạ?',
-    content_plain:
-      'Với dãy số đã sắp xếp gồm n = 10^6 phần tử, thuật toán tìm kiếm nhị phân chỉ cần tối đa 20 phép so sánh. Làm sao chứng minh công thức truy hồi T(n) = O(log2 n)?',
-    has_math: true,
-    subject: 'Tin Học',
-    grade: 12,
-    chapter_id: 2,
-    chapter_name: 'Chủ đề F: Giải quyết vấn đề với sự trợ giúp của máy tính',
-    tags: ['Độ phức tạp Big-O', 'Binary Search', 'Thuật toán', 'Lớp 12'],
-    is_solved: true,
-    views_count: 265,
-    likes_count: 30,
-    author_type: 'STUDENT',
-    root_comment: {
-      author_type: 'TEACHER',
-      content:
-        'Giả sử $n = 2^k \\implies k = \\log_2 n$. Sau mỗi bước chia đôi, kích thước miền tìm kiếm giảm từ $2^k \\to 2^{k-1} \\to \\dots \\to 2^0 = 1$ sau đúng $k$ bước. Mỗi bước tốn $\\mathcal{O}(1)$ phép so sánh nên tổng thời gian là:\n$$T(n) = T(1) + \\sum_{i=1}^{k} c = c_0 + c \\log_2 n = \\mathcal{O}(\\log_2 n)$$',
-      is_accepted: true,
-      likes_count: 22,
-      nested_reply: {
-        author_type: 'STUDENT',
-        content:
-          'Còn với Merge Sort thì mỗi tầng đệ quy tốn $\\mathcal{O}(n)$ để trộn và có $\\log_2 n$ tầng nên $T(n) = 2T(n/2) + \\mathcal{O}(n) = \\mathcal{O}(n \\log_2 n)$ đúng không thầy?',
-        likes_count: 9,
-      },
-    },
-  },
-
-  // 16. TIN HỌC 11 - QUY HOẠCH ĐỘNG & CƠ SỞ DỮ LIỆU QUAN HỆ
-  {
-    slug: 'tin-hoc-11-cong-thuc-truy-hoi-quy-hoach-dong-day-con-tang-dai-nhat-lis',
-    title:
-      'Tin Học 11: Công thức truy hồi Quy hoạch động $dp[i] = \\max_{j < i,\\, a_j < a_i}(dp[j] + 1)$ cho bài toán Dãy con tăng dài nhất (LIS)',
-    content:
-      'Em đang ôn chuyên đề Quy hoạch động Tin học 11. Với công thức cơ bản:\n$$dp[i] = 1 + \\max(\\{dp[j] \\mid 1 \\le j < i,\\; a_j < a_i\\} \\cup \\{0\\})$$\nthì độ phức tạp là $\\mathcal{O}(n^2)$. Khi $n \\le 10^5$, làm sao kết hợp mảng phụ và chặt nhị phân `lower_bound` để tối ưu xuống $\\mathcal{O}(n \\log_2 n)$ ạ?',
-    content_plain:
-      'Em đang ôn chuyên đề Quy hoạch động Tin học 11 bài toán Dãy con tăng dài nhất (LIS). Khi n <= 10^5, làm sao kết hợp chặt nhị phân để tối ưu từ O(n^2) xuống O(n log n)?',
-    has_math: true,
-    subject: 'Tin Học',
-    grade: 11,
-    chapter_id: 3,
-    chapter_name: 'Chủ đề F: Thuật toán và Cấu trúc dữ liệu',
-    tags: ['Quy hoạch động', 'Thuật toán', 'Big-O', 'Lớp 11'],
-    is_solved: true,
-    views_count: 220,
-    likes_count: 25,
-    author_type: 'STUDENT',
-    root_comment: {
-      author_type: 'TEACHER',
-      content:
-        'Em duy trì mảng `tail[len]` lưu giá trị kết thúc **nhỏ nhất** của một dãy con tăng độ dài `len`. Vì mảng `tail` luôn đơn điệu tăng nghiêm ngặt ($tail[1] < tail[2] < \\dots < tail[L]$), với mỗi $a_i$ ta chỉ tốn $\\mathcal{O}(\\log_2 L)$ để tìm vị trí đầu tiên $tail[pos] \\ge a_i$ bằng chặt nhị phân, tổng thời gian là $\\sum_{i=1}^n \\mathcal{O}(\\log_2 i) = \\mathcal{O}(n \\log_2 n)$.',
-      is_accepted: true,
-      likes_count: 19,
-      nested_reply: {
-        author_type: 'STUDENT',
-        content:
-          'Nếu đề yêu cầu dãy con không giảm ($a_j \\le a_i$) thì mình chỉ cần đổi `lower_bound` ($\\ge a_i$) thành `upper_bound` ($> a_i$) là xong đúng không thầy?',
-        likes_count: 8,
-      },
-    },
-  },
-
-  // 17. TIN HỌC 10 - HỆ ĐẾM NHỊ PHÂN & BIỂU DIỄN DỮ LIỆU
-  {
-    slug: 'tin-hoc-10-chuyen-doi-he-nhi-phan-va-thap-luc-phan-theo-luy-thua-co-so-2',
-    title:
-      'Tin Học 10: Công thức chuyển đổi số nhị phân $N_{(2)} = \\sum_{i=0}^{k-1} b_i \\cdot 2^i$ sang hệ thập phân và bù 2 (Two’s Complement)',
-    content:
-      'Trong bài Biểu diễn dữ liệu trong máy tính (Tin 10 GDPT 2018), một số nguyên không dấu $8\\text{ bit}$ có giá trị từ $0$ đến $2^8 - 1 = 255$. Khi biểu diễn số nguyên có dấu bằng mã bù $2$ trên $n = 8\\text{ bit}$, vì sao dải giá trị lại là $[-2^{n-1},\\; 2^{n-1} - 1] = [-128,\\; 127]$ mà phần âm nhiều hơn phần dương $1$ số ạ?',
-    content_plain:
-      'Trong bài Biểu diễn dữ liệu trong máy tính Tin 10, khi biểu diễn số nguyên có dấu bằng mã bù 2 trên 8 bit, vì sao dải giá trị lại từ -128 đến 127?',
-    has_math: true,
-    subject: 'Tin Học',
-    grade: 10,
-    chapter_id: 1,
-    chapter_name: 'Chủ đề A: Máy tính và xã hội tri thức - Biểu diễn thông tin',
-    tags: ['Hệ nhị phân', 'Mã bù 2', 'Biểu diễn số', 'Lớp 10'],
-    is_solved: true,
-    views_count: 175,
-    likes_count: 15,
-    author_type: 'STUDENT',
-    root_comment: {
-      author_type: 'TEACHER',
-      content:
-        'Trên $n = 8\\text{ bit}$ có tổng cộng $2^8 = 256$ tổ hợp bit, được chia đôi: $128$ tổ hợp có bit dấu $b_7 = 0$ (gồm số $0$ và các số dương $1 \\dots 127$) và $128$ tổ hợp có bit dấu $b_7 = 1$ (biểu diễn từ $-1$ đến $-128$). Công thức trọng số tổng quát của mã bù $2$ là:\n$$V = -b_{n-1} \\cdot 2^{n-1} + \\sum_{i=0}^{n-2} b_i \\cdot 2^i$$\nVì số $0$ (`00000000`) đã chiếm mất $1$ vị trí bên nhánh không âm nên nhánh dương chỉ tới $2^{n-1} - 1 = 127$, còn `10000000` ứng với $-1 \\cdot 2^7 + 0 = -128$.',
-      is_accepted: true,
-      likes_count: 14,
-      nested_reply: {
-        author_type: 'STUDENT',
-        content:
-          'Công thức trọng số $V = -b_7 \\cdot 2^7 + \\sum_{i=0}^6 b_i \\cdot 2^i$ giải thích quá rõ ràng vì sao `11111111` bằng $-128 + 127 = -1$ luôn ạ!',
-        likes_count: 6,
       },
     },
   },
@@ -710,136 +710,319 @@ const FORUM_SEED_TOPICS: RawSeedPost[] = [
     },
   },
 
-  // 19. TIẾNG ANH 11 - MỆNH ĐỀ QUAN HỆ RÚT GỌN & PHÂN TỪ HOÀN THÀNH
+  // 19. SINH HỌC 12 - QUY LUẬT DI TRUYỀN QUẦN THỂ HARDY-WEINBERG & ADN
   {
-    slug: 'tieng-anh-11-phan-biet-rut-gon-menh-de-quan-he-bang-v-ing-v-ed-va-to-v',
+    slug: 'sinh-hoc-12-dinh-luat-can-bang-di-truyen-hardy-weinberg-va-tan-so-alen',
     title:
-      'Tiếng Anh 11 (Global Success): Phân biệt rút gọn mệnh đề quan hệ bằng $V_{\\text{-ing}}$, $V_{\\text{p.p}}$ và $\\text{to } V_{\\text{inf}}$',
+      'Sinh Học 12: Áp dụng định luật cân bằng Hardy-Weinberg $p^2\\text{AA} + 2pq\\text{Aa} + q^2\\text{aa} = 1$ tính tần số kiểu gen dị hợp',
     content:
-      'Trong đề kiểm tra Unit 6 - Preserving Our Heritage có câu: *"The Citadel of the Ho Dynasty is the only stone citadel in Southeast Asia (remaining / remained / to remain) mostly intact."* Khi có từ chỉ số thứ tự hoặc duy nhất (`the first`, `the last`, `the only`) đứng trước danh từ thì công thức rút gọn bắt buộc là:\n$$\\text{the first / only / last} + N + \\text{to } V_{\\text{inf}} \\;(\\text{chủ động}) \\quad \\text{hoặc} \\quad \\text{to be } V_{\\text{p.p}} \\;(\\text{bị động})$$\nphải không ạ?',
+      'Một quần thể thực vật giao phấn ngẫu nhiên đang ở trạng thái cân bằng di truyền Hardy-Weinberg có hai alen $A$ (hoa đỏ, trội hoàn toàn) và $a$ (hoa trắng, lặn). Biết tỷ lệ cây hoa trắng $(aa)$ trong quần thể chiếm $q^2 = 16\\%$. Làm sao tính nhanh tần số alen $p(A),\\; q(a)$ và tỷ lệ cây hoa đỏ dị hợp tử $Aa$ trong số các cây hoa đỏ $\\frac{2pq}{p^2 + 2pq}$ ạ?',
     content_plain:
-      'Trong đề kiểm tra Unit 6 Preserving Our Heritage, khi có từ the first, the last, the only đứng trước danh từ thì công thức rút gọn mệnh đề quan hệ bắt buộc dùng to V phải không ạ?',
+      'Một quần thể thực vật giao phấn ngẫu nhiên đang ở trạng thái cân bằng di truyền Hardy-Weinberg có tỷ lệ cây hoa trắng aa chiếm 16%. Làm sao tính tần số alen p(A), q(a) và tỷ lệ cây hoa đỏ dị hợp tử Aa?',
     has_math: true,
-    subject: 'Tiếng Anh',
-    grade: 11,
-    chapter_id: 6,
-    chapter_name: 'Unit 6: Preserving Our Heritage - Reduced Relative Clauses',
-    tags: ['Ngữ pháp', 'Rút gọn mệnh đề', 'Global Success 11'],
+    subject: 'Sinh Học',
+    grade: 12,
+    chapter_id: 2,
+    chapter_name: 'Chương 2: Di truyền học quần thể và Quy luật Hardy-Weinberg',
+    tags: ['Di truyền quần thể', 'Hardy-Weinberg', 'Tần số alen', 'Lớp 12'],
     is_solved: true,
-    views_count: 225,
-    likes_count: 21,
+    views_count: 245,
+    likes_count: 28,
     author_type: 'STUDENT',
     root_comment: {
       author_type: 'TEACHER',
       content:
-        'Hoàn toàn chính xác! Do phía trước có cụm `"the only stone citadel"` và động từ `remain` là nội động từ mang nghĩa chủ động, nên đáp án chuẩn là **`to remain`**. Nếu dùng cho câu bị động (ví dụ *"the first heritage site to be recognized by UNESCO"*) thì ta dùng $\\text{to be } + V_{\\text{p.p}}$ nhé!',
+        'Vì quần thể cân bằng di truyền nên từ $q^2 = 0{,}16 \\implies q(a) = \\sqrt{0{,}16} = 0{,}4$ và $p(A) = 1 - q = 0{,}6$. Cấu trúc di truyền của quần thể là:\n$$0{,}36\\text{AA} : 0{,}48\\text{Aa} : 0{,}16\\text{aa}$$\nTrong tổng số cây hoa đỏ ($1 - q^2 = 0{,}84$), tỷ lệ cây hoa đỏ dị hợp tử $Aa$ là $\\frac{2pq}{1 - q^2} = \\frac{2q}{1 + q} = \\frac{0{,}48}{0{,}84} = \\frac{4}{7} \\approx 57{,}14\\%$ nhé!',
       is_accepted: true,
-      likes_count: 15,
+      likes_count: 21,
       nested_reply: {
         author_type: 'STUDENT',
         content:
-          'Dạ ngoài `the first/last/only` thì khi danh từ đứng sau so sánh nhất ($\\text{the} + \\text{ Adj}_{\\text{est}} / \\text{most Adj} + N$) mình cũng rút gọn bằng $\\text{to } V_{\\text{inf}}$ luôn đúng không ạ?',
-        likes_count: 7,
+          'Công thức rút gọn $\\frac{2pq}{p^2 + 2pq} = \\frac{2pq}{p(p + 2q)} = \\frac{2q}{1 + q}$ của cô bấm máy tính siêu nhanh luôn ạ!',
+        likes_count: 9,
       },
     },
   },
 
-  // 20. TIẾNG ANH 10 - CÂU ĐIỀU KIỆN HỖN HỢP & XÁC SUẤT ĐIỂM SỐ
+  // 20. NGỮ VĂN 12 - CẤU TRÚC ĐOẠN VĂN NGHỊ LUẬN XÃ HỘI 200 CHỮ & ĐỌC HIỂU
   {
-    slug: 'tieng-anh-10-cong-thuc-cau-dieu-kien-loai-1-2-3-va-mixed-conditionals',
+    slug: 'ngu-van-12-cong-thuc-phan-bo-dung-luong-doan-van-nghi-luan-xa-hoi-200-chu',
     title:
-      'Tiếng Anh 10: Hệ thống hóa công thức Câu điều kiện (Conditionals Type 1, 2, 3 & Mixed) dễ nhớ nhất',
+      'Ngữ Văn 12 (GDPT 2018): Công thức phân bổ dung lượng đoạn văn Nghị luận xã hội $200$ chữ và ma trận điểm Đọc hiểu $4{,}0$ điểm',
     content:
-      'Em tổng hợp bảng công thức chia thì của $4$ loại câu điều kiện dưới dạng ký hiệu toán học để ôn thi học kỳ:\n- **Type 1:** $\\text{If} + S + V_{(s/es)},\\; S + \\text{will/can} + V_{\\text{inf}}$\n- **Type 2 (trái hiện tại):** $\\text{If} + S + V_{\\text{ed/were}},\\; S + \\text{would/could} + V_{\\text{inf}}$\n- **Type 3 (trái quá khứ):** $\\text{If} + S + \\text{had } V_{\\text{p.p}},\\; S + \\text{would have } V_{\\text{p.p}}$\n- **Mixed ($3 \\to 2$):** $\\text{If} + S + \\text{had } V_{\\text{p.p}} \\;(\\text{yesterday}),\\; S + \\text{would } V_{\\text{inf}} \\;(\\text{now})$\nKhi nào thì mình dùng dạng đảo ngữ `Were I you` hoặc `Had it not been for + N` vậy ạ?',
+      'Trong cấu trúc đề thi tốt nghiệp THPT môn Ngữ Văn theo chương trình GDPT 2018 ($100\\%$ ngữ liệu ngoài SGK), phần Viết gồm đoạn văn Nghị luận xã hội khoảng $200$ chữ ($2{,}0\\text{ điểm}$) và bài văn Nghị luận văn học khoảng $600$ chữ ($4{,}0\\text{ điểm}$). Thầy cô cho em hỏi tỷ lệ phân bổ số câu trong đoạn văn $200$ chữ theo mô hình:\n$$\\text{Mở đoạn } (10\\%) + \\text{Giải thích } (15\\%) + \\text{Bàn luận & Dẫn chứng } (55\\%) + \\text{Phản đề & Bài học } (20\\%)$$\ntương ứng khoảng bao nhiêu dòng tờ giấy thi là chuẩn barem nhất ạ?',
     content_plain:
-      'Em tổng hợp bảng công thức chia thì của 4 loại câu điều kiện Type 1, 2, 3 và Mixed Conditionals. Khi nào thì dùng dạng đảo ngữ Were I you hoặc Had it not been for?',
+      'Trong cấu trúc đề thi tốt nghiệp THPT môn Ngữ Văn chương trình GDPT 2018, phần viết đoạn văn Nghị luận xã hội 200 chữ nên phân bổ dung lượng Mở đoạn, Giải thích, Bàn luận, Dẫn chứng và Bài học như thế nào?',
     has_math: true,
-    subject: 'Tiếng Anh',
-    grade: 10,
-    chapter_id: 8,
-    chapter_name: 'Unit 8: New Ways to Learn - Conditional Sentences',
-    tags: ['Câu điều kiện', 'Mixed Conditionals', 'Lớp 10'],
+    subject: 'Ngữ Văn',
+    grade: 12,
+    chapter_id: 1,
+    chapter_name:
+      'Chuyên đề Kỹ năng Viết đoạn văn Nghị luận xã hội 200 chữ (GDPT 2018)',
+    tags: ['Nghị luận xã hội', 'Đoạn văn 200 chữ', 'GDPT 2018', 'Lớp 12'],
     is_solved: true,
-    views_count: 195,
-    likes_count: 19,
+    views_count: 280,
+    likes_count: 33,
     author_type: 'STUDENT',
     root_comment: {
       author_type: 'TEACHER',
       content:
-        'Bảng tổng hợp của em rất chuẩn! Công thức đảo ngữ $3$ loại câu điều kiện (bỏ `If`, đưa trợ động từ lên đầu câu) như sau:\n- **Đảo ngữ loại 1:** $\\text{Should} + S + V_{\\text{bare-inf}},\\; S + \\text{will/can} + V_{\\text{inf}}$\n- **Đảo ngữ loại 2:** $\\text{Were} + S + (\\text{to } V_{\\text{inf}} / \\text{Adj / N}),\\; S + \\text{would} + V_{\\text{inf}}$\n- **Đảo ngữ loại 3:** $\\text{Had} + S + V_{\\text{p.p}},\\; S + \\text{would have } V_{\\text{p.p}}$ (Cụm $\\text{Had it not been for} + N = \\text{Without / But for} + N$: *"Nếu không nhờ có..."*).',
+        'Đoạn văn $200$ chữ (cho phép dao động $200 \\pm 50$ chữ, tức khoảng $22 - 25$ dòng giấy thi, tuyệt đối **không xuống dòng tách đoạn**) nên chia theo công thức $12 - 15$ câu:\n- **Mở đoạn ($1 - 2$ câu):** Dẫn dắt trực tiếp vào vấn đề nghị luận ($0{,}25\\text{đ}$).\n- **Giải thích ($1 - 2$ câu):** Giải thích từ khóa trọng tâm ($0{,}25\\text{đ}$).\n- **Phân tích - Chứng minh ($6 - 8$ câu):** Nêu $2 - 3$ luận điểm + $1$ dẫn chứng thực tế ngắn gọn, tiêu biểu ($1{,}0\\text{đ}$).\n- **Bàn luận mở rộng & Bài học nhận thức/hành động ($2 - 3$ câu):** Phản đề và rút ra thông điệp cá nhân ($0{,}5\\text{đ}$).',
       is_accepted: true,
-      likes_count: 16,
+      likes_count: 25,
       nested_reply: {
         author_type: 'STUDENT',
         content:
-          'Bộ 3 từ khóa đầu câu $\\text{Should}$ (loại 1) – $\\text{Were}$ (loại 2) – $\\text{Had}$ (loại 3) cực kỳ dễ nhận diện trong bài trắc nghiệm luôn ạ!',
-        likes_count: 6,
+          'Barem điểm $0{,}25 + 0{,}25 + 1{,}0 + 0{,}5 = 2{,}0\\text{ điểm}$ rõ ràng từng ý thế này giúp em canh đúng $2/3$ trang giấy thi mà không sợ lan man quá giờ cho câu $600$ chữ!',
+        likes_count: 10,
       },
     },
   },
 ];
 
-const AVATARS: Record<string, string> = {
-  ADMIN: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
-  TEACHER: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=120&auto=format&fit=crop&q=80',
-  STUDENT: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
-};
+const FORUM_AUTHOR_PERSONAS = [
+  // 0: Admin (cho bài Nội quy #1)
+  {
+    email: 'admin@schoolify.top',
+    fullname: 'Ban Quản Trị Schoolify',
+    avatar_url:
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=160&auto=format&fit=crop&q=80',
+    grade_level: 'Hệ Thống',
+    is_admin: true,
+  },
+  // 1..19: 19 học sinh riêng biệt cho 19 câu hỏi chuyên đề
+  {
+    email: 'student.minhanh@schoolify.edu.vn',
+    fullname: 'Nguyễn Minh Anh',
+    avatar_url:
+      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=160&auto=format&fit=crop&q=80',
+    grade_level: 'Lớp 12A1 - THPT Chuyên KHTN',
+  },
+  {
+    email: 'student.minh@schoolify.edu.vn',
+    fullname: 'Nguyễn Hoàng Minh',
+    avatar_url:
+      'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=160&auto=format&fit=crop&q=80',
+    grade_level: 'Lớp 12 Toán 1 - THPT Chuyên Hà Nội - Amsterdam',
+  },
+  {
+    email: 'student.khanhlinh@schoolify.edu.vn',
+    fullname: 'Trần Khánh Linh',
+    avatar_url:
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=160&auto=format&fit=crop&q=80',
+    grade_level: 'Lớp 12A2 - THPT Chu Văn An',
+  },
+  {
+    email: 'student.ducduy@schoolify.edu.vn',
+    fullname: 'Lê Đức Duy',
+    avatar_url:
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160&auto=format&fit=crop&q=80',
+    grade_level: 'Lớp 12 Toán - THPT Chuyên Lê Hồng Phong',
+  },
+  {
+    email: 'student.phuongthao@schoolify.edu.vn',
+    fullname: 'Phạm Phương Thảo',
+    avatar_url:
+      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=160&auto=format&fit=crop&q=80',
+    grade_level: 'Lớp 11A1 - THPT Chuyên Sư Phạm',
+  },
+  {
+    email: 'student.quochuy@schoolify.edu.vn',
+    fullname: 'Võ Quốc Huy',
+    avatar_url:
+      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=160&auto=format&fit=crop&q=80',
+    grade_level: 'Lớp 11 Toán 2 - THPT Chuyên Phan Bội Châu',
+  },
+  {
+    email: 'student.baotran@schoolify.edu.vn',
+    fullname: 'Đặng Bảo Trân',
+    avatar_url:
+      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=160&auto=format&fit=crop&q=80',
+    grade_level: 'Lớp 10 Toán 1 - THPT Chuyên Trần Phú',
+  },
+  {
+    email: 'student.tuananh@schoolify.edu.vn',
+    fullname: 'Hoàng Tuấn Anh',
+    avatar_url:
+      'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=160&auto=format&fit=crop&q=80',
+    grade_level: 'Lớp 12 Tin - THPT Chuyên KHTN',
+  },
+  {
+    email: 'student.quanghien@schoolify.edu.vn',
+    fullname: 'Bùi Quang Hiển',
+    avatar_url:
+      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=160&auto=format&fit=crop&q=80',
+    grade_level: 'Lớp 12 chuyên Tin - THPT Chuyên Lam Sơn',
+  },
+  {
+    email: 'student.nhatminh@schoolify.edu.vn',
+    fullname: 'Đỗ Nhật Minh',
+    avatar_url:
+      'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=160&auto=format&fit=crop&q=80',
+    grade_level: 'Lớp 11 Tin - THPT Chuyên Quốc Học Huế',
+  },
+  {
+    email: 'student.thanhha@schoolify.edu.vn',
+    fullname: 'Ngô Thanh Hà',
+    avatar_url:
+      'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=160&auto=format&fit=crop&q=80',
+    grade_level: 'Lớp 11 chuyên Tin - THPT Năng Khiếu ĐHQG',
+  },
+  {
+    email: 'student.giakiet@schoolify.edu.vn',
+    fullname: 'Trương Gia Kiệt',
+    avatar_url:
+      'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=160&auto=format&fit=crop&q=80',
+    grade_level: 'Lớp 10 Tin - THPT Chuyên Lê Quý Đôn',
+  },
+  {
+    email: 'student.giabao@schoolify.edu.vn',
+    fullname: 'Trần Gia Bảo',
+    avatar_url:
+      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=160&auto=format&fit=crop&q=80',
+    grade_level: 'Lớp 12 Lý - THPT Chuyên Nguyễn Huệ',
+  },
+  {
+    email: 'student.haidang@schoolify.edu.vn',
+    fullname: 'Phan Hải Đăng',
+    avatar_url:
+      'https://images.unsplash.com/photo-1463453091185-61582044d556?w=160&auto=format&fit=crop&q=80',
+    grade_level: 'Lớp 11 Lý - THPT Kim Liên',
+  },
+  {
+    email: 'student.thutrang@schoolify.edu.vn',
+    fullname: 'Lê Thu Trang',
+    avatar_url:
+      'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=160&auto=format&fit=crop&q=80',
+    grade_level: 'Lớp 12 Hóa - THPT Chuyên Hà Nội - Amsterdam',
+  },
+  {
+    email: 'student.myduyen@schoolify.edu.vn',
+    fullname: 'Huỳnh Mỹ Duyên',
+    avatar_url:
+      'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=160&auto=format&fit=crop&q=80',
+    grade_level: 'Lớp 11 Hóa - THPT Nguyễn Thị Minh Khai',
+  },
+  {
+    email: 'student.tuankiet@schoolify.edu.vn',
+    fullname: 'Đặng Tuấn Kiệt',
+    avatar_url:
+      'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=160&auto=format&fit=crop&q=80',
+    grade_level: 'Lớp 12 Anh 1 - THPT Chuyên Ngoại Ngữ',
+  },
+  {
+    email: 'student.ngocmai@schoolify.edu.vn',
+    fullname: 'Lý Ngọc Mai',
+    avatar_url:
+      'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=160&auto=format&fit=crop&q=80',
+    grade_level: 'Lớp 12 Sinh - THPT Chuyên Trần Đại Nghĩa',
+  },
+  {
+    email: 'student.quynhhuong@schoolify.edu.vn',
+    fullname: 'Vũ Quỳnh Hương',
+    avatar_url:
+      'https://images.unsplash.com/photo-1514315384763-ba401779410f?w=160&auto=format&fit=crop&q=80',
+    grade_level: 'Lớp 12 Văn - THPT Chuyên Khoa Học Xã Hội & Nhân Văn',
+  },
+];
 
-const AUTHOR_NAMES: Record<string, string> = {
-  ADMIN: 'Ban Quản Trị Schoolify',
-  TEACHER: 'ThS. Nguyễn Văn Hùng',
-  STUDENT: 'Nguyễn Minh Anh',
-};
-
-const ROLES: Record<string, string> = {
-  ADMIN: 'Admin Diễn Đàn',
-  TEACHER: 'Giáo viên',
-  STUDENT: 'Học sinh',
+const FORUM_TEACHER_PERSONAS: Record<
+  string,
+  { email: string; fullname: string; avatar_url: string; expertise: string }
+> = {
+  'Toán Học': {
+    email: 'teacher.nguyen@schoolify.edu.vn',
+    fullname: 'ThS. Nguyễn Văn Hùng',
+    avatar_url:
+      'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=160&auto=format&fit=crop&q=80',
+    expertise: 'Giảng viên Toán THPT & ĐGNL',
+  },
+  'Tin Học': {
+    email: 'teacher.tinhoc@schoolify.edu.vn',
+    fullname: 'ThS. Lê Minh Quân',
+    avatar_url:
+      'https://images.unsplash.com/photo-1556157382-97eda2d62296?w=160&auto=format&fit=crop&q=80',
+    expertise: 'Huấn luyện viên Đội tuyển HSG Tin học & Thuật toán',
+  },
+  'Vật Lý': {
+    email: 'teacher.vatly@schoolify.edu.vn',
+    fullname: 'TS. Trần Quốc Bảo',
+    avatar_url:
+      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=160&auto=format&fit=crop&q=80',
+    expertise: 'Giảng viên Vật lý THPT',
+  },
+  'Hóa Học': {
+    email: 'teacher.hoahoc@schoolify.edu.vn',
+    fullname: 'ThS. Phạm Thu Thủy',
+    avatar_url:
+      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=160&auto=format&fit=crop&q=80',
+    expertise: 'Giảng viên Hóa học THPT',
+  },
+  'Tiếng Anh': {
+    email: 'teacher.tienganh@schoolify.edu.vn',
+    fullname: 'Cô Đặng Lan Phương (IELTS 8.5)',
+    avatar_url:
+      'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=160&auto=format&fit=crop&q=80',
+    expertise: 'Giảng viên Tiếng Anh THPT & IELTS',
+  },
+  'Sinh Học': {
+    email: 'teacher.sinhhoc@schoolify.edu.vn',
+    fullname: 'ThS. Hoàng Diệu Linh',
+    avatar_url:
+      'https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=160&auto=format&fit=crop&q=80',
+    expertise: 'Giảng viên Sinh học & Di truyền học',
+  },
+  'Ngữ Văn': {
+    email: 'teacher.nguvan@schoolify.edu.vn',
+    fullname: 'TS. Vũ Thanh Tâm',
+    avatar_url:
+      'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=160&auto=format&fit=crop&q=80',
+    expertise: 'Giảng viên Ngữ văn & Lý luận văn học',
+  },
 };
 
 export const ALL_FORUM_SEED_POSTS: ForumPostItem[] = FORUM_SEED_TOPICS.map((topic, index) => {
   const postId = `forum-seed-post-${String(index + 1).padStart(2, '0')}`;
-  const postAuthorRole = ROLES[topic.author_type] || 'Học sinh';
-  const postAuthorName =
-    topic.author_type === 'ADMIN'
-      ? 'Ban Quản Trị Schoolify'
-      : topic.author_type === 'TEACHER'
-      ? 'ThS. Nguyễn Văn Hùng'
-      : index % 2 === 0
-      ? 'Nguyễn Minh Anh'
-      : 'Lê Hoàng Nam';
-  const postAuthorGrade =
-    topic.author_type === 'ADMIN'
-      ? 'Hệ Thống'
-      : topic.author_type === 'TEACHER'
-      ? 'Tổ Chuyên Môn'
-      : `Lớp ${topic.grade}A1 - THPT Chuyên`;
+  const persona = FORUM_AUTHOR_PERSONAS[index] || FORUM_AUTHOR_PERSONAS[1];
+  const teacherInfo = FORUM_TEACHER_PERSONAS[topic.subject] || FORUM_TEACHER_PERSONAS['Toán Học'];
+  const postAuthorRole = topic.author_type === 'ADMIN' ? 'Admin Diễn Đàn' : 'Học sinh';
+  const postAuthorName = persona.fullname;
+  const postAuthorAvatar = persona.avatar_url;
+  const postAuthorGrade = persona.grade_level;
 
   const initialComments: ForumCommentItemDef[] = [];
 
   if (topic.root_comment) {
     const rootCommentId = `comment-${postId}-root`;
-    const rootAuthorName =
-      topic.root_comment.author_type === 'TEACHER'
-        ? 'ThS. Nguyễn Văn Hùng'
-        : topic.root_comment.author_type === 'ADMIN'
+    const isRootTeacher = topic.root_comment.author_type === 'TEACHER';
+    const isRootAdmin = topic.root_comment.author_type === 'ADMIN';
+    const rootAuthorName = isRootTeacher
+      ? teacherInfo.fullname
+      : isRootAdmin
         ? 'Ban Quản Trị Schoolify'
-        : 'Trần Bảo Ngọc';
-    const rootAuthorRole = ROLES[topic.root_comment.author_type] || 'Giáo viên';
-    const rootAuthorGrade =
-      topic.root_comment.author_type === 'TEACHER'
-        ? 'Tổ Chuyên Môn'
-        : topic.root_comment.author_type === 'ADMIN'
+        : 'Nguyễn Hoàng Minh';
+    const rootAuthorAvatar = isRootTeacher
+      ? teacherInfo.avatar_url
+      : isRootAdmin
+        ? FORUM_AUTHOR_PERSONAS[0].avatar_url
+        : FORUM_AUTHOR_PERSONAS[2].avatar_url;
+    const rootAuthorRole = isRootTeacher
+      ? 'Giáo viên'
+      : isRootAdmin
+        ? 'Admin Diễn Đàn'
+        : 'Học sinh';
+    const rootAuthorGrade = isRootTeacher
+      ? teacherInfo.expertise
+      : isRootAdmin
         ? 'Hệ Thống'
-        : `Lớp ${topic.grade}A2`;
+        : `Lớp ${topic.grade}A1`;
 
     const replies: ForumCommentItemDef[] = [];
     if (topic.root_comment.nested_reply) {
-      const replyAuthorName =
-        topic.root_comment.nested_reply.author_type === 'STUDENT'
-          ? postAuthorName
-          : 'ThS. Nguyễn Văn Hùng';
-      const replyAuthorRole = ROLES[topic.root_comment.nested_reply.author_type] || 'Học sinh';
+      const isReplyStudent = topic.root_comment.nested_reply.author_type === 'STUDENT';
+      const replyAuthorName = isReplyStudent ? postAuthorName : 'Ban Quản Trị Schoolify';
+      const replyAuthorAvatar = isReplyStudent ? postAuthorAvatar : FORUM_AUTHOR_PERSONAS[0].avatar_url;
+      const replyAuthorRole = isReplyStudent ? 'Học sinh' : 'Admin Diễn Đàn';
       replies.push({
         id: `reply-${postId}-nested`,
         postId,
@@ -848,9 +1031,9 @@ export const ALL_FORUM_SEED_POSTS: ForumPostItem[] = FORUM_SEED_TOPICS.map((topi
         replyToUserName: rootAuthorName,
         author: {
           name: replyAuthorName,
-          avatar: AVATARS[topic.root_comment.nested_reply.author_type],
+          avatar: replyAuthorAvatar,
           role: replyAuthorRole,
-          grade: `Lớp ${topic.grade}A1`,
+          grade: isReplyStudent ? postAuthorGrade : 'Hệ Thống',
         },
         content: topic.root_comment.nested_reply.content,
         timeAgo: '10 phút trước',
@@ -866,7 +1049,7 @@ export const ALL_FORUM_SEED_POSTS: ForumPostItem[] = FORUM_SEED_TOPICS.map((topi
       depth: 1,
       author: {
         name: rootAuthorName,
-        avatar: AVATARS[topic.root_comment.author_type],
+        avatar: rootAuthorAvatar,
         role: rootAuthorRole,
         grade: rootAuthorGrade,
       },
@@ -881,19 +1064,15 @@ export const ALL_FORUM_SEED_POSTS: ForumPostItem[] = FORUM_SEED_TOPICS.map((topi
   }
 
   if (topic.extra_comment) {
-    const extraAuthorName =
-      topic.extra_comment.author_type === 'ADMIN'
-        ? 'Cố Vấn Học Tập Schoolify'
-        : 'Vũ Hoàng Quân';
     initialComments.push({
       id: `comment-${postId}-extra`,
       postId,
       parentId: null,
       depth: 1,
       author: {
-        name: extraAuthorName,
-        avatar: AVATARS[topic.extra_comment.author_type],
-        role: ROLES[topic.extra_comment.author_type] || 'Cố vấn',
+        name: 'Cố Vấn Học Tập Schoolify',
+        avatar: FORUM_AUTHOR_PERSONAS[0].avatar_url,
+        role: 'Admin Diễn Đàn',
         grade: 'Hệ Thống',
       },
       content: topic.extra_comment.content,
@@ -917,7 +1096,7 @@ export const ALL_FORUM_SEED_POSTS: ForumPostItem[] = FORUM_SEED_TOPICS.map((topi
     content: topic.content,
     author: {
       name: postAuthorName,
-      avatar: AVATARS[topic.author_type],
+      avatar: postAuthorAvatar,
       role: postAuthorRole,
       grade: postAuthorGrade,
     },
@@ -925,7 +1104,7 @@ export const ALL_FORUM_SEED_POSTS: ForumPostItem[] = FORUM_SEED_TOPICS.map((topi
     grade: topic.grade,
     chapter_id: topic.chapter_id,
     chapter_name: topic.chapter_name,
-    repliesCount: repliesCount > 0 ? repliesCount : Math.floor(Math.random() * 8) + 2,
+    repliesCount: repliesCount > 0 ? repliesCount : 2,
     likesCount: topic.likes_count,
     viewsCount: topic.views_count,
     isSolved: Boolean(topic.is_solved),

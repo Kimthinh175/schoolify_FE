@@ -11,7 +11,6 @@ import {
   Clock,
   PlusCircle,
   Search,
-  Filter,
   Flame,
   Award,
   BookOpen,
@@ -23,46 +22,36 @@ import {
   ExternalLink,
   Lock,
   Flag,
+  Bookmark,
+  GraduationCap,
+  ChevronLeft,
+  ChevronRight,
+  RotateCcw,
+  Image as ImageIcon,
+  X,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog } from '@/components/ui/dialog';
 import { Avatar } from '@/components/ui/avatar';
 import { MathRenderer } from '@/components/ui/math-renderer';
 import { cn } from '@/lib/utils';
-import { ALL_FORUM_SEED_POSTS } from '@/data/forum-seed-posts';
 import { ForumCommentSection } from '@/components/features/forum/ForumCommentSection';
 import { ReportModal } from '@/components/features/forum/ReportModal';
+import { ForumAskQuestionModal } from '@/components/features/forum/ForumAskQuestionModal';
+import {
+  ForumPost,
+  ForumTabStatus,
+  forumService,
+} from '@/services/forum.service';
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, margin: '-40px' },
-  transition: { duration: 0.4, delay, ease: 'easeOut' as const },
+  transition: { duration: 0.35, delay, ease: 'easeOut' as const },
 });
-
-export interface ForumPost {
-  id: string;
-  slug?: string;
-  title: string;
-  content: string;
-  author: {
-    name: string;
-    avatar: string;
-    role: string;
-    grade: string;
-  };
-  subject: string;
-  grade: number;
-  repliesCount: number;
-  likesCount: number;
-  viewsCount: number;
-  isSolved?: boolean;
-  isPinned?: boolean;
-  timeAgo: string;
-  tags: string[];
-}
 
 const SUBJECT_FILTERS = [
   'Tất cả',
@@ -75,18 +64,106 @@ const SUBJECT_FILTERS = [
   'Ngữ Văn',
 ];
 
+const GRADE_FILTERS: Array<{ value: 'ALL' | 10 | 11 | 12; label: string; short: string }> = [
+  { value: 'ALL', label: 'Tất cả khối', short: 'Tất cả' },
+  { value: 12, label: 'Khối 12', short: 'Khối 12' },
+  { value: 11, label: 'Khối 11', short: 'Khối 11' },
+  { value: 10, label: 'Khối 10', short: 'Khối 10' },
+];
+
+const POSTS_PER_PAGE = 6;
+const SAVED_POSTS_STORAGE_KEY = 'schoolify-forum-saved-post-ids';
+
+export type { ForumPost };
+
+function readInitialSavedPosts(): Record<string, boolean> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.localStorage.getItem(SAVED_POSTS_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as unknown;
+    if (parsed && typeof parsed === 'object') {
+      return parsed as Record<string, boolean>;
+    }
+  } catch {
+    // ignore storage read error
+  }
+  return {};
+}
+
 export default function ForumPage() {
+  // ── BỘ LỌC & PHÂN TRANG (Task #13) ──
   const [selectedSubject, setSelectedSubject] = React.useState('Tất cả');
-  const [activeTab, setActiveTab] = React.useState<'ALL' | 'HOT' | 'UNSOLVED' | 'SOLVED'>('ALL');
+  const [selectedGrade, setSelectedGrade] = React.useState<'ALL' | 10 | 11 | 12>('ALL');
+  const [activeTab, setActiveTab] = React.useState<ForumTabStatus>('ALL');
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [currentPage, setCurrentPage] = React.useState(1);
+
+  // ── DỮ LIỆU TỪ FORUM.SERVICE.TS (Task #14) ──
+  const [posts, setPosts] = React.useState<ForumPost[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [isNewPostModalOpen, setIsNewPostModalOpen] = React.useState(false);
-  const [newTitle, setNewTitle] = React.useState('');
-  const [newSubject, setNewSubject] = React.useState('Toán Học');
-  const [newContent, setNewContent] = React.useState('');
-  const [posts, setPosts] = React.useState<ForumPost[]>(ALL_FORUM_SEED_POSTS);
+
+  // ── TƯƠNG TÁC TRÊN THẺ BÀI VIẾT ──
   const [expandedPostId, setExpandedPostId] = React.useState<string | null>(null);
   const [highlightedPostId, setHighlightedPostId] = React.useState<string | null>(null);
   const [likedPosts, setLikedPosts] = React.useState<Record<string, boolean>>({});
+  const [savedPostIds, setSavedPostIds] = React.useState<Record<string, boolean>>(
+    readInitialSavedPosts
+  );
+
+  // Tải danh sách câu hỏi qua forumService.getPosts (tuân thủ chuẩn React 19 không gọi setState đồng bộ đầu effect)
+  React.useEffect(() => {
+    let isMounted = true;
+
+    async function fetchForumList() {
+      const res = await forumService.getPosts({
+        page: 1,
+        limit: 100,
+      });
+      if (!isMounted) return;
+      setPosts(res.items);
+      setSavedPostIds((prev) => {
+        const next = { ...prev };
+        for (const item of res.items) {
+          if (item.isBookmarked) {
+            next[item.id] = true;
+          }
+        }
+        return next;
+      });
+      setIsLoading(false);
+    }
+
+    void fetchForumList();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Reset về trang 1 khi người dùng đổi bộ lọc
+  const handleSelectSubject = (subj: string) => {
+    setSelectedSubject(subj);
+    setCurrentPage(1);
+  };
+
+  const handleSelectGrade = (gradeVal: 'ALL' | 10 | 11 | 12) => {
+    setSelectedGrade(gradeVal);
+    setCurrentPage(1);
+  };
+
+  const handleSelectTab = (tab: ForumTabStatus) => {
+    setActiveTab(tab);
+    setCurrentPage(1);
+  };
+
+  const handleResetFilters = () => {
+    setSelectedSubject('Tất cả');
+    setSelectedGrade('ALL');
+    setActiveTab('ALL');
+    setSearchQuery('');
+    setCurrentPage(1);
+  };
 
   // Tự động mở rộng & cuộn mượt tới bài viết khi truy cập từ Chuông thông báo
   const focusAndExpandPost = React.useCallback(
@@ -218,115 +295,90 @@ export default function ForumPage() {
       )
     );
 
-    try {
-      const targetPost = posts.find((p) => p.id === postId);
-      const targetId = targetPost?.slug || postId;
-      await fetch('http://localhost:3005/api/v1/forum/reactions/toggle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          targetType: 'POST',
-          targetId,
-          userId: 'seed-student-01',
-        }),
-      });
-    } catch {
-      // offline fallback
-    }
+    await forumService.toggleLikePost(postId);
   };
 
-  // Cố gắng đồng bộ thêm từ Backend API nếu server có endpoint GET /api/v1/forum/posts
-  React.useEffect(() => {
-    let isMounted = true;
-    async function fetchPosts() {
-      try {
-        const res = await fetch('/api/v1/forum/posts');
-        if (!res.ok) return;
-        const json = await res.json();
-        if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
-          if (!isMounted) return;
-          const mapped: ForumPost[] = json.data.map((item: any) => ({
-            id: item.id,
-            slug: item.slug,
-            title: item.title,
-            content: item.content,
-            author: {
-              name: item.author?.fullname || 'Thành viên Schoolify',
-              avatar:
-                item.author?.avatar_url ||
-                'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
-              role: item.author?.role === 'TEACHER' ? 'Giáo viên' : 'Học sinh',
-              grade: item.author?.role === 'TEACHER' ? 'Tổ Chuyên Môn' : 'Lớp 12',
-            },
-            subject: item.subject?.name || item.subject || 'Chung',
-            grade: item.grade_level || item.grade || 12,
-            repliesCount: item.comments_count || item.repliesCount || 0,
-            likesCount: item.likes_count || item.likesCount || 0,
-            viewsCount: item.views_count || item.viewsCount || 0,
-            isSolved: Boolean(item.is_solved),
-            isPinned: Boolean(item.is_pinned),
-            timeAgo: item.is_pinned ? 'Đã ghim' : 'Gần đây',
-            tags: Array.isArray(item.tags) ? item.tags : [],
-          }));
-          setPosts(mapped);
-        }
-      } catch {
-        // Fallback tự động giữ nguyên ALL_FORUM_SEED_POSTS
+  const toggleSavePost = async (postId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const nextSaved = !savedPostIds[postId];
+    setSavedPostIds((prev) => {
+      const updated = { ...prev, [postId]: nextSaved };
+      if (!nextSaved) {
+        delete updated[postId];
       }
-    }
-    fetchPosts();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+      try {
+        window.localStorage.setItem(SAVED_POSTS_STORAGE_KEY, JSON.stringify(updated));
+      } catch {
+        // ignore
+      }
+      return updated;
+    });
 
-  const handleCreatePost = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle.trim() || !newContent.trim()) return;
-
-    const newPost: ForumPost = {
-      id: `post-${Date.now()}`,
-      title: newTitle,
-      content: newContent,
-      author: {
-        name: 'Bạn (Học Sinh)',
-        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
-        role: 'Học sinh',
-        grade: 'Lớp 12',
-      },
-      subject: newSubject,
-      grade: 12,
-      repliesCount: 0,
-      likesCount: 1,
-      viewsCount: 5,
-      isSolved: false,
-      timeAgo: 'Vừa xong',
-      tags: [newSubject, 'Hỏi bài'],
-    };
-
-    setPosts([newPost, ...posts]);
-    setNewTitle('');
-    setNewContent('');
-    setIsNewPostModalOpen(false);
+    await forumService.toggleBookmarkPost(postId);
   };
 
-  const filteredPosts = posts.filter((post) => {
-    const matchesSubject =
-      selectedSubject === 'Tất cả' || post.subject === selectedSubject;
-    const matchesSearch =
-      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.content.toLowerCase().includes(searchQuery.toLowerCase());
+  const handlePostCreated = (createdPost: ForumPost) => {
+    setPosts((prev) => [createdPost, ...prev]);
+    setCurrentPage(1);
+  };
 
-    if (activeTab === 'HOT') return matchesSubject && matchesSearch && post.likesCount > 20;
-    if (activeTab === 'UNSOLVED') return matchesSubject && matchesSearch && !post.isSolved;
-    if (activeTab === 'SOLVED') return matchesSubject && matchesSearch && post.isSolved;
-    return matchesSubject && matchesSearch;
-  });
+  // Đếm nhanh số lượng câu hỏi theo từng trạng thái (sau khi đã áp dụng lọc Môn + Khối + Từ khóa)
+  const baseMatchedPosts = React.useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return posts.filter((post) => {
+      const matchesSubject =
+        selectedSubject === 'Tất cả' || post.subject === selectedSubject;
+      const matchesGrade =
+        selectedGrade === 'ALL' || Number(post.grade) === Number(selectedGrade);
+      const matchesSearch =
+        !q ||
+        post.title.toLowerCase().includes(q) ||
+        post.content.toLowerCase().includes(q) ||
+        post.tags.some((t) => t.toLowerCase().includes(q));
+      return matchesSubject && matchesGrade && matchesSearch;
+    });
+  }, [posts, selectedSubject, selectedGrade, searchQuery]);
+
+  const tabCounts = React.useMemo(() => {
+    return {
+      ALL: baseMatchedPosts.length,
+      UNSOLVED: baseMatchedPosts.filter((p) => !p.isSolved).length,
+      SOLVED: baseMatchedPosts.filter((p) => Boolean(p.isSolved)).length,
+      SAVED: baseMatchedPosts.filter((p) => Boolean(savedPostIds[p.id] || p.isBookmarked)).length,
+      HOT: baseMatchedPosts.filter((p) => p.likesCount >= 15 || p.repliesCount >= 3).length,
+    };
+  }, [baseMatchedPosts, savedPostIds]);
+
+  // Lọc theo Tab trạng thái đang chọn
+  const filteredPosts = React.useMemo(() => {
+    return baseMatchedPosts.filter((post) => {
+      if (activeTab === 'UNSOLVED') return !post.isSolved;
+      if (activeTab === 'SOLVED') return Boolean(post.isSolved);
+      if (activeTab === 'SAVED') return Boolean(savedPostIds[post.id] || post.isBookmarked);
+      if (activeTab === 'HOT') return post.likesCount >= 15 || post.repliesCount >= 3;
+      return true;
+    });
+  }, [baseMatchedPosts, activeTab, savedPostIds]);
+
+  // Tính toán phân trang (Task #13)
+  const totalFilteredCount = filteredPosts.length;
+  const totalPages = Math.max(1, Math.ceil(totalFilteredCount / POSTS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedPosts = React.useMemo(() => {
+    const startIdx = (safePage - 1) * POSTS_PER_PAGE;
+    return filteredPosts.slice(startIdx, startIdx + POSTS_PER_PAGE);
+  }, [filteredPosts, safePage]);
+
+  const hasActiveFilter =
+    selectedSubject !== 'Tất cả' ||
+    selectedGrade !== 'ALL' ||
+    activeTab !== 'ALL' ||
+    searchQuery.trim() !== '';
 
   return (
-    <div className="py-12 sm:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 sm:space-y-14">
+    <div className="py-10 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-10">
       {/* ── HEADER ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-200 dark:border-slate-800 pb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-200 dark:border-slate-800 pb-7">
         <div className="space-y-2 max-w-2xl">
           <Badge variant="primary" className="bg-[#00B8DD] text-white font-bold mb-1">
             CỘNG ĐỒNG HỌC TẬP K-12
@@ -334,12 +386,9 @@ export default function ForumPage() {
           <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
             Diễn Đàn Hỏi Đáp &amp; Chia Sẻ Bài Tập
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500">
-            Nơi hàng ngàn học sinh và thầy cô cùng trao đổi kiến thức, giải đáp bài tập khó và chia sẻ kinh nghiệm ôn thi 24/7.
-          </p>
         </div>
 
-        {/* Action Button */}
+        {/* Action Button mở Modal Đăng câu hỏi mới (Task #12 & #11) */}
         <Button
           onClick={() => setIsNewPostModalOpen(true)}
           className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold rounded-xl shadow-lg shadow-[#00B8DD]/20 shrink-0 self-start md:self-auto"
@@ -349,93 +398,256 @@ export default function ForumPage() {
         </Button>
       </div>
 
-      {/* ── UNIFIED FILTER TOOLBAR (NGAY NGẮN, ĐẸP MẮT) ── */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs space-y-3.5">
-        {/* Hàng 1: Danh sách các môn học (Pills nằm phẳng phiu trên 1 hàng, hỗ trợ cuộn ngang) */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-          <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1.5">
-            <BookOpen className="w-3.5 h-3.5 text-[#00B8DD]" /> Môn học:
-          </span>
-          <div className="flex items-center gap-1.5 shrink-0">
-            {SUBJECT_FILTERS.map((s) => (
+      {/* ── TASK #13: COMMAND FILTER BAR CHUYÊN NGHIỆP, ĐỒNG NHẤT NỀN & MÀU SẮC ── */}
+      <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+        {/* Tầng 1: Khối Lớp 10-11-12 (Trái) + Thanh Tìm Kiếm Rộng (Phải) — Nền trắng đồng nhất */}
+        <div className="px-4 py-3.5 sm:px-5 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800/80 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          {/* Cụm chọn Khối Lớp 10 - 11 - 12 đồng bộ kiểu dáng với Môn học */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mr-1">
+              <GraduationCap className="w-3.5 h-3.5 text-[#00B8DD]" />
+              <span>Khối lớp:</span>
+            </span>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {GRADE_FILTERS.map((g) => {
+                const isActive = selectedGrade === g.value;
+                return (
+                  <button
+                    key={String(g.value)}
+                    type="button"
+                    onClick={() => handleSelectGrade(g.value)}
+                    className={cn(
+                      'inline-flex items-center px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border whitespace-nowrap',
+                      isActive
+                        ? 'bg-[#00B8DD]/12 border-[#00B8DD] text-[#007D99] dark:text-[#00B8DD] shadow-2xs'
+                        : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                    )}
+                  >
+                    {g.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Ô tìm kiếm mở rộng tối đa phần không gian còn lại (flex-1) */}
+          <div className="relative flex-1 min-w-[260px] lg:max-w-xl xl:max-w-2xl">
+            <Search className="w-4 h-4 text-[#00B8DD] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Tìm nhanh theo tiêu đề bài toán, công thức LaTeX ($...$), chuyên đề..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full pl-10 pr-9 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/90 dark:border-slate-700/80 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-[#00B8DD] focus:border-transparent transition-all"
+            />
+            {searchQuery && (
               <button
-                key={s}
-                onClick={() => setSelectedSubject(s)}
-                className={cn(
-                  'px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer',
-                  selectedSubject === s
-                    ? 'bg-[#00B8DD] text-white shadow-sm shadow-[#00B8DD]/25'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
-                )}
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setCurrentPage(1);
+                }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700 cursor-pointer"
+                title="Xóa từ khóa"
               >
-                {s}
+                <X className="w-3.5 h-3.5" />
               </button>
-            ))}
+            )}
           </div>
         </div>
 
-        <div className="border-t border-slate-100 dark:border-slate-800/80" />
+        {/* Tầng 2: Danh mục Môn Học (Pills tự động bẻ dòng flex-wrap trên màn hình nhỏ) */}
+        <div className="px-4 py-3.5 sm:px-5 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center gap-2">
+          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mr-1">
+            <BookOpen className="w-3.5 h-3.5 text-[#00B8DD]" />
+            <span>Môn học:</span>
+          </span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {SUBJECT_FILTERS.map((s) => {
+              const isSelected = selectedSubject === s;
+              const subjectCount =
+                s === 'Tất cả'
+                  ? posts.length
+                  : posts.filter((p) => p.subject === s).length;
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => handleSelectSubject(s)}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border',
+                    isSelected
+                      ? 'bg-[#00B8DD]/12 border-[#00B8DD] text-[#007D99] dark:text-[#00B8DD] shadow-2xs'
+                      : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                  )}
+                >
+                  <span>{s}</span>
+                  <span
+                    className={cn(
+                      'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
+                      isSelected
+                        ? 'bg-[#00B8DD] text-white'
+                        : 'bg-slate-200/80 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
+                    )}
+                  >
+                    {subjectCount}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-        {/* Hàng 2: Trạng thái bài đăng (Trái) & Ô tìm kiếm (Phải) */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          {/* Segmented Status Tabs */}
-          <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800/90 rounded-xl text-xs w-full sm:w-auto overflow-x-auto">
+        {/* Tầng 3: Navigation Tabs Trạng thái (Tất cả / Sôi nổi / Chưa giải / Đã giải / Đã lưu) + Bộ đếm kết quả */}
+        <div className="px-4 sm:px-5 pt-2.5 pb-0 bg-white dark:bg-slate-900 flex flex-wrap items-center justify-between gap-3">
+          {/* Underline Tabs theo đúng thứ tự: Tất cả -> Sôi nổi -> Chưa giải -> Đã giải -> Đã lưu */}
+          <div className="flex flex-wrap items-center gap-1 sm:gap-2 -mb-px">
             <button
-              onClick={() => setActiveTab('ALL')}
+              type="button"
+              onClick={() => handleSelectTab('ALL')}
               className={cn(
-                'px-3.5 py-1.5 rounded-lg font-bold transition-all whitespace-nowrap cursor-pointer',
+                'inline-flex items-center gap-1.5 px-3.5 py-2.5 border-b-2 text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
                 activeTab === 'ALL'
-                  ? 'bg-white dark:bg-slate-900 text-[#007D99] dark:text-[#00B8DD] shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  ? 'border-[#00B8DD] text-[#007D99] dark:text-[#00B8DD]'
+                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
               )}
             >
-              Tất Cả
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>Tất cả</span>
+              <span
+                className={cn(
+                  'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
+                  activeTab === 'ALL'
+                    ? 'bg-[#00B8DD]/15 text-[#007D99] dark:text-[#00B8DD]'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                )}
+              >
+                {tabCounts.ALL}
+              </span>
             </button>
+
             <button
-              onClick={() => setActiveTab('HOT')}
+              type="button"
+              onClick={() => handleSelectTab('HOT')}
               className={cn(
-                'px-3.5 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer',
+                'inline-flex items-center gap-1.5 px-3.5 py-2.5 border-b-2 text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
                 activeTab === 'HOT'
-                  ? 'bg-white dark:bg-slate-900 text-amber-500 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  ? 'border-orange-500 text-orange-600 dark:text-orange-400'
+                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
               )}
             >
-              <Flame className="w-3.5 h-3.5 text-amber-500" /> Sôi Nổi
+              <Flame className="w-3.5 h-3.5 text-orange-500" />
+              <span>Sôi nổi</span>
+              <span
+                className={cn(
+                  'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
+                  activeTab === 'HOT'
+                    ? 'bg-orange-500/15 text-orange-700 dark:text-orange-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                )}
+              >
+                {tabCounts.HOT}
+              </span>
             </button>
+
             <button
-              onClick={() => setActiveTab('UNSOLVED')}
+              type="button"
+              onClick={() => handleSelectTab('UNSOLVED')}
               className={cn(
-                'px-3.5 py-1.5 rounded-lg font-bold transition-all whitespace-nowrap cursor-pointer',
+                'inline-flex items-center gap-1.5 px-3.5 py-2.5 border-b-2 text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
                 activeTab === 'UNSOLVED'
-                  ? 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  ? 'border-amber-500 text-amber-600 dark:text-amber-400'
+                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
               )}
             >
-              Chờ Giải Đáp
+              <Clock className="w-3.5 h-3.5 text-amber-500" />
+              <span>Chưa giải</span>
+              <span
+                className={cn(
+                  'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
+                  activeTab === 'UNSOLVED'
+                    ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                )}
+              >
+                {tabCounts.UNSOLVED}
+              </span>
             </button>
+
             <button
-              onClick={() => setActiveTab('SOLVED')}
+              type="button"
+              onClick={() => handleSelectTab('SOLVED')}
               className={cn(
-                'px-3.5 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1 whitespace-nowrap cursor-pointer',
+                'inline-flex items-center gap-1.5 px-3.5 py-2.5 border-b-2 text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
                 activeTab === 'SOLVED'
-                  ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
               )}
             >
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Đã Có Lời Giải
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Đã giải</span>
+              <span
+                className={cn(
+                  'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
+                  activeTab === 'SOLVED'
+                    ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                )}
+              >
+                {tabCounts.SOLVED}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSelectTab('SAVED')}
+              className={cn(
+                'inline-flex items-center gap-1.5 px-3.5 py-2.5 border-b-2 text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
+                activeTab === 'SAVED'
+                  ? 'border-[#00B8DD] text-[#007D99] dark:text-[#00B8DD]'
+                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+              )}
+            >
+              <Bookmark className="w-3.5 h-3.5 text-[#00B8DD]" />
+              <span>Đã lưu</span>
+              <span
+                className={cn(
+                  'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
+                  activeTab === 'SAVED'
+                    ? 'bg-[#00B8DD]/15 text-[#007D99] dark:text-[#00B8DD]'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                )}
+              >
+                {tabCounts.SAVED}
+              </span>
             </button>
           </div>
 
-          {/* Ô tìm kiếm dạng bài */}
-          <div className="relative w-full sm:w-72">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Tìm theo tiêu đề, công thức, môn học..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00B8DD] focus:border-transparent transition-all"
-            />
+          {/* Bộ đếm hiển thị & nút đặt lại lọc */}
+          <div className="flex items-center gap-3 pb-2 text-xs text-slate-500">
+            <span>
+              Hiển thị{' '}
+              <strong className="text-slate-900 dark:text-white">
+                {paginatedPosts.length}
+              </strong>{' '}
+              /{' '}
+              <strong className="text-slate-900 dark:text-white">
+                {totalFilteredCount}
+              </strong>{' '}
+              câu hỏi
+            </span>
+            {hasActiveFilter && (
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-bold text-[#007D99] dark:text-[#00B8DD] hover:bg-[#00B8DD]/15 transition-colors cursor-pointer"
+              >
+                <RotateCcw className="w-3 h-3" /> Đặt lại lọc
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -444,20 +656,70 @@ export default function ForumPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Main Feed (8 cols) */}
         <div className="lg:col-span-8 space-y-4">
-          {filteredPosts.length === 0 ? (
-            <Card className="p-8 text-center rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-              <HelpCircle className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-              <h4 className="text-base font-bold text-slate-700 dark:text-slate-300">
-                Chưa có câu hỏi nào trong danh mục này
-              </h4>
-              <p className="text-xs text-slate-500 mt-1">
-                Hãy là người đầu tiên đặt câu hỏi để nhận sự trợ giúp từ thầy cô và bạn bè!
-              </p>
+          {isLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((skeletonIdx) => (
+                <Card
+                  key={skeletonIdx}
+                  className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 animate-pulse space-y-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-800" />
+                      <div className="space-y-1.5">
+                        <div className="h-3.5 w-32 bg-slate-200 dark:bg-slate-800 rounded" />
+                        <div className="h-2.5 w-20 bg-slate-100 dark:bg-slate-800/70 rounded" />
+                      </div>
+                    </div>
+                    <div className="h-5 w-20 bg-slate-200 dark:bg-slate-800 rounded-full" />
+                  </div>
+                  <div className="h-4 w-3/4 bg-slate-200 dark:bg-slate-800 rounded" />
+                  <div className="h-3 w-full bg-slate-100 dark:bg-slate-800/80 rounded" />
+                  <div className="h-3 w-2/3 bg-slate-100 dark:bg-slate-800/80 rounded" />
+                </Card>
+              ))}
+            </div>
+          ) : paginatedPosts.length === 0 ? (
+            <Card className="p-10 text-center rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3">
+              <HelpCircle className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto" />
+              <div className="space-y-1">
+                <h4 className="text-base font-bold text-slate-700 dark:text-slate-300">
+                  {activeTab === 'SAVED'
+                    ? 'Bạn chưa lưu câu hỏi nào'
+                    : 'Chưa có câu hỏi nào khớp với bộ lọc hiện tại'}
+                </h4>
+                <p className="text-xs text-slate-500 max-w-md mx-auto">
+                  {activeTab === 'SAVED'
+                    ? 'Hãy bấm vào nút "Lưu" trên các bài toán hay để xem lại nhanh khi ôn thi nhé!'
+                    : 'Hãy thử đặt lại bộ lọc hoặc là người đầu tiên đặt câu hỏi mới để nhận sự trợ giúp từ thầy cô và bạn bè!'}
+                </p>
+              </div>
+              <div className="pt-2 flex items-center justify-center gap-2.5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResetFilters}
+                  className="rounded-xl text-xs font-bold"
+                >
+                  Xem Tất Cả Câu Hỏi
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setIsNewPostModalOpen(true)}
+                  className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold rounded-xl text-xs"
+                  leftIcon={<PlusCircle className="w-3.5 h-3.5" />}
+                >
+                  Đặt Câu Hỏi Ngay
+                </Button>
+              </div>
             </Card>
           ) : (
-            filteredPosts.map((post, idx) => {
+            paginatedPosts.map((post, idx) => {
               const isExpanded = expandedPostId === post.id;
-              const hasLiked = Boolean(likedPosts[post.id]);
+              const hasLiked = Boolean(likedPosts[post.id] ?? post.isLiked);
+              const isSaved = Boolean(savedPostIds[post.id] ?? post.isBookmarked);
 
               return (
                 <motion.div key={post.id} {...fadeUp(idx * 0.03)}>
@@ -480,7 +742,7 @@ export default function ForumPage() {
                         <div className="flex items-center gap-2.5">
                           <Avatar src={post.author.avatar} alt={post.author.name} size="sm" />
                           <div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
                                 {post.author.name}
                               </h4>
@@ -495,7 +757,7 @@ export default function ForumPage() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 shrink-0">
                           {post.isPinned && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#00B8DD]/15 text-[#007D99] dark:text-[#00B8DD] border border-[#00B8DD]/30">
                               <Pin className="w-3 h-3 rotate-45" /> Đã ghim
@@ -507,32 +769,55 @@ export default function ForumPage() {
                             </span>
                           ) : (
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
-                              Đang chờ giải đáp
+                              Chưa giải
                             </span>
                           )}
                         </div>
                       </div>
 
-                      {/* Title & Body with KaTeX (Click to expand comments right below) */}
+                      {/* Title & Body with KaTeX Preview ngay ngoài thẻ danh sách (Task #13) */}
                       <div
                         onClick={() => toggleComments(post.id)}
-                        className="space-y-1.5 cursor-pointer group"
+                        className="space-y-2 cursor-pointer group"
                       >
                         <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white group-hover:text-[#007D99] dark:group-hover:text-[#00B8DD] transition-colors leading-snug">
                           <MathRenderer text={post.title} inline />
                         </h3>
-                        <div className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                        <div className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 line-clamp-3 leading-relaxed rounded-xl bg-slate-50/70 dark:bg-slate-800/40 px-3.5 py-2.5 border border-slate-100 dark:border-slate-800/80">
                           <MathRenderer text={post.content} />
                         </div>
+
+                        {/* Hiển thị thumbnail ảnh đính kèm nếu câu hỏi có ảnh chụp đề bài */}
+                        {post.attachments && post.attachments.length > 0 && (
+                          <div className="flex items-center gap-2 pt-1">
+                            {post.attachments.slice(0, 3).map((imgUrl, imgIdx) => (
+                              <div
+                                key={imgIdx}
+                                className="relative h-16 w-24 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 shrink-0"
+                              >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={imgUrl}
+                                  alt={`Đề bài đính kèm ${imgIdx + 1}`}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            ))}
+                            <span className="text-[11px] font-semibold text-[#007D99] dark:text-[#00B8DD] flex items-center gap-1">
+                              <ImageIcon className="w-3.5 h-3.5" />
+                              {post.attachments.length} ảnh đính kèm
+                            </span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Tags & Engagement metrics */}
                       <div className="pt-2 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
                         <div className="flex flex-wrap items-center gap-1.5">
                           <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#00B8DD]/10 text-[#007D99] dark:text-[#00B8DD]">
-                            {post.subject} • Lớp {post.grade}
+                            {post.subject} • Khối {post.grade}
                           </span>
-                          {(post as any).isLocked && (
+                          {post.isLocked && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700/60">
                               <Lock className="w-3 h-3" /> Đã khóa
                             </span>
@@ -547,8 +832,8 @@ export default function ForumPage() {
                           ))}
                         </div>
 
-                        <div className="flex items-center gap-2 sm:gap-3 text-xs font-semibold">
-                          {/* Nút Like trên Card (không chuyển trang) */}
+                        <div className="flex items-center gap-2 text-xs font-semibold">
+                          {/* Nút Like trên Card */}
                           <button
                             type="button"
                             onClick={(e) => togglePostCardLike(post.id, e)}
@@ -563,7 +848,23 @@ export default function ForumPage() {
                             <span>{post.likesCount}</span>
                           </button>
 
-                          {/* BẤM COI LỜI GIẢI / BÌNH LUẬN: HIỆN NGAY BÊN DƯỚI KHÔNG CHUYỂN TRANG */}
+                          {/* Nút Lưu câu hỏi (phục vụ Tab Đã lưu ở Task #13) */}
+                          <button
+                            type="button"
+                            onClick={(e) => toggleSavePost(post.id, e)}
+                            title={isSaved ? 'Bỏ lưu câu hỏi' : 'Lưu câu hỏi này'}
+                            className={cn(
+                              'flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer',
+                              isSaved
+                                ? 'bg-amber-500 text-white shadow-xs'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-amber-500/15 hover:text-amber-600 dark:hover:text-amber-400'
+                            )}
+                          >
+                            <Bookmark className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">{isSaved ? 'Đã lưu' : 'Lưu'}</span>
+                          </button>
+
+                          {/* BẤM COI LỜI GIẢI / BÌNH LUẬN */}
                           <button
                             type="button"
                             onClick={() => toggleComments(post.id)}
@@ -575,7 +876,7 @@ export default function ForumPage() {
                             )}
                           >
                             <MessageSquare className="w-3.5 h-3.5" />
-                            <span>{post.repliesCount} bình luận</span>
+                            <span>{post.repliesCount} thảo luận</span>
                             {isExpanded ? (
                               <ChevronUp className="w-3.5 h-3.5" />
                             ) : (
@@ -605,7 +906,7 @@ export default function ForumPage() {
                         </div>
                       </div>
 
-                      {/* ── KHU VỰC BÌNH LUẬN & LỜI GIẢI HIỆN XUỐNG DƯỚI (KHÔNG CHUYỂN TRANG) ── */}
+                      {/* ── KHU VỰC BÌNH LUẬN & LỜI GIẢI HIỆN XUỐNG DƯỚI ── */}
                       <AnimatePresence>
                         {isExpanded && (
                           <motion.div
@@ -645,8 +946,8 @@ export default function ForumPage() {
                               postSlug={post.slug}
                               postTitle={post.title}
                               postAuthorId={(post as any).author?.id || (post as any).author_id}
-                              initialComments={(post as any).initialComments}
-                              isLocked={Boolean((post as any).isLocked || (post as any).is_locked)}
+                              initialComments={post.initialComments}
+                              isLocked={Boolean(post.isLocked)}
                             />
                           </motion.div>
                         )}
@@ -656,6 +957,58 @@ export default function ForumPage() {
                 </motion.div>
               );
             })
+          )}
+
+          {/* ── TASK #13: THANH PHÂN TRANG (PAGINATION BAR) TRÊN /FORUM ── */}
+          {!isLoading && totalPages > 1 && (
+            <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 shadow-xs">
+              <span className="text-xs text-slate-500">
+                Trang <strong className="text-slate-900 dark:text-white">{safePage}</strong> /{' '}
+                <strong className="text-slate-900 dark:text-white">{totalPages}</strong> ({totalFilteredCount} câu hỏi)
+              </span>
+
+              <div className="flex items-center gap-1.5">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={safePage <= 1}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  leftIcon={<ChevronLeft className="w-3.5 h-3.5" />}
+                  className="rounded-xl text-xs font-bold"
+                >
+                  Trước
+                </Button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                  <button
+                    key={pageNum}
+                    type="button"
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={cn(
+                      'w-8 h-8 rounded-xl text-xs font-bold transition-all cursor-pointer',
+                      pageNum === safePage
+                        ? 'bg-[#00B8DD] text-white shadow-sm shadow-[#00B8DD]/30'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    )}
+                  >
+                    {pageNum}
+                  </button>
+                ))}
+
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={safePage >= totalPages}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  rightIcon={<ChevronRight className="w-3.5 h-3.5" />}
+                  className="rounded-xl text-xs font-bold"
+                >
+                  Tiếp
+                </Button>
+              </div>
+            </div>
           )}
         </div>
 
@@ -673,13 +1026,18 @@ export default function ForumPage() {
                 { name: 'Nguyễn Minh Anh', role: 'Lớp 12A1 KHTN', solves: '32 bài giải', diamonds: '+320 💎' },
                 { name: 'Trần Gia Bảo', role: 'Lớp 12 Lý', solves: '24 bài giải', diamonds: '+240 💎' },
               ].map((m, i) => (
-                <div key={i} className="flex items-center justify-between text-xs py-1 border-b border-slate-100 dark:border-slate-800/80 last:border-none">
+                <div
+                  key={i}
+                  className="flex items-center justify-between text-xs py-1 border-b border-slate-100 dark:border-slate-800/80 last:border-none"
+                >
                   <div>
                     <strong className="text-slate-800 dark:text-slate-200 block">{m.name}</strong>
                     <span className="text-[10px] text-slate-400">{m.role}</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 block">{m.solves}</span>
+                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 block">
+                      {m.solves}
+                    </span>
                     <span className="text-[10px] text-amber-600 font-bold">{m.diamonds}</span>
                   </div>
                 </div>
@@ -694,98 +1052,22 @@ export default function ForumPage() {
               <span>Quy Tắc Diễn Đàn Văn Minh</span>
             </div>
             <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc pl-4 leading-relaxed">
-              <li>Đặt tiêu đề rõ ràng, nêu rõ dạng bài hoặc công thức trọng tâm.</li>
-              <li>Tôn trọng người giải, tích lũy lời cảm ơn và đánh dấu bài đã giải đúng.</li>
-              <li>Nghiêm cấm chia sẻ tài liệu vi phạm bản quyền hoặc spam quảng cáo.</li>
+              <li>Đặt tiêu đề rõ ràng, chọn đúng Môn học và Khối lớp (10, 11, 12).</li>
+              <li>Sử dụng thanh công cụ LaTeX để chèn nhanh Phân số, Căn bậc hai, Tích phân, Giới hạn.</li>
+              <li>Đính kèm ảnh chụp đề bài rõ nét (dung lượng &lt;= 5MB).</li>
             </ul>
           </Card>
         </div>
       </div>
 
-      {/* ── MODAL: ĐẶT CÂU HỎI MỚI ── */}
-      <Dialog
+      {/* ── MODAL ĐẶT CÂU HỎI MỚI (TASK #12 & TASK #11) ── */}
+      <ForumAskQuestionModal
         isOpen={isNewPostModalOpen}
         onClose={() => setIsNewPostModalOpen(false)}
-        maxWidth="lg"
-        title="Tạo Câu Hỏi Thảo Luận Mới"
-        description="Đặt câu hỏi rõ ràng, chi tiết để nhận được câu trả lời chính xác từ cộng đồng."
-      >
-        <form onSubmit={handleCreatePost} className="space-y-4 py-2 text-xs">
-          <div>
-            <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-              Tiêu Đề Câu Hỏi:
-            </label>
-            <input
-              type="text"
-              required
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="Ví dụ: Tìm m để hàm số y = x^3 - 3mx^2 + 1 có 2 điểm cực trị thỏa mãn..."
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#00B8DD]"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                Môn Học:
-              </label>
-              <select
-                value={newSubject}
-                onChange={(e) => setNewSubject(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#00B8DD]"
-              >
-                {SUBJECT_FILTERS.filter((s) => s !== 'Tất cả').map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                Khối Lớp:
-              </label>
-              <select className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#00B8DD]">
-                <option value="12">Lớp 12 (Thi THPT)</option>
-                <option value="11">Lớp 11</option>
-                <option value="10">Lớp 10</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-              Chi Tiết Bài Tập / Thắc Mắc:
-            </label>
-            <textarea
-              required
-              rows={5}
-              value={newContent}
-              onChange={(e) => setNewContent(e.target.value)}
-              placeholder="Mô tả cụ thể bước em đang bị vướng hoặc chèn công thức Toán LaTeX..."
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#00B8DD]"
-            />
-          </div>
-
-          <div className="flex items-center justify-end gap-2.5 pt-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsNewPostModalOpen(false)}
-              className="rounded-xl border-slate-300 dark:border-slate-700"
-            >
-              Hủy
-            </Button>
-            <Button
-              type="submit"
-              className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold rounded-xl"
-            >
-              Đăng Câu Hỏi
-            </Button>
-          </div>
-        </form>
-      </Dialog>
+        onPostCreated={handlePostCreated}
+        defaultSubject={selectedSubject !== 'Tất cả' ? selectedSubject : 'Toán Học'}
+        defaultGrade={selectedGrade !== 'ALL' ? selectedGrade : 12}
+      />
 
       {/* Modal Báo cáo vi phạm bài viết */}
       <ReportModal
