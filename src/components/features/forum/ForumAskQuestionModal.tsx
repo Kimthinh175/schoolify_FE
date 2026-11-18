@@ -16,6 +16,8 @@ import {
   GraduationCap,
   Tag,
   Sigma,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { Dialog } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -644,6 +646,7 @@ export function ForumAskQuestionModal({
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
   const [uploadErrorMsg, setUploadErrorMsg] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isToolbarExpanded, setIsToolbarExpanded] = React.useState(false);
 
   const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
   const titleInputRef = React.useRef<HTMLInputElement | null>(null);
@@ -656,6 +659,12 @@ export function ForumAskQuestionModal({
       (item) => item.subjects.includes(subject) && item.minGrade <= grade
     );
   }, [subject, grade]);
+
+  const DEFAULT_VISIBLE_SNIPPETS_COUNT = 5;
+  const hasMoreSnippets = visibleToolbarItems.length > DEFAULT_VISIBLE_SNIPPETS_COUNT;
+  const displayedToolbarItems = isToolbarExpanded || !hasMoreSnippets
+    ? visibleToolbarItems
+    : visibleToolbarItems.slice(0, DEFAULT_VISIBLE_SNIPPETS_COUNT);
 
   // Chèn công thức LaTeX đúng vào vị trí con trỏ của ô đang chọn (Title hoặc Content)
   const handleInsertLatex = (snippet: MathToolbarSnippet) => {
@@ -1016,9 +1025,9 @@ export function ForumAskQuestionModal({
             </div>
           </div>
 
-          {/* Danh sách nút bấm chèn nhanh theo Môn học & Khối lớp */}
+          {/* Danh sách nút bấm chèn nhanh theo Môn học & Khối lớp (mặc định gọn 1 hàng, bấm Xem chi tiết để mở hết) */}
           <div className="flex flex-wrap items-center gap-1.5">
-            {visibleToolbarItems.map((item) => (
+            {displayedToolbarItems.map((item) => (
               <button
                 key={item.id}
                 type="button"
@@ -1034,6 +1043,28 @@ export function ForumAskQuestionModal({
                 </span>
               </button>
             ))}
+
+            {hasMoreSnippets && (
+              <button
+                type="button"
+                onClick={() => setIsToolbarExpanded((prev) => !prev)}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#00B8DD]/10 hover:bg-[#00B8DD]/20 border border-[#00B8DD]/35 text-[#007D99] dark:text-[#00B8DD] text-[11px] font-bold transition-all cursor-pointer"
+              >
+                {isToolbarExpanded ? (
+                  <>
+                    <span>Thu gọn</span>
+                    <ChevronUp className="w-3.5 h-3.5" />
+                  </>
+                ) : (
+                  <>
+                    <span>
+                      Xem chi tiết (+{visibleToolbarItems.length - DEFAULT_VISIBLE_SNIPPETS_COUNT})
+                    </span>
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
 
