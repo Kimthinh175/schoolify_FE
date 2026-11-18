@@ -126,6 +126,15 @@ export default function AdminForumPage() {
   const [statusFilter, setStatusFilter] = React.useState('ALL');
   const [reportStatusFilter, setReportStatusFilter] = React.useState<string>('ALL');
 
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('tab') === 'reports') {
+        setActiveTab('REPORTS');
+      }
+    }
+  }, []);
+
   // Dữ liệu quản trị bài viết
   const [posts, setPosts] = React.useState<AdminForumPost[]>(() =>
     ALL_FORUM_SEED_POSTS.map((p) => ({
@@ -406,7 +415,15 @@ export default function AdminForumPage() {
           <p className="text-[11px] text-slate-400 mt-0.5">Tạm dừng nhận lời giải mới</p>
         </Card>
 
-        <Card className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs">
+        <Card
+          onClick={() => setActiveTab('REPORTS')}
+          className={cn(
+            'p-4 bg-white dark:bg-slate-900 border rounded-2xl shadow-xs cursor-pointer transition-all group',
+            activeTab === 'REPORTS'
+              ? 'border-rose-500 ring-2 ring-rose-500/20'
+              : 'border-slate-200/80 dark:border-slate-800 hover:border-rose-400 hover:shadow-md'
+          )}
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
               Báo Cáo Chờ Xử Lý
@@ -423,49 +440,90 @@ export default function AdminForumPage() {
           >
             {totalPendingReports}
           </div>
-          <p className="text-[11px] text-slate-400 mt-0.5">Yêu cầu từ học sinh &amp; giáo viên</p>
+          <div className="flex items-center justify-between mt-0.5">
+            <p className="text-[11px] text-slate-400">Yêu cầu từ cộng đồng</p>
+            <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 group-hover:underline">
+              Bấm duyệt ➔
+            </span>
+          </div>
         </Card>
       </div>
 
-      {/* 3. Thanh Tab Điều Hướng */}
-      <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 w-fit">
-        <button
-          type="button"
-          onClick={() => setActiveTab('POSTS')}
-          className={cn(
-            'px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2',
-            activeTab === 'POSTS'
-              ? 'bg-white dark:bg-slate-900 text-[#00B8DD] shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-          )}
-        >
-          <MessageSquare className="w-4 h-4" />
-          <span>Tab 1: Quản lý Chủ đề ({posts.length})</span>
-        </button>
+      {/* 3. Thanh Tab Điều Hướng Nổi Bật (Có hỗ trợ cuộn theo màn hình) */}
+      <div className="sticky top-0 z-20 py-2 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-md">
+        <div className="flex items-center gap-2 p-1.5 bg-slate-200/70 dark:bg-slate-800/90 rounded-2xl border border-slate-300/80 dark:border-slate-700/80 w-full sm:w-fit shadow-xs">
+          <button
+            type="button"
+            onClick={() => setActiveTab('POSTS')}
+            className={cn(
+              'flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-2',
+              activeTab === 'POSTS'
+                ? 'bg-white dark:bg-slate-900 text-[#00B8DD] shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            )}
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span>Tab 1: Quản lý Chủ đề ({posts.length})</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('REPORTS')}
-          className={cn(
-            'px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2',
-            activeTab === 'REPORTS'
-              ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-          )}
-        >
-          <Flag className="w-4 h-4" />
-          <span>Tab 2: Xử lý Báo cáo vi phạm</span>
-          {totalPendingReports > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white">
-              {totalPendingReports}
-            </span>
-          )}
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('REPORTS')}
+            className={cn(
+              'flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-2 relative',
+              activeTab === 'REPORTS'
+                ? 'bg-rose-600 text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-rose-50 dark:hover:bg-rose-950/40'
+            )}
+          >
+            <Flag className={cn('w-4 h-4', activeTab === 'REPORTS' ? 'text-white' : 'text-rose-500')} />
+            <span>Tab 2: Xử lý Báo cáo vi phạm</span>
+            {totalPendingReports > 0 && (
+              <span
+                className={cn(
+                  'px-1.5 py-0.5 rounded-full text-[10px] font-black',
+                  activeTab === 'REPORTS' ? 'bg-white text-rose-600' : 'bg-rose-600 text-white'
+                )}
+              >
+                {totalPendingReports}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* ── TAB 1: QUẢN LÝ CHỦ ĐỀ HỎI BÀI ── */}
       {activeTab === 'POSTS' && (
         <div className="space-y-4">
+          {/* Banner thông báo Báo cáo vi phạm chờ duyệt */}
+          {totalPendingReports > 0 && (
+            <div className="p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-rose-50 to-amber-50 dark:from-rose-950/40 dark:to-amber-950/30 border border-rose-300 dark:border-rose-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <ShieldAlert className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>Đang có {totalPendingReports} báo cáo vi phạm cần duyệt!</span>
+                    <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-600 text-white">Chờ duyệt</span>
+                  </h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    Học sinh &amp; giáo viên báo cáo nội dung spam, sai kiến thức. Nhấn nút bên cạnh để xem và duyệt 1 chạm.
+                  </p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                onClick={() => setActiveTab('REPORTS')}
+                size="sm"
+                className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shrink-0 cursor-pointer shadow-xs flex items-center gap-1.5 self-start sm:self-auto py-2 h-auto"
+              >
+                <Flag className="w-3.5 h-3.5" />
+                <span>Mở Duyệt Báo Cáo ({totalPendingReports}) ➔</span>
+              </Button>
+            </div>
+          )}
+
           {/* Bộ lọc tìm kiếm */}
           <Card className="p-3.5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs space-y-3">
             <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
@@ -515,6 +573,21 @@ export default function AdminForumPage() {
 
           {/* Bảng danh sách bài viết */}
           <Card className="p-0 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+            {/* Header thanh công cụ bảng */}
+            <div className="p-3 sm:px-4 bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 flex-wrap">
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                Danh sách chủ đề câu hỏi ({filteredPosts.length})
+              </span>
+              <button
+                type="button"
+                onClick={() => setActiveTab('REPORTS')}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-700 transition-all cursor-pointer shadow-xs"
+              >
+                <Flag className="w-3.5 h-3.5 text-rose-600" />
+                <span>Xem &amp; Duyệt Báo Cáo ({totalPendingReports}) ➔</span>
+              </button>
+            </div>
+
             {/* ── MOBILE CARD STACK (< 1024px) TỐI ƯU 375px: 0px CUỘN NGANG ── */}
             <div className="lg:hidden divide-y divide-slate-100 dark:divide-slate-800/80 w-full max-w-full overflow-hidden">
               {filteredPosts.length === 0 ? (
