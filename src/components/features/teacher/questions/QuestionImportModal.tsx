@@ -201,7 +201,7 @@ export function QuestionImportModal({
     if (!content || !content.trim()) {
       return { isValid: false, errors: ['Nội dung câu hỏi không được để trống'] };
     }
-    if (qType === 'ESSAY' || qType === 'GROUP_QUESTIONS') {
+    if (qType === 'GROUP_QUESTIONS') {
       return { isValid: true, errors: [] };
     }
     if (qType === 'FILL_BLANK') {
@@ -296,12 +296,12 @@ export function QuestionImportModal({
       prev.map((q) => {
         if (q.temp_id !== tempId) return q;
         const hasCorrect = editAnswers.some((a) => a.is_correct);
-        const isValid = q.question_type === 'ESSAY' ? editContent.trim() !== '' : (hasCorrect && editContent.trim() !== '');
+        const isValid = hasCorrect && editContent.trim() !== '';
         const errors: string[] = [];
         if (!editContent.trim()) {
           errors.push('Nội dung câu hỏi không được để trống');
         }
-        if (q.question_type !== 'ESSAY' && !hasCorrect) {
+        if (!hasCorrect) {
           errors.push('Vui lòng chọn ít nhất 1 đáp án đúng');
         }
         return {
@@ -541,7 +541,7 @@ export function QuestionImportModal({
                       </div>
                     </div>
                     <p className="text-xs text-slate-500">
-                      Tải file mẫu để xem quy chuẩn soạn câu hỏi trắc nghiệm & tự luận trên Word.
+                      Tải file mẫu để xem quy chuẩn soạn câu hỏi trắc nghiệm trên Word.
                     </p>
                     <div className="flex flex-wrap items-center gap-2 pt-1">
                       <a
@@ -807,7 +807,7 @@ export function QuestionImportModal({
                                   </div>
                                 )}
 
-                                {q.question_type !== 'ESSAY' && q.answers.length > 0 && (
+                                {q.answers.length > 0 && (
                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 font-sans">
                                     {q.answers.map((ans, aIdx) => (
                                       <div
@@ -878,7 +878,6 @@ export function QuestionImportModal({
                                 <option value="MULTIPLE_CHOICE">Trắc nghiệm nhiều đáp án</option>
                                 <option value="TRUE_FALSE">Đúng / Sai đa mệnh đề (2025)</option>
                                 <option value="FILL_BLANK">Điền số / Trả lời ngắn</option>
-                                <option value="ESSAY">Câu hỏi Tự luận</option>
                                 <option value="GROUP_QUESTIONS">Chùm câu hỏi (Ngữ liệu)</option>
                                 <option value="MATCHING">Nối cặp tương ứng</option>
                                 <option value="ORDERING">Sắp xếp theo thứ tự</option>
@@ -967,67 +966,65 @@ export function QuestionImportModal({
                                 )}
                               </div>
 
-                              {q.question_type !== 'ESSAY' && (
-                                <div className="space-y-2">
-                                  <div className="flex items-center justify-between">
-                                    <label className="block text-[11px] font-bold text-purple-900 dark:text-purple-300 uppercase">
-                                      Các lựa chọn đáp án:
-                                    </label>
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={handleEditAddAnswer}
-                                      leftIcon={<Plus className="w-3 h-3" />}
-                                      className="h-7 text-[11px]"
-                                    >
-                                      Thêm đáp án
-                                    </Button>
-                                  </div>
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <label className="block text-[11px] font-bold text-purple-900 dark:text-purple-300 uppercase">
+                                    Các lựa chọn đáp án:
+                                  </label>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleEditAddAnswer}
+                                    leftIcon={<Plus className="w-3 h-3" />}
+                                    className="h-7 text-[11px]"
+                                  >
+                                    Thêm đáp án
+                                  </Button>
+                                </div>
 
-                                  {editAnswers.map((ans, aIdx) => (
-                                    <div key={aIdx} className="flex items-center gap-2">
+                                {editAnswers.map((ans, aIdx) => (
+                                  <div key={aIdx} className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const updated = editAnswers.map((a, i) => ({
+                                          ...a,
+                                          is_correct: i === aIdx ? !a.is_correct : q.question_type === 'SINGLE_CHOICE' ? false : a.is_correct,
+                                        }));
+                                        setEditAnswers(updated);
+                                      }}
+                                      className={`h-7 w-7 rounded-lg text-xs font-bold flex items-center justify-center shrink-0 border transition-all ${
+                                        ans.is_correct
+                                          ? 'bg-emerald-500 text-white border-emerald-500'
+                                          : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+                                      }`}
+                                      title={ans.is_correct ? 'Đáp án đúng' : 'Đánh dấu đáp án đúng'}
+                                    >
+                                      {ans.is_correct ? '✓' : String.fromCharCode(65 + aIdx)}
+                                    </button>
+                                    <Input
+                                      value={ans.content}
+                                      onChange={(e) => {
+                                        const updated = [...editAnswers];
+                                        updated[aIdx].content = e.target.value;
+                                        setEditAnswers(updated);
+                                      }}
+                                      placeholder={`Nhập nội dung đáp án ${String.fromCharCode(65 + aIdx)}...`}
+                                      className="text-xs h-8 flex-1"
+                                    />
+                                    {editAnswers.length > 2 && (
                                       <button
                                         type="button"
-                                        onClick={() => {
-                                          const updated = editAnswers.map((a, i) => ({
-                                            ...a,
-                                            is_correct: i === aIdx ? !a.is_correct : q.question_type === 'SINGLE_CHOICE' ? false : a.is_correct,
-                                          }));
-                                          setEditAnswers(updated);
-                                        }}
-                                        className={`h-7 w-7 rounded-lg text-xs font-bold flex items-center justify-center shrink-0 border transition-all ${
-                                          ans.is_correct
-                                            ? 'bg-emerald-500 text-white border-emerald-500'
-                                            : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
-                                        }`}
-                                        title={ans.is_correct ? 'Đáp án đúng' : 'Đánh dấu đáp án đúng'}
+                                        onClick={() => handleEditRemoveAnswer(aIdx)}
+                                        className="p-1 text-slate-400 hover:text-rose-500 transition-colors"
                                       >
-                                        {ans.is_correct ? '✓' : String.fromCharCode(65 + aIdx)}
+                                        <Trash2 className="w-3.5 h-3.5" />
                                       </button>
-                                      <Input
-                                        value={ans.content}
-                                        onChange={(e) => {
-                                          const updated = [...editAnswers];
-                                          updated[aIdx].content = e.target.value;
-                                          setEditAnswers(updated);
-                                        }}
-                                        placeholder={`Nhập nội dung đáp án ${String.fromCharCode(65 + aIdx)}...`}
-                                        className="text-xs h-8 flex-1"
-                                      />
-                                      {editAnswers.length > 2 && (
-                                        <button
-                                          type="button"
-                                          onClick={() => handleEditRemoveAnswer(aIdx)}
-                                          className="p-1 text-slate-400 hover:text-rose-500 transition-colors"
-                                        >
-                                          <Trash2 className="w-3.5 h-3.5" />
-                                        </button>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
 
                               <div>
                                 <label className="block text-[11px] font-bold text-purple-900 dark:text-purple-300 uppercase mb-1">
@@ -1078,16 +1075,7 @@ export function QuestionImportModal({
                               )}
 
                               {/* Hiển thị chi tiết theo từng loại câu hỏi */}
-                              {q.question_type === 'ESSAY' ? (
-                                <div className="p-2.5 rounded-xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 text-[11px] text-purple-900 dark:text-purple-300 space-y-1">
-                                  <div className="font-bold flex items-center gap-1.5">
-                                    <span>📝 Chế độ Tự luận / Barem chấm điểm</span>
-                                  </div>
-                                  <p className="text-slate-600 dark:text-slate-300">
-                                    {q.sample_essay_answer || 'Không yêu cầu đáp án trắc nghiệm. Học sinh nộp bài viết hoặc file ảnh.'}
-                                  </p>
-                                </div>
-                              ) : q.question_type === 'GROUP_QUESTIONS' ? (
+                              {q.question_type === 'GROUP_QUESTIONS' ? (
                                 <div className="p-2.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-[11px] text-amber-900 dark:text-amber-300 space-y-1">
                                   <div className="font-bold flex items-center gap-1.5">
                                     <span>📚 Chùm câu hỏi / Ngữ liệu đọc hiểu chung</span>
@@ -1226,7 +1214,6 @@ export function QuestionImportModal({
                             <option value="SINGLE_CHOICE">Trắc nghiệm 1 đáp án</option>
                             <option value="MULTIPLE_CHOICE">Trắc nghiệm nhiều đáp án</option>
                             <option value="TRUE_FALSE">Câu hỏi Đúng / Sai</option>
-                            <option value="ESSAY">Câu hỏi Tự luận</option>
                           </select>
                           {!q.is_valid && (
                             <span className="text-xs font-bold text-rose-600 flex items-center gap-1">
@@ -1310,67 +1297,65 @@ export function QuestionImportModal({
                             )}
                           </div>
 
-                          {q.question_type !== 'ESSAY' && (
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between">
-                                <label className="block text-[11px] font-bold text-purple-900 dark:text-purple-300 uppercase">
-                                  Các lựa chọn đáp án:
-                                </label>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={handleEditAddAnswer}
-                                  leftIcon={<Plus className="w-3 h-3" />}
-                                  className="h-7 text-[11px]"
-                                >
-                                  Thêm đáp án
-                                </Button>
-                              </div>
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <label className="block text-[11px] font-bold text-purple-900 dark:text-purple-300 uppercase">
+                                Các lựa chọn đáp án:
+                              </label>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={handleEditAddAnswer}
+                                leftIcon={<Plus className="w-3 h-3" />}
+                                className="h-7 text-[11px]"
+                              >
+                                Thêm đáp án
+                              </Button>
+                            </div>
 
-                              {editAnswers.map((ans, aIdx) => (
-                                <div key={aIdx} className="flex items-center gap-2">
+                            {editAnswers.map((ans, aIdx) => (
+                              <div key={aIdx} className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = editAnswers.map((a, i) => ({
+                                      ...a,
+                                      is_correct: i === aIdx ? !a.is_correct : q.question_type === 'SINGLE_CHOICE' ? false : a.is_correct,
+                                    }));
+                                    setEditAnswers(updated);
+                                  }}
+                                  className={`h-7 w-7 rounded-lg text-xs font-bold flex items-center justify-center shrink-0 border transition-all ${
+                                    ans.is_correct
+                                      ? 'bg-emerald-500 text-white border-emerald-500'
+                                      : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+                                  }`}
+                                  title={ans.is_correct ? 'Đáp án đúng' : 'Đánh dấu đáp án đúng'}
+                                >
+                                  {ans.is_correct ? '✓' : String.fromCharCode(65 + aIdx)}
+                                </button>
+                                <Input
+                                  value={ans.content}
+                                  onChange={(e) => {
+                                    const updated = [...editAnswers];
+                                    updated[aIdx].content = e.target.value;
+                                    setEditAnswers(updated);
+                                  }}
+                                  placeholder={`Nhập nội dung đáp án ${String.fromCharCode(65 + aIdx)}...`}
+                                  className="text-xs h-8 flex-1"
+                                />
+                                {editAnswers.length > 2 && (
                                   <button
                                     type="button"
-                                    onClick={() => {
-                                      const updated = editAnswers.map((a, i) => ({
-                                        ...a,
-                                        is_correct: i === aIdx ? !a.is_correct : q.question_type === 'SINGLE_CHOICE' ? false : a.is_correct,
-                                      }));
-                                      setEditAnswers(updated);
-                                    }}
-                                    className={`h-7 w-7 rounded-lg text-xs font-bold flex items-center justify-center shrink-0 border transition-all ${
-                                      ans.is_correct
-                                        ? 'bg-emerald-500 text-white border-emerald-500'
-                                        : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
-                                    }`}
-                                    title={ans.is_correct ? 'Đáp án đúng' : 'Đánh dấu đáp án đúng'}
+                                    onClick={() => handleEditRemoveAnswer(aIdx)}
+                                    className="p-1 text-slate-400 hover:text-rose-500 transition-colors"
                                   >
-                                    {ans.is_correct ? '✓' : String.fromCharCode(65 + aIdx)}
+                                    <Trash2 className="w-3.5 h-3.5" />
                                   </button>
-                                  <Input
-                                    value={ans.content}
-                                    onChange={(e) => {
-                                      const updated = [...editAnswers];
-                                      updated[aIdx].content = e.target.value;
-                                      setEditAnswers(updated);
-                                    }}
-                                    placeholder={`Nhập nội dung đáp án ${String.fromCharCode(65 + aIdx)}...`}
-                                    className="text-xs h-8 flex-1"
-                                  />
-                                  {editAnswers.length > 2 && (
-                                    <button
-                                      type="button"
-                                      onClick={() => handleEditRemoveAnswer(aIdx)}
-                                      className="p-1 text-slate-400 hover:text-rose-500 transition-colors"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                                )}
+                              </div>
+                            ))}
+                          </div>
 
                           <div>
                             <label className="block text-[11px] font-bold text-purple-900 dark:text-purple-300 uppercase mb-1">
@@ -1420,41 +1405,35 @@ export function QuestionImportModal({
                             </div>
                           )}
 
-                          {/* Danh sách đáp án hoặc Chú thích Tự luận */}
-                          {q.question_type === 'ESSAY' ? (
-                            <div className="p-2.5 rounded-xl bg-slate-100/70 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-400 flex items-center gap-2 font-medium">
-                              <span>ℹ️ <strong>Chế độ Tự luận:</strong> {q.answers.length > 0 ? `Đã tạm ẩn ${q.answers.length} lựa chọn trắc nghiệm. Đổi lại Trắc nghiệm để hiển thị lại.` : 'Câu hỏi tự luận không yêu cầu đáp án lựa chọn.'}</span>
-                            </div>
-                          ) : (
-                            q.answers.length > 0 && (
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                                {q.answers.map((ans, aIdx) => (
-                                  <button
-                                    type="button"
-                                    key={aIdx}
-                                    onClick={() => handleToggleAnswerCorrect(q.temp_id, aIdx)}
-                                    className={`p-2.5 rounded-xl text-xs flex items-start gap-2.5 text-left border transition-all w-full min-w-0 ${
+                          {/* Danh sách đáp án */}
+                          {q.answers.length > 0 && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                              {q.answers.map((ans, aIdx) => (
+                                <button
+                                  type="button"
+                                  key={aIdx}
+                                  onClick={() => handleToggleAnswerCorrect(q.temp_id, aIdx)}
+                                  className={`p-2.5 rounded-xl text-xs flex items-start gap-2.5 text-left border transition-all w-full min-w-0 ${
+                                    ans.is_correct
+                                      ? 'bg-emerald-50 border-emerald-300 text-emerald-800 font-bold dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300 shadow-xs'
+                                      : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                                  }`}
+                                >
+                                  <span
+                                    className={`h-5 w-5 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 ${
                                       ans.is_correct
-                                        ? 'bg-emerald-50 border-emerald-300 text-emerald-800 font-bold dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300 shadow-xs'
-                                        : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                                        ? 'bg-emerald-500 text-white'
+                                        : 'bg-slate-200 dark:bg-slate-800 text-slate-600'
                                     }`}
                                   >
-                                    <span
-                                      className={`h-5 w-5 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 ${
-                                        ans.is_correct
-                                          ? 'bg-emerald-500 text-white'
-                                          : 'bg-slate-200 dark:bg-slate-800 text-slate-600'
-                                      }`}
-                                    >
-                                      {ans.is_correct ? '✓' : String.fromCharCode(65 + aIdx)}
-                                    </span>
-                                    <span className="flex-1 truncate">
-                                      <MathText text={cleanOptionText(ans.content)} />
-                                    </span>
-                                  </button>
-                                ))}
-                              </div>
-                            )
+                                    {ans.is_correct ? '✓' : String.fromCharCode(65 + aIdx)}
+                                  </span>
+                                  <span className="flex-1 truncate">
+                                    <MathText text={cleanOptionText(ans.content)} />
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
                           )}
 
                           {q.explain && (

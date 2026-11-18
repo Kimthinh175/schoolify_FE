@@ -20,6 +20,13 @@ export interface ExamPointLogItem {
   createdAt: string;
 }
 
+export interface DiagnosticPromptInfo {
+  shouldPrompt: boolean;
+  reason: 'FIRST_TIME' | 'INACTIVE_30_DAYS' | null;
+  daysSinceLastPractice: number | null;
+  thresholdDays: number;
+}
+
 export interface ExamPointsBalanceResponse {
   studentProfileId: string;
   currentPoints: number;
@@ -30,6 +37,10 @@ export interface ExamPointsBalanceResponse {
   hasAi50PercentDiscount?: boolean;
   lastDailyGrantDate: string;
   alreadyClaimedToday?: boolean;
+  totalSubmissionsCount?: number;
+  lastSubmittedAt?: string | null;
+  daysSinceLastPractice?: number | null;
+  diagnosticPrompt?: DiagnosticPromptInfo;
   quotaByLevel: {
     BASIC: ExamPointsQuotaItem;
     MEDIUM: ExamPointsQuotaItem;
@@ -93,6 +104,51 @@ export function getCachedPointsBalance(): number | null {
   }
 }
 
+export function getCachedDiamondsBalance(): number | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem('schoolify_user_diamonds');
+    if (raw === null || raw === '') return null;
+    const num = Number(raw);
+    return Number.isFinite(num) ? num : null;
+  } catch {
+    return null;
+  }
+}
+
+export function isDiagnosticPromptSkipped(
+  userId?: string | null,
+  reason?: 'FIRST_TIME' | 'INACTIVE_30_DAYS' | null,
+): boolean {
+  if (typeof window === 'undefined' || !reason) return false;
+  try {
+    const uid = userId || 'guest';
+    if (reason === 'FIRST_TIME') {
+      return window.localStorage.getItem(`schoolify_diag_skip_first_${uid}`) === '1';
+    }
+    const monthKey = new Date().toISOString().slice(0, 7);
+    return window.localStorage.getItem(`schoolify_diag_skip_inactive_${uid}_${monthKey}`) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function markDiagnosticPromptSkipped(
+  userId?: string | null,
+  reason?: 'FIRST_TIME' | 'INACTIVE_30_DAYS' | null,
+) {
+  if (typeof window === 'undefined' || !reason) return;
+  try {
+    const uid = userId || 'guest';
+    if (reason === 'FIRST_TIME') {
+      window.localStorage.setItem(`schoolify_diag_skip_first_${uid}`, '1');
+    } else {
+      const monthKey = new Date().toISOString().slice(0, 7);
+      window.localStorage.setItem(`schoolify_diag_skip_inactive_${uid}_${monthKey}`, '1');
+    }
+  } catch {}
+}
+
 export function getExamLevelCost(rawLevel?: string): {
   code: 'BASIC' | 'MEDIUM' | 'ADVANCED';
   label: string;
@@ -101,6 +157,19 @@ export function getExamLevelCost(rawLevel?: string): {
   const norm = String(rawLevel || 'BASIC')
     .trim()
     .toUpperCase();
+
+  if (
+    norm.includes('ASSESSMENT') ||
+    norm.includes('DIAGNOSTIC') ||
+    norm.includes('DANH_GIA') ||
+    norm.includes('ĐÁNH GIÁ')
+  ) {
+    return {
+      code: 'BASIC',
+      label: 'Đánh giá năng lực',
+      costPoints: 0,
+    };
+  }
 
   if (
     norm.includes('NATIONAL') ||
@@ -194,7 +263,7 @@ export const examPointsService = {
     });
     const json = await res.json();
     if (json?.data?.currentPoints !== undefined) {
-      notifyExamPointsUpdated(json.data.currentPoints);
+      notifyExamPointsUpdated(json.data.currentPoints, json.data.diamonds);
     }
     return json;
   },
@@ -206,6 +275,7 @@ export const examPointsService = {
     subjectSlug?: string;
     grade?: number;
     chapterId?: number;
+    useDiamonds?: boolean;
   }) {
     const headers = getAuthHeaders();
     const effectiveUserId = payload.userId || headers['x-user-id'] || undefined;
@@ -219,11 +289,14 @@ export const examPointsService = {
         userId: effectiveUserId,
         level: payload.level,
         examTitle: payload.examTitle,
+        subjectSlug: payload.subjectSlug,
+        grade: payload.grade,
+        useDiamonds: payload.useDiamonds,
       }),
     });
     const json = await res.json().catch(() => ({}));
-    if (json?.data?.currentPoints !== undefined) {
-      notifyExamPointsUpdated(json.data.currentPoints);
+    if (json?.data?.currentPoints !== undefined || json?.data?.diamonds !== undefined) {
+      notifyExamPointsUpdated(json.data.currentPoints, json.data.diamonds);
     }
     return { ok: res.ok, status: res.status, ...json };
   },

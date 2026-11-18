@@ -226,7 +226,6 @@ export const QUESTION_TYPE_LABELS: Record<string, string> = {
   TRUE_FALSE: 'Đúng / Sai (THPT 2025)',
   SHORT_ANSWER: 'Trả lời ngắn (Điền số)',
   FILL_BLANK: 'Điền khuyết / Điền số',
-  ESSAY: 'Tự luận',
   GROUP_QUESTIONS: 'Chùm câu hỏi',
   MATCHING: 'Nối cặp',
   ORDERING: 'Sắp xếp thứ tự',
@@ -412,7 +411,7 @@ export default function AdminQuestionsPage() {
       else if (q.difficulty === 'ADVANCED_APPLICATION') entry.advanced += 1;
 
       if (q.type === 'TRUE_FALSE') entry.trueFalseCount += 1;
-      else if (q.type === 'FILL_BLANK' || q.type === 'ESSAY') entry.shortOrEssayCount += 1;
+      else if (q.type === 'FILL_BLANK' || q.type === 'SHORT_ANSWER') entry.shortOrEssayCount += 1;
       else entry.singleChoiceCount += 1;
     });
 
@@ -1154,7 +1153,7 @@ export default function AdminQuestionsPage() {
                               : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200/70 dark:border-amber-800/60'
                           }`}
                         >
-                          TLN / Tự luận: <strong>{sub.shortOrEssayCount}</strong>
+                          Trả lời ngắn: <strong>{sub.shortOrEssayCount}</strong>
                         </span>
                       </div>
 
@@ -1440,7 +1439,6 @@ export default function AdminQuestionsPage() {
                       <option value="MULTIPLE_CHOICE">Trắc nghiệm nhiều đáp án</option>
                       <option value="TRUE_FALSE">Đúng / Sai 2025</option>
                       <option value="FILL_BLANK">Điền khuyết / Điền số</option>
-                      <option value="ESSAY">Tự luận</option>
                       <option value="GROUP_QUESTIONS">Chùm câu hỏi</option>
                       <option value="MATCHING">Nối cặp</option>
                       <option value="ORDERING">Sắp xếp</option>

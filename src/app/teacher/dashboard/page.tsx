@@ -72,15 +72,32 @@ export default function TeacherDashboardPage() {
       </div>
 
       {!user || (!!teacherId && !isReady) ? (
-        <>
+        <div className="space-y-6">
           {/* Đang tải hồ sơ giáo viên / dữ liệu */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {Array.from({ length: 4 }).map((_, index) => (
-              <Skeleton key={index} className="h-28" />
+              <div
+                key={index}
+                className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/75 space-y-2.5"
+              >
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-4 w-28 rounded" />
+                  <Skeleton variant="brand" className="w-9 h-9 rounded-xl" />
+                </div>
+                <Skeleton className="h-8 w-24 rounded-xl" />
+                <Skeleton className="h-3 w-36 rounded" />
+              </div>
             ))}
           </div>
-          <Skeleton className="h-96" />
-        </>
+          <div className="p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/75 space-y-4">
+            <Skeleton className="h-6 w-52 rounded-lg" />
+            <div className="space-y-2.5">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} variant="subtle" className="h-14 w-full rounded-xl" />
+              ))}
+            </div>
+          </div>
+        </div>
       ) : !teacherId || !stats ? (
         /* Không có hồ sơ giáo viên -> chặn rò dữ liệu của giáo viên khác */
         <Card className="p-10 flex flex-col items-center text-center space-y-3">

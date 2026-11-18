@@ -1,5 +1,5 @@
-import { GenericPageSkeleton } from '@/components/skeletons/page-skeletons';
+import { NewsPageSkeleton } from "@/components/skeletons/page-skeletons";
 
 export default function NewsLoading() {
-  return <GenericPageSkeleton />;
+  return <NewsPageSkeleton />;
 }

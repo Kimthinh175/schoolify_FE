@@ -70,7 +70,6 @@ export function HomePageSkeletonContent() {
 
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <Bone className="sk-bone--brand h-12 w-52 rounded-2xl" />
-              <Bone className="h-12 w-40 rounded-2xl" />
             </div>
 
             {/* Chip niềm tin */}

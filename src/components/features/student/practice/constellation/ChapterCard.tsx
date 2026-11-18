@@ -18,8 +18,11 @@ export interface LevelMeta {
 
 interface ChapterCardProps {
   node: ChapterRoadmapNode;
+  chapterLabel?: string;
   level: LevelMeta;
   isJumping: boolean;
+  caretSide?: 'top' | 'left' | 'right' | 'none';
+  caretOffsetPx?: number;
   onStart: () => void;
   onGoPrevLevel: (code: RoadmapDifficultyLevel) => void;
   onJump: () => void;
@@ -28,11 +31,14 @@ interface ChapterCardProps {
 const btnBase =
   'min-h-[44px] px-4 rounded-xl text-sm font-bold inline-flex items-center justify-center gap-2 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00B8DD]/60 disabled:opacity-60 disabled:cursor-not-allowed';
 
-/** Thẻ kính mờ mô tả chương đang chọn — hành vi giữ nguyên bản cũ (bắt đầu / luyện lại / qua mức trước / nhảy tới chương). */
+/** Thẻ kính mờ mô tả chương đang chọn — đặt ngay tại vị trí chương đang chọn. */
 export function ChapterCard({
   node,
+  chapterLabel,
   level,
   isJumping,
+  caretSide = 'none',
+  caretOffsetPx,
   onStart,
   onGoPrevLevel,
   onJump,
@@ -40,21 +46,51 @@ export function ChapterCard({
   const status = node.levels[level.code];
   const isEntry = node.trackOrder === 1;
   const showPrev = isEntry && level.prevLevelCode && level.prevLevelTitle;
+  const eyebrow = chapterLabel || `Chương ${node.trackOrder}`;
 
   return (
     <div
       key={`${node.id}-${level.code}`}
-      className="rounded-[20px] border border-white/15 bg-slate-900/70 p-[18px] backdrop-blur-xl animate-in fade-in slide-in-from-bottom-2 duration-200 motion-reduce:animate-none"
+      className="relative rounded-[20px] border border-white/20 bg-slate-900/88 p-[18px] shadow-[0_18px_48px_rgba(2,6,23,0.72),0_0_0_1px_rgba(92,225,255,0.12)] backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 motion-reduce:animate-none"
     >
-      <p
-        className={cn(
-          'text-[11px] font-bold uppercase tracking-[0.12em]',
-          status.unlocked ? 'text-[#5CE1FF]' : 'text-slate-400',
+      {caretSide === 'top' && (
+        <span
+          aria-hidden="true"
+          style={
+            typeof caretOffsetPx === 'number'
+              ? { left: `${caretOffsetPx}px`, transform: 'translateX(-50%) rotate(45deg)' }
+              : { left: '50%', transform: 'translateX(-50%) rotate(45deg)' }
+          }
+          className="pointer-events-none absolute -top-[7px] h-3 w-3 border-l border-t border-white/25 bg-slate-900/95"
+        />
+      )}
+      {caretSide === 'left' && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute -left-[7px] top-1/2 h-3 w-3 -translate-y-1/2 rotate-45 border-b border-l border-white/25 bg-slate-900/95"
+        />
+      )}
+      {caretSide === 'right' && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-[7px] top-1/2 h-3 w-3 -translate-y-1/2 rotate-45 border-r border-t border-white/25 bg-slate-900/95"
+        />
+      )}
+
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p
+          className={cn(
+            'text-[11px] font-bold uppercase tracking-[0.12em]',
+            status.unlocked ? 'text-[#5CE1FF]' : 'text-slate-400',
+          )}
+        >
+          {eyebrow}
+        </p>
+        {node.sgkLabel && (
+          <span className="text-[10px] font-medium text-slate-400">{node.sgkLabel}</span>
         )}
-      >
-        Chương {node.trackOrder}
-      </p>
-      <h2 className="mt-1 break-words text-[17px] font-bold leading-snug text-white">{node.name}</h2>
+      </div>
+      <h2 className="mt-1 break-words text-[16px] font-bold leading-snug text-white">{node.name}</h2>
 
       {status.unlocked ? (
         <div className="mt-3.5 flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -90,7 +126,7 @@ export function ChapterCard({
             <Lock className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
             <span>
               {showPrev
-                ? `Vượt qua Chương 1 mức ${level.prevLevelTitle} (từ 5.0đ) để mở cổng mức ${level.title}.`
+                ? `Vượt qua ${eyebrow} mức ${level.prevLevelTitle} (từ 5.0đ) để mở cổng mức ${level.title}.`
                 : `Hoàn thành chương liền trước ở mức ${level.title} (từ 5.0đ) để mở chương này.`}
             </span>
           </p>
@@ -101,7 +137,7 @@ export function ChapterCard({
                 onClick={() => onGoPrevLevel(level.prevLevelCode!)}
                 className={cn(btnBase, 'bg-[#00B8DD] text-white hover:bg-[#009BBD]')}
               >
-                <span>Qua Chương 1 · {level.prevLevelTitle}</span>
+                <span>Qua {eyebrow} · {level.prevLevelTitle}</span>
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </button>
             )}

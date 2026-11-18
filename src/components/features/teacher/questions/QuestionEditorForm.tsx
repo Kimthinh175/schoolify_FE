@@ -19,7 +19,6 @@ const TYPE_OPTIONS: { value: QuestionType; label: string }[] = [
   { value: 'TRUE_FALSE', label: 'Đúng / Sai' },
   { value: 'SHORT_ANSWER', label: 'Trả lời ngắn / điền số' },
   { value: 'FILL_BLANK', label: 'Điền vào chỗ trống' },
-  { value: 'ESSAY', label: 'Tự luận' },
 ];
 
 function toFormValues(q: Question | undefined): QuestionFormValues {
@@ -29,7 +28,6 @@ function toFormValues(q: Question | undefined): QuestionFormValues {
       title: '',
       content: '',
       points: 2.5,
-      sample_essay_answer: '',
       answers: [
         { id: uid('a'), content: '', is_answer: true, explain: '' },
         { id: uid('a'), content: '', is_answer: false, explain: '' },
@@ -41,7 +39,6 @@ function toFormValues(q: Question | undefined): QuestionFormValues {
     title: q.title || '',
     content: q.content,
     points: q.points,
-    sample_essay_answer: q.sample_essay_answer || '',
     answers: (q.answers || []).map((a) => ({
       id: a.id,
       content: a.content,
@@ -118,17 +115,14 @@ export function QuestionEditorForm({
 
   const submit = (values: QuestionFormValues) => {
     const qId = question?.id || uid('q');
-    const answers: Answer[] =
-      values.type === 'ESSAY'
-        ? []
-        : values.answers.map((a) => ({
-            id: a.id,
-            question_id: qId,
-            content: a.content,
-            explain: a.explain || null,
-            img_url: a.img_url || null,
-            is_answer: a.is_answer,
-          }));
+    const answers: Answer[] = values.answers.map((a) => ({
+      id: a.id,
+      question_id: qId,
+      content: a.content,
+      explain: a.explain || null,
+      img_url: a.img_url || null,
+      is_answer: a.is_answer,
+    }));
     onSave({
       id: qId,
       bank_id: bankId,
@@ -136,7 +130,6 @@ export function QuestionEditorForm({
       title: values.title || '',
       content: values.content,
       points: values.points,
-      sample_essay_answer: values.type === 'ESSAY' ? values.sample_essay_answer || '' : undefined,
       answers,
     });
   };
@@ -211,24 +204,16 @@ export function QuestionEditorForm({
         {...register('points', { valueAsNumber: true })}
       />
 
-      {type === 'ESSAY' ? (
-        <Textarea
-          label="Đáp án mẫu (sample_essay_answer)"
-          placeholder="Gợi ý đáp án cho phần tự luận..."
-          {...register('sample_essay_answer')}
-        />
-      ) : (
-        <AnswerListEditor
-          type={type}
-          fields={fields}
-          register={register}
-          errors={errors}
-          watch={watch}
-          setValue={setValue}
-          onAppend={() => append({ id: uid('a'), content: '', is_answer: false, explain: '' })}
-          onRemove={remove}
-        />
-      )}
+      <AnswerListEditor
+        type={type}
+        fields={fields}
+        register={register}
+        errors={errors}
+        watch={watch}
+        setValue={setValue}
+        onAppend={() => append({ id: uid('a'), content: '', is_answer: false, explain: '' })}
+        onRemove={remove}
+      />
 
       <Button type="submit" className="w-full justify-center" leftIcon={<Save className="w-4 h-4" />}>
         Lưu Câu Hỏi

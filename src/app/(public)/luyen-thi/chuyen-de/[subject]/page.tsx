@@ -4,33 +4,36 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  ArrowLeft,
   ArrowRight,
-  Calculator,
-  Cpu,
-  Target,
   BookOpen,
 } from 'lucide-react';
 import {
   ChapterConstellation,
   StartChapterPracticePayload,
 } from '@/components/features/student/practice/constellation/ChapterConstellation';
+import { DiagnosticGateOverlay } from '@/components/features/student/practice/DiagnosticGateOverlay';
 import { GradeOnboardingModal } from '@/components/features/student/practice/GradeOnboardingModal';
 import { OutOfPointsModal } from '@/components/features/student/practice/OutOfPointsModal';
+import { DiagnosticPromptModal } from '@/components/features/student/practice/DiagnosticPromptModal';
 import { RequireLoginModal } from '@/components/features/auth/RequireLoginModal';
 import { Button } from '@/components/ui/button';
 import {
+  chapterRoadmapService,
+  CHAPTER_ROADMAP_UPDATED_EVENT,
   CurriculumTrackCode,
   RoadmapDifficultyLevel,
 } from '@/services/chapter-roadmap.service';
 import {
   examPointsService,
   getExamLevelCost,
+  isDiagnosticPromptSkipped,
+  markDiagnosticPromptSkipped,
   notifyExamPointsUpdated,
 } from '@/services/exam-points.service';
 import { getGuestOnboarding, parseHighSchoolGrade } from '@/lib/semester-utils';
 import {
   findSubjectByTopicParam,
+  getSessionTopicContext,
   resolveFullSubjectSlug,
   setSessionTopicContext,
 } from '@/lib/topic-route-utils';
@@ -55,9 +58,11 @@ export default function ChuyenDeSubjectPage() {
   const isSupportedSubject =
     fullSubjectSlug === 'toan-hoc' || fullSubjectSlug === 'tin-hoc';
 
-  const [legacyGrade, setLegacyGrade] = React.useState<10 | 11 | 12 | undefined>(
-    undefined,
-  );
+  const [isClientMounted, setIsClientMounted] = React.useState(false);
+  const [forceGateMode, setForceGateMode] = React.useState(false);
+  const [activeGradeOverride, setActiveGradeOverride] = React.useState<
+    10 | 11 | 12 | undefined
+  >(undefined);
   const [legacyTrack, setLegacyTrack] = React.useState<
     CurriculumTrackCode | undefined
   >(undefined);
@@ -67,6 +72,7 @@ export default function ChuyenDeSubjectPage() {
 
   // Nếu người dùng mở bookmark cũ có ?grade=..., ?track=..., ?level=..., lưu vào session và làm sạch URL ngay
   React.useEffect(() => {
+    setIsClientMounted(true);
     if (typeof window === 'undefined' || !window.location.search) return;
     const sp = new URLSearchParams(window.location.search);
     const parsedGrade = parseHighSchoolGrade(sp.get('grade')) ?? undefined;
@@ -81,18 +87,22 @@ export default function ChuyenDeSubjectPage() {
         ? (rawLevel as RoadmapDifficultyLevel)
         : undefined;
 
+    if (sp.get('forceGate') === '1') {
+      setForceGateMode(true);
+    }
+
     if (parsedGrade || parsedTrack || parsedLevel) {
       setSessionTopicContext({
         ...(parsedGrade ? { grade: parsedGrade } : {}),
         ...(parsedTrack ? { track: parsedTrack } : {}),
         ...(parsedLevel ? { level: parsedLevel } : {}),
       });
-      if (parsedGrade) setLegacyGrade(parsedGrade);
+      if (parsedGrade) setActiveGradeOverride(parsedGrade);
       if (parsedTrack) setLegacyTrack(parsedTrack);
       if (parsedLevel) setLegacyLevel(parsedLevel);
     }
 
-    if (sp.has('grade') || sp.has('track') || sp.has('level')) {
+    if (sp.has('grade') || sp.has('track') || sp.has('level') || sp.has('forceGate')) {
       window.history.replaceState(null, '', window.location.pathname);
     }
   }, []);
@@ -100,6 +110,11 @@ export default function ChuyenDeSubjectPage() {
   const [guestOnboardingOpen, setGuestOnboardingOpen] = React.useState(false);
   const [pendingPayload, setPendingPayload] =
     React.useState<StartChapterPracticePayload | null>(null);
+  const [diagnosticGate, setDiagnosticGate] = React.useState<{
+    isOpen: boolean;
+    grade: 10 | 11 | 12;
+  }>({ isOpen: false, grade: 12 });
+  const [gateRefreshNonce, setGateRefreshNonce] = React.useState(0);
 
   const [requireLoginOpen, setRequireLoginOpen] = React.useState(false);
   const [gatedLevelName, setGatedLevelName] = React.useState('');
@@ -108,29 +123,126 @@ export default function ChuyenDeSubjectPage() {
   const [outOfPointsModal, setOutOfPointsModal] = React.useState<{
     isOpen: boolean;
     currentPoints: number;
+    currentDiamonds: number;
     requiredPoints: number;
     levelLabel: string;
+    targetExamUrl: string;
   }>({
     isOpen: false,
     currentPoints: 0,
+    currentDiamonds: 0,
     requiredPoints: 3,
     levelLabel: 'Cơ bản',
+    targetExamUrl: '',
   });
 
+  const [diagnosticModal, setDiagnosticModal] = React.useState<{
+    isOpen: boolean;
+    reason: 'FIRST_TIME' | 'INACTIVE_30_DAYS';
+    daysSinceLastPractice: number | null;
+    grade: number;
+    pendingPayload: StartChapterPracticePayload | null;
+  }>({
+    isOpen: false,
+    reason: 'FIRST_TIME',
+    daysSinceLastPractice: null,
+    grade: 12,
+    pendingPayload: null,
+  });
+
+  // Lắng nghe cập nhật trạng thái khách / tiến độ lộ trình để kiểm tra Gate tức thì
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const bump = () => setGateRefreshNonce((n) => n + 1);
+    window.addEventListener('schoolify-guest-onboarding-updated', bump);
+    window.addEventListener(CHAPTER_ROADMAP_UPDATED_EVENT, bump);
+    return () => {
+      window.removeEventListener('schoolify-guest-onboarding-updated', bump);
+      window.removeEventListener(CHAPTER_ROADMAP_UPDATED_EVENT, bump);
+    };
+  }, []);
+
+  // Tự động kiểm tra Khối lớp + Đánh giá năng lực bắt buộc khi vào chuyên đề
+  React.useEffect(() => {
+    if (!isClientMounted || !isSupportedSubject) return;
+    let cancelled = false;
+
+    const evaluateEntryGate = async () => {
+      const profileGrade = parseHighSchoolGrade(
+        user?.student_profile?.grade_level || (user as any)?.gradeLevel,
+      );
+      const guestGrade = getGuestOnboarding()?.grade ?? null;
+      const sessionGrade = getSessionTopicContext().grade ?? null;
+      const resolvedGrade =
+        activeGradeOverride ??
+        sessionGrade ??
+        (isLoggedIn ? profileGrade : guestGrade);
+
+      // Chưa chọn khối lớp (khách mới vào lần đầu) -> Mở modal chọn khối lớp ngay
+      if (!resolvedGrade) {
+        if (!isLoggedIn && !isAdmin && !forceGateMode) {
+          setGuestOnboardingOpen(true);
+        } else if (forceGateMode) {
+          setDiagnosticGate({ isOpen: true, grade: 12 });
+        }
+        return;
+      }
+
+      if (forceGateMode) {
+        setDiagnosticGate({ isOpen: true, grade: resolvedGrade });
+        return;
+      }
+
+      if (isAdmin) {
+        setDiagnosticGate((prev) => (prev.isOpen ? { ...prev, isOpen: false } : prev));
+        return;
+      }
+
+      const status = await chapterRoadmapService.getDiagnosticStatus(
+        fullSubjectSlug,
+        resolvedGrade,
+      );
+      if (cancelled || !status) return;
+
+      if (status.diagnosticRequired && !status.isPrivileged) {
+        setDiagnosticGate({ isOpen: true, grade: resolvedGrade });
+      } else {
+        setDiagnosticGate((prev) => (prev.isOpen ? { ...prev, isOpen: false } : prev));
+      }
+    };
+
+    void evaluateEntryGate();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    isClientMounted,
+    isSupportedSubject,
+    fullSubjectSlug,
+    activeGradeOverride,
+    isLoggedIn,
+    isAdmin,
+    forceGateMode,
+    user?.id,
+    user?.student_profile?.grade_level,
+    gateRefreshNonce,
+  ]);
+
   const buildExamRoomUrl = React.useCallback(
-    (payload: StartChapterPracticePayload) => {
+    (payload: StartChapterPracticePayload, useDiamonds?: boolean) => {
       const diffMap: Record<string, string> = {
         BASIC: 'EASY',
         MEDIUM: 'MEDIUM',
         ADVANCED: 'HARD',
       };
-      return `/student/practice/exam-room?subject=${payload.subjectSlug}&level=${payload.level.toLowerCase()}&grade=${payload.grade}&chapter=${payload.chapterId}&track=${payload.track}&format=quiz&duration=${payload.durationMinutes}&quizCount=${payload.questionCount}&count=${payload.questionCount}&practiceMode=TOPIC&difficulty=${diffMap[payload.level] || 'ALL'}`;
+      const diamondParam = useDiamonds ? '&useDiamonds=true' : '';
+      return `/student/practice/exam-room?subject=${payload.subjectSlug}&level=${payload.level.toLowerCase()}&grade=${payload.grade}&chapter=${payload.chapterId}&track=${payload.track}&format=quiz&duration=${payload.durationMinutes}&quizCount=${payload.questionCount}&count=${payload.questionCount}&practiceMode=TOPIC&difficulty=${diffMap[payload.level] || 'ALL'}${diamondParam}`;
     },
     [],
   );
 
-  const handleStartPractice = React.useCallback(
-    async (payload: StartChapterPracticePayload) => {
+  const proceedToExamWithPointCheck = React.useCallback(
+    async (payload: StartChapterPracticePayload, skipDiagnosticCheck = false) => {
       const levelLabelMap: Record<string, string> = {
         BASIC: 'Cơ bản',
         MEDIUM: 'Trung bình',
@@ -150,6 +262,16 @@ export default function ChuyenDeSubjectPage() {
         const canGuestTry =
           (guest.trialUsedCount ?? 0) < 1 && payload.level === 'BASIC';
         if (canGuestTry) {
+          if (!skipDiagnosticCheck && !isDiagnosticPromptSkipped('guest', 'FIRST_TIME')) {
+            setDiagnosticModal({
+              isOpen: true,
+              reason: 'FIRST_TIME',
+              daysSinceLastPractice: null,
+              grade: payload.grade || 12,
+              pendingPayload: payload,
+            });
+            return;
+          }
           router.push(examRoomUrl);
           return;
         }
@@ -164,8 +286,28 @@ export default function ChuyenDeSubjectPage() {
         try {
           const costInfo = getExamLevelCost(payload.level);
           const bal = await examPointsService.getBalance(user?.id);
+
+          // 1. Gợi ý làm bài Test Đánh giá năng lực (nếu vào tạo đề lần đầu hoặc >= 30 ngày không luyện)
+          if (
+            !skipDiagnosticCheck &&
+            bal?.diagnosticPrompt?.shouldPrompt &&
+            bal.diagnosticPrompt.reason &&
+            !isDiagnosticPromptSkipped(user?.id, bal.diagnosticPrompt.reason)
+          ) {
+            setDiagnosticModal({
+              isOpen: true,
+              reason: bal.diagnosticPrompt.reason,
+              daysSinceLastPractice: bal.diagnosticPrompt.daysSinceLastPractice,
+              grade: payload.grade || 12,
+              pendingPayload: payload,
+            });
+            return;
+          }
+
+          // 2. Kiểm tra Tia Sáng ⚡ & Ngọc Tri Thức 💎
           if (bal && typeof bal.currentPoints === 'number') {
-            notifyExamPointsUpdated(bal.currentPoints);
+            const currentDiamonds = Math.max(0, Number(bal.diamonds ?? 0));
+            notifyExamPointsUpdated(bal.currentPoints, currentDiamonds);
             if (
               bal.currentPoints <= 0 ||
               bal.currentPoints < costInfo.costPoints
@@ -173,8 +315,10 @@ export default function ChuyenDeSubjectPage() {
               setOutOfPointsModal({
                 isOpen: true,
                 currentPoints: Math.max(0, bal.currentPoints),
+                currentDiamonds,
                 requiredPoints: costInfo.costPoints,
                 levelLabel: label,
+                targetExamUrl: buildExamRoomUrl(payload, true),
               });
               return;
             }
@@ -189,69 +333,19 @@ export default function ChuyenDeSubjectPage() {
     [buildExamRoomUrl, isAdmin, isLoggedIn, router, user?.id],
   );
 
+  const handleStartPractice = React.useCallback(
+    async (payload: StartChapterPracticePayload) => {
+      await proceedToExamWithPointCheck(payload, false);
+    },
+    [proceedToExamWithPointCheck],
+  );
+
   const displaySubjectName =
     subjectInfo?.name ||
     (fullSubjectSlug === 'tin-hoc' ? 'Tin Học' : 'Toán Học');
 
   return (
-    <div className="min-h-screen bg-slate-50/50 dark:bg-[#090D16] text-slate-900 dark:text-slate-100">
-      {/* Thanh Breadcrumb & Chuyển nhanh Môn / Thi thử */}
-      <div className="border-b border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-950/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-2.5">
-          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400 min-w-0">
-            <Link
-              href="/luyen-thi"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold transition-colors"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Cổng Luyện Thi</span>
-            </Link>
-            <span className="text-slate-300 dark:text-slate-700">/</span>
-            <span className="font-semibold text-slate-800 dark:text-slate-200">
-              Chuyên đề {displaySubjectName}
-            </span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Chuyển môn nhanh (hiện trên mọi kích thước) */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              <Link
-                href="/luyen-thi/chuyen-de/toan"
-                className={cn(
-                  'min-h-[36px] px-2.5 py-1 rounded-xl text-xs font-bold border flex items-center gap-1 transition-colors',
-                  fullSubjectSlug === 'toan-hoc'
-                    ? 'bg-[#00B8DD] border-[#009BBD] text-white'
-                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300',
-                )}
-              >
-                <Calculator className="w-3.5 h-3.5" />
-                <span>Toán</span>
-              </Link>
-              <Link
-                href="/luyen-thi/chuyen-de/tin"
-                className={cn(
-                  'min-h-[36px] px-2.5 py-1 rounded-xl text-xs font-bold border flex items-center gap-1 transition-colors',
-                  fullSubjectSlug === 'tin-hoc'
-                    ? 'bg-[#00B8DD] border-[#009BBD] text-white'
-                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300',
-                )}
-              >
-                <Cpu className="w-3.5 h-3.5" />
-                <span>Tin</span>
-              </Link>
-            </div>
-
-            <Link
-              href={`/luyen-thi?subject=${isSupportedSubject ? fullSubjectSlug : 'toan-hoc'}&mode=mock`}
-              className="min-h-[36px] px-3 py-1.5 rounded-xl bg-[#00B8DD]/10 hover:bg-[#00B8DD]/20 border border-[#00B8DD]/30 text-[#00B8DD] text-xs font-bold inline-flex items-center gap-1.5 transition-colors"
-            >
-              <Target className="w-3.5 h-3.5 shrink-0" />
-              <span>Thi thử tổng hợp</span>
-            </Link>
-          </div>
-        </div>
-      </div>
-
+    <div className="min-h-[calc(100dvh-5rem)] bg-slate-50/50 dark:bg-[#090D16] text-slate-900 dark:text-slate-100">
       {/* Nội dung chính: bầu trời "Chòm sao Tia Sáng" phủ kín màn hình */}
       <main
         className={cn(
@@ -289,13 +383,14 @@ export default function ChuyenDeSubjectPage() {
             </div>
           </div>
         ) : (
-          <div className="min-[900px]:h-[calc(100dvh-8.5rem)] min-[900px]:min-h-[560px]">
+          <div className="min-[900px]:h-[calc(100dvh-5rem)] min-[900px]:min-h-[560px]">
             <ChapterConstellation
               subjectSlug={fullSubjectSlug}
               subjectName={displaySubjectName}
-              initialGrade={legacyGrade}
+              initialGrade={activeGradeOverride}
               initialTrack={legacyTrack}
               initialLevel={legacyLevel}
+              onGradeChange={(g) => setActiveGradeOverride(g)}
               onRequestAuth={() => {
                 setGatedLevelName('Lưu tiến độ lộ trình chuyên đề');
                 setPendingReturnUrl(window.location.pathname);
@@ -307,9 +402,21 @@ export default function ChuyenDeSubjectPage() {
         )}
       </main>
 
+      <DiagnosticGateOverlay
+        isOpen={isSupportedSubject && diagnosticGate.isOpen}
+        subjectSlug={fullSubjectSlug}
+        subjectName={displaySubjectName}
+        grade={diagnosticGate.grade}
+        onClose={() => router.push('/luyen-thi')}
+        onReadyToEnterExam={(examUrl) => {
+          router.push(examUrl);
+        }}
+      />
+
       <GradeOnboardingModal
         isOpen={guestOnboardingOpen}
         mode="GUEST_TRIAL"
+        preventClose={!pendingPayload}
         subjectName={displaySubjectName}
         onClose={() => {
           setGuestOnboardingOpen(false);
@@ -318,19 +425,10 @@ export default function ChuyenDeSubjectPage() {
         onCompleted={(result) => {
           setGuestOnboardingOpen(false);
           setSessionTopicContext({ grade: result.grade });
+          setActiveGradeOverride(result.grade);
+          setGateRefreshNonce((n) => n + 1);
           if (pendingPayload) {
-            const nextPayload: StartChapterPracticePayload = {
-              ...pendingPayload,
-              grade: result.grade,
-            };
             setPendingPayload(null);
-            if (nextPayload.level === 'BASIC') {
-              router.push(buildExamRoomUrl(nextPayload));
-            } else {
-              setGatedLevelName(nextPayload.chapterName);
-              setPendingReturnUrl(buildExamRoomUrl(nextPayload));
-              setRequireLoginOpen(true);
-            }
           }
         }}
       />
@@ -355,11 +453,45 @@ export default function ChuyenDeSubjectPage() {
           setOutOfPointsModal((prev) => ({ ...prev, isOpen: false }))
         }
         currentPoints={outOfPointsModal.currentPoints}
+        currentDiamonds={outOfPointsModal.currentDiamonds}
         requiredPoints={outOfPointsModal.requiredPoints}
         levelLabel={outOfPointsModal.levelLabel}
+        onUseDiamonds={() => {
+          const targetUrl = outOfPointsModal.targetExamUrl;
+          setOutOfPointsModal((prev) => ({ ...prev, isOpen: false }));
+          if (targetUrl) {
+            router.push(targetUrl);
+          }
+        }}
         onNavigatePricing={() => {
           setOutOfPointsModal((prev) => ({ ...prev, isOpen: false }));
           router.push('/pricing');
+        }}
+      />
+
+      <DiagnosticPromptModal
+        isOpen={diagnosticModal.isOpen}
+        onClose={() =>
+          setDiagnosticModal((prev) => ({ ...prev, isOpen: false }))
+        }
+        reason={diagnosticModal.reason}
+        daysSinceLastPractice={diagnosticModal.daysSinceLastPractice}
+        subjectName={displaySubjectName}
+        grade={diagnosticModal.grade}
+        onStartDiagnostic={() => {
+          const gradeNum = diagnosticModal.grade || 12;
+          setDiagnosticModal((prev) => ({ ...prev, isOpen: false, pendingPayload: null }));
+          router.push(
+            `/student/practice/exam-room?subject=${isSupportedSubject ? fullSubjectSlug : 'toan-hoc'}&level=assessment&grade=${gradeNum}&chapter=1&format=quiz&duration=15&quizCount=12&count=12&practiceMode=ASSESSMENT`,
+          );
+        }}
+        onSkipAndContinue={() => {
+          const payloadToContinue = diagnosticModal.pendingPayload;
+          markDiagnosticPromptSkipped(user?.id || 'guest', diagnosticModal.reason);
+          setDiagnosticModal((prev) => ({ ...prev, isOpen: false, pendingPayload: null }));
+          if (payloadToContinue) {
+            void proceedToExamWithPointCheck(payloadToContinue, true);
+          }
         }}
       />
     </div>

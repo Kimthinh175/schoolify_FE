@@ -11,12 +11,16 @@ interface ExamSessionGuardContextType {
   activeSession: ActiveExamSession | null;
   isOnline: boolean;
   refreshSession: () => Promise<ActiveExamSession | null>;
+  examNavbarVisible: boolean;
+  setExamNavbarVisible: (visible: boolean) => void;
 }
 
 export const ExamSessionGuardContext = React.createContext<ExamSessionGuardContextType>({
   activeSession: null,
   isOnline: true,
   refreshSession: async () => null,
+  examNavbarVisible: false,
+  setExamNavbarVisible: () => {},
 });
 
 export function ExamSessionGuardProvider({ children }: { children: React.ReactNode }) {
@@ -26,6 +30,7 @@ export function ExamSessionGuardProvider({ children }: { children: React.ReactNo
 
   const [activeSession, setActiveSession] = React.useState<ActiveExamSession | null>(null);
   const [isOnline, setIsOnline] = React.useState<boolean>(true);
+  const [examNavbarVisible, setExamNavbarVisible] = React.useState<boolean>(false);
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -183,7 +188,15 @@ export function ExamSessionGuardProvider({ children }: { children: React.ReactNo
   }, []);
 
   return (
-    <ExamSessionGuardContext.Provider value={{ activeSession, isOnline, refreshSession }}>
+    <ExamSessionGuardContext.Provider
+      value={{
+        activeSession,
+        isOnline,
+        refreshSession,
+        examNavbarVisible,
+        setExamNavbarVisible,
+      }}
+    >
       {!isOnline && (
         <div className="bg-amber-500/90 text-slate-950 px-3 py-1.5 text-xs font-bold flex items-center justify-center gap-2 sticky top-0 z-50 shadow-md">
           <WifiOff className="w-3.5 h-3.5 shrink-0 animate-pulse" />

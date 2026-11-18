@@ -1,5 +1,5 @@
-import { GenericPageSkeleton } from '@/components/skeletons/page-skeletons';
+import { AppFallbackSkeleton } from "@/components/skeletons/page-skeletons";
 
 export default function RootLoading() {
-  return <GenericPageSkeleton />;
+  return <AppFallbackSkeleton />;
 }

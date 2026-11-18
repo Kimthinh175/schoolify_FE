@@ -54,13 +54,13 @@ export function normalizeMathExpression(raw: string): string {
   // 5. Chỉ số dưới kiểu x_[1], v_[0] => _{...}
   res = res.replace(/_\[([^\]]+)\]/g, '_{$1}');
 
-  // 6. Chỉ số dưới tự nhiên: x_1, x_2, y_CD, a_n nếu chưa bọc ngoặc nhọn
-  res = res.replace(/([a-zA-Z0-9)\]]+)_([a-zA-Z0-9]+)(?![a-zA-Z0-9_{])/g, '$1_{$2}');
+  // 6. Chỉ số dưới tự nhiên: x_1, x_2, y_CD, a_n nếu chưa bọc ngoặc nhọn (tránh chuỗi gạch dưới _____)
+  res = res.replace(/(?<![_a-zA-Z0-9])([a-zA-Z0-9)\]]+)_([a-zA-Z0-9]+)(?![a-zA-Z0-9_{])/g, '$1_{$2}');
 
   // 7. Căn thức: √(x), √[x], ∛(x), ∛[x], sqrt(...)
   res = res.replace(/√\(([^)]+)\)/g, '\\sqrt{$1}');
   res = res.replace(/√\[([^\]]+)\]/g, '\\sqrt{$1}');
-  res = res.replace(/\bsqrt\(([^)]+)\)/g, '\\sqrt{$1}');
+  res = res.replace(/(?<![\\a-zA-Z])sqrt\(([^)]+)\)/g, '\\sqrt{$1}');
   res = res.replace(/∛\(([^)]+)\)/g, '\\sqrt[3]{$1}');
   res = res.replace(/∛\[([^\]]+)\]/g, '\\sqrt[3]{$1}');
 
@@ -74,36 +74,37 @@ export function normalizeMathExpression(raw: string): string {
     '\\frac{$1}{$2}'
   );
 
-  // 9. Tích phân có cận shorthand tự nhiên do học sinh gõ: 1\int3, 1 \int 3, a\int b, 1\int^3, v.v.
-  res = res.replace(/([a-zA-Z0-9+\-]+)\s*\\?int\s*([a-zA-Z0-9+\-]+)/g, '\\int_{$1}^{$2}');
+  // 9. Tích phân có cận shorthand: 1\int3, 1 \int 3, a\int b (tránh khớp từ tiếng Anh như points/print)
+  res = res.replace(/\b([0-9]+(?:\.[0-9]+)?|[a-zA-Z])\s*\\int\s*([0-9]+(?:\.[0-9]+)?|[a-zA-Z])\b/g, '\\int_{$1}^{$2}');
+  res = res.replace(/\b([0-9]+)\s*int\s*([0-9]+)\b/g, '\\int_{$1}^{$2}');
 
-  // Tích phân dạng \int[a; b], \int[a, b], \int[a->b], \int[a→b], int[a; b]
-  res = res.replace(/\\?int\s*\[\s*([^;,→\->\s]+)\s*(?:[;,]|->|→)\s*([^\]\s]+)\s*\]/g, '\\int_{$1}^{$2}');
+  // Tích phân dạng \int[a; b], \int[a, b], \int[a->b], \int[a→b]
+  res = res.replace(/(?:\\int|\bint)\s*\[\s*([^;,→\->\s]+)\s*(?:[;,]|->|→)\s*([^\]\s]+)\s*\]/g, '\\int_{$1}^{$2}');
 
-  // Tích phân dạng \int_1^3 hoặc int_1^3 hoặc \int_{1}^{3} hoặc int_{1}^{3}
-  res = res.replace(/\\?int_(\{?[^}^_\s]+\}?)\^(\{?[^}^_\s]+\}?)/g, (_, lower, upper) => {
+  // Tích phân dạng \int_1^3 hoặc int_1^3 hoặc \int_{1}^{3}
+  res = res.replace(/(?:\\int|(?<![\\a-zA-Z])\bint)_(\{?[^}^_\s]+\}?)\^(\{?[^}^_\s]+\}?)/g, (_, lower, upper) => {
     const l = lower.startsWith('{') ? lower : `{${lower}}`;
     const u = upper.startsWith('{') ? upper : `{${upper}}`;
     return `\\int_${l}^${u}`;
   });
-  res = res.replace(/\\?int\^(\{?[^}^_\s]+\}?)\_(\{?[^}^_\s]+\}?)/g, (_, upper, lower) => {
+  res = res.replace(/(?:\\int|(?<![\\a-zA-Z])\bint)\^(\{?[^}^_\s]+\}?)\_(\{?[^}^_\s]+\}?)/g, (_, upper, lower) => {
     const l = lower.startsWith('{') ? lower : `{${lower}}`;
     const u = upper.startsWith('{') ? upper : `{${upper}}`;
     return `\\int_${l}^${u}`;
   });
 
   // Tích phân chỉ có cận dưới: \int_1, int_1
-  res = res.replace(/\\?int_(\{?[^}^_\s]+\}?)(?!\^)/g, (_, lower) => {
+  res = res.replace(/(?:\\int|(?<![\\a-zA-Z])\bint)_(\{?[^}^_\s]+\}?)(?!\^)/g, (_, lower) => {
     const l = lower.startsWith('{') ? lower : `{${lower}}`;
     return `\\int_${l}`;
   });
 
-  // Ký hiệu nguyên hàm đơn lẻ: \int hoặc int f(x)
-  res = res.replace(/(\bint\b)(?![a-zA-Z{_^])/g, '\\int ');
+  // Ký hiệu nguyên hàm đơn lẻ: chỉ thay 'int' khi KHÔNG đứng sau '\' hoặc chữ cái
+  res = res.replace(/(?<![\\a-zA-Z])\bint\b(?![a-zA-Z{_^])/g, '\\int ');
 
   // 10. Giới hạn lim:
   // lim(x->a), lim(x -> a), lim(x→a), \lim(x->a)
-  res = res.replace(/\\?lim\s*\(\s*([a-zA-Z0-9_]+)\s*(?:->|→|\\to)\s*([^)]+)\s*\)/g, (_, varName, target) => {
+  res = res.replace(/(?:\\lim|(?<![\\a-zA-Z])\blim)\s*\(\s*([a-zA-Z0-9_]+)\s*(?:->|→|\\to)\s*([^)]+)\s*\)/g, (_, varName, target) => {
     let t = target.trim();
     if (t === '+inf' || t === 'inf' || t === '+oo' || t === 'oo') t = '+\\infty';
     else if (t === '-inf' || t === '-oo') t = '-\\infty';
@@ -111,7 +112,7 @@ export function normalizeMathExpression(raw: string): string {
   });
 
   // lim_{x->a} hoặc lim_{x→a}
-  res = res.replace(/\\?lim_\{\s*([a-zA-Z0-9_]+)\s*(?:->|→)\s*([^}]+)\s*\}/g, (_, varName, target) => {
+  res = res.replace(/(?:\\lim|(?<![\\a-zA-Z])\blim)_\{\s*([a-zA-Z0-9_]+)\s*(?:->|→)\s*([^}]+)\s*\}/g, (_, varName, target) => {
     let t = target.trim();
     if (t === '+inf' || t === 'inf' || t === '+oo' || t === 'oo') t = '+\\infty';
     else if (t === '-inf' || t === '-oo') t = '-\\infty';
@@ -119,7 +120,7 @@ export function normalizeMathExpression(raw: string): string {
   });
 
   // lim x->a
-  res = res.replace(/\\?lim\s+([a-zA-Z0-9_]+)\s*(?:->|→|\\to)\s*([a-zA-Z0-9+\-∞\\_]+)/g, (_, varName, target) => {
+  res = res.replace(/(?:\\lim|(?<![\\a-zA-Z])\blim)\s+([a-zA-Z0-9_]+)\s*(?:->|→|\\to)\s*([a-zA-Z0-9+\-∞\\_]+)/g, (_, varName, target) => {
     let t = target.trim();
     if (t === '+inf' || t === 'inf' || t === '+oo' || t === 'oo') t = '+\\infty';
     else if (t === '-inf' || t === '-oo') t = '-\\infty';
@@ -127,7 +128,7 @@ export function normalizeMathExpression(raw: string): string {
   });
 
   // \lim_{...} hoặc lim_{...} -> chuẩn hóa \lim_{...}
-  res = res.replace(/(?:\\lim|\blim)_(?:\{([^}]+)\}|([a-zA-Z0-9+\-]+))/g, (_, p1, p2) => {
+  res = res.replace(/(?:\\lim|(?<![\\a-zA-Z])\blim)_(?:\{([^}]+)\}|([a-zA-Z0-9+\-]+))/g, (_, p1, p2) => {
     let inner = (p1 || p2).trim();
     inner = inner.replace(/->|→/g, '\\to ');
     return `\\lim_{${inner}}`;
@@ -165,20 +166,28 @@ export function normalizeMathExpression(raw: string): string {
   return res;
 }
 
+function escapeHtmlText(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 /**
  * Render một biểu thức toán học LaTeX thành chuỗi HTML KaTeX an toàn.
  */
-export function renderKatex(expr: string, displayMode = false): string {
+export function renderKatex(expr: string, displayMode = false, strictFallback = false): string {
   try {
     const normalized = normalizeMathExpression(expr.trim());
+    if (!normalized) return escapeHtmlText(expr);
     return katex.renderToString(normalized, {
       displayMode,
-      throwOnError: false,
+      throwOnError: strictFallback,
       output: 'htmlAndMathml',
       strict: false,
     });
   } catch {
-    return expr;
+    return escapeHtmlText(expr);
   }
 }
 
@@ -186,12 +195,74 @@ const MATH_RENDER_CACHE = new Map<string, string>();
 const MAX_MATH_CACHE = 1500;
 
 /**
+ * Regex nhận diện công thức & ký hiệu toán học độc lập trong văn bản thông thường (ngoài dấu $).
+ * An toàn với văn bản tiếng Anh/Tin học: không nuốt chữ "points/print/Paint", không nuốt chỗ trống "______",
+ * không nuốt tên biến snake_case dài như "HOC_SINH" hay "X_train".
+ */
+const STANDALONE_SHORTHAND_REGEX =
+  /(?:\b[0-9]+\s*(?:\\int|int)\s*[0-9]+(?:\s+[a-zA-Z0-9+\-*^_{}()\s\\]*?dx)?|\\int(?:_\{?[^}\s]+\}?|\^\{?[^}\s]+\}?)*(?:\s+[a-zA-Z0-9+\-*^_{}()\s\\]*?dx)?|\\lim\s*\([^)]+\)|\\lim_\{[^}]+\}|(?<![\\a-zA-Z])\blim\s*\([^)]+\)|(?<![\\a-zA-Z])\blim_\{[^}]+\}|(?<![\\a-zA-Z])\blim\s+[a-zA-Z0-9_]+\s*(?:->|→|\\to)\s*[a-zA-Z0-9+\-∞\\_]+|(?:\\[a-zA-Z]+(?:_\{[^}]+\}|_[a-zA-Z0-9+\-]+)?(?:\^\{[^}]+\}|\^[a-zA-Z0-9+\-]+)?(?:\{[^}]*\})+)|(?:(?:\([^()\n]+\)|\[[^[\]\n]+\]|[a-zA-Z0-9α-ωΑ-Ω]{1,4})\s*)\^(?:\{[^}]+\}|\[[^\]]+\]|[a-zA-Z0-9+\-]+)|(?:(?:\([^()\n]+\)|\[[^[\]\n]+\]|[a-zA-Z0-9α-ωΑ-Ω]{1,4})\s*)[⁰¹²³⁴⁵⁶⁷⁸⁹ⁿ⁺⁻ᵃᵇˣʸᵏᵐ]+|(?<![_a-zA-Z0-9])(?:[a-zA-Zα-ωΑ-Ω]{1,2}|[0-9]+|[)\]])_(?:\{[^}]+\}|\[[^\]]+\]|[0-9]{1,3}|[a-zA-Z]{1,2})(?![_a-zA-Z0-9])|(?:(?:\([^()\n]+\)|\[[^[\]\n]+\]|[a-zA-Z0-9α-ωΑ-Ω]{1,4})\s*)[₀₁₂₃₄₅₆₇₈₉ₙᵢⱼₖₘ]+|√\([^)]+\)|√\[[^\]]+\]|(?<![\\a-zA-Z])\bsqrt\([^)]+\)|∛\([^)]+\)|∛\[[^\]]+\]|\([a-zA-Z0-9+\-*^_{}\s\\]+\)\s*\/\s*\([a-zA-Z0-9+\-*^_{}\s\\]+\)|\[[a-zA-Z0-9+\-*^_{}\s\\]+\]\s*\/\s*\[[a-zA-Z0-9+\-*^_{}\s\\]+\]|[A-Za-z]{1,2}⃗|\b\d+\s*Ω)/g;
+
+/**
+ * Render một đoạn plain-text (ngoài $...$) có bảo vệ inline code `...` và thẻ gạch chân <u>...</u>,
+ * đồng thời escape toàn bộ ký tự < > & còn lại để HTML/code tags (<h6>, <p>, <form>, <math.h>, x < 5) không bị biến mất.
+ */
+function renderPlainTextSegment(rawChunk: string): string {
+  if (!rawChunk) return '';
+
+  // Tách code inline `...` và thẻ <u>...</u> an toàn trước khi xử lý toán học & escape HTML
+  const protectedRegex = /(`[^`\n]+`|<u>[\s\S]*?<\/u>)/gi;
+  let out = '';
+  let lastIdx = 0;
+  let m: RegExpExecArray | null;
+
+  const processUnprotectedText = (plain: string): string => {
+    if (!plain) return '';
+    let result = '';
+    let pLast = 0;
+    STANDALONE_SHORTHAND_REGEX.lastIndex = 0;
+    let sm: RegExpExecArray | null;
+    while ((sm = STANDALONE_SHORTHAND_REGEX.exec(plain)) !== null) {
+      if (sm.index > pLast) {
+        result += escapeHtmlText(plain.slice(pLast, sm.index));
+      }
+      result += renderKatex(sm[0], false, true);
+      pLast = STANDALONE_SHORTHAND_REGEX.lastIndex;
+    }
+    if (pLast < plain.length) {
+      result += escapeHtmlText(plain.slice(pLast));
+    }
+    return result;
+  };
+
+  while ((m = protectedRegex.exec(rawChunk)) !== null) {
+    if (m.index > lastIdx) {
+      out += processUnprotectedText(rawChunk.slice(lastIdx, m.index));
+    }
+    const token = m[0];
+    if (token.startsWith('`') && token.endsWith('`')) {
+      const codeInner = escapeHtmlText(token.slice(1, -1));
+      out += `<code class="px-1.5 py-0.5 mx-0.5 rounded bg-slate-200/80 dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-mono text-[0.9em] border border-slate-300/60 dark:border-slate-700">${codeInner}</code>`;
+    } else {
+      // Thẻ <u>...</u> từ câu hỏi Tiếng Anh: escape nội dung bên trong <u> nhưng giữ lại thẻ <u>
+      const inner = token.slice(3, -4);
+      out += `<u class="underline decoration-2 underline-offset-4">${processUnprotectedText(inner)}</u>`;
+    }
+    lastIdx = protectedRegex.lastIndex;
+  }
+
+  if (lastIdx < rawChunk.length) {
+    out += processUnprotectedText(rawChunk.slice(lastIdx));
+  }
+  return out;
+}
+
+/**
  * Phân tích đoạn văn bản chứa hỗn hợp giữa câu chữ tiếng Việt và công thức toán học/vật lý.
  * Hỗ trợ các chế độ:
  *  1. Bọc bởi $$...$$ hoặc \[...\] (khối công thức xuống dòng)
  *  2. Bọc bởi $...$ hoặc \(...\) (nội dòng)
  *  3. Môi trường LaTeX: \begin{cases}, \begin{aligned}, v.v.
- *  4. Cú pháp toán độc lập như: x^2, x^3, x², x³, x^n, x_1, √(x), (a)/(b), 1\int3, \int_{1}^{3}, lim(x->1), \vec{F}, \Omega, v.v.
+ *  4. Cú pháp toán độc lập như: x^2, x^3, x², x³, x^n, x_1, √(x), (a)/(b), \int_{1}^{3}, lim(x->1), \vec{F}, \Omega, v.v.
  */
 export function parseAndRenderMath(text: string): string {
   if (!text) return '';
@@ -199,23 +270,25 @@ export function parseAndRenderMath(text: string): string {
   const cached = MATH_RENDER_CACHE.get(text);
   if (cached !== undefined) return cached;
 
-  // Chuyển đổi escape newline \\n thành newline thực nếu có
-  let cleanText = text.replace(/\\n/g, '\n');
+  // Chuyển đổi escape newline \\n thành newline thực nếu có (không đụng \\neq, \\nu...)
+  let cleanText = text.replace(/\\n(?![a-zA-Z])/g, '\n');
 
-  // Chuẩn hóa display math: \[ ... \] -> $$ ... $$
-  cleanText = cleanText.replace(/\\\[([\s\S]*?)\\\]/g, '\n\n$$$$$1$$$$\n\n');
+  // Chuẩn hóa display math: \[ ... \] -> $$ ... $$ (dùng callback để tránh lỗi ký tự $ đặc biệt trong JS replace)
+  cleanText = cleanText.replace(/\\\[([\s\S]*?)\\\]/g, (_, inner) => `\n\n$$${inner}$$\n\n`);
 
-  // Chuẩn hóa inline math: \( ... \) -> $ ... $
-  cleanText = cleanText.replace(/\\\(([\s\S]*?)\\\)/g, '$$$1$$');
+  // Chuẩn hóa inline math: \( ... \) -> $$ nếu có xuống dòng, hoặc $ ... $
+  cleanText = cleanText.replace(/\\\(([\s\S]*?)\\\)/g, (_, inner) =>
+    inner.includes('\n') ? `$$${inner}$$` : `$${inner}$`
+  );
 
   // Chuẩn hóa môi trường độc lập như \begin{cases}...\end{cases}, \begin{aligned}...\end{aligned} nếu chưa bọc $
   cleanText = cleanText.replace(
     /(?<!\$)(?:\\begin\{(cases|aligned|matrix|pmatrix|bmatrix|vmatrix|gather|align)\*?\}[\s\S]*?\\end\{\1\*?\})(?!\$)/g,
-    '\n\n$$$$ $& $$$$\n\n'
+    (matched) => `\n\n$$ ${matched} $$\n\n`
   );
 
-  // Regex nhận diện công thức bọc bởi $$...$$ (khối) hoặc $...$ (nội dòng)
-  const mathDelimiterRegex = /(\$\$[\s\S]*?\$\$|\$[^\$\n]+?\$)/g;
+  // Regex nhận diện công thức bọc bởi $$...$$ (khối) hoặc $...$ (nội dòng, bỏ qua \$ escape)
+  const mathDelimiterRegex = /(\$\$[\s\S]*?\$\$|(?<!\\)\$[^\$\n]+?(?<!\\)\$)/g;
   const parts: { type: 'text' | 'math-inline' | 'math-block'; content: string }[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -237,35 +310,15 @@ export function parseAndRenderMath(text: string): string {
     parts.push({ type: 'text', content: cleanText.substring(lastIndex) });
   }
 
-  // Regex nhận diện công thức & ký hiệu toán học độc lập trong văn bản thông thường (ngoài dấu $)
-  // Ưu tiên:
-  // 1. Tích phân có cận hoặc nguyên hàm: 1\int3, \int_{1}^{3}, \int_1^3, \int f(x) dx, \int[a;b]
-  // 2. Giới hạn lim: \lim_{x \to 1}, lim(x->3), lim_{x->1}, lim x->1
-  // 3. LaTeX commands có chỉ số/mũ/tham số: \frac{a}{b}, \sqrt[3]{x}, \vec{v}, \alpha
-  // 4. Lũy thừa x^2, x^3, x^[n], x², x³, chỉ số x_1, x_[1], x₁, căn thức \sqrt{}, √(x), phân số (a)/(b)
-  const standaloneShorthandRegex =
-    /(?:[a-zA-Z0-9+\-]+\s*\\?int\s*[a-zA-Z0-9+\-]+(?:\s+[a-zA-Z0-9+\-*^_{}()\s\\]*?dx)?|\\?int(?:_\{?[^}]+\}?|\^\{?[^}]+\}?|_\{?[a-zA-Z0-9+\-]+\}?|\^\{?[a-zA-Z0-9+\-]+\}?)*(?:\s+[a-zA-Z0-9+\-*^_{}()\s\\]*?dx)?|\\?lim\s*\([^)]+\)|\\?lim_\{[^}]+\}|\\?lim\s+[a-zA-Z0-9_]+\s*(?:->|→|\\to)\s*[a-zA-Z0-9+\-∞\\_]+|(?:\\[a-zA-Z]+(?:_\{[^}]+\}|_[a-zA-Z0-9+\-]+)?(?:\^\{[^}]+\}|\^[a-zA-Z0-9+\-]+)?(?:\{[^}]*\})*)|(?:(?:\([^()]+\)|\[[^[\]]+\]|[a-zA-Z0-9α-ωΑ-Ω_]+)\s*)\^(?:\{[^}]+\}|\[[^\]]+\]|[a-zA-Z0-9+\-]+)|(?:(?:\([^()]+\)|\[[^[\]]+\]|[a-zA-Z0-9α-ωΑ-Ω_]+)\s*)[⁰¹²³⁴⁵⁶⁷⁸⁹ⁿ⁺⁻ᵃᵇˣʸᵏᵐ]+|(?:(?:\([^()]+\)|\[[^[\]]+\]|[a-zA-Z0-9α-ωΑ-Ω_]+)\s*)_(?:\{[^}]+\}|\[[^\]]+\]|[a-zA-Z0-9α-ωΑ-Ω_]+)|(?:(?:\([^()]+\)|\[[^[\]]+\]|[a-zA-Z0-9α-ωΑ-Ω_]+)\s*)[₀₁₂₃₄₅₆₇₈₉ₙᵢⱼₖₘ]+|√\([^)]+\)|√\[[^\]]+\]|\bsqrt\([^)]+\)|∛\([^)]+\)|∛\[[^\]]+\]|\([a-zA-Z0-9+\-*^_{}\s\\]+\)\s*\/\s*\([a-zA-Z0-9+\-*^_{}\s\\]+\)|\[[a-zA-Z0-9+\-*^_{}\s\\]+\]\s*\/\s*\[[a-zA-Z0-9+\-*^_{}\s\\]+\]|[A-Za-z]{1,2}⃗|\b\d+\s*Ω)/g;
-
   const result = parts
     .map((part) => {
       if (part.type === 'math-block') {
-        return `<div class="my-2 overflow-x-auto py-1">${renderKatex(part.content, true)}</div>`;
+        return `<div class="my-2 overflow-x-auto py-1">${renderKatex(part.content, true, false)}</div>`;
       }
       if (part.type === 'math-inline') {
-        return renderKatex(part.content, false);
+        return renderKatex(part.content, false, false);
       }
-
-      // Xử lý plain text: render các ký hiệu viết tắt x^2, 1\int3, lim(x->1) thành KaTeX
-      let textChunk = part.content;
-      textChunk = textChunk.replace(standaloneShorthandRegex, (matched) => {
-        try {
-          return renderKatex(matched, false);
-        } catch {
-          return matched;
-        }
-      });
-
-      return textChunk;
+      return renderPlainTextSegment(part.content);
     })
     .join('');
 

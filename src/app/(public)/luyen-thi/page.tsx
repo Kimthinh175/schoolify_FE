@@ -36,8 +36,10 @@ import { K12Subject } from '@/types/subject';
 import { LevelSelectionModal } from '@/components/features/student/practice/LevelSelectionModal';
 import { PendingSubjectModal } from '@/components/features/student/practice/PendingSubjectModal';
 import { GradeOnboardingModal } from '@/components/features/student/practice/GradeOnboardingModal';
+import { DiagnosticGateOverlay } from '@/components/features/student/practice/DiagnosticGateOverlay';
 import { RequireLoginModal, RequireLoginReason } from '@/components/features/auth/RequireLoginModal';
 import { useAuthStore } from '@/store/auth.store';
+import { chapterRoadmapService } from '@/services/chapter-roadmap.service';
 import {
   getCurrentSchoolSemester,
   getGuestOnboarding,
@@ -208,34 +210,75 @@ export default function LuyenThiPage() {
     });
   }, [activeCategory]);
 
-  // Pending Subject Modal State
+  // Pending Subject Modal & First-Time Diagnostic Gate State
   const [isPendingModalOpen, setIsPendingModalOpen] = React.useState(false);
   const [pendingSubjectName, setPendingSubjectName] = React.useState<string>('Môn học');
+  const [diagnosticGate, setDiagnosticGate] = React.useState<{
+    isOpen: boolean;
+    subjectSlug: string;
+    subjectName: string;
+    grade: 10 | 11 | 12;
+  }>({
+    isOpen: false,
+    subjectSlug: 'toan-hoc',
+    subjectName: 'Toán Học',
+    grade: 12,
+  });
+  const isCheckingGateRef = React.useRef(false);
 
-  const handleOpenSubjectLevels = (subject: K12Subject, preferredMode?: 'TOPIC' | 'MOCK_EXAM') => {
+  const openSubjectAfterGradeResolved = async (
+    subject: K12Subject,
+    resolvedGrade: 10 | 11 | 12,
+    preferredMode?: 'TOPIC' | 'MOCK_EXAM',
+  ) => {
+    if (isCheckingGateRef.current) return;
+    isCheckingGateRef.current = true;
+    try {
+      const forceGate =
+        typeof window !== 'undefined' &&
+        new URLSearchParams(window.location.search).get('forceGate') === '1';
+
+      const status = forceGate
+        ? { diagnosticRequired: true, isPrivileged: false }
+        : await chapterRoadmapService.getDiagnosticStatus(subject.slug, resolvedGrade);
+
+      if (status && status.diagnosticRequired && !status.isPrivileged) {
+        setDiagnosticGate({
+          isOpen: true,
+          subjectSlug: subject.slug,
+          subjectName: subject.name,
+          grade: resolvedGrade,
+        });
+        return;
+      }
+
+      if (preferredMode === 'TOPIC') {
+        router.push(buildTopicRoadmapHref(subject.slug, { grade: resolvedGrade }));
+        return;
+      }
+
+      setLevelModalInitialMode(preferredMode);
+      setSelectedSubject(subject);
+      setIsLevelModalOpen(true);
+    } finally {
+      isCheckingGateRef.current = false;
+    }
+  };
+
+  const handleOpenSubjectLevels = async (subject: K12Subject, preferredMode?: 'TOPIC' | 'MOCK_EXAM') => {
     if (subject.status === 'PENDING') {
       setPendingSubjectName(subject.name);
       setIsPendingModalOpen(true);
       return;
     }
 
-    if (preferredMode === 'TOPIC') {
-      router.push(buildTopicRoadmapHref(subject.slug, { grade: activeUserGrade ?? undefined }));
+    if (!activeUserGrade) {
+      setPendingSubjectAfterOnboarding(subject);
+      setGuestOnboardingOpen(true);
       return;
     }
 
-    if (!isLoggedIn) {
-      const guest = getGuestOnboarding();
-      if (!guest) {
-        setPendingSubjectAfterOnboarding(subject);
-        setGuestOnboardingOpen(true);
-        return;
-      }
-    }
-
-    setLevelModalInitialMode(preferredMode);
-    setSelectedSubject(subject);
-    setIsLevelModalOpen(true);
+    await openSubjectAfterGradeResolved(subject, activeUserGrade, preferredMode);
   };
 
   const handlePendingModalSelect = (slug: 'toan-hoc' | 'tin-hoc') => {
@@ -744,6 +787,17 @@ export default function LuyenThiPage() {
         initialMode={levelModalInitialMode}
       />
 
+      <DiagnosticGateOverlay
+        isOpen={diagnosticGate.isOpen}
+        subjectSlug={diagnosticGate.subjectSlug}
+        subjectName={diagnosticGate.subjectName}
+        grade={diagnosticGate.grade}
+        onClose={() => setDiagnosticGate((prev) => ({ ...prev, isOpen: false }))}
+        onReadyToEnterExam={(examUrl) => {
+          router.push(examUrl);
+        }}
+      />
+
       <GradeOnboardingModal
         isOpen={guestOnboardingOpen}
         mode="GUEST_TRIAL"
@@ -756,12 +810,9 @@ export default function LuyenThiPage() {
           setGuestOnboardingOpen(false);
           setGuestState(getGuestOnboarding());
           if (pendingSubjectAfterOnboarding) {
-            const targetHref = buildTopicRoadmapHref(
-              pendingSubjectAfterOnboarding.slug,
-              { grade: result.grade },
-            );
+            const subjectToOpen = pendingSubjectAfterOnboarding;
             setPendingSubjectAfterOnboarding(null);
-            router.push(targetHref);
+            void openSubjectAfterGradeResolved(subjectToOpen, result.grade);
           }
         }}
       />

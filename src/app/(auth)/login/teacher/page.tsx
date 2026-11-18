@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { AuthCardSkeleton } from '@/components/skeletons/page-skeletons';
 import {
   BookOpen,
   Phone,
@@ -274,13 +275,7 @@ function TeacherLoginForm() {
 
 export default function TeacherLoginPage() {
   return (
-    <React.Suspense
-      fallback={
-        <div className="max-w-md w-full my-auto p-8 text-center text-slate-400 text-xs">
-          Đang tải cổng đăng nhập giảng viên...
-        </div>
-      }
-    >
+    <React.Suspense fallback={<AuthCardSkeleton />}>
       <TeacherLoginForm />
     </React.Suspense>
   );

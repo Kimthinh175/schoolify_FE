@@ -70,32 +70,12 @@ export interface QuizSection {
 }
 
 // -------------------------------------------------------------
-// PHẦN 3: ESSAY SECTION (Bài Tập Tự Luận)
-// -------------------------------------------------------------
-export interface EssayProblem {
-  id: string;
-  number: number;
-  title: string;
-  difficulty: 'Cơ bản' | 'Trung bình' | 'Nâng cao';
-  problemStatement: string;
-  hints?: string[];
-  sampleSolution: string;
-  maxPoints: number;
-}
-
-export interface EssaySection {
-  title: string;
-  description: string;
-  problems: EssayProblem[];
-}
-
-// -------------------------------------------------------------
-// PHẦN 4: LESSON EXAM SECTION (Bài Kiểm Tra Tổng Hợp Bài Học)
+// PHẦN 3: LESSON EXAM SECTION (Bài Kiểm Tra Tổng Hợp Bài Học)
 // -------------------------------------------------------------
 export interface LessonExamQuestion {
   id: string;
   number: number;
-  type: 'SINGLE_CHOICE' | 'ESSAY';
+  type: 'SINGLE_CHOICE';
   points: number;
   content: string;
   options?: QuizOption[];
@@ -119,13 +99,12 @@ export interface LessonExamSection {
 }
 
 // -------------------------------------------------------------
-// WRAPPER CHO TOÀN BỘ NỘI DUNG 4 PHẦN CỦA MỖI BÀI HỌC
+// WRAPPER CHO TOÀN BỘ NỘI DUNG CÁC PHẦN CỦA MỖI BÀI HỌC
 // -------------------------------------------------------------
 export interface LessonFullContent {
   lessonId: string;
   lessonTitle: string;
   theory: TheorySection;
   quiz: QuizSection;
-  essay: EssaySection;
   exam: LessonExamSection;
 }

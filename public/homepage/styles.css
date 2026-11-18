@@ -1639,6 +1639,19 @@ html.preloader-cached body.is-loading .sky-hero__bottom {
   width: clamp(250px, 28vw, 390px);
   margin-bottom: -10px;
   will-change: transform;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+#heroShipRig:focus-visible {
+  outline: 2px solid #00D4FF;
+  outline-offset: 6px;
+  border-radius: 18px;
+}
+
+#heroShipRig:hover .hero-glider-svg,
+#heroShipRig:focus-visible .hero-glider-svg {
+  filter: drop-shadow(0 0 24px rgba(0, 212, 255, 0.5));
 }
 
 @media (max-width: 767px) {
@@ -1652,6 +1665,7 @@ html.preloader-cached body.is-loading .sky-hero__bottom {
   width: 100%;
   height: auto;
   overflow: visible;
+  transition: filter 0.22s ease;
 }
 
 .glider-body-float {
@@ -1676,6 +1690,14 @@ html.preloader-cached body.is-loading .sky-hero__bottom {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  pointer-events: none;
+}
+
+.sky-hero__headline a,
+.sky-hero__headline button,
+.sky-hero__bottom a,
+.sky-hero__bottom button {
+  pointer-events: auto;
 }
 
 @media (min-width: 768px) {
@@ -1727,6 +1749,62 @@ html.preloader-cached body.is-loading .sky-hero__bottom {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+.sky-hero__actions {
+  margin-top: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.sky-hero__cta-primary {
+  min-height: 48px;
+  padding: 12px 22px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #00B8DD 0%, #0284C7 100%);
+  color: #FFFFFF !important;
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  box-shadow: 0 10px 28px rgba(0, 184, 221, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.sky-hero__cta-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(0, 212, 255, 0.52);
+  filter: brightness(1.05);
+}
+
+.sky-hero__cta-secondary {
+  min-height: 48px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.68);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(125, 211, 252, 0.34);
+  color: #F8FAFC !important;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.sky-hero__cta-secondary:hover {
+  background: rgba(0, 184, 221, 0.16);
+  border-color: #00D4FF;
+  transform: translateY(-2px);
 }
 
 .sky-hero__bottom {

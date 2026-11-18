@@ -1,7 +1,9 @@
 import { Question, DifficultyLevel, QuestionType, Answer } from '@/types/exam';
 import questionsDb from '@/data/questions-db.json';
 
-const DB_MASTER_QUESTIONS: Question[] = (questionsDb as any[]).map((q, idx) => {
+const DB_MASTER_QUESTIONS: Question[] = (questionsDb as any[])
+  .filter((q) => q.type !== 'ESSAY')
+  .map((q, idx) => {
   const diffMap: Record<string, DifficultyLevel> = {
     EASY: 'RECOGNITION',
     MEDIUM: 'UNDERSTANDING',
@@ -12,9 +14,7 @@ const DB_MASTER_QUESTIONS: Question[] = (questionsDb as any[]).map((q, idx) => {
   let mappedType: QuestionType = 'MULTIPLE_CHOICE';
   let answers: Answer[] | undefined = undefined;
 
-  if (q.type === 'ESSAY') {
-    mappedType = 'ESSAY';
-  } else if (q.type === 'TRUE_FALSE') {
+  if (q.type === 'TRUE_FALSE') {
     mappedType = 'TRUE_FALSE';
     if (q.statements) {
       answers = q.statements.map((st: any) => ({
@@ -69,14 +69,13 @@ const DB_MASTER_QUESTIONS: Question[] = (questionsDb as any[]).map((q, idx) => {
     subject: q.subjectName,
     grade_level: String(q.grade || 12),
     chapter: `Chương ${q.chapterId}: ${q.topic || ''}`,
-    points: q.score || (q.type === 'ESSAY' ? 2.0 : q.type === 'TRUE_FALSE' ? 1.0 : 0.25),
+    points: q.score || (q.type === 'TRUE_FALSE' ? 1.0 : 0.25),
     answers,
     choices: q.choices,
     correctChoice: q.correctChoice,
     statements: q.statements,
     shortAnswerCorrect: q.shortAnswerCorrect,
     gradingRubric: q.gradingRubric,
-    sample_essay_answer: q.type === 'ESSAY' ? q.explanation : undefined,
     explain: q.explanation,
     rubric,
     count_used: 10 + (idx % 25),
@@ -161,21 +160,6 @@ const LEGACY_MASTER_QUESTIONS: Question[] = [
     explain: 'I = [x^2 + x] từ 0 đến 2 = (4 + 2) - 0 = 6.',
     count_used: 5,
     created_at: '2026-03-04T08:00:00Z',
-  },
-  {
-    id: 'mst_q_5',
-    type: 'ESSAY',
-    title: 'Câu 5',
-    content: 'Trình bày cách tính thể tích khối lăng trụ đứng tam giác có diện tích đáy B = 15 cm2 và chiều cao h = 8 cm.',
-    difficulty: 'RECOGNITION',
-    subject: 'Toán học',
-    grade_level: '12',
-    chapter: 'Chương 4: Khối đa diện',
-    points: 1.0,
-    sample_essay_answer: 'Công thức V = B * h = 15 * 8 = 120 cm3.',
-    explain: 'Thể tích lăng trụ = Diện tích đáy * Chiều cao.',
-    count_used: 2,
-    created_at: '2026-03-05T08:00:00Z',
   },
   {
     id: 'mst_q_6',
@@ -486,21 +470,6 @@ const LEGACY_MASTER_QUESTIONS: Question[] = [
     explain: 'Phương trình mặt cầu có dạng (x-a)^2 + (y-b)^2 + (z-c)^2 = R^2 => R = sqrt(16) = 4.',
     count_used: 16,
     created_at: '2026-03-21T08:00:00Z',
-  },
-  {
-    id: 'mst_q_22',
-    type: 'ESSAY',
-    title: 'Câu 14',
-    content: 'Cho hàm số $y = \\frac{1}{3}x^3 - mx^2 + (m^2 - 4)x + 3$. Hãy trình bày các bước tìm điều kiện của tham số $m$ để hàm số đạt cực đại tại $x = 1$.',
-    difficulty: 'ADVANCED_APPLICATION',
-    subject: 'Toán học',
-    grade_level: '12',
-    chapter: 'Chương 1: Khảo sát hàm số',
-    points: 1.0,
-    sample_essay_answer: "1. Đạo hàm y' = x^2 - 2mx + (m^2 - 4).\n2. Để x = 1 là điểm cực đại: y'(1) = 0 và y''(1) < 0.\n3. y'(1) = 1 - 2m + m^2 - 4 = m^2 - 2m - 3 = 0 <=> m = -1 hoặc m = 3.\n4. y'' = 2x - 2m => y''(1) = 2 - 2m < 0 <=> m > 1.\n5. Kết hợp điều kiện suy ra m = 3.",
-    explain: 'Điều kiện cần và đủ cho điểm cực đại cấp 1 và đạo hàm cấp 2.',
-    count_used: 7,
-    created_at: '2026-03-22T08:00:00Z',
   },
 ];
 

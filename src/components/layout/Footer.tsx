@@ -22,7 +22,7 @@ const FOOTER_COLUMNS = {
   ],
   teacher: [
     { label: 'Course Builder Đa Phương Tiện', href: '/login' },
-    { label: 'Khảo Thí & Chấm Bài Tự Luận', href: '/login' },
+    { label: 'Khảo Thí & Luyện Đề Chuẩn GDPT 2018', href: '/login' },
     { label: 'Kinh Doanh Trên Marketplace', href: '/courses' },
     { label: 'Đối Soát & Rút Tiền Ngân Hàng', href: '/login' },
     { label: 'Tạo Quà Thưởng Gamification', href: '/login' },

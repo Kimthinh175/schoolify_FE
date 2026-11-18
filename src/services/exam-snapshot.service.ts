@@ -27,7 +27,6 @@ export interface ExamSnapshot {
       multipleChoices: Record<string, string>;
       trueFalseAnswers: Record<string, Record<string, boolean>>;
       shortAnswers: Record<string, string>;
-      essayAnswers: Record<string, string>;
     };
     wrongQuestionIds: string[];
   };
@@ -43,7 +42,6 @@ export interface ExamSnapshot {
       multipleChoices: Record<string, string>;
       trueFalseAnswers: Record<string, Record<string, boolean>>;
       shortAnswers: Record<string, string>;
-      essayAnswers: Record<string, string>;
     };
   };
   bloomSummary: Record<string, { total: number; correct: number }>;
@@ -52,6 +50,7 @@ export interface ExamSnapshot {
   track?: string;
   knowledgeUpdate?: KnowledgeUpdatePayload;
   chapterProgressUpdate?: any;
+  diagnosticUpdate?: any;
 }
 
 import {
@@ -141,7 +140,6 @@ function mapBackendSubmissionToSnapshot(item: any): ExamSnapshot | null {
         multipleChoices: {},
         trueFalseAnswers: {},
         shortAnswers: {},
-        essayAnswers: {},
       },
       wrongQuestionIds: [],
     },
@@ -217,6 +215,10 @@ export const examSnapshotService = {
         const cpu = body?.chapterProgressUpdate || body?.data?.chapterProgressUpdate;
         if (cpu) {
           snapshot.chapterProgressUpdate = cpu;
+        }
+        const du = body?.diagnosticUpdate || body?.data?.diagnosticUpdate;
+        if (du) {
+          snapshot.diagnosticUpdate = du;
         }
       }
     } catch (err) {
@@ -315,7 +317,6 @@ export const examSnapshotService = {
               multipleChoices: {},
               trueFalseAnswers: {},
               shortAnswers: {},
-              essayAnswers: {},
             },
             wrongQuestionIds: [],
           },

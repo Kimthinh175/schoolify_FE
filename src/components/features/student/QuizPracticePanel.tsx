@@ -56,14 +56,12 @@ function questionTypeLabel(type: QuestionType): string {
   if (type === 'SINGLE_CHOICE') return 'Một đáp án';
   if (type === 'TRUE_FALSE') return 'Đúng / Sai';
   if (type === 'SHORT_ANSWER' || type === 'FILL_BLANK') return 'Điền vào chỗ trống';
-  if (type === 'ESSAY') return 'Tự luận';
   return 'Khác';
 }
 
 function questionTypeIcon(type: QuestionType) {
   if (type === 'MULTIPLE_CHOICE') return <CheckSquare className="h-3.5 w-3.5" />;
   if (type === 'TRUE_FALSE') return <ToggleLeft className="h-3.5 w-3.5" />;
-  if (type === 'ESSAY') return <FileText className="h-3.5 w-3.5" />;
   if (type === 'SHORT_ANSWER' || type === 'FILL_BLANK') return <FileText className="h-3.5 w-3.5" />;
   return <CircleDot className="h-3.5 w-3.5" />;
 }
@@ -77,7 +75,7 @@ function gradeQuestion(question: Question, selected: string[]): boolean {
 }
 
 function gradeAll(questions: Question[], answers: Record<string, string[]>) {
-  const gradable = (q: Question) => q.type !== 'ESSAY' && q.type !== 'FILL_BLANK';
+  const gradable = (q: Question) => q.type !== 'FILL_BLANK';
   const total = questions.filter(gradable).length;
   const correct = questions.filter(
     (q) => gradable(q) && gradeQuestion(q, answers[q.id] ?? [])
@@ -226,9 +224,7 @@ function AnswerOption({ answer, index, isSelected, isMulti, phase, onSelect }: A
 // Main component
 // ─────────────────────────────────────────────────────────────
 
-export function QuizPracticePanel({ questions: allQuestions, title }: QuizPracticePanelProps) {
-  // Loại bỏ câu tự luận ra khỏi Quiz, vì Tự luận đã có Tab riêng (EssayPracticePanel)
-  const questions = React.useMemo(() => allQuestions.filter(q => q.type !== 'ESSAY'), [allQuestions]);
+export function QuizPracticePanel({ questions, title }: QuizPracticePanelProps) {
 
   const [state, dispatch] = React.useReducer(quizReducer, {
     phase: 'ANSWERING',
@@ -378,13 +374,11 @@ export function QuizPracticePanel({ questions: allQuestions, title }: QuizPracti
       <div className="space-y-5">
         {questions.map((question, qIndex) => {
           const isMulti = question.type === 'MULTIPLE_CHOICE';
-          const isEssay = question.type === 'ESSAY';
           const selected = answers[question.id] ?? [];
           const isExpanded = expandedExplain === question.id;
           const isCorrectQ = phase === 'REVIEWING' && gradeQuestion(question, selected);
           const hasExplain =
             phase === 'REVIEWING' &&
-            !isEssay &&
             (question.answers ?? []).some((a) => a.explain);
 
           return (
@@ -410,7 +404,7 @@ export function QuizPracticePanel({ questions: allQuestions, title }: QuizPracti
                         {question.points} điểm
                       </Badge>
                     )}
-                    {phase === 'REVIEWING' && !isEssay && (
+                    {phase === 'REVIEWING' && (
                       <Badge
                         variant={isCorrectQ ? 'success' : 'danger'}
                         icon={isCorrectQ
@@ -447,28 +441,7 @@ export function QuizPracticePanel({ questions: allQuestions, title }: QuizPracti
 
               {/* Answer area */}
               <div className="px-5 py-4">
-                {isEssay ? (
-                  // ── Essay type ──
-                  <div className="space-y-3">
-                    <textarea
-                      disabled={phase === 'REVIEWING'}
-                      rows={4}
-                      placeholder="Nhập câu trả lời của bạn tại đây..."
-                      className="w-full resize-none rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-800 dark:text-slate-200 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:border-[#00B8DD] disabled:opacity-60"
-                    />
-                    {phase === 'REVIEWING' && question.sample_essay_answer && (
-                      <div className="rounded-xl border border-amber-300 dark:border-amber-700/40 bg-amber-50 dark:bg-amber-900/20 px-4 py-3">
-                        <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400">
-                          <Lightbulb className="h-3.5 w-3.5" />
-                          Đáp án mẫu
-                        </p>
-                        <div className="text-sm text-amber-900 dark:text-amber-200">
-                          <MathRenderer text={question.sample_essay_answer} />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : question.type === 'FILL_BLANK' ? (
+                {question.type === 'FILL_BLANK' ? (
                   // ── Fill‑in‑the‑blank type ──
                   <div className="space-y-3">
                     <input

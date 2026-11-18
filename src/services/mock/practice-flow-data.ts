@@ -2,7 +2,7 @@ import { PracticeLevel } from '@/types/subject';
 import { generateQuestionsByMatrix } from './question-matrix-engine';
 import questionsDb from '@/data/questions-db.json';
 
-export type ExamFormat = 'QUIZ' | 'ESSAY' | 'MIXED';
+export type ExamFormat = 'QUIZ';
 export type QuestionDifficulty = 'EASY' | 'MEDIUM' | 'HARD' | 'VERY_HARD';
 export type PracticeMode = 'TOPIC' | 'MOCK_EXAM';
 
@@ -1275,7 +1275,7 @@ export interface TrueFalseStatement {
 
 export interface ExamQuestion {
   id: string;
-  type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'ESSAY';
+  type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';
   difficulty: QuestionDifficulty;
   grade: number;
   chapterId: number;
@@ -1298,12 +1298,8 @@ export interface ExamQuestion {
   statements?: TrueFalseStatement[];
   // Cho trắc nghiệm trả lời ngắn (điền số)
   shortAnswerCorrect?: string;
-  // Cho câu hỏi tự luận (đáp án mẫu)
-  essaySampleAnswer?: string;
   // Lời giải chi tiết
   explanation: string;
-  // Barem điểm tự luận
-  gradingRubric?: { step: string; point: number; detail: string }[];
 }
 
 export interface PracticeExamPackage {
@@ -1466,58 +1462,6 @@ export const MOCK_EXAM_QUESTIONS_CH1: ExamQuestion[] = [
       'Đạo hàm $y\' = 3x^2 - 12x + 9 = 3(x^2 - 4x + 3)$.\\n$y\' = 0 \\Leftrightarrow x = 1$ hoặc $x = 3$.\\n• Với $x_1 = 1 \\Rightarrow y_1 = 1 - 6 + 9 + 1 = 5 \\Rightarrow A(1; 5)$.\\n• Với $x_2 = 3 \\Rightarrow y_2 = 27 - 54 + 27 + 1 = 1 \\Rightarrow B(3; 1)$.\\nTổng giá trị tung độ cực trị: $y_1 + y_2 = 5 + 1 = 6$.\\nĐáp số điền: 6.',
   },
 
-  // 7. Bài toán Tự Luận - Khảo sát và tìm tham số m (Vận dụng)
-  {
-    id: 'q-07',
-    type: 'ESSAY',
-    difficulty: 'HARD',
-    grade: 12,
-    chapterId: 1,
-    title: 'Câu 7 (Tự luận): Tìm tham số m để hàm số đạt cực tiểu tại điểm cho trước',
-    content:
-      'Cho hàm số $y = f(x) = \\frac{1}{3}x^3 - mx^2 + (m^2 - m + 1)x + 1$ (với $m$ là tham số thực).\\n\\na) Khi $m = 2$, hãy lập bảng biến thiên và tìm các khoảng đơn điệu của hàm số.\\nb) Tìm tất cả các giá trị của tham số $m$ để hàm số đạt cực tiểu tại điểm $x = 1$.',
-    score: 6.0,
-    explanation:
-      'Lời giải mẫu tự luận:\\n\\n' +
-      'a) Với $m = 2$, hàm số trở thành: $y = \\frac{1}{3}x^3 - 2x^2 + 3x + 1$.\\n' +
-      '• TXĐ: $D = \\mathbb{R}$.\\n' +
-      '• Đạo hàm: $y\' = x^2 - 4x + 3$.\\n' +
-      '• $y\' = 0 \\Leftrightarrow x = 1$ hoặc $x = 3$.\\n' +
-      '• Bảng biến thiên: $y\' > 0$ trên $(-\\infty; 1) \\cup (3; +\\infty)$, $y\' < 0$ trên $(1; 3)$.\\n' +
-      '• Kết luận: Hàm số đồng biến trên $(-\\infty; 1)$ và $(3; +\\infty)$; nghịch biến trên $(1; 3)$.\\n\\n' +
-      'b) Tìm $m$ để hàm số đạt cực tiểu tại $x = 1$:\\n' +
-      '• Ta có: $y\' = x^2 - 2mx + (m^2 - m + 1)$.\\n' +
-      '• Đạo hàm cấp hai: $y\'\' = 2x - 2m$.\\n' +
-      '• Điều kiện cần để hàm số đạt cực trị tại $x = 1$ là $y\'(1) = 0$:\\n' +
-      '  $1^2 - 2m(1) + m^2 - m + 1 = 0 \\Leftrightarrow m^2 - 3m + 2 = 0 \\Leftrightarrow m = 1$ hoặc $m = 2$.\\n' +
-      '• Thử lại:\\n' +
-      '  - Với $m = 1$: $y\' = (x - 1)^2 \\geq 0 \\Rightarrow$ không đổi dấu qua $x = 1$ (loại).\\n' +
-      '  - Với $m = 2$: $y\' = (x - 1)(x - 3) \\Rightarrow$ qua $x = 1$, $y\'$ đổi dấu từ $+$ sang $-$ nên $x = 1$ là cực đại (loại).\\n' +
-      '• Kết luận: Không tồn tại $m$ thỏa mãn.',
-    gradingRubric: [
-      {
-        step: 'Bước 1 (1.5 điểm)',
-        point: 1.5,
-        detail: 'Thay đúng $m = 2$, tính đúng $y\' = x^2 - 4x + 3$, tìm đúng nghiệm $x = 1, x = 3$.',
-      },
-      {
-        step: 'Bước 2 (1.5 điểm)',
-        point: 1.5,
-        detail: 'Lập đúng bảng xét dấu/bảng biến thiên và kết luận chính xác các khoảng đồng biến, nghịch biến.',
-      },
-      {
-        step: 'Bước 3 (1.5 điểm)',
-        point: 1.5,
-        detail: 'Tính $y\'(1) = m^2 - 3m + 2 = 0$, giải ra $m = 1$ hoặc $m = 2$.',
-      },
-      {
-        step: 'Bước 4 (1.5 điểm)',
-        point: 1.5,
-        detail: 'Kiểm tra điều kiện đủ loại cả hai nghiệm và kết luận không có $m$ thỏa mãn.',
-      },
-    ],
-  },
-
   // 8. Trắc nghiệm 4 lựa chọn - Liên môn Vật lý (Vận dụng)
   {
     id: 'q-08',
@@ -1538,38 +1482,6 @@ export const MOCK_EXAM_QUESTIONS_CH1: ExamQuestion[] = [
     correctChoice: 'A',
     explanation:
       'Vận tốc tức thời là đạo hàm của quãng đường: $v(t) = s\'(t) = t^[2] - 4t + 3 = (t - 2)^[2] - 1 \\geq -1$. Dấu "=" khi $t = 2$ s. Chọn A.',
-  },
-
-  // 9. Tự luận Vật lý - Cơ học (Vận dụng cao)
-  {
-    id: 'q-09',
-    type: 'ESSAY',
-    difficulty: 'VERY_HARD',
-    grade: 12,
-    chapterId: 1,
-    title: 'Câu 9 (Tự luận Vật lý - Toán học): Khảo sát động năng và chuyển động biến đổi đều',
-    content:
-      'Một vật có khối lượng $m = 2$ kg chuyển động với phương trình vận tốc $v = v_[0] + a.t$ trong đó vận tốc ban đầu $v_[0] = 5$ m/s và gia tốc $a = 2$ m/s^[2]. Lực tác dụng tuân theo định luật II Newton $\\vec{F} = m.\\vec{a}$.\\n\\na) Tính độ lớn lực tác dụng $F$ lên vật và vận tốc của vật tại thời điểm $t = 3$ s.\\nb) Biểu thức động năng của vật là $W = (1)/(2)m.v^[2]$. Hãy tính động năng của vật tại thời điểm $t = 3$ s.',
-    score: 4.0,
-    explanation:
-      'a) $F = m.a = 2 \\times 2 = 4$ N. $v(3) = 5 + 2 \\times 3 = 11$ m/s.\\nb) $W = (1)/(2) \\times 2 \\times 11^[2] = 121$ J.',
-    gradingRubric: [
-      {
-        step: 'Bước 1 (1.0 điểm)',
-        point: 1.0,
-        detail: 'Áp dụng định luật II Newton $\\vec{F} = m.\\vec{a}$, tính được độ lớn $F = 4$ N.',
-      },
-      {
-        step: 'Bước 2 (1.0 điểm)',
-        point: 1.0,
-        detail: 'Sử dụng công thức vận tốc $v = v_[0] + a.t$, tính đúng $v(3) = 11$ m/s.',
-      },
-      {
-        step: 'Bước 3 (2.0 điểm)',
-        point: 2.0,
-        detail: 'Áp dụng công thức động năng $W = (1)/(2)m.v^[2]$, tính chính xác $W = 121$ J.',
-      },
-    ],
   },
 
   // 10. Trắc nghiệm 4 lựa chọn - Nhận biết tiệm cận ngang
@@ -1838,46 +1750,6 @@ export const MOCK_EXAM_QUESTIONS_CH2: ExamQuestion[] = [
     shortAnswerCorrect: '60',
     explanation:
       'Ta có $\\cos(\\vec{u}, \\vec{v}) = \\frac{\\vec{u}.\\vec{v}}{|\\vec{u}|.|\\vec{v}|} = \\frac{1(0) + 1(1) + 0(1)}{\\sqrt{1^2+1^2}.\\sqrt{1^2+1^2}} = \\frac{1}{\\sqrt{2}.\\sqrt{2}} = \\frac{1}{2}$.\\nSuy ra góc $(\\vec{u}, \\vec{v}) = 60^\\circ$.\\nĐáp số điền: 60.',
-  },
-
-  // 10. Tự luận (Vận dụng)
-  {
-    id: 'q2-10',
-    type: 'ESSAY',
-    difficulty: 'HARD',
-    grade: 12,
-    chapterId: 2,
-    title: 'Gắn hệ trục tọa độ Oxyz giải bài toán hình khối đa diện thực tế',
-    content:
-      'Cho hình chóp $S.ABCD$ có đáy $ABCD$ là hình vuông cạnh $a = 2$, cạnh bên $SA$ vuông góc với mặt phẳng đáy và $SA = 3$. Chọn hệ trục tọa độ $Oxyz$ sao cho gốc $O$ trùng với điểm $A$, tia $Ox$ chứa cạnh $AB$, tia $Oy$ chứa cạnh $AD$, tia $Oz$ chứa cạnh $AS$.\\n\\na) Xác định tọa độ các đỉnh $S, B, C, D$.\\nb) Tính thể tích khối chóp $S.ABCD$ theo công thức $V = (1)/(3)S_{đáy}.h$ và tính khoảng cách giữa hai điểm $S$ và $C$.',
-    score: 4.0,
-    explanation:
-      'a) Tọa độ các đỉnh: $A(0; 0; 0)$, $B(2; 0; 0)$, $D(0; 2; 0)$, $C(2; 2; 0)$, $S(0; 0; 3)$.\\n\\n' +
-      'b) Thể tích: Diện tích đáy $S_{đáy} = 2^2 = 4$. Chiều cao $h = SA = 3$.\\n' +
-      '$V = \\frac{1}{3} \\times 4 \\times 3 = 4$ (đvtt).\\n' +
-      'Khoảng cách $SC = \\sqrt{(2-0)^2 + (2-0)^2 + (0-3)^2} = \\sqrt{4 + 4 + 9} = \\sqrt{17}$.',
-    gradingRubric: [
-      {
-        step: 'Bước 1 (1.0 điểm)',
-        point: 1.0,
-        detail: 'Xác định chính xác tọa độ các đỉnh $A(0;0;0), B(2;0;0), D(0;2;0), C(2;2;0), S(0;0;3)$.',
-      },
-      {
-        step: 'Bước 2 (1.0 điểm)',
-        point: 1.0,
-        detail: 'Tính đúng diện tích đáy $S = 4$ và chiều cao $h = 3$.',
-      },
-      {
-        step: 'Bước 3 (1.0 điểm)',
-        point: 1.0,
-        detail: 'Áp dụng công thức thể tích tính ra $V = 4$ đvtt.',
-      },
-      {
-        step: 'Bước 4 (1.0 điểm)',
-        point: 1.0,
-        detail: 'Tính đúng độ dài đoạn thẳng $SC = \\sqrt{17}$.',
-      },
-    ],
   },
 
   // 11. Nhận biết (Dễ) - ÔN TẬP CHƯƠNG 1
@@ -2479,27 +2351,6 @@ export const MOCK_INFORMATICS_QUESTIONS: ExamQuestion[] = [
     explanation: 'Các phần tử chẵn là 2, 4, 6. Tổng = 2 + 4 + 6 = 12.',
   },
   {
-    id: 'tin-q-08',
-    type: 'ESSAY',
-    difficulty: 'HARD',
-    grade: 12,
-    chapterId: 1,
-    subjectSlug: 'tin-hoc',
-    subjectName: 'Tin Học',
-    topic: 'Giải thuật Euclid & Tối ưu thuật toán',
-    topicTag: 'Đệ quy & Giải thuật số học',
-    trapTag: 'Bẫy quên điều kiện dừng b == 0 trong đệ quy',
-    title: 'Câu 8 (Tự luận): Thuật toán tìm ƯCLN Euclid',
-    content: 'Trình bày ý tưởng giải thuật Euclid tìm Ước chung lớn nhất GCD(a, b) của 2 số nguyên dương. Viết hàm bằng Python hoặc C++ và phân tích độ phức tạp thuật toán.',
-    score: 2.0,
-    explanation: 'Ý tưởng: GCD(a, b) = GCD(b, a % b) với điều kiện dừng b = 0 thì GCD = a. Mã Python: def gcd(a, b): return a if b == 0 else gcd(b, a % b). Độ phức tạp thời gian theo định lý Lame là O(log(min(a, b))).',
-    gradingRubric: [
-      { step: 'Nêu đúng nguyên lý Euclid GCD(a, b) = GCD(b, a % b)', point: 0.5, detail: 'Ý tưởng toán học' },
-      { step: 'Viết đúng hàm đệ quy hoặc vòng lặp (Python/C++)', point: 1.0, detail: 'Cài đặt thuật toán' },
-      { step: 'Đánh giá chính xác độ phức tạp O(log(min(a, b)))', point: 0.5, detail: 'Phân tích thuật toán' },
-    ],
-  },
-  {
     id: 'tin-q-09',
     type: 'MULTIPLE_CHOICE',
     difficulty: 'HARD',
@@ -2894,7 +2745,6 @@ export function resetSystemQuestionBank() {
 export interface PracticeExamOptions {
   requestedCount?: number;
   quizCount?: number;
-  essayCount?: number;
   durationMinutes?: number;
   practiceMode?: PracticeMode;
   targetDifficulty?: QuestionDifficulty | 'ALL';
@@ -2916,19 +2766,11 @@ export function getPracticeExam(
   const chapter = chapters.find((c) => c.id === chapterId) || chapters[0] || MATH_GRADE_12_CHAPTERS[0];
 
   const targetTotal =
-    format === 'QUIZ'
-      ? opts.quizCount && opts.quizCount >= 5 && opts.quizCount <= 50
-        ? opts.quizCount
-        : opts.requestedCount && opts.requestedCount >= 5 && opts.requestedCount <= 50
-        ? opts.requestedCount
-        : 10
-      : format === 'ESSAY'
-      ? opts.essayCount && opts.essayCount >= 5 && opts.essayCount <= 10
-        ? opts.essayCount
-        : opts.requestedCount && opts.requestedCount >= 5 && opts.requestedCount <= 10
-        ? opts.requestedCount
-        : 5
-      : (opts.quizCount || 10) + (opts.essayCount || 2);
+    opts.quizCount && opts.quizCount >= 5 && opts.quizCount <= 50
+      ? opts.quizCount
+      : opts.requestedCount && opts.requestedCount >= 5 && opts.requestedCount <= 50
+      ? opts.requestedCount
+      : 10;
 
   // Sinh câu hỏi theo Ma trận tạo đề từ Kho câu hỏi hệ thống (bao gồm cả các câu admin đã import)
   const questionBank = getSystemQuestionBank();
@@ -2940,7 +2782,6 @@ export function getPracticeExam(
     format,
     totalQuestions: targetTotal,
     quizCount: opts.quizCount,
-    essayCount: opts.essayCount,
     practiceMode: opts.practiceMode,
     targetDifficulty: opts.targetDifficulty,
     topicTagFilter: opts.topicTagFilter,
@@ -2948,10 +2789,8 @@ export function getPracticeExam(
 
   const duration =
     typeof opts.durationMinutes === 'number' && opts.durationMinutes >= 0
-      ? opts.durationMinutes || (format === 'QUIZ' ? Math.max(10, Math.round(questions.length * 1.5)) : 45)
-      : format === 'QUIZ'
-      ? Math.max(10, Math.round(questions.length * 1.5))
-      : 45;
+      ? opts.durationMinutes || Math.max(10, Math.round(questions.length * 1.5))
+      : Math.max(10, Math.round(questions.length * 1.5));
 
   const subjectNameMap: Record<string, string> = {
     'toan-hoc': 'Toán Học',
@@ -2984,14 +2823,8 @@ export function getPracticeExam(
     title = `Luyện Tập Chuyên Đề (${questions.length} Câu)${diffLabel} - ${opts.topicTagFilter || chapter.name}`;
   } else if ((level as string)?.toUpperCase() === 'ASSESSMENT') {
     title = `Đề Khảo Thí Đánh Giá Năng Lực (${questions.length} Câu) - Lớp ${grade}`;
-  } else if (format === 'QUIZ') {
-    title = `Đề Luyện Trắc Nghiệm (${questions.length} Câu) - ${chapter.name}`;
-  } else if (format === 'ESSAY') {
-    title = `Đề Luyện Tự Luận (${questions.length} Câu) - ${chapter.name}`;
   } else {
-    const qCount = opts.quizCount || 10;
-    const eCount = opts.essayCount || 2;
-    title = `Đề Luyện Tổng Hợp (${qCount} TN + ${eCount} TL) - ${chapter.name}`;
+    title = `Đề Luyện Trắc Nghiệm (${questions.length} Câu) - ${chapter.name}`;
   }
 
   const totalPoints = questions.reduce((sum, q) => sum + q.score, 0);

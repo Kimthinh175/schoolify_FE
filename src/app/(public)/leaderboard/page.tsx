@@ -1,511 +1,249 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   Trophy,
-  Crown,
-  Medal,
   Flame,
   Award,
   Sparkles,
+  Gift,
+  Clock,
+  ShieldAlert,
   ArrowRight,
   TrendingUp,
-  Search,
-  Filter,
-  CheckCircle2,
+  Share2,
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
+import {
+  LeaderboardTimeframe,
+  LeaderboardScope,
+  GradeLevel,
+  SubjectFilter,
+  LeaderboardUser,
+  Season,
+} from '@/types/leaderboard';
+import { leaderboardService } from '@/services/leaderboard.service';
+import { PodiumTopThree } from '@/components/features/leaderboard/PodiumTopThree';
+import { LeaderboardFilters } from '@/components/features/leaderboard/LeaderboardFilters';
+import { LeaderboardTable } from '@/components/features/leaderboard/LeaderboardTable';
+import { StickyUserRank } from '@/components/features/leaderboard/StickyUserRank';
+import { SeasonRewardsModal } from '@/components/features/leaderboard/SeasonRewardsModal';
+import { UserRankDetailModal } from '@/components/features/leaderboard/UserRankDetailModal';
 import { Button } from '@/components/ui/button';
-import { Avatar } from '@/components/ui/avatar';
-import { catalogService } from '@/services/catalog.service';
-import { cn } from '@/lib/utils';
-import { NgocIcon } from '@/components/ui/point-icons';
-
-const fadeUp = (delay = 0) => ({
-  initial: { opacity: 0, y: 16 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-40px' },
-  transition: { duration: 0.4, delay, ease: 'easeOut' as const },
-});
-
-interface LeaderboardUser {
-  rank: number;
-  name: string;
-  avatar: string;
-  school: string;
-  province: string;
-  grade: number;
-  streak: number;
-  examsCompleted: number;
-  points: number;
-  diamonds: number;
-  badgeTitle: string;
-}
-
-const TOP_3_STUDENTS: LeaderboardUser[] = [
-  {
-    rank: 1,
-    name: 'Phan Nhật Minh',
-    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=160&auto=format&fit=crop&q=80',
-    school: 'THPT Chuyên Hà Nội - Amsterdam',
-    province: 'Hà Nội',
-    grade: 12,
-    streak: 42,
-    examsCompleted: 156,
-    points: 9850,
-    diamonds: 1850,
-    badgeTitle: 'Đại Cao Thủ K-12 ⭐',
-  },
-  {
-    rank: 2,
-    name: 'Trần Thảo Linh',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=160&auto=format&fit=crop&q=80',
-    school: 'THPT Chuyên Lê Hồng Phong',
-    province: 'TP. Hồ Chí Minh',
-    grade: 12,
-    streak: 35,
-    examsCompleted: 142,
-    points: 9420,
-    diamonds: 1620,
-    badgeTitle: 'Chiến Thần Tự Luận 🌟',
-  },
-  {
-    rank: 3,
-    name: 'Vũ Quốc Khánh',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160&auto=format&fit=crop&q=80',
-    school: 'THPT Chuyên Quốc Học Huế',
-    province: 'Thừa Thiên Huế',
-    grade: 12,
-    streak: 28,
-    examsCompleted: 128,
-    points: 8960,
-    diamonds: 1450,
-    badgeTitle: 'Bậc Thầy Giải Tốc Độ ⚡',
-  },
-];
-
-const LEADERBOARD_LIST: LeaderboardUser[] = [
-  {
-    rank: 4,
-    name: 'Nguyễn Thị Hương',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80',
-    school: 'THPT Chuyên Lam Sơn',
-    province: 'Thanh Hóa',
-    grade: 12,
-    streak: 24,
-    examsCompleted: 110,
-    points: 8450,
-    diamonds: 1240,
-    badgeTitle: 'Tinh Anh Toán Học',
-  },
-  {
-    rank: 5,
-    name: 'Lê Hoàng Long',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80',
-    school: 'THPT Chuyên KHTN',
-    province: 'Hà Nội',
-    grade: 12,
-    streak: 21,
-    examsCompleted: 104,
-    points: 8120,
-    diamonds: 1180,
-    badgeTitle: 'Học Sinh Xuất Sắc',
-  },
-  {
-    rank: 6,
-    name: 'Đoàn Bảo Ngọc',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
-    school: 'THPT Chuyên Lương Văn Tụy',
-    province: 'Ninh Bình',
-    grade: 11,
-    streak: 19,
-    examsCompleted: 98,
-    points: 7890,
-    diamonds: 1050,
-    badgeTitle: 'Gương Mặt Triển Vọng',
-  },
-  {
-    rank: 7,
-    name: 'Đặng Tuấn Tú',
-    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=120&auto=format&fit=crop&q=80',
-    school: 'THPT Chu Văn An',
-    province: 'Hà Nội',
-    grade: 12,
-    streak: 17,
-    examsCompleted: 92,
-    points: 7540,
-    diamonds: 980,
-    badgeTitle: 'Chuyên Cần Kiên Trì',
-  },
-  {
-    rank: 8,
-    name: 'Hoàng Kim Chi',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80',
-    school: 'THPT Chuyên Phan Bội Châu',
-    province: 'Nghệ An',
-    grade: 12,
-    streak: 16,
-    examsCompleted: 88,
-    points: 7210,
-    diamonds: 920,
-    badgeTitle: 'Thợ Săn Điểm 10',
-  },
-  {
-    rank: 9,
-    name: 'Bùi Đức Anh',
-    avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&auto=format&fit=crop&q=80',
-    school: 'THPT Chuyên Trần Phú',
-    province: 'Hải Phòng',
-    grade: 11,
-    streak: 14,
-    examsCompleted: 82,
-    points: 6980,
-    diamonds: 850,
-    badgeTitle: 'Tài Năng Trẻ',
-  },
-  {
-    rank: 10,
-    name: 'Ngô Phương Thảo',
-    avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=120&auto=format&fit=crop&q=80',
-    school: 'THPT Chuyên Bến Tre',
-    province: 'Bến Tre',
-    grade: 12,
-    streak: 12,
-    examsCompleted: 76,
-    points: 6720,
-    diamonds: 800,
-    badgeTitle: 'Chinh Phục Điểm 9+',
-  },
-];
+import { Badge } from '@/components/ui/badge';
 
 export default function LeaderboardPage() {
-  const [timeframe, setTimeframe] = React.useState<'WEEK' | 'MONTH' | 'ALL'>('WEEK');
-  const [selectedGrade, setSelectedGrade] = React.useState<number | 'ALL'>('ALL');
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [top3Students, setTop3Students] = React.useState<LeaderboardUser[]>(TOP_3_STUDENTS);
-  const [leaderboardList, setLeaderboardList] = React.useState<LeaderboardUser[]>(LEADERBOARD_LIST);
+  const [timeframe, setTimeframe] = React.useState<LeaderboardTimeframe>('WEEKLY');
+  const [scope, setScope] = React.useState<LeaderboardScope>('NATIONAL');
+  const [grade, setGrade] = React.useState<GradeLevel>('ALL');
+  const [subject, setSubject] = React.useState<SubjectFilter>('ALL');
+  const [search, setSearch] = React.useState('');
+
+  const [activeSeason, setActiveSeason] = React.useState<Season>(() =>
+    leaderboardService.getActiveSeason()
+  );
+
+  const [selectedUser, setSelectedUser] = React.useState<LeaderboardUser | null>(null);
+  const [isRewardsModalOpen, setIsRewardsModalOpen] = React.useState(false);
+  const [highlightUserId, setHighlightUserId] = React.useState<string | undefined>(undefined);
+
+  // Countdown timer for active season
+  const [timeLeft, setTimeLeft] = React.useState({ days: 14, hours: 8, minutes: 24, seconds: 50 });
 
   React.useEffect(() => {
-    catalogService
-      .getLeaderboard()
-      .then((entries) => {
-        if (entries.length > 0) {
-          const mapped: LeaderboardUser[] = entries.map((e, idx) => ({
-            rank: idx + 1,
-            name: e.fullname || 'Học sinh Schoolify',
-            avatar:
-              e.avatarUrl ||
-              TOP_3_STUDENTS[idx]?.avatar ||
-              LEADERBOARD_LIST[idx]?.avatar ||
-              'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=160&auto=format&fit=crop&q=80',
-            school: e.schoolName || 'THPT Chuyên Schoolify',
-            province: 'Toàn Quốc',
-            grade: Number(e.grade || e.gradeLevel || 12),
-            streak: Number(e.streakDays || 15),
-            examsCompleted: Number(e.totalExams || 1),
-            points: Number(e.points || 100) * 10 + Number(e.totalExams || 0) * 50,
-            diamonds: Number(e.points || 100),
-            badgeTitle:
-              idx === 0
-                ? 'Đại Cao Thủ K-12 ⭐'
-                : idx === 1
-                  ? 'Chiến Thần Tự Luận 🌟'
-                  : idx === 2
-                    ? 'Bậc Thầy Giải Tốc Độ ⚡'
-                    : 'Học Sinh Xuất Sắc',
-          }));
-
-          const combined = [...mapped];
-          const fallbackPool = [...TOP_3_STUDENTS, ...LEADERBOARD_LIST];
-          for (const fb of fallbackPool) {
-            if (combined.length >= 10) break;
-            if (!combined.some((c) => c.name.toLowerCase() === fb.name.toLowerCase())) {
-              combined.push({ ...fb, rank: combined.length + 1 });
-            }
-          }
-
-          setTop3Students(combined.slice(0, 3));
-          setLeaderboardList(combined.slice(3));
-        }
-      })
-      .catch(() => {});
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
+        if (prev.minutes > 0) return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
+        if (prev.hours > 0) return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 };
+        if (prev.days > 0) return { ...prev, days: prev.days - 1, hours: 23, minutes: 59, seconds: 59 };
+        return prev;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
   }, []);
 
-  const filteredList = leaderboardList.filter((u) => {
-    const matchesGrade = selectedGrade === 'ALL' || u.grade === selectedGrade;
-    const matchesSearch =
-      u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.school.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.province.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesGrade && matchesSearch;
-  });
+  // Filtered leaderboard data
+  const { topThree, restOfUsers, currentUser, totalCount } = React.useMemo(() => {
+    return leaderboardService.getFilteredLeaderboard({
+      timeframe,
+      scope,
+      grade,
+      subject,
+      search,
+    });
+  }, [timeframe, scope, grade, subject, search]);
+
+  const handleScrollToMe = () => {
+    if (!currentUser) return;
+    setHighlightUserId(currentUser.id);
+    const element = document.getElementById(`user-rank-${currentUser.rank}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
 
   return (
-    <div className="py-12 sm:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 sm:space-y-16">
-      {/* ── HEADER ── */}
-      <div className="text-center max-w-3xl mx-auto space-y-3">
-        <motion.div {...fadeUp(0)}>
-          <Badge variant="primary" className="bg-[#00B8DD] text-white font-bold mb-2">
-            VINH DANH HỌC SINH XUẤT SẮC TOÀN QUỐC
-          </Badge>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight flex items-center justify-center gap-3">
-            <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-amber-500" />
-            <span>BẢNG XẾP HẠNG THI ĐUA</span>
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            Mỗi bài thi, câu hỏi trắc nghiệm và tự luận hoàn thành trên Schoolify đều được quy đổi thành điểm kinh nghiệm và Ngọc Tri Thức <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat /> để vinh danh trên Bảng Vàng!
-          </p>
-        </motion.div>
-      </div>
+    <div className="min-h-screen bg-slate-50/70 dark:bg-slate-950 pb-28">
+      {/* ── HERO BANNER ── */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white pt-10 pb-16 px-4 sm:px-6 lg:px-8 border-b border-slate-800">
+        {/* Ambient background decoration */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#00B8DD]/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
 
-      {/* ── TIMEFRAME & GRADE FILTERS ── */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
-        {/* Timeframe Tabs */}
-        <div className="inline-flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-900 rounded-2xl text-xs w-full sm:w-auto">
-          {[
-            { key: 'WEEK', label: 'Tuần Này' },
-            { key: 'MONTH', label: 'Tháng Này' },
-            { key: 'ALL', label: 'Toàn Thời Gian' },
-          ].map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTimeframe(t.key as any)}
-              className={cn(
-                'px-4 py-2 rounded-xl font-bold transition-all cursor-pointer',
-                timeframe === t.key
-                  ? 'bg-white dark:bg-slate-800 text-[#007D99] dark:text-[#00B8DD] shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-              )}
-            >
-              {t.label}
-            </button>
-          ))}
+        <div className="max-w-6xl mx-auto relative z-10">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div>
+              <div className="flex items-center gap-2 flex-wrap mb-3">
+                <Badge variant="primary" className="bg-[#00B8DD] text-white font-extrabold uppercase tracking-wide">
+                  Đấu Trường Học Tập Schoolify
+                </Badge>
+                <Badge variant="secondary" className="bg-amber-500/20 text-amber-300 border-amber-500/30 font-bold">
+                  {activeSeason.name}
+                </Badge>
+              </div>
+
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white">
+                Bảng Xếp Hạng & <span className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent">Đua Top Mùa Giải</span>
+              </h1>
+              <p className="mt-2 text-sm sm:text-base text-slate-300 max-w-2xl leading-relaxed">
+                Vinh danh những gương mặt học sinh xuất sắc nhất toàn quốc. Tích lũy điểm kinh nghiệm (EXP), rèn luyện kỹ năng và nhận hàng ngàn Ngọc thưởng giá trị.
+              </p>
+            </div>
+
+            {/* Countdown Box & Gem Pool */}
+            <div className="bg-slate-800/80 backdrop-blur-md border border-slate-700/80 rounded-3xl p-5 shrink-0 w-full md:w-auto shadow-xl">
+              <div className="flex items-center justify-between gap-4 pb-3 border-b border-slate-700">
+                <div className="flex items-center gap-2 text-xs text-amber-400 font-bold">
+                  <Clock className="w-4 h-4 animate-spin text-amber-400" />
+                  <span>KẾT THÚC SAU</span>
+                </div>
+                <span className="text-xs text-slate-400">Chốt sổ Mùa 1</span>
+              </div>
+
+              {/* Countdown Numbers */}
+              <div className="grid grid-cols-4 gap-2 text-center mt-3">
+                <div className="bg-slate-900/90 rounded-xl p-2 border border-slate-700">
+                  <span className="text-xl sm:text-2xl font-black text-white">{timeLeft.days}</span>
+                  <span className="block text-[10px] text-slate-400 uppercase font-semibold">Ngày</span>
+                </div>
+                <div className="bg-slate-900/90 rounded-xl p-2 border border-slate-700">
+                  <span className="text-xl sm:text-2xl font-black text-white">{timeLeft.hours}</span>
+                  <span className="block text-[10px] text-slate-400 uppercase font-semibold">Giờ</span>
+                </div>
+                <div className="bg-slate-900/90 rounded-xl p-2 border border-slate-700">
+                  <span className="text-xl sm:text-2xl font-black text-white">{timeLeft.minutes}</span>
+                  <span className="block text-[10px] text-slate-400 uppercase font-semibold">Phút</span>
+                </div>
+                <div className="bg-slate-900/90 rounded-xl p-2 border border-slate-700">
+                  <span className="text-xl sm:text-2xl font-black text-[#00B8DD]">{timeLeft.seconds}</span>
+                  <span className="block text-[10px] text-slate-400 uppercase font-semibold">Giây</span>
+                </div>
+              </div>
+
+              {/* Gem Pool & Action */}
+              <div className="mt-4 pt-3 border-t border-slate-700/80 flex items-center justify-between gap-3">
+                <div>
+                  <span className="text-[10px] text-slate-400 block font-semibold">TỔNG QUỸ THƯỞNG</span>
+                  <span className="text-sm font-black text-cyan-400 flex items-center gap-1">
+                    💎 {activeSeason.totalGemsPool.toLocaleString('vi-VN')} Ngọc
+                  </span>
+                </div>
+                <Button
+                  size="sm"
+                  variant="primary"
+                  onClick={() => setIsRewardsModalOpen(true)}
+                  className="bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl h-9"
+                >
+                  <Gift className="w-3.5 h-3.5" />
+                  <span>Cơ Cấu Quà</span>
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
+      </section>
 
-        {/* Grade Filters & Search */}
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="flex items-center gap-1 text-xs">
-            {[
-              { val: 'ALL', label: 'Tất Cả Khối' },
-              { val: 12, label: 'Lớp 12' },
-              { val: 11, label: 'Lớp 11' },
-              { val: 10, label: 'Lớp 10' },
-            ].map((g) => (
-              <button
-                key={g.val}
-                onClick={() => setSelectedGrade(g.val as any)}
-                className={cn(
-                  'px-3 py-1.5 rounded-lg font-bold transition-all whitespace-nowrap cursor-pointer',
-                  selectedGrade === g.val
-                    ? 'bg-[#00B8DD] text-white'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
-                )}
-              >
-                {g.label}
-              </button>
-            ))}
+      {/* ── MAIN CONTENT ── */}
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20 space-y-8">
+        {/* PODIUM TOP 3 */}
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-3xl p-4 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-md">
+          <div className="text-center mb-2">
+            <span className="text-xs font-extrabold uppercase tracking-widest text-[#00B8DD]">
+              Vinh Danh Anh Tài
+            </span>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+              Podium Top 3 Xuất Sắc Nhất
+            </h2>
           </div>
 
-          <div className="relative w-48 sm:w-60 hidden md:block">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Tìm theo tên, trường..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00B8DD]"
-            />
+          <PodiumTopThree
+            topThree={topThree}
+            onSelectUser={(user) => setSelectedUser(user)}
+          />
+        </div>
+
+        {/* FILTERS SECTION */}
+        <LeaderboardFilters
+          timeframe={timeframe}
+          onTimeframeChange={setTimeframe}
+          scope={scope}
+          onScopeChange={setScope}
+          grade={grade}
+          onGradeChange={setGrade}
+          subject={subject}
+          onSubjectChange={setSubject}
+          search={search}
+          onSearchChange={setSearch}
+          isFrozen={activeSeason.isFrozen}
+        />
+
+        {/* RANKINGS TABLE */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between px-2">
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <span>Bảng Đua Top</span>
+                <span className="text-xs font-normal text-slate-500">
+                  (Hiển thị {restOfUsers.length} thí sinh)
+                </span>
+              </h3>
+            </div>
+            <div className="text-xs text-slate-500">
+              Cập nhật mỗi 15 phút
+            </div>
           </div>
+
+          <LeaderboardTable
+            users={restOfUsers}
+            onSelectUser={(user) => setSelectedUser(user)}
+            highlightUserId={highlightUserId}
+          />
         </div>
-      </div>
+      </main>
 
-      {/* ── TOP 3 PODIUM SHOWCASE ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end pt-8">
-        {/* TOP 2 (Left) */}
-        <motion.div {...fadeUp(0.1)} className="order-2 md:order-1">
-          <Card className="p-6 rounded-3xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-center relative overflow-hidden shadow-lg hover:shadow-xl transition-all">
-            <div className="absolute top-0 inset-x-0 h-2 bg-slate-400" />
-            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-black mb-3">
-              🥈 HẠNG 2 • HUY CHƯƠNG BẠC
-            </div>
-            <div className="relative mx-auto w-20 h-20 mb-3">
-              <Avatar src={top3Students[1].avatar} alt={top3Students[1].name} size="lg" className="border-4 border-slate-300 shadow-md" />
-              <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-slate-300 text-slate-950 font-black text-xs flex items-center justify-center shadow">
-                2
-              </span>
-            </div>
-            <h3 className="text-base font-black text-slate-900 dark:text-white">
-              {top3Students[1].name}
-            </h3>
-            <p className="text-xs text-slate-500 truncate mt-0.5">
-              {top3Students[1].school}
-            </p>
-            <div className="mt-4 p-3 rounded-2xl bg-slate-50 dark:bg-slate-850 flex items-center justify-around text-xs">
-              <div>
-                <span className="text-[10px] text-slate-400 block">Điểm Tích Lũy</span>
-                <strong className="text-slate-900 dark:text-white font-mono font-bold">{top3Students[1].points}</strong>
-              </div>
-              <div className="h-6 w-px bg-slate-200 dark:bg-slate-800" />
-              <div>
-                <span className="text-[10px] text-slate-400 block">Ngọc Tri Thức</span>
-                <strong className="text-[#007D99] dark:text-[#00B8DD] font-bold">+{top3Students[1].diamonds} <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat /></strong>
-              </div>
-            </div>
-          </Card>
-        </motion.div>
+      {/* ── STICKY USER RANK BAR (Ghim thứ hạng cá nhân) ── */}
+      {currentUser && (
+        <StickyUserRank
+          currentUser={currentUser}
+          onScrollToMe={handleScrollToMe}
+          onOpenRewardsModal={() => setIsRewardsModalOpen(true)}
+        />
+      )}
 
-        {/* TOP 1 (Center - Elevated) */}
-        <motion.div {...fadeUp(0)} className="order-1 md:order-2">
-          <Card className="p-7 rounded-3xl border-2 border-amber-400/80 bg-gradient-to-b from-amber-50/60 via-white to-amber-50/40 dark:from-slate-850 dark:via-slate-900 dark:to-slate-850 text-center relative overflow-hidden shadow-2xl scale-105 z-10">
-            <div className="absolute top-0 inset-x-0 h-3 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400" />
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 text-xs font-black shadow-sm mb-3">
-              <Crown className="w-4 h-4 text-amber-600 fill-amber-500" />
-              QUÁN QUÂN TOÀN QUỐC 🥇
-            </div>
-            <div className="relative mx-auto w-24 h-24 mb-3">
-              <Avatar src={top3Students[0].avatar} alt={top3Students[0].name} size="lg" className="w-24 h-24 border-4 border-amber-400 shadow-xl" />
-              <span className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-amber-400 text-slate-950 font-black text-sm flex items-center justify-center shadow-lg border-2 border-white">
-                1
-              </span>
-            </div>
-            <h3 className="text-lg font-black text-slate-900 dark:text-white">
-              {top3Students[0].name}
-            </h3>
-            <p className="text-xs text-slate-500 truncate mt-0.5">
-              {top3Students[0].school} • {top3Students[0].province}
-            </p>
-            <div className="mt-4 p-3.5 rounded-2xl bg-amber-100/60 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 flex items-center justify-around text-xs">
-              <div>
-                <span className="text-[10px] text-amber-800 dark:text-amber-300 block font-semibold">Điểm Tích Lũy</span>
-                <strong className="text-slate-950 dark:text-white font-mono font-black text-sm">{top3Students[0].points}</strong>
-              </div>
-              <div className="h-7 w-px bg-amber-300 dark:bg-amber-800" />
-              <div>
-                <span className="text-[10px] text-amber-800 dark:text-amber-300 block font-semibold">Ngọc Tri Thức Thưởng</span>
-                <strong className="text-[#007D99] dark:text-[#00B8DD] font-black text-sm">+{top3Students[0].diamonds} <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat /></strong>
-              </div>
-            </div>
-          </Card>
-        </motion.div>
+      {/* ── MODALS ── */}
+      <SeasonRewardsModal
+        isOpen={isRewardsModalOpen}
+        onClose={() => setIsRewardsModalOpen(false)}
+        season={activeSeason}
+        userRank={currentUser?.rank || 42}
+      />
 
-        {/* TOP 3 (Right) */}
-        <motion.div {...fadeUp(0.15)} className="order-3">
-          <Card className="p-6 rounded-3xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-center relative overflow-hidden shadow-lg hover:shadow-xl transition-all">
-            <div className="absolute top-0 inset-x-0 h-2 bg-amber-700" />
-            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 text-xs font-black mb-3">
-              🥉 HẠNG 3 • HUY CHƯƠNG ĐỒNG
-            </div>
-            <div className="relative mx-auto w-20 h-20 mb-3">
-              <Avatar src={top3Students[2].avatar} alt={top3Students[2].name} size="lg" className="border-4 border-amber-600/70 shadow-md" />
-              <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-amber-700 text-white font-black text-xs flex items-center justify-center shadow">
-                3
-              </span>
-            </div>
-            <h3 className="text-base font-black text-slate-900 dark:text-white">
-              {top3Students[2].name}
-            </h3>
-            <p className="text-xs text-slate-500 truncate mt-0.5">
-              {top3Students[2].school}
-            </p>
-            <div className="mt-4 p-3 rounded-2xl bg-slate-50 dark:bg-slate-850 flex items-center justify-around text-xs">
-              <div>
-                <span className="text-[10px] text-slate-400 block">Điểm Tích Lũy</span>
-                <strong className="text-slate-900 dark:text-white font-mono font-bold">{top3Students[2].points}</strong>
-              </div>
-              <div className="h-6 w-px bg-slate-200 dark:bg-slate-800" />
-              <div>
-                <span className="text-[10px] text-slate-400 block">Ngọc Tri Thức</span>
-                <strong className="text-[#007D99] dark:text-[#00B8DD] font-bold">+{top3Students[2].diamonds} <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat /></strong>
-              </div>
-            </div>
-          </Card>
-        </motion.div>
-      </div>
-
-      {/* ── LEADERBOARD TABLE (TOP 4 TO 10) ── */}
-      <Card className="rounded-3xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
-        <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Medal className="w-5 h-5 text-[#00B8DD]" />
-            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-              Bảng Xếp Hạng Chi Tiết (Top 4 - Top 10)
-            </h3>
-          </div>
-          <span className="text-xs text-slate-500">Cập nhật tự động sau mỗi bài thi</span>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs sm:text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-850 text-slate-500 font-bold text-[11px] uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
-              <tr>
-                <th className="py-3.5 px-4 text-center w-16">Thứ Hạng</th>
-                <th className="py-3.5 px-4">Học Sinh</th>
-                <th className="py-3.5 px-4 hidden sm:table-cell">Trường &amp; Tỉnh Thành</th>
-                <th className="py-3.5 px-4 text-center">Chuỗi Ngày 🔥</th>
-                <th className="py-3.5 px-4 text-center hidden md:table-cell">Đề Đã Luyện</th>
-                <th className="py-3.5 px-4 text-right">Ngọc Tri Thức <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat /></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {filteredList.map((user) => (
-                <tr key={user.rank} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-                  <td className="py-3.5 px-4 text-center">
-                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 font-black text-xs text-slate-700 dark:text-slate-300">
-                      #{user.rank}
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-4">
-                    <div className="flex items-center gap-3">
-                      <Avatar src={user.avatar} alt={user.name} size="sm" />
-                      <div>
-                        <strong className="text-slate-900 dark:text-white block font-bold">
-                          {user.name}
-                        </strong>
-                        <span className="text-[11px] text-[#007D99] dark:text-[#00B8DD] font-semibold">
-                          {user.badgeTitle} • Lớp {user.grade}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-3.5 px-4 hidden sm:table-cell text-slate-600 dark:text-slate-400 text-xs">
-                    <div>{user.school}</div>
-                    <span className="text-[10px] text-slate-400">{user.province}</span>
-                  </td>
-                  <td className="py-3.5 px-4 text-center font-bold text-amber-500">
-                    {user.streak} ngày
-                  </td>
-                  <td className="py-3.5 px-4 text-center hidden md:table-cell text-slate-500">
-                    {user.examsCompleted} đề thi
-                  </td>
-                  <td className="py-3.5 px-4 text-right font-black text-[#007D99] dark:text-[#00B8DD] font-mono">
-                    +{user.diamonds}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-
-      {/* ── CALL TO ACTION STRIP ── */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#E6F8FC] via-white to-sky-50 dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 border border-[#00B8DD]/30 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div>
-          <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-            Bạn Muốn Ghi Tên Lên Bảng Vàng Schoolify?
-          </h3>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Luyện ngay một đề thi hôm nay để tích lũy điểm số và thăng hạng liên tục!
-          </p>
-        </div>
-        <Link href="/#kho-mon-hoc">
-          <Button className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold rounded-xl shadow-md shrink-0" rightIcon={<ArrowRight className="w-4 h-4" />}>
-            Bắt Đầu Luyện Ngay
-          </Button>
-        </Link>
-      </div>
+      <UserRankDetailModal
+        user={selectedUser}
+        isOpen={!!selectedUser}
+        onClose={() => setSelectedUser(null)}
+      />
     </div>
   );
 }

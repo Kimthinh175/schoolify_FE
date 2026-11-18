@@ -3782,6 +3782,25 @@
       autoRaf = requestAnimationFrame(tick);
     };
 
+    const heroPlane = document.getElementById('heroShipRig');
+    const onHeroPlaneClick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (autoActive) stopAuto(false);
+      else startAuto();
+    };
+    const onHeroPlaneKey = (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (autoActive) stopAuto(false);
+        else startAuto();
+      }
+    };
+    if (heroPlane) {
+      heroPlane.addEventListener('click', onHeroPlaneClick);
+      heroPlane.addEventListener('keydown', onHeroPlaneKey);
+    }
+
     autoBtn.addEventListener('click', () => {
       if (autoActive) stopAuto(false);
       else startAuto();
@@ -3789,7 +3808,10 @@
 
     const onUserInput = (e) => {
       if (!autoActive) return;
-      if (e && e.target && e.target.nodeType === 1 && dock.contains(e.target)) return;
+      if (e && e.target && e.target.nodeType === 1) {
+        if (dock.contains(e.target)) return;
+        if (heroPlane && heroPlane.contains(e.target)) return;
+      }
       stopAuto(false);
     };
     const onKeyInput = (e) => {
@@ -3823,6 +3845,10 @@
     addCleanup(() => {
       stopAuto(false, true);
       clearInterval(dockTimer);
+      if (heroPlane) {
+        heroPlane.removeEventListener('click', onHeroPlaneClick);
+        heroPlane.removeEventListener('keydown', onHeroPlaneKey);
+      }
       window.removeEventListener('wheel', onUserInput);
       window.removeEventListener('touchstart', onUserInput);
       window.removeEventListener('pointerdown', onUserInput);

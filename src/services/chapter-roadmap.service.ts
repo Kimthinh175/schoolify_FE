@@ -57,6 +57,22 @@ export interface ChapterRoadmapTrack {
   chapters: ChapterRoadmapNode[];
 }
 
+export interface DiagnosticStatusInfo {
+  subject: string;
+  grade: number;
+  isAuthenticated: boolean;
+  isPrivileged: boolean;
+  diagnosticCompleted: boolean;
+  diagnosticRequired: boolean;
+  diagnosticResult: {
+    assignedLevel: string;
+    overallScore: number;
+    trackScores?: Record<string, number>;
+    bloomBreakdown?: Record<string, { correct: number; total: number }>;
+    completedAt?: string;
+  } | null;
+}
+
 export interface ChapterRoadmapResponse {
   subject: string;
   hasDualMathTracks: boolean;
@@ -64,6 +80,7 @@ export interface ChapterRoadmapResponse {
   savedStudentGrade: 10 | 11 | 12 | null;
   needsGradeOnboarding: boolean;
   isAuthenticated: boolean;
+  diagnosticStatus?: DiagnosticStatusInfo;
   semesterInfo: {
     semester: 1 | 2;
     isSummerReview: boolean;
@@ -137,12 +154,15 @@ function overlayGuestProgressOnRoadmap(
 ): ChapterRoadmapResponse {
   if (data.isAuthenticated) return data;
   const guest = getGuestOnboarding();
-  if (!guest || !guest.completedChapters) return data;
+  if (!guest) return data;
+
+  const diagKey = `${(data.subject || 'toan-hoc').trim().toLowerCase()}::${data.grade}`;
+  const guestDiag = guest.completedDiagnostics?.[diagKey] || null;
 
   const nextTracks = data.tracks.map((track) => {
     const firstNode = track.chapters[0];
     const firstKey = firstNode ? `${data.subject}::${data.grade}::${firstNode.id}` : '';
-    const firstProg = firstKey ? guest.completedChapters[firstKey] : null;
+    const firstProg = firstKey ? guest.completedChapters?.[firstKey] : null;
     const firstBasicDone = Boolean(
       firstNode?.levels.BASIC.completed || firstProg?.basicCompleted,
     );
@@ -150,12 +170,23 @@ function overlayGuestProgressOnRoadmap(
       firstNode?.levels.MEDIUM.completed || firstProg?.mediumCompleted,
     );
 
+    const trackDiagScore = guestDiag
+      ? Number(
+          guestDiag.trackScores?.[track.trackCode] ??
+            guestDiag.trackScores?.DEFAULT ??
+            guestDiag.overallScore ??
+            0,
+        )
+      : 0;
+    const diagUnlockMedium = Boolean(guestDiag && trackDiagScore >= 5.0);
+    const diagUnlockAdvanced = Boolean(guestDiag && trackDiagScore >= 8.0);
+
     const updatedChapters = track.chapters.map((node, idx, arr) => {
       const key = `${data.subject}::${data.grade}::${node.id}`;
-      const localProg = guest.completedChapters[key];
+      const localProg = guest.completedChapters?.[key];
       const prevNode = idx > 0 ? arr[idx - 1] : null;
       const prevKey = prevNode ? `${data.subject}::${data.grade}::${prevNode.id}` : '';
-      const prevProg = prevKey ? guest.completedChapters[prevKey] : null;
+      const prevProg = prevKey ? guest.completedChapters?.[prevKey] : null;
 
       const basicCompleted = Boolean(node.levels.BASIC.completed || localProg?.basicCompleted);
       const mediumCompleted = Boolean(node.levels.MEDIUM.completed || localProg?.mediumCompleted);
@@ -173,18 +204,23 @@ function overlayGuestProgressOnRoadmap(
         prevNode?.levels.ADVANCED.completed || prevProg?.advancedCompleted,
       );
 
+      const inDiagUnlockWindow =
+        data.semesterInfo?.semester === 2 || node.semester === 1 || node.trackOrder === 1;
+
       const basicUnlocked = Boolean(
         node.levels.BASIC.unlocked || basicCompleted || prevBasicCompleted,
       );
       const mediumUnlocked = Boolean(
         node.levels.MEDIUM.unlocked ||
           mediumCompleted ||
+          (diagUnlockMedium && inDiagUnlockWindow) ||
           (idx === 0 && firstBasicDone) ||
           (idx > 0 && prevMediumCompleted),
       );
       const advancedUnlocked = Boolean(
         node.levels.ADVANCED.unlocked ||
           advancedCompleted ||
+          (diagUnlockAdvanced && inDiagUnlockWindow) ||
           (idx === 0 && firstMediumDone) ||
           (idx > 0 && prevAdvancedCompleted),
       );
@@ -258,6 +294,23 @@ function overlayGuestProgressOnRoadmap(
 
   return {
     ...data,
+    diagnosticStatus: guestDiag
+      ? {
+          subject: data.subject,
+          grade: data.grade,
+          isAuthenticated: false,
+          isPrivileged: false,
+          diagnosticCompleted: true,
+          diagnosticRequired: false,
+          diagnosticResult: {
+            assignedLevel: guestDiag.assignedLevel,
+            overallScore: guestDiag.overallScore,
+            trackScores: guestDiag.trackScores,
+            bloomBreakdown: guestDiag.bloomBreakdown,
+            completedAt: guestDiag.completedAt,
+          },
+        }
+      : data.diagnosticStatus,
     summary: {
       ...data.summary,
       totalCrowns: nextTracks.reduce((s, t) => s + t.totalCrowns, 0),
@@ -270,6 +323,58 @@ export const chapterRoadmapService = {
   notifyUpdated() {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new Event(CHAPTER_ROADMAP_UPDATED_EVENT));
+    }
+  },
+
+  async getDiagnosticStatus(
+    subjectSlug: string,
+    grade?: number,
+  ): Promise<DiagnosticStatusInfo | null> {
+    const normalizedSubject = (subjectSlug || 'toan-hoc').trim().toLowerCase();
+    const safeGrade =
+      grade && [10, 11, 12].includes(Number(grade)) ? Number(grade) : 12;
+
+    try {
+      const qs = new URLSearchParams();
+      qs.set('subject', normalizedSubject);
+      qs.set('grade', String(safeGrade));
+
+      const res = await fetch(`/api/v1/exams/diagnostic-status?${qs.toString()}`, {
+        method: 'GET',
+        headers: {
+          ...getAuthHeaders(),
+        },
+        cache: 'no-store',
+      });
+
+      if (!res.ok) return null;
+      const json = await res.json();
+      const raw: DiagnosticStatusInfo | null = json?.data || null;
+      if (!raw) return null;
+
+      if (!raw.isAuthenticated && !raw.isPrivileged) {
+        const guest = getGuestOnboarding();
+        const diagKey = `${normalizedSubject}::${safeGrade}`;
+        const guestDiag = guest?.completedDiagnostics?.[diagKey];
+        if (guestDiag) {
+          return {
+            ...raw,
+            diagnosticCompleted: true,
+            diagnosticRequired: false,
+            diagnosticResult: {
+              assignedLevel: guestDiag.assignedLevel,
+              overallScore: guestDiag.overallScore,
+              trackScores: guestDiag.trackScores,
+              bloomBreakdown: guestDiag.bloomBreakdown,
+              completedAt: guestDiag.completedAt,
+            },
+          };
+        }
+      }
+      return raw;
+    } catch (err) {
+      console.warn('[chapterRoadmapService.getDiagnosticStatus] Error:', err);
+      return null;
     }
   },
 
@@ -371,6 +476,8 @@ export const chapterRoadmapService = {
       }
     }
 
+    const completedDiagnostics = Object.values(guest.completedDiagnostics || {});
+
     try {
       const res = await fetch('/api/v1/exams/sync-guest-onboarding', {
         method: 'POST',
@@ -383,6 +490,7 @@ export const chapterRoadmapService = {
           grade: guest.grade,
           semester: guest.semester,
           completedChapters,
+          completedDiagnostics,
           pendingTrialSubmission: guest.pendingTrialSubmission || undefined,
         }),
       });

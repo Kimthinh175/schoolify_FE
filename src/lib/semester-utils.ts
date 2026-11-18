@@ -10,6 +10,16 @@ export interface RealTimeSemesterInfo {
   description: string;
 }
 
+export interface GuestDiagnosticEntry {
+  subject: string;
+  grade: number;
+  assignedLevel: 'BASIC' | 'MEDIUM' | 'ADVANCED';
+  overallScore: number;
+  trackScores: Record<string, number>;
+  bloomBreakdown?: Record<string, { correct: number; total: number }>;
+  completedAt: string;
+}
+
 export interface GuestOnboardingState {
   fullname: string;
   grade: 10 | 11 | 12;
@@ -33,6 +43,7 @@ export interface GuestOnboardingState {
       crownsEarned: number;
     }
   >;
+  completedDiagnostics?: Record<string, GuestDiagnosticEntry>;
   pendingTrialSubmission?: any | null;
 }
 
@@ -141,6 +152,7 @@ export function getGuestOnboarding(): GuestOnboardingState | null {
       grade: Number(parsed.grade) as 10 | 11 | 12,
       trialUsedCount: Number(parsed.trialUsedCount || 0),
       completedChapters: parsed.completedChapters || {},
+      completedDiagnostics: parsed.completedDiagnostics || {},
     };
   } catch {
     return null;
@@ -158,6 +170,7 @@ export function saveGuestOnboarding(data: Partial<GuestOnboardingState> & { full
     trialUsedCount: data.trialUsedCount ?? existing?.trialUsedCount ?? 0,
     createdAt: existing?.createdAt || new Date().toISOString(),
     completedChapters: data.completedChapters ?? existing?.completedChapters ?? {},
+    completedDiagnostics: data.completedDiagnostics ?? existing?.completedDiagnostics ?? {},
     pendingTrialSubmission:
       data.pendingTrialSubmission !== undefined
         ? data.pendingTrialSubmission
@@ -228,6 +241,30 @@ export function recordGuestChapterCompletion(params: {
       [key]: updatedEntry,
     },
     pendingTrialSubmission: params.submissionPayload || existing.pendingTrialSubmission || null,
+  });
+}
+
+export function recordGuestDiagnosticResult(entry: GuestDiagnosticEntry) {
+  const existing = getGuestOnboarding();
+  const sem = getCurrentSchoolSemester();
+  const safeGrade =
+    entry.grade === 10 || entry.grade === 11 || entry.grade === 12
+      ? (entry.grade as 10 | 11 | 12)
+      : existing?.grade || 12;
+  const key = `${(entry.subject || 'toan-hoc').trim().toLowerCase()}::${safeGrade}`;
+  return saveGuestOnboarding({
+    fullname: existing?.fullname || 'Khách',
+    grade: existing?.grade || safeGrade,
+    semester: existing?.semester || sem.semester,
+    schoolYear: existing?.schoolYear || sem.schoolYear,
+    completedDiagnostics: {
+      ...(existing?.completedDiagnostics || {}),
+      [key]: {
+        ...entry,
+        subject: (entry.subject || 'toan-hoc').trim().toLowerCase(),
+        grade: safeGrade,
+      },
+    },
   });
 }
 

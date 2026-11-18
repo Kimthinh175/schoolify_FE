@@ -144,7 +144,7 @@ export default function RemediationExamPage() {
             grade: 12,
             chapterId: 1,
             chapterName: 'Khắc phục lỗ hổng',
-            format: 'MIXED',
+            format: 'QUIZ',
             title: `Đề Khắc Phục Lỗi Sai: ${latestWithWrong.examTitle}`,
             durationMinutes: 0,
             totalPoints: 10,
@@ -287,7 +287,6 @@ export default function RemediationExamPage() {
             multipleChoices: choices,
             trueFalseAnswers,
             shortAnswers,
-            essayAnswers: {},
           },
         },
         {
@@ -313,8 +312,20 @@ export default function RemediationExamPage() {
       );
     } catch {}
 
-    toast.success('🎉 Đã nộp bài khắc phục thành công! Bạn nhận được +5 Ngọc Tri Thức 💎 thưởng nỗ lực.');
+    if (finalScore >= 5.0) {
+      toast.success(
+        `🎉 Chúc mừng! Bạn đạt ${finalScore}/10đ (${correct}/${remediationExam.questions.length} câu đúng) và nhận +5 Ngọc Tri Thức 💎!`
+      );
+    } else {
+      toast.info(
+        `💙 Chia buồn cùng bạn! Bài khắc phục đạt ${finalScore}/10đ. Đừng nản lòng — bạn vẫn nhận +5 Ngọc Tri Thức 💎 khích lệ tinh thần học tập!`
+      );
+    }
   };
+
+  const canonicalTopicHref = `/luyen-thi/chuyen-de/${
+    remediationExam?.subjectSlug?.includes('tin') ? 'tin-hoc' : 'toan'
+  }?grade=${remediationExam?.grade || 12}`;
 
   // Màn hình Loading
   if (loading) {
@@ -342,14 +353,21 @@ export default function RemediationExamPage() {
             Không tìm thấy đề thi cần khắc phục
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-            Bạn chưa có câu hỏi nào cần khắc phục hoặc bài làm đã hoàn thành. Hãy vào Cổng Luyện Thi để thử sức với các bộ đề mới nhé!
+            Bạn chưa có câu hỏi nào cần khắc phục hoặc bài làm đã hoàn thành. Hãy vào Bản Đồ Chuyên Đề hoặc Trang Chủ để thử sức với các bộ đề mới nhé!
           </p>
-          <div className="pt-2 flex justify-center gap-3">
+          <div className="pt-2 flex flex-wrap justify-center gap-3">
             <Button
-              onClick={() => router.push('/student/practice')}
+              onClick={() => router.push('/')}
+              variant="outline"
+              className="font-bold rounded-xl text-xs px-5 py-2.5 cursor-pointer"
+            >
+              Về Trang Chủ
+            </Button>
+            <Button
+              onClick={() => router.push('/luyen-thi/chuyen-de/toan')}
               className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold rounded-xl text-xs px-5 py-2.5 cursor-pointer"
             >
-              Vào Cổng Luyện Thi K-12
+              Vào Bản Đồ Chuyên Đề
             </Button>
           </div>
         </Card>
@@ -397,7 +415,7 @@ export default function RemediationExamPage() {
           </div>
 
           {/* BỘ ĐẾM THỜI GIAN VÔ HẠN & NÚT NỘP BÀI */}
-          <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+          <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2.5 shrink-0">
             <ThemeToggle className="shrink-0" />
 
             {/* Badge thời gian vô hạn */}
@@ -423,13 +441,23 @@ export default function RemediationExamPage() {
                 <span>Nộp Bài Khắc Phục</span>
               </Button>
             ) : (
-              <Button
-                onClick={() => router.push('/student/practice')}
-                className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md cursor-pointer flex items-center gap-1.5"
-              >
-                <Home className="w-3.5 h-3.5" />
-                <span>Về Cổng Luyện Thi</span>
-              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  onClick={() => router.push('/')}
+                  variant="outline"
+                  className="font-bold text-xs px-3.5 py-2 rounded-xl cursor-pointer flex items-center gap-1.5"
+                >
+                  <Home className="w-3.5 h-3.5 text-[#00B8DD]" />
+                  <span>Về Trang Chủ</span>
+                </Button>
+                <Button
+                  onClick={() => router.push(canonicalTopicHref)}
+                  className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md cursor-pointer flex items-center gap-1.5"
+                >
+                  <Target className="w-3.5 h-3.5" />
+                  <span>Bản Đồ Chuyên Đề</span>
+                </Button>
+              </div>
             )}
           </div>
         </div>
@@ -498,24 +526,44 @@ export default function RemediationExamPage() {
 
       {/* NỘI DUNG CHÍNH */}
       <main className="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 space-y-6">
-        {/* BANNER THÔNG BÁO KẾT QUẢ SAU KHI NỘP BÀI */}
+        {/* BANNER THÔNG BÁO KẾT QUẢ SAU KHI NỘP BÀI (CHÚC MỪNG / CHIA BUỒN) */}
         {isSubmitted && result && (
-          <Card className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-emerald-500/10 via-[#00B8DD]/10 to-amber-500/10 border-2 border-emerald-500/40 shadow-lg space-y-4">
+          <Card
+            className={`p-6 sm:p-8 rounded-3xl border-2 shadow-lg space-y-4 ${
+              result.score >= 5
+                ? 'bg-gradient-to-br from-emerald-500/10 via-[#00B8DD]/10 to-amber-500/10 border-emerald-500/40'
+                : 'bg-gradient-to-br from-rose-500/10 via-amber-500/10 to-slate-500/10 border-rose-500/40'
+            }`}
+          >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/30">
+                <div
+                  className={`w-12 h-12 rounded-2xl text-white flex items-center justify-center shrink-0 shadow-md ${
+                    result.score >= 5
+                      ? 'bg-emerald-500 shadow-emerald-500/30'
+                      : 'bg-rose-500 shadow-rose-500/30'
+                  }`}
+                >
                   <Award className="w-7 h-7" />
                 </div>
                 <div>
-                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                    Kết Quả Rèn Luyện Khắc Phục
+                  <span
+                    className={`text-xs font-bold uppercase tracking-wider ${
+                      result.score >= 5
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-rose-600 dark:text-rose-400'
+                    }`}
+                  >
+                    {result.score >= 5
+                      ? '🎉 Thông Báo Chúc Mừng Khắc Phục'
+                      : '💙 Thông Báo Chia Buồn & Khích Lệ'}
                   </span>
                   <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
                     {result.score >= 8.5
-                      ? '🎉 Xuất Sắc! Bạn Đã Làm Chủ Hoàn Toàn Dạng Bài Này'
+                      ? '🎉 Chúc mừng! Bạn Đã Làm Chủ Hoàn Toàn Dạng Bài Này'
                       : result.score >= 5
-                      ? '👏 Rất Đáng Khen! Bạn Đã Tiến Bộ Vượt Bậc'
-                      : '💪 Cố Gắng Lên! Đọc Kỹ Hướng Dẫn Chi Tiết Bên Dưới'}
+                      ? '👏 Chúc mừng! Bạn Đã Tiến Bộ Vượt Bậc'
+                      : '💙 Chia buồn cùng bạn! Đừng Nản Lòng — Xem Kỹ Hướng Dẫn Bên Dưới Nhé'}
                   </h2>
                 </div>
               </div>
@@ -556,11 +604,19 @@ export default function RemediationExamPage() {
                 Quay Lại Bài Thi Gốc
               </Button>
               <Button
-                onClick={() => router.push('/student/practice')}
+                onClick={() => router.push(canonicalTopicHref)}
                 className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold rounded-xl text-xs"
-                leftIcon={<Home className="w-4 h-4" />}
+                leftIcon={<Target className="w-4 h-4" />}
               >
-                Vào Cổng Luyện Thi Mới
+                Về Bản Đồ Chuyên Đề
+              </Button>
+              <Button
+                onClick={() => router.push('/')}
+                variant="outline"
+                className="rounded-xl font-bold text-xs"
+                leftIcon={<Home className="w-4 h-4 text-[#00B8DD]" />}
+              >
+                Về Trang Chủ
               </Button>
             </div>
           </Card>
@@ -843,11 +899,11 @@ export default function RemediationExamPage() {
               ) : (
                 <Button
                   type="button"
-                  onClick={() => router.push('/student/practice')}
+                  onClick={() => router.push(canonicalTopicHref)}
                   className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs"
                   rightIcon={<Home className="w-3.5 h-3.5" />}
                 >
-                  Hoàn tất
+                  Hoàn tất &amp; Về Bản Đồ
                 </Button>
               )}
             </div>

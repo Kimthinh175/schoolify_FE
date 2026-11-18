@@ -72,7 +72,7 @@ export interface OlympiadExam {
   durationMinutes: number; // 120, 150, 180
   totalPoints: number; // 20
   pointsReward: number; // 100, 200 💎
-  examType: 'ESSAY' | 'CODING';
+  examType: 'CODING';
   mathProblems?: OlympiadMathProblem[];
   codingProblems?: CodingProblem[];
 }

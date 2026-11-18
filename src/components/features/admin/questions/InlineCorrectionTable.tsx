@@ -147,7 +147,7 @@ export function InlineCorrectionTable({
     let isValid = false;
 
     if (hasContent) {
-      if (updatedQ.type === 'ESSAY' || updatedQ.type === 'GROUP_QUESTIONS') {
+      if (updatedQ.type === 'GROUP_QUESTIONS') {
         isValid = true;
       } else if (updatedQ.type === 'FILL_BLANK') {
         isValid = Boolean(updatedQ.shortAnswerCorrect?.trim() || hasCorrect);
@@ -471,15 +471,6 @@ export function InlineCorrectionTable({
                   <Badge className="bg-emerald-600 text-white font-mono text-xs px-2.5 py-1">
                     {q.shortAnswerCorrect || (q.answers && q.answers[0] && q.answers[0].content) || '(Chưa nhập)'}
                   </Badge>
-                </div>
-              ) : q.type === 'ESSAY' ? (
-                <div className="p-3 rounded-xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 text-xs text-purple-900 dark:text-purple-300 space-y-1">
-                  <div className="font-bold flex items-center gap-1.5">
-                    <span>📝 Hướng dẫn chấm / Barem tự luận:</span>
-                  </div>
-                  <div className="text-slate-600 dark:text-slate-300">
-                    <MathRenderer content={q.sample_essay_answer || q.explain || 'Không yêu cầu đáp án trắc nghiệm.'} inline />
-                  </div>
                 </div>
               ) : q.type === 'GROUP_QUESTIONS' ? (
                 <div className="p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-300 space-y-1">

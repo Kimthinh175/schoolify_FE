@@ -606,7 +606,7 @@ export interface UnifiedParsedQuestion {
   index: number;
   questionNumber: number;
   title: string;
-  questionType: 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'FILL_BLANK' | 'ESSAY';
+  questionType: 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'FILL_BLANK';
   difficulty: 'RECOGNITION' | 'UNDERSTANDING' | 'APPLICATION' | 'ADVANCED_APPLICATION';
   chapter: string;
   content: string;
@@ -761,12 +761,12 @@ export function parseExamTextWithMathAndKeys(text: string): UnifiedParsedQuestio
   const bodyLines = allLines.slice(0, bodyEndIndex);
   const results: UnifiedParsedQuestion[] = [];
 
-  let currentSection: 1 | 2 | 3 | 4 = 1; // 1: Trắc nghiệm ABCD, 2: Đúng/Sai, 3: Trả lời ngắn, 4: Tự luận
+  let currentSection: 1 | 2 | 3 = 1; // 1: Trắc nghiệm ABCD, 2: Đúng/Sai, 3: Trả lời ngắn
   let currentChapter = 'Chương chung';
   let currentQ: {
     localNum: number;
     title: string;
-    section: 1 | 2 | 3 | 4;
+    section: 1 | 2 | 3;
     stemLines: string[];
     explainLines: string[];
     inExplain: boolean;
@@ -799,9 +799,7 @@ export function parseExamTextWithMathAndKeys(text: string): UnifiedParsedQuestio
         ? 'TRUE_FALSE'
         : currentQ.section === 3
           ? 'FILL_BLANK'
-          : currentQ.section === 4
-            ? 'ESSAY'
-            : 'SINGLE_CHOICE';
+          : 'SINGLE_CHOICE';
 
     let answers = [...currentQ.answers];
     let explain = currentQ.explainLines.join('\n').trim();
@@ -809,7 +807,12 @@ export function parseExamTextWithMathAndKeys(text: string): UnifiedParsedQuestio
 
     if (qType === 'SINGLE_CHOICE') {
       if (answers.length === 0) {
-        qType = 'ESSAY';
+        qType = 'FILL_BLANK';
+        if (shortAnswer) {
+          answers = [{ label: 'Đáp số', content: shortAnswer, isCorrect: true }];
+        } else {
+          answers = [{ label: 'Đáp số', content: '(Điền đáp số)', isCorrect: true }];
+        }
       } else {
         // Tra cứu đáp án đúng từ BẢNG ĐÁP ÁN nếu chưa được đánh dấu trực tiếp
         let keyLetter = '';
@@ -861,16 +864,6 @@ export function parseExamTextWithMathAndKeys(text: string): UnifiedParsedQuestio
       } else if (answers.length === 0) {
         answers = [{ label: 'Đáp số', content: '(Điền đáp số)', isCorrect: true }];
       }
-    } else if (qType === 'ESSAY') {
-      if (answers.length === 0) {
-        answers = [
-          {
-            label: 'Tự luận',
-            content: 'Học sinh trình bày lời giải chi tiết theo từng bước lập luận.',
-            isCorrect: true,
-          },
-        ];
-      }
     }
 
     const points =
@@ -878,9 +871,7 @@ export function parseExamTextWithMathAndKeys(text: string): UnifiedParsedQuestio
         ? 1.0
         : qType === 'FILL_BLANK'
           ? 0.5
-          : qType === 'ESSAY'
-            ? 2.0
-            : 0.25;
+          : 0.25;
 
     results.push({
       index: seqIndex,
@@ -910,7 +901,7 @@ export function parseExamTextWithMathAndKeys(text: string): UnifiedParsedQuestio
     }
     if (!line) continue;
 
-    // 1. Nhận diện chuyển Phần (Section I, II, III, B. Tự luận)
+    // 1. Nhận diện chuyển Phần (Section I, II, III)
     if (
       /^(?:PHẦN\s*(?:1|I)\b|I\.\s*CÂU\s*TRẮC\s*NGHIỆM\s*NHIỀU|I\.\s*TRẮC\s*NGHIỆM\s*NHIỀU)/i.test(line)
     ) {
@@ -937,14 +928,6 @@ export function parseExamTextWithMathAndKeys(text: string): UnifiedParsedQuestio
       currentChapter = 'Trắc nghiệm trả lời ngắn';
       continue;
     }
-    if (
-      /^(?:PHẦN\s*(?:4|IV)\b|B\.\s*BÀI\s*TẬP\s*TỰ\s*LUẬN|IV\.\s*TỰ\s*LUẬN)/i.test(line)
-    ) {
-      commitCurrentQuestion();
-      currentSection = 4;
-      currentChapter = 'Bài tập Tự luận';
-      continue;
-    }
 
     // Bỏ qua các tiêu đề lớn đầu đề (VD: "ĐỀ CƯƠNG ÔN TẬP...", "A. BÀI TẬP TRẮC NGHIỆM", "NĂM HỌC...")
     if (
@@ -965,15 +948,13 @@ export function parseExamTextWithMathAndKeys(text: string): UnifiedParsedQuestio
       let restText = qStartMatch[3].trim();
 
       let diff: UnifiedParsedQuestion['difficulty'] =
-        currentSection === 4
+        currentSection === 3
           ? 'APPLICATION'
-          : currentSection === 3
-            ? 'APPLICATION'
-            : currentSection === 2
-              ? 'UNDERSTANDING'
-              : qNum <= 15
-                ? 'RECOGNITION'
-                : 'UNDERSTANDING';
+          : currentSection === 2
+            ? 'UNDERSTANDING'
+            : qNum <= 15
+              ? 'RECOGNITION'
+              : 'UNDERSTANDING';
 
       if (/\[(VDC|VẬN DỤNG CAO)\]/i.test(restText) || /vận dụng cao/i.test(restText)) {
         diff = 'ADVANCED_APPLICATION';
@@ -1096,9 +1077,6 @@ export function parseExamTextWithMathAndKeys(text: string): UnifiedParsedQuestio
         }
         continue;
       }
-      currentQ.stemLines.push(line);
-    } else {
-      // Phần 4: Bài tập Tự luận
       currentQ.stemLines.push(line);
     }
   }

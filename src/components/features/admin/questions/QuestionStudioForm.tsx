@@ -268,7 +268,6 @@ export function QuestionStudioForm({
               <option value="MULTIPLE_CHOICE">Trắc nghiệm nhiều đáp án (Multi Choice)</option>
               <option value="TRUE_FALSE">Đúng / Sai 4 mệnh đề (Chuẩn 2025)</option>
               <option value="FILL_BLANK">Điền số / Trả lời ngắn</option>
-              <option value="ESSAY">Tự luận (Barem điểm)</option>
               <option value="GROUP_QUESTIONS">Chùm câu hỏi / Ngữ liệu</option>
               <option value="MATCHING">Nối cặp tương ứng A - B</option>
               <option value="ORDERING">Sắp xếp theo thứ tự</option>
@@ -703,21 +702,6 @@ export function QuestionStudioForm({
               onChange={(e) => setFillAnswer(e.target.value)}
               placeholder="Ví dụ: 3.5 hoặc 42"
               className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white max-w-md focus:bg-white dark:focus:bg-slate-900"
-            />
-          </div>
-        )}
-
-        {type === 'ESSAY' && (
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
-              Gợi ý đáp án mẫu / Barem chấm:
-            </label>
-            <textarea
-              rows={3}
-              value={explain}
-              onChange={(e) => setExplain(e.target.value)}
-              placeholder="Nhập tiêu chí chấm điểm tự luận..."
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900"
             />
           </div>
         )}

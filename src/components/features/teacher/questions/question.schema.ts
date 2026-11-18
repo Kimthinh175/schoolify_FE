@@ -15,7 +15,6 @@ export const questionFormSchema = z
     type: z.enum([
       'MULTIPLE_CHOICE',
       'SINGLE_CHOICE',
-      'ESSAY',
       'TRUE_FALSE',
       'FILL_BLANK',
       'SHORT_ANSWER',
@@ -27,12 +26,10 @@ export const questionFormSchema = z
     title: z.string().optional(),
     content: z.string().min(1, 'Vui lòng nhập nội dung câu hỏi'),
     points: z.number().min(0, 'Điểm phải ≥ 0'),
-    sample_essay_answer: z.string().optional(),
     answers: z.array(answerSchema),
   })
   .superRefine((val, ctx) => {
     if (
-      val.type === 'ESSAY' ||
       val.type === 'FILL_BLANK' ||
       val.type === 'SHORT_ANSWER' ||
       val.type === 'GROUP_QUESTIONS' ||
