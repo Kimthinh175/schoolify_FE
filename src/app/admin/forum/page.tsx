@@ -31,6 +31,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { ALL_FORUM_SEED_POSTS } from '@/data/forum-seed-posts';
+import { forumService } from '@/services/forum.service';
 
 interface AdminForumPost {
   id: string;
@@ -80,7 +81,7 @@ const DEFAULT_REPORTS: AdminForumReport[] = [
     reporterRole: 'Học sinh',
     targetType: 'POST',
     targetId: 'toan-11-tim-so-nghiem-phuong-trinh-luong-giac-tren-doan',
-    targetTitleOrSnippet: 'Tìm số nghiệm phương trình lượng giác trên đoạn [0; 2pi]',
+    targetTitleOrSnippet: 'Toán 11: Tìm số nghiệm của phương trình sin(2x) - √3cos(2x) = 1 trên khoảng (0; 2π)',
     reason: 'SPAM',
     reasonLabel: 'Spam / Quảng cáo',
     description: 'Chủ đề có chèn liên kết nhóm kéo cờ bạc, không phục vụ mục đích học bài.',
@@ -93,8 +94,8 @@ const DEFAULT_REPORTS: AdminForumReport[] = [
     reporterName: 'Thầy Lê Hoàng Nam',
     reporterRole: 'Giáo viên',
     targetType: 'COMMENT',
-    targetId: 'cmt-spam-09',
-    targetTitleOrSnippet: 'Cách giải này hoàn toàn sai bản chất, bạn giải vớ vẩn quá...',
+    targetId: 'comment-forum-seed-post-10-root',
+    targetTitleOrSnippet: 'Tin Học 12: Bình luận giải thuật Dijkstra chưa tối ưu hàng đợi ưu tiên priority_queue',
     reason: 'OFFENSIVE_LANGUAGE',
     reasonLabel: 'Ngôn từ thiếu chuẩn mực',
     description: 'Bình luận mang tính thóa mạ bạn học, công kích cá nhân.',
@@ -107,11 +108,11 @@ const DEFAULT_REPORTS: AdminForumReport[] = [
     reporterName: 'Nguyễn Đăng Khoa',
     reporterRole: 'Học sinh',
     targetType: 'COMMENT',
-    targetId: 'cmt-misinfo-01',
-    targetTitleOrSnippet: 'Áp dụng công thức tính nhanh: S = a * b * c / 2 (sai công thức)',
+    targetId: 'comment-forum-seed-post-05-root',
+    targetTitleOrSnippet: 'Toán 12: Lời giải áp dụng sai công thức Bayes P(A|B) = P(B|A)/P(A)',
     reason: 'MISINFORMATION',
     reasonLabel: 'Sai kiến thức nghiêm trọng',
-    description: 'Hướng dẫn công thức hình học bịa đặt, khiến nhiều bạn làm sai đề thi.',
+    description: 'Hướng dẫn công thức Bayes bị đảo ngược mẫu số, gây nhầm lẫn khi làm bài thi THPT.',
     status: 'RESOLVED',
     moderationAction: 'HIDE_CONTENT',
     adminNote: 'Đã ẩn bình luận sai kiến thức tránh gây hiểu lầm',
@@ -123,10 +124,11 @@ export default function AdminForumPage() {
   const [activeTab, setActiveTab] = React.useState<'POSTS' | 'REPORTS'>('POSTS');
   const [searchQuery, setSearchQuery] = React.useState('');
   const [subjectFilter, setSubjectFilter] = React.useState('ALL');
+  const [gradeFilter, setGradeFilter] = React.useState('ALL');
   const [statusFilter, setStatusFilter] = React.useState('ALL');
   const [reportStatusFilter, setReportStatusFilter] = React.useState<string>('ALL');
 
-  // Dữ liệu quản trị bài viết
+  // Dữ liệu quản trị bài viết: Khởi tạo với 20 câu seed chuẩn mới nhất từ Huân
   const [posts, setPosts] = React.useState<AdminForumPost[]>(() =>
     ALL_FORUM_SEED_POSTS.map((p) => ({
       id: p.id,
@@ -146,6 +148,43 @@ export default function AdminForumPage() {
       timeAgo: p.timeAgo,
     }))
   );
+
+  // Đồng bộ tải dữ liệu bài viết mới nhất từ API / Seed Service
+  React.useEffect(() => {
+    let isMounted = true;
+    async function loadAdminPosts() {
+      try {
+        const res = await forumService.getPosts({ page: 1, limit: 100 });
+        if (isMounted && res.items && res.items.length > 0) {
+          setPosts(
+            res.items.map((p) => ({
+              id: p.id,
+              title: p.title,
+              slug: p.slug,
+              subject: p.subject,
+              grade: p.grade,
+              content: p.content || '',
+              author: p.author,
+              repliesCount: p.repliesCount,
+              likesCount: p.likesCount,
+              viewsCount: p.viewsCount,
+              isSolved: Boolean(p.isSolved),
+              isPinned: Boolean(p.isPinned),
+              isLocked: Boolean(p.isLocked),
+              isHidden: false,
+              timeAgo: p.timeAgo,
+            }))
+          );
+        }
+      } catch {
+        // Fallback giữ nguyên 20 câu seed
+      }
+    }
+    void loadAdminPosts();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Dữ liệu quản trị báo cáo
   const [reports, setReports] = React.useState<AdminForumReport[]>(DEFAULT_REPORTS);
@@ -178,13 +217,16 @@ export default function AdminForumPage() {
       if (subjectFilter !== 'ALL' && p.subject !== subjectFilter) {
         return false;
       }
+      if (gradeFilter !== 'ALL' && String(p.grade) !== gradeFilter) {
+        return false;
+      }
       if (statusFilter === 'PINNED' && !p.isPinned) return false;
       if (statusFilter === 'LOCKED' && !p.isLocked) return false;
       if (statusFilter === 'HIDDEN' && !p.isHidden) return false;
       if (statusFilter === 'SOLVED' && !p.isSolved) return false;
       return true;
     });
-  }, [posts, searchQuery, subjectFilter, statusFilter]);
+  }, [posts, searchQuery, subjectFilter, gradeFilter, statusFilter]);
 
   // Lọc báo cáo vi phạm
   const filteredReports = React.useMemo(() => {
@@ -490,12 +532,25 @@ export default function AdminForumPage() {
                 >
                   <option value="ALL">Môn học: Tất cả</option>
                   <option value="Toán Học">Toán Học</option>
+                  <option value="Tin Học">Tin Học</option>
                   <option value="Vật Lý">Vật Lý</option>
                   <option value="Hóa Học">Hóa Học</option>
-                  <option value="Tin Học">Tin Học</option>
                   <option value="Tiếng Anh">Tiếng Anh</option>
                   <option value="Sinh Học">Sinh Học</option>
                   <option value="Ngữ Văn">Ngữ Văn</option>
+                  <option value="Hệ Thống">Hệ Thống (Nội Quy)</option>
+                </select>
+
+                {/* Lọc khối lớp */}
+                <select
+                  value={gradeFilter}
+                  onChange={(e) => setGradeFilter(e.target.value)}
+                  className="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer"
+                >
+                  <option value="ALL">Khối lớp: Tất cả</option>
+                  <option value="12">Lớp 12</option>
+                  <option value="11">Lớp 11</option>
+                  <option value="10">Lớp 10</option>
                 </select>
 
                 {/* Lọc trạng thái */}
