@@ -45,7 +45,6 @@ import {
   ForumTabStatus,
   forumService,
 } from '@/services/forum.service';
-import { ALL_FORUM_SEED_POSTS } from '@/data/forum-seed-posts';
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -101,10 +100,8 @@ export default function ForumPage() {
   const [currentPage, setCurrentPage] = React.useState(1);
 
   // ── DỮ LIỆU TỪ FORUM.SERVICE.TS (Task #14) ──
-  const [posts, setPosts] = React.useState<ForumPost[]>(
-    () => (ALL_FORUM_SEED_POSTS as unknown as ForumPost[])
-  );
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [posts, setPosts] = React.useState<ForumPost[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [isNewPostModalOpen, setIsNewPostModalOpen] = React.useState(false);
 
   // ── TƯƠNG TÁC TRÊN THẺ BÀI VIẾT ──
@@ -115,38 +112,27 @@ export default function ForumPage() {
     readInitialSavedPosts
   );
 
-  // Tải danh sách câu hỏi qua forumService.getPosts
+  // Tải danh sách câu hỏi qua forumService.getPosts (tuân thủ chuẩn React 19 không gọi setState đồng bộ đầu effect)
   React.useEffect(() => {
     let isMounted = true;
 
     async function fetchForumList() {
-      try {
-        const res = await forumService.getPosts({
-          page: 1,
-          limit: 100,
-        });
-        if (!isMounted) return;
-        if (res.items && res.items.length > 0) {
-          setPosts(res.items);
-          setSavedPostIds((prev) => {
-            const next = { ...prev };
-            for (const item of res.items) {
-              if (item.isBookmarked) {
-                next[item.id] = true;
-              }
-            }
-            return next;
-          });
-        } else {
-          // Khi Database Backend chưa seed hoặc rỗng, hiển thị đầy đủ 20 câu seed chuẩn của Huân
-          setPosts(ALL_FORUM_SEED_POSTS as unknown as ForumPost[]);
+      const res = await forumService.getPosts({
+        page: 1,
+        limit: 100,
+      });
+      if (!isMounted) return;
+      setPosts(res.items);
+      setSavedPostIds((prev) => {
+        const next = { ...prev };
+        for (const item of res.items) {
+          if (item.isBookmarked) {
+            next[item.id] = true;
+          }
         }
-      } catch {
-        if (!isMounted) return;
-        setPosts(ALL_FORUM_SEED_POSTS as unknown as ForumPost[]);
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
+        return next;
+      });
+      setIsLoading(false);
     }
 
     void fetchForumList();

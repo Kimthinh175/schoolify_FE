@@ -215,6 +215,62 @@ export function mapBackendPostToForumPost(item: Record<string, unknown>): ForumP
   };
 }
 
+function getSeedPostsFallback(params?: ForumQueryParams): ForumPostsListResponse {
+  let list = (ALL_FORUM_SEED_POSTS as unknown as ForumPost[]);
+
+  if (params?.subject && params.subject !== 'Tất cả') {
+    list = list.filter((p) => p.subject === params.subject);
+  }
+  if (params?.grade && params.grade !== 'ALL') {
+    list = list.filter((p) => p.grade === Number(params.grade));
+  }
+  if (params?.status && params.status !== 'ALL') {
+    if (params.status === 'UNSOLVED') list = list.filter((p) => !p.isSolved);
+    else if (params.status === 'SOLVED') list = list.filter((p) => Boolean(p.isSolved));
+    else if (params.status === 'HOT') {
+      list = [...list].sort((a, b) => (b.viewsCount || 0) - (a.viewsCount || 0));
+    }
+  }
+  if (params?.search?.trim()) {
+    const q = params.search.trim().toLowerCase();
+    list = list.filter(
+      (p) =>
+        p.title.toLowerCase().includes(q) ||
+        p.content.toLowerCase().includes(q) ||
+        p.tags.some((t) => t.toLowerCase().includes(q))
+    );
+  }
+
+  const page = Math.max(1, Number(params?.page || 1));
+  const limit = Math.max(1, Number(params?.limit || 6));
+  const total = list.length;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const start = (page - 1) * limit;
+  const items = list.slice(start, start + limit);
+
+  return {
+    items,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+    },
+  };
+}
+
+function getSeedPostBySlugOrIdFallback(idOrSlug: string): ForumPost | null {
+  const clean = idOrSlug.trim().toLowerCase();
+  const found = (ALL_FORUM_SEED_POSTS as unknown as ForumPost[]).find(
+    (p) =>
+      p.id.toLowerCase() === clean ||
+      p.slug?.toLowerCase() === clean ||
+      (p.slug && p.slug.toLowerCase().includes(clean)) ||
+      (p.slug && clean.includes(p.slug.toLowerCase()))
+  );
+  return found || null;
+}
+
 export const forumService = {
   /**
    * Lấy danh sách câu hỏi diễn đàn từ Backend API (`GET /api/v1/forum/posts`)
@@ -257,15 +313,7 @@ export const forumService = {
       });
 
       if (!res.ok) {
-        return {
-          items: ALL_FORUM_SEED_POSTS as unknown as ForumPost[],
-          pagination: {
-            page: 1,
-            limit: 100,
-            total: ALL_FORUM_SEED_POSTS.length,
-            totalPages: 1,
-          },
-        };
+        return getSeedPostsFallback(params);
       }
 
       const json = (await res.json()) as Record<string, unknown>;
@@ -279,19 +327,11 @@ export const forumService = {
         ? (json.items as Record<string, unknown>[])
         : [];
 
-      const mapped = rawArray.map(mapBackendPostToForumPost);
-
-      if (mapped.length === 0) {
-        return {
-          items: ALL_FORUM_SEED_POSTS as unknown as ForumPost[],
-          pagination: {
-            page: 1,
-            limit: 100,
-            total: ALL_FORUM_SEED_POSTS.length,
-            totalPages: 1,
-          },
-        };
+      if (rawArray.length === 0) {
+        return getSeedPostsFallback(params);
       }
+
+      const mapped = rawArray.map(mapBackendPostToForumPost);
 
       const beMeta = (json?.pagination ||
         json?.meta ||
@@ -328,16 +368,8 @@ export const forumService = {
         },
       };
     } catch (err) {
-      console.warn('[forumService.getPosts] Failed:', err);
-      return {
-        items: ALL_FORUM_SEED_POSTS as unknown as ForumPost[],
-        pagination: {
-          page: 1,
-          limit: 100,
-          total: ALL_FORUM_SEED_POSTS.length,
-          totalPages: 1,
-        },
-      };
+      console.warn('[forumService.getPosts] Failed, using seed posts fallback:', err);
+      return getSeedPostsFallback(params);
     }
   },
 
@@ -345,15 +377,6 @@ export const forumService = {
    * Lấy chi tiết 1 bài thảo luận theo ID hoặc Slug (`GET /api/v1/forum/posts/:idOrSlug`)
    */
   async getPostBySlugOrId(idOrSlug: string): Promise<ForumPost | null> {
-    const clean = idOrSlug.trim().toLowerCase();
-    const findFallback = () =>
-      (ALL_FORUM_SEED_POSTS as unknown as ForumPost[]).find(
-        (p) =>
-          p.slug?.toLowerCase() === clean ||
-          p.id.toLowerCase() === clean ||
-          (p.slug && p.slug.toLowerCase().includes(clean))
-      ) || null;
-
     try {
       const res = await fetch(
         `/api/v1/forum/posts/${encodeURIComponent(idOrSlug)}`,
@@ -363,17 +386,18 @@ export const forumService = {
           cache: 'no-store',
         }
       );
-      if (!res.ok) return findFallback();
-      const json = (await res.json()) as Record<string, unknown>;
-      const dataObj = json?.data as Record<string, unknown> | undefined;
-      const raw = (dataObj?.post || dataObj || json?.post) as
-        | Record<string, unknown>
-        | undefined;
-      if (!raw) return findFallback();
-      return mapBackendPostToForumPost(raw);
+      if (res.ok) {
+        const json = (await res.json()) as Record<string, unknown>;
+        const dataObj = json?.data as Record<string, unknown> | undefined;
+        const raw = (dataObj?.post || dataObj || json?.post) as
+          | Record<string, unknown>
+          | undefined;
+        if (raw) return mapBackendPostToForumPost(raw);
+      }
+      return getSeedPostBySlugOrIdFallback(idOrSlug);
     } catch (err) {
-      console.warn('[forumService.getPostBySlugOrId] Failed:', err);
-      return findFallback();
+      console.warn('[forumService.getPostBySlugOrId] Failed, using seed fallback:', err);
+      return getSeedPostBySlugOrIdFallback(idOrSlug);
     }
   },
 
