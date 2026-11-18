@@ -33,7 +33,6 @@ import { cn } from '@/lib/utils';
 import { useNotificationsStore } from '@/store/notifications.store';
 import { useAuthStore } from '@/store/auth.store';
 import { ReportModal } from './ReportModal';
-import { RequireLoginModal } from './RequireLoginModal';
 
 export type ForumReactionType = 'LIKE' | 'HELPFUL' | 'LOVE' | 'HAHA';
 
@@ -191,14 +190,9 @@ export function ForumCommentSection({
   className,
   initialComments,
   isLocked = false,
-  isLoggedIn: isLoggedInProp,
   currentUser,
 }: ForumCommentSectionProps) {
-  const { user: authUser, currentRole, isAuthenticated } = useAuthStore();
-  const isActuallyLoggedIn =
-    isLoggedInProp !== undefined
-      ? isLoggedInProp
-      : Boolean(isAuthenticated || authUser);
+  const { user: authUser, currentRole } = useAuthStore();
   const currentUserId = currentUser?.id || authUser?.id || 'seed-student-01';
   const currentUserName = currentUser?.name || authUser?.fullname || 'Bạn (Học Sinh)';
 
@@ -353,9 +347,7 @@ export function ForumCommentSection({
 
   const addNotification = useNotificationsStore((s) => s.addNotification);
 
-  // Modal kiểm soát đăng nhập & báo cáo vi phạm
-  const [isLoginModalOpen, setIsLoginModalOpen] = React.useState(false);
-  const [loginActionName, setLoginActionName] = React.useState('tham gia thảo luận');
+  // Modal báo cáo vi phạm
   const [isReportModalOpen, setIsReportModalOpen] = React.useState(false);
   const [reportTarget, setReportTarget] = React.useState<{
     type: 'POST' | 'COMMENT';
@@ -363,17 +355,7 @@ export function ForumCommentSection({
     title?: string;
   }>({ type: 'COMMENT', id: '' });
 
-  const requireAuth = (actionName: string): boolean => {
-    if (!isActuallyLoggedIn) {
-      setLoginActionName(actionName);
-      setIsLoginModalOpen(true);
-      return false;
-    }
-    return true;
-  };
-
   const handleOpenReport = (type: 'POST' | 'COMMENT', id: string, title?: string) => {
-    if (!requireAuth('báo cáo vi phạm quy tắc cộng đồng')) return;
     setReportTarget({ type, id, title });
     setIsReportModalOpen(true);
   };
@@ -557,8 +539,6 @@ export function ForumCommentSection({
 
   // Toggle Hữu ích (ThumbsUp) cho lời giải cấp 1 (Atomic update không race condition)
   const handleToggleLike = async (commentId: string) => {
-    if (!requireAuth('thả Hữu ích (ThumbsUp) cho lời giải')) return;
-
     updateAndPersistComments((prev) =>
       prev.map((c) => {
         if (c.id === commentId) {
@@ -590,8 +570,6 @@ export function ForumCommentSection({
 
   // Toggle Hữu ích cho phản hồi cấp 2
   const handleToggleReplyLike = async (rootCommentId: string, replyId: string) => {
-    if (!requireAuth('thả Hữu ích (ThumbsUp) cho phản hồi')) return;
-
     updateAndPersistComments((prev) =>
       prev.map((c) => {
         if (c.id === rootCommentId && c.replies) {
@@ -631,8 +609,6 @@ export function ForumCommentSection({
 
   // Chốt Lời giải chuẩn nhất & Thưởng Ngọc Tri Thức (kèm chống gian lận)
   const handleAcceptComment = async (commentId: string) => {
-    if (!requireAuth('công nhận Lời giải đúng (+10 Ngọc)')) return;
-
     if (!canAcceptComment) {
       alert('Chỉ chủ bài viết hoặc Thầy cô / Quản trị viên mới có quyền công nhận Lời giải đúng.');
       return;
@@ -738,7 +714,6 @@ export function ForumCommentSection({
   // Gửi lời giải mới (Cấp 1): Gửi API kèm cập nhật comments_count & bắn Notification
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!requireAuth('gửi lời giải / bình luận mới')) return;
 
     if (isLockedState) {
       alert('Bài viết này đã bị Quản trị viên khóa bình luận (is_locked = true).');
@@ -878,8 +853,6 @@ export function ForumCommentSection({
 
   // Gửi phản hồi lồng cấp 2: Gửi API kèm cập nhật replies_count & bắn Notification
   const handleSubmitReply = async (rootCommentId: string, replyToName: string) => {
-    if (!requireAuth('gửi phản hồi thảo luận')) return;
-
     if (isLockedState) {
       alert('Bài viết này đã bị Quản trị viên khóa bình luận (is_locked = true).');
       return;
@@ -1726,13 +1699,6 @@ export function ForumCommentSection({
           setApiSuccessMessage(msg);
           setTimeout(() => setApiSuccessMessage(null), 4000);
         }}
-      />
-
-      {/* Modal Yêu cầu đăng nhập cho khách vãng lai */}
-      <RequireLoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        actionName={loginActionName}
       />
     </div>
   );

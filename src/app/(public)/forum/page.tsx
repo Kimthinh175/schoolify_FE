@@ -34,7 +34,6 @@ import { cn } from '@/lib/utils';
 import { ALL_FORUM_SEED_POSTS } from '@/data/forum-seed-posts';
 import { ForumCommentSection } from '@/components/features/forum/ForumCommentSection';
 import { ReportModal } from '@/components/features/forum/ReportModal';
-import { RequireLoginModal } from '@/components/features/forum/RequireLoginModal';
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -185,8 +184,6 @@ export default function ForumPage() {
     id: string;
     title?: string;
   }>({ type: 'POST', id: '' });
-  const [isLoginModalOpen, setIsLoginModalOpen] = React.useState(false);
-  const [loginActionName, setLoginActionName] = React.useState('tương tác bài viết');
   const [reportSuccessMessage, setReportSuccessMessage] = React.useState<string | null>(null);
 
   const handleOpenReport = (type: 'POST' | 'COMMENT', id: string, title?: string) => {
@@ -801,13 +798,6 @@ export default function ForumPage() {
           setReportSuccessMessage(msg);
           setTimeout(() => setReportSuccessMessage(null), 4000);
         }}
-      />
-
-      {/* Modal Yêu cầu đăng nhập cho khách vãng lai */}
-      <RequireLoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        actionName={loginActionName}
       />
     </div>
   );
