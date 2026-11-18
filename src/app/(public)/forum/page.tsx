@@ -45,6 +45,7 @@ import {
   ForumTabStatus,
   forumService,
 } from '@/services/forum.service';
+import { ALL_FORUM_SEED_POSTS } from '@/data/forum-seed-posts';
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -99,9 +100,11 @@ export default function ForumPage() {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [currentPage, setCurrentPage] = React.useState(1);
 
-  // ── DỮ LIỆU TỪ FORUM.SERVICE.TS (Task #14) ──
-  const [posts, setPosts] = React.useState<ForumPost[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+  // ── DỮ LIỆU TỪ FORUM.SERVICE.TS (Task #14) & SEED FALLBACK ──
+  const [posts, setPosts] = React.useState<ForumPost[]>(
+    () => (ALL_FORUM_SEED_POSTS as unknown as ForumPost[]) || []
+  );
+  const [isLoading, setIsLoading] = React.useState(false);
   const [isNewPostModalOpen, setIsNewPostModalOpen] = React.useState(false);
 
   // ── TƯƠNG TÁC TRÊN THẺ BÀI VIẾT ──
@@ -112,27 +115,34 @@ export default function ForumPage() {
     readInitialSavedPosts
   );
 
-  // Tải danh sách câu hỏi qua forumService.getPosts (tuân thủ chuẩn React 19 không gọi setState đồng bộ đầu effect)
+  // Tải danh sách câu hỏi qua forumService.getPosts
   React.useEffect(() => {
     let isMounted = true;
 
     async function fetchForumList() {
-      const res = await forumService.getPosts({
-        page: 1,
-        limit: 100,
-      });
-      if (!isMounted) return;
-      setPosts(res.items);
-      setSavedPostIds((prev) => {
-        const next = { ...prev };
-        for (const item of res.items) {
-          if (item.isBookmarked) {
-            next[item.id] = true;
-          }
+      try {
+        const res = await forumService.getPosts({
+          page: 1,
+          limit: 100,
+        });
+        if (!isMounted) return;
+        if (res && res.items && res.items.length > 0) {
+          setPosts(res.items);
+          setSavedPostIds((prev) => {
+            const next = { ...prev };
+            for (const item of res.items) {
+              if (item.isBookmarked) {
+                next[item.id] = true;
+              }
+            }
+            return next;
+          });
         }
-        return next;
-      });
-      setIsLoading(false);
+      } catch {
+        // Fallback giữ nguyên 20 câu seed
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
     }
 
     void fetchForumList();
