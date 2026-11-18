@@ -33,8 +33,13 @@ export default function ForumDetailPage() {
 
   // Tìm topic trong 20 câu hỏi seed chuẩn từ Backend
   const post = React.useMemo(() => {
+    const cleanSlug = decodedSlug.trim().toLowerCase();
     const found = ALL_FORUM_SEED_POSTS.find(
-      (p) => p.slug === decodedSlug || p.id === decodedSlug
+      (p) =>
+        p.slug?.toLowerCase() === cleanSlug ||
+        p.id.toLowerCase() === cleanSlug ||
+        (p.slug && p.slug.toLowerCase().includes(cleanSlug)) ||
+        (p.slug && cleanSlug.includes(p.slug.toLowerCase()))
     );
     if (found) {
       return found;
@@ -73,6 +78,17 @@ export default function ForumDetailPage() {
   React.useEffect(() => {
     setPostLikes(post.likesCount || 35);
   }, [post.likesCount]);
+
+  // Tự động cuộn mượt xuống phần bình luận khi mở trang chi tiết
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      const cmtSection = document.getElementById('forum-comments-section');
+      if (cmtSection) {
+        cmtSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, []);
 
   const togglePostLike = () => {
     const next = !hasLikedPost;
@@ -209,13 +225,15 @@ export default function ForumDetailPage() {
           </Card>
 
           {/* ── COMPONENT FORUM COMMENT SECTION ── */}
-          <ForumCommentSection
-            postId={post.id}
-            postSlug={post.slug}
-            postTitle={post.title}
-            initialComments={(post as any).initialComments}
-            isLocked={Boolean((post as any).isLocked || (post as any).is_locked)}
-          />
+          <div id="forum-comments-section">
+            <ForumCommentSection
+              postId={post.id}
+              postSlug={post.slug}
+              postTitle={post.title}
+              initialComments={(post as any).initialComments}
+              isLocked={Boolean((post as any).isLocked || (post as any).is_locked)}
+            />
+          </div>
         </div>
 
         {/* Sidebar (4 cols) */}

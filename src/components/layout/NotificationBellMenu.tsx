@@ -161,6 +161,24 @@ export function NotificationBellMenu() {
     markAsRead(item.id);
     if (item.link) {
       setIsOpen(false);
+
+      if (typeof window !== 'undefined') {
+        try {
+          const url = new URL(item.link, window.location.origin);
+          const postSlug =
+            url.searchParams.get('post') ||
+            (url.pathname.startsWith('/forum/') ? url.pathname.replace('/forum/', '') : null);
+
+          if (postSlug && window.location.pathname === '/forum') {
+            window.dispatchEvent(
+              new CustomEvent('schoolify:open-forum-post', {
+                detail: { postSlug },
+              })
+            );
+          }
+        } catch {}
+      }
+
       router.push(item.link);
     }
   };

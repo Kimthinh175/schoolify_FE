@@ -86,7 +86,61 @@ export default function ForumPage() {
   const [newContent, setNewContent] = React.useState('');
   const [posts, setPosts] = React.useState<ForumPost[]>(ALL_FORUM_SEED_POSTS);
   const [expandedPostId, setExpandedPostId] = React.useState<string | null>(null);
+  const [highlightedPostId, setHighlightedPostId] = React.useState<string | null>(null);
   const [likedPosts, setLikedPosts] = React.useState<Record<string, boolean>>({});
+
+  // Tự động mở rộng & cuộn mượt tới bài viết khi truy cập từ Chuông thông báo
+  const focusAndExpandPost = React.useCallback(
+    (targetSlugOrId: string) => {
+      const cleanTarget = targetSlugOrId.trim().toLowerCase();
+      const matched = posts.find(
+        (p) =>
+          p.id.toLowerCase() === cleanTarget ||
+          (p.slug && p.slug.toLowerCase() === cleanTarget) ||
+          (p.slug && p.slug.toLowerCase().includes(cleanTarget)) ||
+          (p.slug && cleanTarget.includes(p.slug.toLowerCase()))
+      );
+
+      if (matched) {
+        setExpandedPostId(matched.id);
+        setHighlightedPostId(matched.id);
+
+        setTimeout(() => {
+          const el = document.getElementById(`forum-post-${matched.id}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 300);
+
+        setTimeout(() => {
+          setHighlightedPostId(null);
+        }, 5000);
+      }
+    },
+    [posts]
+  );
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const postParam = searchParams.get('post');
+      if (postParam) {
+        focusAndExpandPost(postParam);
+      }
+    }
+
+    const handleOpenPostEvent = (e: any) => {
+      const slug = e?.detail?.postSlug;
+      if (slug) {
+        focusAndExpandPost(slug);
+      }
+    };
+
+    window.addEventListener('schoolify:open-forum-post', handleOpenPostEvent);
+    return () => {
+      window.removeEventListener('schoolify:open-forum-post', handleOpenPostEvent);
+    };
+  }, [focusAndExpandPost]);
 
   // Modal Báo cáo & Yêu cầu đăng nhập
   const [isReportModalOpen, setIsReportModalOpen] = React.useState(false);
@@ -375,12 +429,16 @@ export default function ForumPage() {
               return (
                 <motion.div key={post.id} {...fadeUp(idx * 0.03)}>
                   <Card
+                    id={`forum-post-${post.id}`}
+                    data-slug={post.slug}
                     className={cn(
                       'p-5 sm:p-6 rounded-2xl border transition-all bg-white dark:bg-slate-900',
                       post.isPinned
                         ? 'border-[#00B8DD]/50 bg-gradient-to-r from-[#E6F8FC]/30 to-white dark:from-slate-850 dark:to-slate-900'
                         : 'border-slate-200 dark:border-slate-800 hover:border-[#00B8DD]/40',
-                      isExpanded && 'ring-2 ring-[#00B8DD]/30 shadow-md'
+                      isExpanded && 'ring-2 ring-[#00B8DD]/30 shadow-md',
+                      highlightedPostId === post.id &&
+                        'ring-4 ring-[#00B8DD] border-[#00B8DD] shadow-xl animate-pulse'
                     )}
                   >
                     <div className="space-y-3">
