@@ -19,6 +19,7 @@ import {
   User,
   Award,
   CreditCard,
+  ChevronDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
@@ -44,6 +45,16 @@ const LOGIN_ROLES = [
   },
 ];
 
+const NAV_LINKS = [
+  { label: 'Luyện Thi', href: '/luyen-thi' },
+  { label: 'Bảng Xếp Hạng', href: '/leaderboard' },
+  { label: 'Diễn Đàn', href: '/forum' },
+  { label: 'Gói Đăng Ký', href: '/pricing' },
+  { label: 'Khám Phá Khóa Học', href: '/courses' },
+  { label: 'Tin Tức', href: '/news' },
+  { label: 'Giới Thiệu', href: '/about' },
+];
+
 export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => void } = {}) {
   const router = useRouter();
   const { user, isAuthenticated, logout, fetchMe, currentRole } = useAuthStore();
@@ -65,7 +76,29 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
   const [checkedInToday, setCheckedInToday] = React.useState(false);
 
   const headerRef = React.useRef<HTMLElement | null>(null);
+  const headerRowRef = React.useRef<HTMLDivElement | null>(null);
+  const logoGroupRef = React.useRef<HTMLDivElement | null>(null);
+  const rightCtasRef = React.useRef<HTMLDivElement | null>(null);
+  const measureNavRef = React.useRef<HTMLDivElement | null>(null);
+  const moreMenuRef = React.useRef<HTMLDivElement | null>(null);
+  const moreMenuTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const [visibleNavCount, setVisibleNavCount] = React.useState<number>(NAV_LINKS.length);
+  const [canCenterXlNav, setCanCenterXlNav] = React.useState<boolean>(true);
+  const [moreMenuOpen, setMoreMenuOpen] = React.useState<boolean>(false);
+
   const pathname = usePathname();
+
+  const handleMoreMenuEnter = () => {
+    if (moreMenuTimeoutRef.current) clearTimeout(moreMenuTimeoutRef.current);
+    setMoreMenuOpen(true);
+  };
+
+  const handleMoreMenuLeave = () => {
+    moreMenuTimeoutRef.current = setTimeout(() => {
+      setMoreMenuOpen(false);
+    }, 200);
+  };
 
   const handleUserMenuEnter = () => {
     if (userMenuTimeoutRef.current) clearTimeout(userMenuTimeoutRef.current);
@@ -272,6 +305,7 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
       setMobileMenuOpen(false);
       setUserMenuOpen(false);
       setPointsMenuOpen(false);
+      setMoreMenuOpen(false);
     }
   }, [pathname]);
 
@@ -283,9 +317,20 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
         setMobileMenuOpen(false);
         setUserMenuOpen(false);
         setPointsMenuOpen(false);
+        setMoreMenuOpen(false);
+      }
+    };
+    const handleClickOutside = (e: MouseEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+        setMoreMenuOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   // Lắng nghe sự kiện đăng nhập thành công từ tab con / popup window
@@ -361,15 +406,112 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
     };
   }, []);
 
-  const navLinks = [
-    { label: 'Luyện Thi', href: '/luyen-thi' },
-    { label: 'Bảng Xếp Hạng', href: '/leaderboard' },
-    { label: 'Diễn Đàn', href: '/forum' },
-    { label: 'Gói Đăng Ký', href: '/pricing' },
-    { label: 'Khám Phá Khóa Học', href: '/courses' },
-    { label: 'Tin Tức', href: '/news' },
-    { label: 'Giới Thiệu', href: '/about' },
-  ];
+  const recomputeVisibleNav = React.useCallback(() => {
+    const rowEl = headerRowRef.current;
+    const logoEl = logoGroupRef.current;
+    const rightEl = rightCtasRef.current;
+    const measureEl = measureNavRef.current;
+    if (!rowEl || !logoEl || !rightEl || !measureEl) return;
+
+    if (window.innerWidth < 768) {
+      setCanCenterXlNav(true);
+      setVisibleNavCount(NAV_LINKS.length);
+      return;
+    }
+
+    const rowRect = rowEl.getBoundingClientRect();
+    const rowStyle = window.getComputedStyle(rowEl);
+    const padLeft = parseFloat(rowStyle.paddingLeft) || 0;
+    const padRight = parseFloat(rowStyle.paddingRight) || 0;
+    const innerWidth = rowRect.width - padLeft - padRight;
+
+    const logoWidth = logoEl.getBoundingClientRect().width;
+    const rightWidth = rightEl.getBoundingClientRect().width;
+
+    const itemEls = Array.from(measureEl.querySelectorAll<HTMLElement>('[data-measure-nav-item]'));
+    const moreEl = measureEl.querySelector<HTMLElement>('[data-measure-nav-more]');
+    if (itemEls.length !== NAV_LINKS.length || !moreEl) return;
+
+    const navStyle = window.getComputedStyle(measureEl);
+    const navGap = parseFloat(navStyle.columnGap || navStyle.gap) || 8;
+    const itemWidths = itemEls.map((el) => Math.ceil(el.getBoundingClientRect().width));
+    const moreBtnWidth = Math.ceil(moreEl.getBoundingClientRect().width);
+
+    const totalAllWidth =
+      itemWidths.reduce((sum, w) => sum + w, 0) + navGap * Math.max(0, itemWidths.length - 1);
+
+    const safetyBuffer = 24;
+    const isXl = window.innerWidth >= 1280;
+    const centeredSideMax = Math.max(logoWidth, rightWidth);
+    const centeredBudget = innerWidth - 2 * centeredSideMax - 2 * safetyBuffer;
+    const flexBudget = innerWidth - logoWidth - rightWidth - 2 * safetyBuffer;
+
+    if (isXl && totalAllWidth <= centeredBudget) {
+      setCanCenterXlNav(true);
+      setVisibleNavCount(NAV_LINKS.length);
+      return;
+    }
+
+    setCanCenterXlNav(false);
+
+    if (totalAllWidth <= flexBudget) {
+      setVisibleNavCount(NAV_LINKS.length);
+      return;
+    }
+
+    let usedWidth = 0;
+    let fitCount = 0;
+    for (let i = 0; i < itemWidths.length; i++) {
+      const nextItemWidth = itemWidths[i] + (fitCount > 0 ? navGap : 0);
+      const neededWithMore = usedWidth + nextItemWidth + navGap + moreBtnWidth;
+      if (neededWithMore <= flexBudget) {
+        usedWidth += nextItemWidth;
+        fitCount++;
+      } else {
+        break;
+      }
+    }
+
+    setVisibleNavCount(Math.max(0, fitCount));
+  }, []);
+
+  React.useEffect(() => {
+    recomputeVisibleNav();
+    const rafId = window.requestAnimationFrame(recomputeVisibleNav);
+
+    const observer =
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(() => recomputeVisibleNav())
+        : null;
+
+    if (observer) {
+      if (headerRowRef.current) observer.observe(headerRowRef.current);
+      if (logoGroupRef.current) observer.observe(logoGroupRef.current);
+      if (rightCtasRef.current) observer.observe(rightCtasRef.current);
+      if (measureNavRef.current) observer.observe(measureNavRef.current);
+    }
+
+    window.addEventListener('resize', recomputeVisibleNav);
+    document.fonts?.ready?.then(() => recomputeVisibleNav()).catch(() => {});
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      observer?.disconnect();
+      window.removeEventListener('resize', recomputeVisibleNav);
+    };
+  }, [recomputeVisibleNav, isMounted, isAuthenticated, isPointsLoading, isAdmin, isTeacher]);
+
+  React.useEffect(() => {
+    if (visibleNavCount >= NAV_LINKS.length) {
+      setMoreMenuOpen(false);
+    }
+  }, [visibleNavCount]);
+
+  const visibleNavLinks = NAV_LINKS.slice(0, visibleNavCount);
+  const overflowNavLinks = NAV_LINKS.slice(visibleNavCount);
+  const isOverflowActive = overflowNavLinks.some(
+    (item) => pathname === item.href || pathname.startsWith(item.href + '/')
+  );
 
   return (
     <>
@@ -378,10 +520,43 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
         ref={headerRef}
         className="fixed top-0 left-0 right-0 z-50 w-full transition-colors duration-200 border-b dark:border-slate-800 bg-white dark:bg-slate-950 border-slate-200/80 shadow-xs"
       >
-        <div className="mx-auto flex xl:grid xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] h-20 max-w-7xl items-center justify-between gap-2 px-4 sm:px-6 lg:px-8">
+        {/* Hidden measurer to compute exact desktop nav widths without layout flicker */}
+        <div
+          ref={measureNavRef}
+          aria-hidden="true"
+          className="pointer-events-none invisible fixed -top-[9999px] left-0 hidden md:flex items-center gap-1 sm:gap-1.5 lg:gap-2"
+        >
+          {NAV_LINKS.map((item) => (
+            <span
+              key={`measure-${item.href}`}
+              data-measure-nav-item
+              className="py-2.5 px-2 lg:px-3 text-xs lg:text-sm font-semibold whitespace-nowrap"
+            >
+              {item.label}
+            </span>
+          ))}
+          <span
+            data-measure-nav-more
+            className="inline-flex items-center gap-1 py-2.5 px-2 lg:px-3 text-xs lg:text-sm font-semibold whitespace-nowrap"
+          >
+            <span>Các mục khác</span>
+            <ChevronDown className="w-3.5 h-3.5 shrink-0" />
+          </span>
+        </div>
+
+        <div
+          ref={headerRowRef}
+          className={cn(
+            'mx-auto flex h-20 max-w-7xl items-center justify-between gap-2 px-4 sm:px-6 lg:px-8',
+            canCenterXlNav && 'xl:grid xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]'
+          )}
+        >
 
           {/* ── Brand Logo & Mobile Sidebar Trigger ── */}
-          <div className="flex items-center gap-1.5 shrink-0 xl:justify-self-start">
+          <div
+            ref={logoGroupRef}
+            className={cn('flex items-center gap-1.5 shrink-0', canCenterXlNav && 'xl:justify-self-start')}
+          >
             {onOpenMobileSidebar && (
               <button
                 type="button"
@@ -409,8 +584,13 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
           </div>
 
           {/* ── Desktop Navigation Links ── */}
-          <nav className="hidden md:flex items-center gap-1 sm:gap-1.5 lg:gap-2 h-full xl:justify-self-center">
-            {navLinks.map((item) => {
+          <nav
+            className={cn(
+              'hidden md:flex items-center gap-1 sm:gap-1.5 lg:gap-2 h-full min-w-0',
+              canCenterXlNav && 'xl:justify-self-center'
+            )}
+          >
+            {visibleNavLinks.map((item) => {
               const isActive =
                 item.href === '/'
                   ? pathname === '/'
@@ -421,7 +601,7 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'relative py-2.5 px-2 lg:px-3 text-xs lg:text-sm font-semibold transition-colors whitespace-nowrap',
+                    'relative py-2.5 px-2 lg:px-3 text-xs lg:text-sm font-semibold transition-colors whitespace-nowrap shrink-0',
                     isActive
                       ? 'text-[#007D99] dark:text-[#00B8DD]'
                       : 'text-slate-600 hover:text-[#007D99] dark:text-slate-300 dark:hover:text-[#00B8DD]'
@@ -438,10 +618,98 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
                 </Link>
               );
             })}
+
+            {overflowNavLinks.length > 0 && (
+              <div
+                ref={moreMenuRef}
+                className="relative flex items-center h-full shrink-0"
+                onMouseEnter={handleMoreMenuEnter}
+                onMouseLeave={handleMoreMenuLeave}
+              >
+                <button
+                  type="button"
+                  onClick={() => setMoreMenuOpen((prev) => !prev)}
+                  data-testid="navbar-more-menu-btn"
+                  aria-expanded={moreMenuOpen}
+                  aria-haspopup="menu"
+                  className={cn(
+                    'relative inline-flex items-center gap-1 py-2.5 px-2 lg:px-3 text-xs lg:text-sm font-semibold transition-colors whitespace-nowrap cursor-pointer rounded-xl',
+                    isOverflowActive || moreMenuOpen
+                      ? 'text-[#007D99] dark:text-[#00B8DD]'
+                      : 'text-slate-600 hover:text-[#007D99] dark:text-slate-300 dark:hover:text-[#00B8DD]'
+                  )}
+                >
+                  <span>Các mục khác</span>
+                  <ChevronDown
+                    className={cn(
+                      'w-3.5 h-3.5 shrink-0 transition-transform duration-200',
+                      moreMenuOpen && 'rotate-180'
+                    )}
+                  />
+                  {isOverflowActive && (
+                    <motion.div
+                      layoutId="navbar-active-underline"
+                      className="absolute bottom-0 inset-x-1.5 h-[2.5px] bg-[#00B8DD] rounded-full"
+                      transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                    />
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {moreMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 6, scale: 0.96 }}
+                      transition={{ duration: 0.15, ease: 'easeOut' }}
+                      data-testid="navbar-more-menu-dropdown"
+                      role="menu"
+                      className={cn(
+                        'absolute top-[calc(100%-10px)] w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xl shadow-slate-900/10 dark:shadow-black/50 p-1.5 z-50',
+                        visibleNavCount === 0 ? 'left-0' : 'right-0'
+                      )}
+                    >
+                      {overflowNavLinks.map((item) => {
+                        const isActive =
+                          item.href === '/'
+                            ? pathname === '/'
+                            : pathname === item.href || pathname.startsWith(item.href + '/');
+
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            role="menuitem"
+                            onClick={() => setMoreMenuOpen(false)}
+                            className={cn(
+                              'flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors',
+                              isActive
+                                ? 'bg-[#E6F8FC] text-[#007D99] dark:bg-[#00B8DD]/15 dark:text-[#00B8DD]'
+                                : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-[#007D99] dark:hover:text-[#00B8DD]'
+                            )}
+                          >
+                            <span>{item.label}</span>
+                            {isActive && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#00B8DD] shrink-0" />
+                            )}
+                          </Link>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
           </nav>
 
           {/* ── Desktop Right CTAs ── */}
-          <div className="hidden md:flex items-center justify-end gap-2.5 xl:justify-self-end">
+          <div
+            ref={rightCtasRef}
+            className={cn(
+              'hidden md:flex items-center justify-end gap-2.5 shrink-0',
+              canCenterXlNav && 'xl:justify-self-end'
+            )}
+          >
             <NotificationBellMenu />
             <ThemeToggle />
 
@@ -1005,7 +1273,7 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
             >
               <div className="flex flex-col space-y-4">
                 <div className="space-y-1">
-                  {navLinks.map((item) => {
+                  {NAV_LINKS.map((item) => {
                     const isActive =
                       item.href === '/'
                         ? pathname === '/'
