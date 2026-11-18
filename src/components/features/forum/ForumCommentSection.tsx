@@ -189,11 +189,113 @@ export function ForumCommentSection({
   isLoggedIn = true,
   currentUser,
 }: ForumCommentSectionProps) {
-  const [comments, setComments] = React.useState<ForumCommentItem[]>(
-    initialComments && initialComments.length > 0
-      ? initialComments
-      : DEFAULT_SAMPLE_COMMENTS
+  const [highlightedCommentId, setHighlightedCommentId] = React.useState<string | null>(null);
+
+  const [comments, setComments] = React.useState<ForumCommentItem[]>(() => {
+    const base =
+      initialComments && initialComments.length > 0
+        ? initialComments
+        : DEFAULT_SAMPLE_COMMENTS;
+    if (typeof window === 'undefined') return base;
+    try {
+      const keys = [
+        postSlug ? `schoolify_forum_comments_${postSlug}` : null,
+        postId ? `schoolify_forum_comments_${postId}` : null,
+      ].filter(Boolean) as string[];
+
+      for (const k of keys) {
+        const saved = localStorage.getItem(k);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        }
+      }
+    } catch {}
+    return base;
+  });
+
+  const updateAndPersistComments = React.useCallback(
+    (updater: (prev: ForumCommentItem[]) => ForumCommentItem[]) => {
+      setComments((prev) => {
+        const next = updater(prev);
+        if (typeof window !== 'undefined') {
+          try {
+            if (postSlug) {
+              localStorage.setItem(`schoolify_forum_comments_${postSlug}`, JSON.stringify(next));
+            }
+            if (postId) {
+              localStorage.setItem(`schoolify_forum_comments_${postId}`, JSON.stringify(next));
+            }
+          } catch {}
+        }
+        return next;
+      });
+    },
+    [postId, postSlug]
   );
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const keys = [
+        postSlug ? `schoolify_forum_comments_${postSlug}` : null,
+        postId ? `schoolify_forum_comments_${postId}` : null,
+      ].filter(Boolean) as string[];
+
+      for (const k of keys) {
+        const saved = localStorage.getItem(k);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setComments(parsed);
+            break;
+          }
+        }
+      }
+    } catch {}
+
+    const checkHashAndScroll = () => {
+      const hash = window.location.hash;
+      if (hash && hash.length > 1) {
+        const rawTarget = hash.replace(/^#/, '');
+        const targetCommentId = rawTarget.replace(/^comment-/, '');
+
+        const candidates = [
+          rawTarget,
+          `comment-${rawTarget}`,
+          targetCommentId,
+          `comment-${targetCommentId}`,
+        ];
+
+        let foundEl: HTMLElement | null = null;
+        for (const cid of candidates) {
+          const el = document.getElementById(cid);
+          if (el) {
+            foundEl = el;
+            setHighlightedCommentId(targetCommentId);
+            break;
+          }
+        }
+
+        if (foundEl) {
+          setTimeout(() => {
+            foundEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 300);
+          setTimeout(() => setHighlightedCommentId(null), 5000);
+        }
+      }
+    };
+
+    checkHashAndScroll();
+    window.addEventListener('hashchange', checkHashAndScroll);
+    window.addEventListener('schoolify:open-forum-post', checkHashAndScroll);
+    return () => {
+      window.removeEventListener('hashchange', checkHashAndScroll);
+      window.removeEventListener('schoolify:open-forum-post', checkHashAndScroll);
+    };
+  }, [postId, postSlug]);
   const [isLockedState, setIsLockedState] = React.useState(isLocked);
   const [apiSuccessMessage, setApiSuccessMessage] = React.useState<string | null>(null);
   const [content, setContent] = React.useState('');
@@ -294,7 +396,14 @@ export function ForumCommentSection({
                 }))
               : [],
           }));
-          setComments(mapped);
+          setComments((prev) => {
+            const localOnly = prev.filter(
+              (p) =>
+                !mapped.some((m) => m.id === p.id) &&
+                (p.id.startsWith('user-') || p.id.startsWith('reply-') || p.id.startsWith('cmt-'))
+            );
+            return [...localOnly, ...mapped];
+          });
         }
       } catch {
         // Fallback sang danh sách mẫu
@@ -357,7 +466,7 @@ export function ForumCommentSection({
   const handleToggleLike = async (commentId: string) => {
     if (!requireAuth('thả Hữu ích (ThumbsUp) cho lời giải')) return;
 
-    setComments((prev) =>
+    updateAndPersistComments((prev) =>
       prev.map((c) => {
         if (c.id === commentId) {
           const nextIsLiked = !c.isLiked;
@@ -390,7 +499,7 @@ export function ForumCommentSection({
   const handleToggleReplyLike = async (rootCommentId: string, replyId: string) => {
     if (!requireAuth('thả Hữu ích (ThumbsUp) cho phản hồi')) return;
 
-    setComments((prev) =>
+    updateAndPersistComments((prev) =>
       prev.map((c) => {
         if (c.id === rootCommentId && c.replies) {
           return {
@@ -456,7 +565,7 @@ export function ForumCommentSection({
       }
 
       const isAcceptedNow = Boolean(json?.data?.is_accepted);
-      setComments((prev) =>
+      updateAndPersistComments((prev) =>
         prev.map((c) => ({
           ...c,
           isAccepted: c.id === commentId ? isAcceptedNow : false,
@@ -467,12 +576,13 @@ export function ForumCommentSection({
         setApiSuccessMessage(
           '🎉 Chúc mừng bạn đã công nhận lời giải đúng! Đã cộng thưởng +10 Ngọc Tri Thức cho tác giả bài giải.'
         );
+        const targetSlugOrId = postSlug || postId;
         addNotification({
           id: `notif-reward-${Date.now()}`,
           type: 'success',
           title: '🎉 Nhận thưởng +10 Ngọc Tri Thức!',
           description: `Lời giải trong bài "${postTitle || 'Hỏi đáp diễn đàn'}" đã được công nhận là Lời giải chuẩn nhất (+10 Ngọc).`,
-          link: postSlug ? `/forum/${postSlug}` : `/forum`,
+          link: `/forum?post=${targetSlugOrId}#comment-${commentId}`,
           category: 'FORUM_REWARD',
         });
       } else {
@@ -496,7 +606,7 @@ export function ForumCommentSection({
     }
 
     if (parentId) {
-      setComments((prev) =>
+      updateAndPersistComments((prev) =>
         prev.map((c) => {
           if (c.id === parentId && c.replies) {
             return {
@@ -508,7 +618,7 @@ export function ForumCommentSection({
         })
       );
     } else {
-      setComments((prev) => prev.filter((c) => c.id !== commentId));
+      updateAndPersistComments((prev) => prev.filter((c) => c.id !== commentId));
     }
   };
 
@@ -584,20 +694,41 @@ export function ForumCommentSection({
       replies: [],
     };
 
-    setComments((prev) => [newComment, ...prev]);
+    updateAndPersistComments((prev) => [newComment, ...prev]);
     setContent('');
     setAttachedImages([]);
     setActiveTab('write');
     setIsSubmitting(false);
 
+    // Kích hoạt viền sáng nổi bật và tự động cuộn tới lời giải vừa đăng
+    setHighlightedCommentId(createdCommentId);
+    setTimeout(() => {
+      const el =
+        document.getElementById(`comment-${createdCommentId}`) ||
+        document.getElementById(createdCommentId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 250);
+    setTimeout(() => setHighlightedCommentId(null), 5000);
+
+    const targetSlugOrId = postSlug || postId;
     addNotification({
       id: `notif-cmt-${Date.now()}`,
       type: 'info',
       title: '💬 Bạn vừa gửi lời giải mới',
       description: `Đã gửi lời giải cho bài viết "${postTitle || 'Hỏi đáp diễn đàn'}".`,
-      link: postSlug ? `/forum/${postSlug}` : `/forum`,
+      link: `/forum?post=${targetSlugOrId}#comment-${createdCommentId}`,
       category: 'FORUM_COMMENT',
     });
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('schoolify:forum-comment-added', {
+          detail: { postId, postSlug, commentId: createdCommentId },
+        })
+      );
+    }
   };
 
   // Gửi phản hồi lồng cấp 2: Gửi API kèm cập nhật replies_count & bắn Notification
@@ -669,7 +800,7 @@ export function ForumCommentSection({
       isLiked: false,
     };
 
-    setComments((prev) =>
+    updateAndPersistComments((prev) =>
       prev.map((c) => {
         if (c.id === rootCommentId) {
           return {
@@ -686,14 +817,35 @@ export function ForumCommentSection({
     setReplyImages([]);
     setReplyActiveTab('write');
 
+    // Kích hoạt viền sáng nổi bật và tự động cuộn tới phản hồi vừa gửi
+    setHighlightedCommentId(createdReplyId);
+    setTimeout(() => {
+      const el =
+        document.getElementById(`comment-${createdReplyId}`) ||
+        document.getElementById(createdReplyId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 250);
+    setTimeout(() => setHighlightedCommentId(null), 5000);
+
+    const targetSlugOrId = postSlug || postId;
     addNotification({
       id: `notif-reply-${Date.now()}`,
       type: 'info',
       title: `💬 Đã gửi phản hồi cho ${replyToName}`,
       description: `Đã gửi câu trả lời cấp 2 trong bài "${postTitle || 'Hỏi đáp diễn đàn'}".`,
-      link: postSlug ? `/forum/${postSlug}` : `/forum`,
+      link: `/forum?post=${targetSlugOrId}#comment-${createdReplyId}`,
       category: 'FORUM_COMMENT',
     });
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('schoolify:forum-comment-added', {
+          detail: { postId, postSlug, commentId: createdReplyId },
+        })
+      );
+    }
   };
 
   // Sắp xếp: Luôn đưa Lời giải được công nhận (isAccepted = true) lên trên cùng
@@ -930,13 +1082,21 @@ export function ForumCommentSection({
         ) : (
           sortedComments.map((rootCmt) => {
             const isAccepted = Boolean(rootCmt.isAccepted);
+            const domId = rootCmt.id.startsWith('comment-') ? rootCmt.id : `comment-${rootCmt.id}`;
+            const isHighlighted =
+              highlightedCommentId === rootCmt.id ||
+              highlightedCommentId === domId ||
+              (rootCmt.id.startsWith('comment-') && highlightedCommentId === rootCmt.id.replace('comment-', ''));
 
             return (
               <div key={rootCmt.id} className="space-y-3">
                 {/* ── THẺ LỜI GIẢI CẤP 1 (GỐC) ── */}
                 <Card
+                  id={domId}
                   className={cn(
                     'p-5 sm:p-6 rounded-2xl transition-all relative overflow-hidden',
+                    isHighlighted &&
+                      'ring-4 ring-[#00B8DD] border-[#00B8DD] shadow-xl animate-pulse scale-[1.005]',
                     // Khung nổi bật Lời giải được công nhận có viền xanh ngọc lục bảo #10B981
                     isAccepted
                       ? 'border-2 border-[#10B981] bg-gradient-to-br from-emerald-50/70 via-white to-emerald-50/30 dark:from-emerald-950/30 dark:via-slate-900 dark:to-emerald-950/20 shadow-lg shadow-emerald-500/10'
@@ -1199,11 +1359,23 @@ export function ForumCommentSection({
                 {/* ── DANH SÁCH BÌNH LUẬN PHẢN HỒI LỒNG CẤP 2 (NESTED REPLIES) ── */}
                 {rootCmt.replies && rootCmt.replies.length > 0 && (
                   <div className="ml-2.5 sm:ml-10 pl-2 sm:pl-4 border-l-2 border-[#00B8DD]/30 dark:border-[#00B8DD]/20 space-y-3 pt-1 max-w-full overflow-hidden">
-                    {rootCmt.replies.map((reply) => (
-                      <Card
-                        key={reply.id}
-                        className="p-3.5 sm:p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/70 space-y-2 hover:border-slate-300 dark:hover:border-slate-700 transition-all"
-                      >
+                    {rootCmt.replies.map((reply) => {
+                      const replyDomId = reply.id.startsWith('comment-') ? reply.id : `comment-${reply.id}`;
+                      const isReplyHighlighted =
+                        highlightedCommentId === reply.id ||
+                        highlightedCommentId === replyDomId ||
+                        (reply.id.startsWith('comment-') && highlightedCommentId === reply.id.replace('comment-', ''));
+
+                      return (
+                        <Card
+                          id={replyDomId}
+                          key={reply.id}
+                          className={cn(
+                            'p-3.5 sm:p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/70 space-y-2 hover:border-slate-300 dark:hover:border-slate-700 transition-all',
+                            isReplyHighlighted &&
+                              'ring-4 ring-[#00B8DD] border-[#00B8DD] shadow-xl animate-pulse scale-[1.005]'
+                          )}
+                        >
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2.5">
                             <Avatar
@@ -1313,7 +1485,8 @@ export function ForumCommentSection({
                           </div>
                         </div>
                       </Card>
-                    ))}
+                    );
+                  })}
                   </div>
                 )}
               </div>

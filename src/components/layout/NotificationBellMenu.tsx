@@ -170,9 +170,12 @@ export function NotificationBellMenu() {
             (url.pathname.startsWith('/forum/') ? url.pathname.replace('/forum/', '') : null);
 
           if (postSlug && window.location.pathname === '/forum') {
+            if (url.hash) {
+              window.location.hash = url.hash;
+            }
             window.dispatchEvent(
               new CustomEvent('schoolify:open-forum-post', {
-                detail: { postSlug },
+                detail: { postSlug, hash: url.hash },
               })
             );
           }

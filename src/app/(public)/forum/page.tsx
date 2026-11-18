@@ -106,11 +106,29 @@ export default function ForumPage() {
         setHighlightedPostId(matched.id);
 
         setTimeout(() => {
+          const hash = window.location.hash;
+          if (hash && hash.length > 1) {
+            const rawTarget = hash.replace(/^#/, '');
+            const targetCommentId = rawTarget.replace(/^comment-/, '');
+            const candidates = [
+              rawTarget,
+              `comment-${rawTarget}`,
+              targetCommentId,
+              `comment-${targetCommentId}`,
+            ];
+            for (const cid of candidates) {
+              const commentEl = document.getElementById(cid);
+              if (commentEl) {
+                commentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+              }
+            }
+          }
           const el = document.getElementById(`forum-post-${matched.id}`);
           if (el) {
             el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
-        }, 300);
+        }, 350);
 
         setTimeout(() => {
           setHighlightedPostId(null);
@@ -136,9 +154,27 @@ export default function ForumPage() {
       }
     };
 
+    const handleCommentAdded = (e: any) => {
+      const pId = e?.detail?.postId;
+      const pSlug = e?.detail?.postSlug;
+      setPosts((prev) =>
+        prev.map((p) => {
+          if (p.id === pId || (pSlug && p.slug === pSlug)) {
+            return {
+              ...p,
+              repliesCount: (p.repliesCount || 0) + 1,
+            };
+          }
+          return p;
+        })
+      );
+    };
+
     window.addEventListener('schoolify:open-forum-post', handleOpenPostEvent);
+    window.addEventListener('schoolify:forum-comment-added', handleCommentAdded);
     return () => {
       window.removeEventListener('schoolify:open-forum-post', handleOpenPostEvent);
+      window.removeEventListener('schoolify:forum-comment-added', handleCommentAdded);
     };
   }, [focusAndExpandPost]);
 

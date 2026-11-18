@@ -24,7 +24,7 @@ const DEFAULT_FORUM_NOTIFICATIONS: AppNotificationItem[] = [
     type: 'success',
     title: '🎉 Nhận thưởng +10 Ngọc Tri Thức!',
     description: 'Lời giải của bạn trong bài "Toán 12: Tìm m để hàm số bậc ba đồng biến" đã được công nhận là Lời giải chuẩn nhất!',
-    link: '/forum?post=hoi-bai-toan-12-tim-m-de-ham-so-bac-ba-dong-bien',
+    link: '/forum?post=hoi-bai-toan-12-tim-m-de-ham-so-bac-ba-dong-bien#comment-comment-forum-seed-post-02-root',
     category: 'FORUM_REWARD',
     createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
     read: false,
@@ -34,7 +34,7 @@ const DEFAULT_FORUM_NOTIFICATIONS: AppNotificationItem[] = [
     type: 'info',
     title: '💬 Bài viết có lời giải mới',
     description: 'ThS. Nguyễn Văn Hùng vừa bình luận: "Em lưu ý xét dấu hệ số a khi khảo sát hàm số bậc ba nhé."',
-    link: '/forum?post=hoi-bai-toan-12-tim-m-de-ham-so-bac-ba-dong-bien',
+    link: '/forum?post=hoi-bai-toan-12-tim-m-de-ham-so-bac-ba-dong-bien#comment-comment-forum-seed-post-02-root',
     category: 'FORUM_COMMENT',
     createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
     read: false,
@@ -53,11 +53,12 @@ function readInitialNotifications(): AppNotificationItem[] {
           if (
             it.link &&
             (it.link.includes('/forum/toan-12-tim-m-de-ham-so-bac-ba-dong-bien') ||
-              it.link.includes('/forum/hoi-bai-toan-12-tim-m-de-ham-so-bac-ba-dong-bien'))
+              it.link.includes('/forum/hoi-bai-toan-12-tim-m-de-ham-so-bac-ba-dong-bien') ||
+              it.link.includes('post=hoi-bai-toan-12-tim-m-de-ham-so-bac-ba-dong-bien'))
           ) {
             return {
               ...it,
-              link: '/forum?post=hoi-bai-toan-12-tim-m-de-ham-so-bac-ba-dong-bien',
+              link: '/forum?post=hoi-bai-toan-12-tim-m-de-ham-so-bac-ba-dong-bien#comment-comment-forum-seed-post-02-root',
             };
           }
           if (it.link && it.link.startsWith('/forum/') && !it.link.includes('?')) {
