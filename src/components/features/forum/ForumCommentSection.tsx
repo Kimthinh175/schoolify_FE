@@ -141,31 +141,10 @@ export function ForumCommentSection({
   const [highlightedCommentId, setHighlightedCommentId] = React.useState<string | null>(null);
 
   const [comments, setComments] = React.useState<ForumCommentItem[]>(() => {
-    const base =
-      initialComments && initialComments.length > 0
-        ? initialComments
-        : [];
-    if (typeof window === 'undefined') return base;
-    try {
-      const keys = [
-        postSlug ? `schoolify_forum_comments_${postSlug}` : null,
-        postId ? `schoolify_forum_comments_${postId}` : null,
-      ].filter(Boolean) as string[];
-
-      for (const k of keys) {
-        const saved = localStorage.getItem(k);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
-          }
-        }
-      }
-    } catch {}
-    return base;
+    return initialComments && initialComments.length > 0 ? initialComments : [];
   });
 
-  // Đồng bộ comments khi initialComments props thay đổi
+  // Luôn đồng bộ khi initialComments thay đổi (khi mở bất kỳ câu nào trong 20 câu seed)
   React.useEffect(() => {
     if (initialComments && initialComments.length > 0) {
       setComments(initialComments);
@@ -194,23 +173,6 @@ export function ForumCommentSection({
 
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
-    try {
-      const keys = [
-        postSlug ? `schoolify_forum_comments_${postSlug}` : null,
-        postId ? `schoolify_forum_comments_${postId}` : null,
-      ].filter(Boolean) as string[];
-
-      for (const k of keys) {
-        const saved = localStorage.getItem(k);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setComments(parsed);
-            break;
-          }
-        }
-      }
-    } catch {}
 
     const checkHashAndScroll = () => {
       const hash = window.location.hash;
