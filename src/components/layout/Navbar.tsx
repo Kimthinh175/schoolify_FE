@@ -398,11 +398,13 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
               <img
                 src="/schoolify-logo.png"
                 alt="Schoolify"
+                suppressHydrationWarning
                 className="h-11 sm:h-12 md:h-14 w-auto object-contain transition-transform duration-200 group-hover:scale-105 dark:hidden"
               />
               <img
                 src="/am-ban.png"
                 alt="Schoolify"
+                suppressHydrationWarning
                 className="h-11 sm:h-12 md:h-14 w-auto object-contain transition-transform duration-200 group-hover:scale-105 hidden dark:block"
               />
             </Link>

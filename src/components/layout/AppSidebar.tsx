@@ -255,11 +255,13 @@ export function AppSidebar({
                 <img
                   src="/schoolify-logo.png"
                   alt="Schoolify"
+                  suppressHydrationWarning
                   className="h-11 sm:h-12 w-auto object-contain dark:hidden"
                 />
                 <img
                   src="/am-ban.png"
                   alt="Schoolify"
+                  suppressHydrationWarning
                   className="h-11 sm:h-12 w-auto object-contain hidden dark:block"
                 />
               </div>
