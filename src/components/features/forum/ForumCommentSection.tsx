@@ -20,6 +20,7 @@ import {
   Pin,
   Lock,
   Trash2,
+  Flag,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,8 @@ import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { MathRenderer } from '@/components/ui/math-renderer';
 import { cn } from '@/lib/utils';
+import { ReportModal } from './ReportModal';
+import { RequireLoginModal } from './RequireLoginModal';
 
 export type ForumReactionType = 'LIKE' | 'HELPFUL' | 'LOVE' | 'HAHA';
 
@@ -74,6 +77,8 @@ export interface ForumCommentSectionProps {
   className?: string;
   initialComments?: ForumCommentItem[];
   isLocked?: boolean;
+  isLoggedIn?: boolean;
+  currentUser?: { id?: string; name?: string; role?: string } | null;
 }
 
 // Các mẫu công thức toán học nhanh để học sinh chèn vào lời giải KaTeX
@@ -180,6 +185,8 @@ export function ForumCommentSection({
   className,
   initialComments,
   isLocked = false,
+  isLoggedIn = true,
+  currentUser,
 }: ForumCommentSectionProps) {
   const [comments, setComments] = React.useState<ForumCommentItem[]>(
     initialComments && initialComments.length > 0
@@ -197,6 +204,31 @@ export function ForumCommentSection({
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [replyActiveTab, setReplyActiveTab] = React.useState<'write' | 'preview'>('write');
 
+  // Modal kiểm soát đăng nhập & báo cáo vi phạm
+  const [isLoginModalOpen, setIsLoginModalOpen] = React.useState(false);
+  const [loginActionName, setLoginActionName] = React.useState('tham gia thảo luận');
+  const [isReportModalOpen, setIsReportModalOpen] = React.useState(false);
+  const [reportTarget, setReportTarget] = React.useState<{
+    type: 'POST' | 'COMMENT';
+    id: string;
+    title?: string;
+  }>({ type: 'COMMENT', id: '' });
+
+  const requireAuth = (actionName: string): boolean => {
+    if (isLoggedIn === false) {
+      setLoginActionName(actionName);
+      setIsLoginModalOpen(true);
+      return false;
+    }
+    return true;
+  };
+
+  const handleOpenReport = (type: 'POST' | 'COMMENT', id: string, title?: string) => {
+    if (!requireAuth('báo cáo vi phạm quy tắc cộng đồng')) return;
+    setReportTarget({ type, id, title });
+    setIsReportModalOpen(true);
+  };
+
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const replyFileInputRef = React.useRef<HTMLInputElement | null>(null);
   const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
@@ -205,7 +237,7 @@ export function ForumCommentSection({
     setIsLockedState(isLocked);
   }, [isLocked]);
 
-  // Thử tải dữ liệu bình luận từ API Backend (Stack ngày 14/11)
+  // Thử tải dữ liệu bình luận từ API Backend
   React.useEffect(() => {
     let isMounted = true;
     async function fetchComments() {
@@ -318,8 +350,10 @@ export function ForumCommentSection({
     }
   };
 
-  // Toggle Hữu ích (Like/ThumbsUp) cho lời giải cấp 1
-  const handleToggleLike = (commentId: string) => {
+  // Toggle Hữu ích (ThumbsUp) cho lời giải cấp 1 (Atomic update không race condition)
+  const handleToggleLike = async (commentId: string) => {
+    if (!requireAuth('thả Hữu ích (ThumbsUp) cho lời giải')) return;
+
     setComments((prev) =>
       prev.map((c) => {
         if (c.id === commentId) {
@@ -333,10 +367,26 @@ export function ForumCommentSection({
         return c;
       })
     );
+
+    try {
+      await fetch('http://localhost:3005/api/v1/forum/reactions/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetType: 'COMMENT',
+          targetId: commentId,
+          userId: 'seed-student-01',
+        }),
+      });
+    } catch {
+      // offline fallback
+    }
   };
 
   // Toggle Hữu ích cho phản hồi cấp 2
-  const handleToggleReplyLike = (rootCommentId: string, replyId: string) => {
+  const handleToggleReplyLike = async (rootCommentId: string, replyId: string) => {
+    if (!requireAuth('thả Hữu ích (ThumbsUp) cho phản hồi')) return;
+
     setComments((prev) =>
       prev.map((c) => {
         if (c.id === rootCommentId && c.replies) {
@@ -358,9 +408,72 @@ export function ForumCommentSection({
         return c;
       })
     );
+
+    try {
+      await fetch('http://localhost:3005/api/v1/forum/reactions/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetType: 'COMMENT',
+          targetId: replyId,
+          userId: 'seed-student-01',
+        }),
+      });
+    } catch {
+      // offline fallback
+    }
   };
 
-  // Xóa bình luận / phản hồi an toàn (Stack #16)
+  // Chốt Lời giải chuẩn nhất & Thưởng Ngọc Tri Thức (kèm chống gian lận)
+  const handleAcceptComment = async (commentId: string) => {
+    if (!requireAuth('công nhận Lời giải đúng (+10 Ngọc)')) return;
+
+    try {
+      const idOrSlug = postSlug || postId;
+      const res = await fetch(
+        `http://localhost:3005/api/v1/forum/posts/${idOrSlug}/accept-comment/${commentId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: 'seed-student-01',
+            rewardGems: 10,
+          }),
+        }
+      );
+
+      const json = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        alert(
+          json?.message ||
+            'Không thể công nhận lời giải này (lỗi quyền hạn hoặc chống gian lận).'
+        );
+        return;
+      }
+
+      const isAcceptedNow = Boolean(json?.data?.is_accepted);
+      setComments((prev) =>
+        prev.map((c) => ({
+          ...c,
+          isAccepted: c.id === commentId ? isAcceptedNow : false,
+        }))
+      );
+
+      if (isAcceptedNow) {
+        setApiSuccessMessage(
+          '🎉 Chúc mừng bạn đã công nhận lời giải đúng! Đã cộng thưởng +10 Ngọc Tri Thức cho tác giả bài giải.'
+        );
+      } else {
+        setApiSuccessMessage('Đã hủy công nhận lời giải đúng.');
+      }
+      setTimeout(() => setApiSuccessMessage(null), 4000);
+    } catch {
+      // fallback
+    }
+  };
+
+  // Xóa bình luận / phản hồi an toàn
   const handleDeleteComment = async (commentId: string, parentId?: string | null) => {
     if (!confirm('Bạn có chắc chắn muốn xóa bình luận / lời giải này không?')) return;
     try {
@@ -388,9 +501,10 @@ export function ForumCommentSection({
     }
   };
 
-  // Gửi lời giải mới (Cấp 1) - Stack #16: Gửi API kèm cập nhật comments_count & bắn Notification
+  // Gửi lời giải mới (Cấp 1): Gửi API kèm cập nhật comments_count & bắn Notification
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!requireAuth('gửi lời giải / bình luận mới')) return;
     if (!content.trim() && attachedImages.length === 0) return;
     if (isLockedState) {
       alert('Bài viết này đã bị Quản trị viên khóa bình luận (is_locked = true).');
@@ -466,8 +580,9 @@ export function ForumCommentSection({
     setIsSubmitting(false);
   };
 
-  // Gửi phản hồi lồng cấp 2 - Stack #16: Gửi API kèm cập nhật replies_count & bắn Notification
+  // Gửi phản hồi lồng cấp 2: Gửi API kèm cập nhật replies_count & bắn Notification
   const handleSubmitReply = async (rootCommentId: string, replyToName: string) => {
+    if (!requireAuth('gửi phản hồi thảo luận')) return;
     if (!replyContent.trim() && replyImages.length === 0) return;
     if (isLockedState) {
       alert('Bài viết này đã bị Quản trị viên khóa bình luận (is_locked = true).');
@@ -600,7 +715,7 @@ export function ForumCommentSection({
         )}
       </div>
 
-      {/* Thông báo thao tác thành công (Stack #16) */}
+      {/* Thông báo thao tác thành công */}
       {apiSuccessMessage && (
         <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs sm:text-sm font-semibold flex items-center gap-2.5 animate-in fade-in">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -608,7 +723,7 @@ export function ForumCommentSection({
         </div>
       )}
 
-      {/* ── STACK #16 & #12: XỬ LÝ KHÓA BÌNH LUẬN AN TOÀN HOẶC KHUNG VIẾT LỜI GIẢI ── */}
+      {/* ── XỬ LÝ KHÓA BÌNH LUẬN AN TOÀN HOẶC KHUNG VIẾT LỜI GIẢI ── */}
       {isLockedState ? (
         <Card className="p-4 sm:p-5 rounded-2xl border-2 border-amber-300/80 dark:border-amber-700/60 bg-amber-50/70 dark:bg-amber-950/30 shadow-sm flex items-start gap-3.5">
           <div className="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
@@ -774,7 +889,7 @@ export function ForumCommentSection({
       </Card>
       )}
 
-      {/* ── STACK #11: DANH SÁCH LỜI GIẢI PHÂN CẤP 2 CẤP & KHUNG NỔI BẬT LỜI GIẢI ĐƯỢC CÔNG NHẬN (#10B981) ── */}
+      {/* ── DANH SÁCH LỜI GIẢI PHÂN CẤP 2 CẤP & KHUNG NỔI BẬT LỜI GIẢI ĐƯỢC CÔNG NHẬN (#10B981) ── */}
       <div className="space-y-5">
         {sortedComments.length === 0 ? (
           <div className="p-8 text-center rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
@@ -793,13 +908,13 @@ export function ForumCommentSection({
                 <Card
                   className={cn(
                     'p-5 sm:p-6 rounded-2xl transition-all relative overflow-hidden',
-                    // STACK #11: Khung nổi bật Lời giải được công nhận có viền xanh ngọc lục bảo #10B981
+                    // Khung nổi bật Lời giải được công nhận có viền xanh ngọc lục bảo #10B981
                     isAccepted
                       ? 'border-2 border-[#10B981] bg-gradient-to-br from-emerald-50/70 via-white to-emerald-50/30 dark:from-emerald-950/30 dark:via-slate-900 dark:to-emerald-950/20 shadow-lg shadow-emerald-500/10'
                       : 'border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
                   )}
                 >
-                  {/* STACK #11: Huy hiệu xác thực Lời giải được công nhận */}
+                  {/* Huy hiệu xác thực Lời giải được công nhận */}
                   {isAccepted && (
                     <div className="mb-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-[#10B981] text-white shadow-md shadow-emerald-600/20">
                       <ShieldCheck className="w-4 h-4" />
@@ -869,7 +984,7 @@ export function ForumCommentSection({
                   {/* Footer tương tác: Nút Hữu ích (Like) & Nút Trả lời */}
                   <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-100 dark:border-slate-800/80 mt-4">
                     <div className="flex items-center gap-2">
-                      {/* STACK #11: Nút Hữu ích (Like/ThumbsUp) với bộ đếm */}
+                      {/* Nút Hữu ích (Like/ThumbsUp) với bộ đếm */}
                       <button
                         type="button"
                         onClick={() => handleToggleLike(rootCmt.id)}
@@ -885,6 +1000,24 @@ export function ForumCommentSection({
                         <ThumbsUp className="w-3.5 h-3.5" />
                         <span>Hữu ích ({rootCmt.likesCount})</span>
                       </button>
+
+                      {/* Nút Chốt Lời giải chuẩn nhất (+10 Ngọc Tri Thức) */}
+                      {!isLockedState && (
+                        <button
+                          type="button"
+                          onClick={() => handleAcceptComment(rootCmt.id)}
+                          title="Chốt lời giải đúng & cộng thưởng 10 Ngọc Tri Thức"
+                          className={cn(
+                            'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border',
+                            isAccepted
+                              ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                              : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/40'
+                          )}
+                        >
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                          <span>{isAccepted ? 'Đã công nhận đúng (+10 Ngọc) ✓' : 'Công nhận lời giải đúng (+10 Ngọc)'}</span>
+                        </button>
+                      )}
 
                       {/* Nút phản hồi mở form Cấp 2 (chỉ hiện khi chưa khóa) */}
                       {!isLockedState && (
@@ -902,7 +1035,18 @@ export function ForumCommentSection({
                         </button>
                       )}
 
-                      {/* Nút Xóa bình luận cấp 1 (Stack #16) */}
+                      {/* Nút Báo cáo vi phạm lời giải */}
+                      <button
+                        type="button"
+                        onClick={() => handleOpenReport('COMMENT', rootCmt.id, rootCmt.content)}
+                        title="Báo cáo vi phạm lời giải này"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+                      >
+                        <Flag className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Báo cáo</span>
+                      </button>
+
+                      {/* Nút Xóa bình luận cấp 1 */}
                       {(rootCmt.author.id === 'seed-student-01' ||
                         rootCmt.author.id === 'me' ||
                         rootCmt.id.startsWith('user-cmt')) && (
@@ -926,7 +1070,7 @@ export function ForumCommentSection({
 
                 {/* ── FORM TRẢ LỜI LỒNG CẤP 2 (KHI BẤM NÚT TRẢ LỜI) ── */}
                 {replyingToId === rootCmt.id && (
-                  <Card className="ml-6 sm:ml-12 p-4 rounded-xl border border-[#00B8DD]/40 bg-slate-50/80 dark:bg-slate-850/80 space-y-3 shadow-xs">
+                  <Card className="ml-2.5 sm:ml-10 p-3 sm:p-4 rounded-xl border border-[#00B8DD]/40 bg-slate-50/80 dark:bg-slate-850/80 space-y-3 shadow-xs max-w-full overflow-hidden">
                     <div className="flex items-center justify-between gap-2 border-b border-slate-200/60 dark:border-slate-700/60 pb-2">
                       <span className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
                         <CornerDownRight className="w-3.5 h-3.5 text-[#007D99] dark:text-[#00B8DD]" />
@@ -1023,9 +1167,9 @@ export function ForumCommentSection({
                   </Card>
                 )}
 
-                {/* ── STACK #11: DANH SÁCH BÌNH LUẬN PHẢN HỒI LỒNG CẤP 2 (NESTED REPLIES) ── */}
+                {/* ── DANH SÁCH BÌNH LUẬN PHẢN HỒI LỒNG CẤP 2 (NESTED REPLIES) ── */}
                 {rootCmt.replies && rootCmt.replies.length > 0 && (
-                  <div className="ml-6 sm:ml-12 pl-4 border-l-2 border-[#00B8DD]/30 dark:border-[#00B8DD]/20 space-y-3 pt-1">
+                  <div className="ml-2.5 sm:ml-10 pl-2 sm:pl-4 border-l-2 border-[#00B8DD]/30 dark:border-[#00B8DD]/20 space-y-3 pt-1 max-w-full overflow-hidden">
                     {rootCmt.replies.map((reply) => (
                       <Card
                         key={reply.id}
@@ -1115,6 +1259,16 @@ export function ForumCommentSection({
                               </button>
                             )}
 
+                            <button
+                              type="button"
+                              onClick={() => handleOpenReport('COMMENT', reply.id, reply.content)}
+                              title="Báo cáo vi phạm phản hồi này"
+                              className="inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"
+                            >
+                              <Flag className="w-3 h-3" />
+                              <span>Báo cáo</span>
+                            </button>
+
                             {!isLockedState && (
                               <button
                                 type="button"
@@ -1138,6 +1292,26 @@ export function ForumCommentSection({
           })
         )}
       </div>
+
+      {/* Modal Báo cáo vi phạm quy tắc cộng đồng */}
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        targetType={reportTarget.type}
+        targetId={reportTarget.id}
+        targetTitle={reportTarget.title}
+        onSuccess={(msg) => {
+          setApiSuccessMessage(msg);
+          setTimeout(() => setApiSuccessMessage(null), 4000);
+        }}
+      />
+
+      {/* Modal Yêu cầu đăng nhập cho khách vãng lai */}
+      <RequireLoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        actionName={loginActionName}
+      />
     </div>
   );
 }

@@ -22,6 +22,7 @@ import {
   ChevronUp,
   ExternalLink,
   Lock,
+  Flag,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -32,6 +33,8 @@ import { MathRenderer } from '@/components/ui/math-renderer';
 import { cn } from '@/lib/utils';
 import { ALL_FORUM_SEED_POSTS } from '@/data/forum-seed-posts';
 import { ForumCommentSection } from '@/components/features/forum/ForumCommentSection';
+import { ReportModal } from '@/components/features/forum/ReportModal';
+import { RequireLoginModal } from '@/components/features/forum/RequireLoginModal';
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -85,11 +88,27 @@ export default function ForumPage() {
   const [expandedPostId, setExpandedPostId] = React.useState<string | null>(null);
   const [likedPosts, setLikedPosts] = React.useState<Record<string, boolean>>({});
 
+  // Modal Báo cáo & Yêu cầu đăng nhập
+  const [isReportModalOpen, setIsReportModalOpen] = React.useState(false);
+  const [reportTarget, setReportTarget] = React.useState<{
+    type: 'POST' | 'COMMENT';
+    id: string;
+    title?: string;
+  }>({ type: 'POST', id: '' });
+  const [isLoginModalOpen, setIsLoginModalOpen] = React.useState(false);
+  const [loginActionName, setLoginActionName] = React.useState('tương tác bài viết');
+  const [reportSuccessMessage, setReportSuccessMessage] = React.useState<string | null>(null);
+
+  const handleOpenReport = (type: 'POST' | 'COMMENT', id: string, title?: string) => {
+    setReportTarget({ type, id, title });
+    setIsReportModalOpen(true);
+  };
+
   const toggleComments = (postId: string) => {
     setExpandedPostId((prev) => (prev === postId ? null : postId));
   };
 
-  const togglePostCardLike = (postId: string, e: React.MouseEvent) => {
+  const togglePostCardLike = async (postId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const isCurrentlyLiked = Boolean(likedPosts[postId]);
     const nextState = !isCurrentlyLiked;
@@ -111,6 +130,22 @@ export default function ForumPage() {
           : p
       )
     );
+
+    try {
+      const targetPost = posts.find((p) => p.id === postId);
+      const targetId = targetPost?.slug || postId;
+      await fetch('http://localhost:3005/api/v1/forum/reactions/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetType: 'POST',
+          targetId,
+          userId: 'seed-student-01',
+        }),
+      });
+    } catch {
+      // offline fallback
+    }
   };
 
   // Cố gắng đồng bộ thêm từ Backend API nếu server có endpoint GET /api/v1/forum/posts
@@ -462,6 +497,20 @@ export default function ForumPage() {
                             <Eye className="w-3.5 h-3.5" />
                             {post.viewsCount}
                           </span>
+
+                          {/* Nút Báo cáo bài viết */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenReport('POST', post.id, post.title);
+                            }}
+                            title="Báo cáo vi phạm bài viết này"
+                            className="flex items-center gap-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 px-2 py-1 rounded-xl transition-all cursor-pointer text-[11px]"
+                          >
+                            <Flag className="w-3.5 h-3.5" />
+                            <span className="hidden md:inline">Báo cáo</span>
+                          </button>
                         </div>
                       </div>
 
@@ -499,7 +548,7 @@ export default function ForumPage() {
                               </div>
                             </div>
 
-                            {/* Component ForumCommentSection (Stack #11, #12 & #16) */}
+                            {/* Component ForumCommentSection */}
                             <ForumCommentSection
                               postId={post.id}
                               postSlug={post.slug}
@@ -645,6 +694,26 @@ export default function ForumPage() {
           </div>
         </form>
       </Dialog>
+
+      {/* Modal Báo cáo vi phạm bài viết */}
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        targetType={reportTarget.type}
+        targetId={reportTarget.id}
+        targetTitle={reportTarget.title}
+        onSuccess={(msg) => {
+          setReportSuccessMessage(msg);
+          setTimeout(() => setReportSuccessMessage(null), 4000);
+        }}
+      />
+
+      {/* Modal Yêu cầu đăng nhập cho khách vãng lai */}
+      <RequireLoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        actionName={loginActionName}
+      />
     </div>
   );
 }

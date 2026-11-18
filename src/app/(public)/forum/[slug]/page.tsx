@@ -208,7 +208,7 @@ export default function ForumDetailPage() {
             </div>
           </Card>
 
-          {/* ── STACK #11, #12 & #16: COMPONENT FORUM COMMENT SECTION ── */}
+          {/* ── COMPONENT FORUM COMMENT SECTION ── */}
           <ForumCommentSection
             postId={post.id}
             postSlug={post.slug}
