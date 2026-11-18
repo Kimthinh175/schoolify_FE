@@ -1317,10 +1317,6 @@ export function ForumCommentSection({
                         </button>
                       )}
                     </div>
-
-                    <span className="text-[11px] text-slate-400">
-                      Cấp 1 • Lời giải chính
-                    </span>
                   </div>
                 </Card>
 
@@ -1478,10 +1474,6 @@ export function ForumCommentSection({
                               </span>
                             </div>
                           </div>
-
-                          <span className="text-[10px] text-slate-400 font-medium">
-                            Cấp 2 • Thảo luận
-                          </span>
                         </div>
 
                         {/* Nội dung phản hồi có @mention và MathRenderer */}
