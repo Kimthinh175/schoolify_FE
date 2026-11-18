@@ -21,7 +21,6 @@ import {
   Lock,
   Trash2,
   Flag,
-  Cloud,
   Loader2,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -448,14 +447,14 @@ export function ForumCommentSection({
       setIsUploadingReplyImage(true);
     } else {
       setIsUploadingImage(true);
-      setUploadProgressText(`Đang đồng bộ ${fileList.length} ảnh sang Cloudinary...`);
+      setUploadProgressText(`Đang tải ${fileList.length} ảnh lên...`);
     }
 
     try {
       for (let i = 0; i < fileList.length; i++) {
         const file = fileList[i];
         if (!isReply) {
-          setUploadProgressText(`Đang tải ảnh ${i + 1}/${fileList.length} lên Cloudinary...`);
+          setUploadProgressText(`Đang tải ảnh ${i + 1}/${fileList.length}...`);
         }
 
         const formData = new FormData();
@@ -493,7 +492,7 @@ export function ForumCommentSection({
       }
 
       if (!isReply) {
-        setApiSuccessMessage('☁️ Đã lưu trữ ảnh thành công trên Cloudinary!');
+        setApiSuccessMessage('Đã đính kèm ảnh bài giải thành công!');
         setTimeout(() => setApiSuccessMessage(null), 3500);
       }
     } catch {
@@ -1057,15 +1056,15 @@ export function ForumCommentSection({
             </div>
           )}
 
-          {/* Trạng thái đang tải ảnh lên Cloudinary */}
+          {/* Trạng thái đang tải ảnh lên */}
           {isUploadingImage && (
             <div className="flex items-center gap-2 p-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-[#00B8DD]/30 text-xs text-[#007D99] dark:text-[#00B8DD] font-semibold animate-pulse">
               <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-              <span>{uploadProgressText || 'Đang tải ảnh lên Cloudinary...'}</span>
+              <span>{uploadProgressText || 'Đang tải ảnh lên...'}</span>
             </div>
           )}
 
-          {/* Khu vực đính kèm ảnh chụp bài giải / vở ghi đã lưu trên Cloudinary */}
+          {/* Khu vực đính kèm ảnh chụp bài giải / vở ghi */}
           {attachedImages.length > 0 && (
             <div className="flex flex-wrap gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
               {attachedImages.map((imgUrl, idx) => (
@@ -1079,10 +1078,6 @@ export function ForumCommentSection({
                     alt={`Ảnh bài giải ${idx + 1}`}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded-md bg-black/75 text-[9px] font-bold text-white flex items-center gap-0.5 pointer-events-none backdrop-blur-xs">
-                    <Cloud className="w-2.5 h-2.5 text-[#00B8DD]" />
-                    <span>Cloud</span>
-                  </div>
                   <button
                     type="button"
                     onClick={() => handleRemoveImage(idx)}
@@ -1114,12 +1109,12 @@ export function ForumCommentSection({
                 disabled={isUploadingImage}
                 isLoading={isUploadingImage}
                 onClick={() => fileInputRef.current?.click()}
-                leftIcon={<Cloud className="w-3.5 h-3.5 text-[#007D99] dark:text-[#00B8DD]" />}
+                leftIcon={<ImageIcon className="w-3.5 h-3.5 text-[#007D99] dark:text-[#00B8DD]" />}
                 className="rounded-xl text-xs font-semibold border-slate-200 dark:border-slate-700 hover:border-[#00B8DD]"
               >
                 {isUploadingImage
-                  ? 'Đang tải lên Cloudinary...'
-                  : `Đính kèm ảnh Cloudinary (${attachedImages.length})`}
+                  ? 'Đang tải ảnh lên...'
+                  : `Đính kèm ảnh (${attachedImages.length})`}
               </Button>
             </div>
 
@@ -1359,11 +1354,11 @@ export function ForumCommentSection({
                       className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00B8DD]"
                     />
 
-                    {/* Trạng thái tải ảnh phản hồi lên Cloudinary */}
+                    {/* Trạng thái tải ảnh phản hồi */}
                     {isUploadingReplyImage && (
                       <div className="flex items-center gap-2 p-2 rounded-lg bg-sky-50 dark:bg-sky-950/40 border border-[#00B8DD]/30 text-[11px] text-[#007D99] dark:text-[#00B8DD] font-semibold animate-pulse">
                         <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
-                        <span>Đang tải ảnh lên Cloudinary...</span>
+                        <span>Đang tải ảnh lên...</span>
                       </div>
                     )}
 
@@ -1373,9 +1368,6 @@ export function ForumCommentSection({
                           <div key={i} className="relative w-14 h-14 rounded-lg overflow-hidden border">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={img} alt="Ảnh phản hồi" className="w-full h-full object-cover" />
-                            <div className="absolute bottom-0.5 left-0.5 px-1 py-0.2 rounded bg-black/75 text-[8px] font-bold text-white flex items-center gap-0.5 pointer-events-none">
-                              <Cloud className="w-2 h-2 text-[#00B8DD]" />
-                            </div>
                             <button
                               type="button"
                               onClick={() => handleRemoveImage(i, true)}
@@ -1403,7 +1395,7 @@ export function ForumCommentSection({
                         disabled={isUploadingReplyImage}
                         isLoading={isUploadingReplyImage}
                         onClick={() => replyFileInputRef.current?.click()}
-                        leftIcon={<Cloud className="w-3.5 h-3.5 text-slate-500" />}
+                        leftIcon={<ImageIcon className="w-3.5 h-3.5 text-slate-500" />}
                         className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white"
                       >
                         {isUploadingReplyImage ? 'Đang tải lên...' : 'Đính kèm ảnh'}
