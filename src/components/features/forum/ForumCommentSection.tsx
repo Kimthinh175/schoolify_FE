@@ -191,10 +191,14 @@ export function ForumCommentSection({
   className,
   initialComments,
   isLocked = false,
-  isLoggedIn = true,
+  isLoggedIn: isLoggedInProp,
   currentUser,
 }: ForumCommentSectionProps) {
-  const { user: authUser, currentRole } = useAuthStore();
+  const { user: authUser, currentRole, isAuthenticated } = useAuthStore();
+  const isActuallyLoggedIn =
+    isLoggedInProp !== undefined
+      ? isLoggedInProp
+      : Boolean(isAuthenticated || authUser);
   const currentUserId = currentUser?.id || authUser?.id || 'seed-student-01';
   const currentUserName = currentUser?.name || authUser?.fullname || 'Bạn (Học Sinh)';
 
@@ -360,7 +364,7 @@ export function ForumCommentSection({
   }>({ type: 'COMMENT', id: '' });
 
   const requireAuth = (actionName: string): boolean => {
-    if (isLoggedIn === false) {
+    if (!isActuallyLoggedIn) {
       setLoginActionName(actionName);
       setIsLoginModalOpen(true);
       return false;
