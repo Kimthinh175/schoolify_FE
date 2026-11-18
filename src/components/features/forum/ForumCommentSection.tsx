@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   Image as ImageIcon,
   X,
-  Upload,
   Send,
   Sparkles,
   Eye,
@@ -17,7 +16,6 @@ import {
   ShieldCheck,
   Clock,
   HelpCircle,
-  Pin,
   Lock,
   Trash2,
 } from 'lucide-react';
@@ -89,104 +87,18 @@ const QUICK_MATH_SNIPPETS = [
   { label: 'Hệ pt', insert: '$$\\begin{cases} x + y = 1 \\\\ x - y = 3 \\end{cases}$$', desc: 'Hệ phương trình' },
 ];
 
-const DEFAULT_SAMPLE_COMMENTS: ForumCommentItem[] = [
-  {
-    id: 'cmt-accepted-01',
-    postId: 'sample-post',
-    parentId: null,
-    depth: 1,
-    author: {
-      id: 'teacher-hung',
-      name: 'ThS. Nguyễn Văn Hùng',
-      avatar: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=120&auto=format&fit=crop&q=80',
-      role: 'Giáo viên Toán',
-      grade: 'Tổ Toán THPT Chuyên',
-    },
-    content:
-      '**Lời giải chi tiết:**\n\nTa có đạo hàm hàm số bậc ba:\n$$y\' = 3x^2 - 6mx + 3(2m - 1) = 3(x - 1)(x - 2m + 1)$$\n\nĐể hàm số đồng biến trên khoảng $(0; +\\infty)$ thì $y\' \\ge 0, \\forall x \\in (0; +\\infty)$, tương đương:\n$$2m(x - 1) \\le x^2 - 1 = (x - 1)(x + 1), \\quad \\forall x > 0$$\n\nVì biểu thức $(x - 1)$ đổi dấu khi đi qua điểm $x = 1 \\in (0; +\\infty)$, nên để bất phương trình nghiệm đúng với mọi $x > 0$ thì hai nghiệm của $y\' = 0$ phải trùng nhau tại $x = 1$ (nghiệm kép):\n$$2m - 1 = 1 \\iff m = 1$$\n\nKhi $m = 1$, ta có $y\' = 3(x - 1)^2 \\ge 0, \\forall x \\in \\mathbb{R}$ (thỏa mãn yêu cầu bài toán). Vậy **$m = 1$** là giá trị duy nhất cần tìm.',
-    attachments: null,
-    timeAgo: '45 phút trước',
-    likesCount: 38,
-    isLiked: true,
-    isAccepted: true,
-    replies: [
-      {
-        id: 'reply-01-01',
-        postId: 'sample-post',
-        parentId: 'cmt-accepted-01',
-        depth: 2,
-        replyToUserName: 'ThS. Nguyễn Văn Hùng',
-        author: {
-          id: 'student-minh',
-          name: 'Nguyễn Minh Anh',
-          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80',
-          role: 'Học sinh',
-          grade: 'Lớp 12A1 KHTN',
-        },
-        content:
-          'Em cảm ơn thầy nhiều ạ! Cách phân tích thành nhân tử $(x - 1)(x - 2m + 1)$ rồi biện luận nghiệm kép ở điểm đổi dấu $x = 1$ nhanh và dễ hiểu hơn cách em lập bảng biến thiên rất nhiều ạ.',
-        timeAgo: '30 phút trước',
-        likesCount: 12,
-        isLiked: false,
-      },
-      {
-        id: 'reply-01-02',
-        postId: 'sample-post',
-        parentId: 'cmt-accepted-01',
-        depth: 2,
-        replyToUserName: 'Nguyễn Minh Anh',
-        author: {
-          id: 'student-bao',
-          name: 'Trần Gia Bảo',
-          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
-          role: 'Học sinh',
-          grade: 'Lớp 12 Lý',
-        },
-        content:
-          'Chuẩn luôn, bài này nếu cô lập $m$ chia trường hợp $x \\in (0; 1)$ và $x \\in (1; +\\infty)$ cũng ra $m \\ge 1$ và $m \\le 1 \\implies m = 1$ nhưng dài dòng hơn.',
-        timeAgo: '20 phút trước',
-        likesCount: 5,
-        isLiked: false,
-      },
-    ],
-  },
-  {
-    id: 'cmt-normal-02',
-    postId: 'sample-post',
-    parentId: null,
-    depth: 1,
-    author: {
-      id: 'teacher-nam',
-      name: 'Thầy Lê Hoàng Nam',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
-      role: 'Giáo viên',
-      grade: 'Tổ Toán',
-    },
-    content:
-      'Ngoài ra các em có thể dùng phương pháp Tam thức bậc hai $g(x) = x^2 - 2mx + 2m - 1$:\n- TH1: $\\Delta\' = m^2 - 2m + 1 = (m - 1)^2 \\le 0 \\iff m = 1$.\n- TH2: $\\Delta\' > 0$, hai nghiệm $x_1 < x_2 \\le 0$ (vô lý vì $x_1 = 1 > 0$).\nDo đó chỉ có $m = 1$.',
-    attachments: null,
-    timeAgo: '1 giờ trước',
-    likesCount: 16,
-    isLiked: false,
-    isAccepted: false,
-    replies: [],
-  },
-];
-
 export function ForumCommentSection({
   postId,
   postSlug,
-  postTitle,
   className,
   initialComments,
   isLocked = false,
 }: ForumCommentSectionProps) {
   const [comments, setComments] = React.useState<ForumCommentItem[]>(
-    initialComments && initialComments.length > 0
-      ? initialComments
-      : DEFAULT_SAMPLE_COMMENTS
+    initialComments && initialComments.length > 0 ? initialComments : []
   );
-  const [isLockedState, setIsLockedState] = React.useState(isLocked);
+  const [lockedByApi, setLockedByApi] = React.useState(false);
+  const isLockedState = isLocked || lockedByApi;
   const [apiSuccessMessage, setApiSuccessMessage] = React.useState<string | null>(null);
   const [content, setContent] = React.useState('');
   const [activeTab, setActiveTab] = React.useState<'write' | 'preview'>('write');
@@ -195,15 +107,10 @@ export function ForumCommentSection({
   const [replyContent, setReplyContent] = React.useState('');
   const [replyImages, setReplyImages] = React.useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [replyActiveTab, setReplyActiveTab] = React.useState<'write' | 'preview'>('write');
 
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const replyFileInputRef = React.useRef<HTMLInputElement | null>(null);
   const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
-
-  React.useEffect(() => {
-    setIsLockedState(isLocked);
-  }, [isLocked]);
 
   // Thử tải dữ liệu bình luận từ API Backend (Stack ngày 14/11)
   React.useEffect(() => {
@@ -216,53 +123,82 @@ export function ForumCommentSection({
         );
         if (!res.ok) return;
         const json = await res.json();
-        if (json?.data?.post?.is_locked !== undefined) {
-          setIsLockedState(Boolean(json.data.post.is_locked));
+        if (json?.data?.post?.is_locked !== undefined && isMounted) {
+          setLockedByApi(Boolean(json.data.post.is_locked));
         }
         if (json?.data?.items && Array.isArray(json.data.items) && json.data.items.length > 0) {
           if (!isMounted) return;
-          const mapped: ForumCommentItem[] = json.data.items.map((item: any) => ({
-            id: item.id,
-            postId: item.post_id || postId,
-            parentId: item.parent_id || null,
-            depth: item.depth || 1,
-            author: {
-              name: item.author?.fullname || 'Thành viên Schoolify',
-              avatar: item.author?.avatar_url || undefined,
-              role: item.author?.role === 'TEACHER' ? 'Giáo viên' : 'Học sinh',
-              grade: item.author?.role === 'TEACHER' ? 'Tổ Chuyên Môn' : 'Lớp 12',
-            },
-            content: item.content || '',
-            attachments: Array.isArray(item.attachments) ? item.attachments : null,
-            timeAgo: 'Gần đây',
-            likesCount: item.likes_count || item.reaction_summary?.total || 0,
-            isLiked: Boolean(item.reaction_summary?.user_reaction),
-            isAccepted: Boolean(item.is_accepted || item.is_pinned_best_answer),
-            replies: Array.isArray(item.replies)
-              ? item.replies.map((r: any) => ({
-                  id: r.id,
-                  postId: r.post_id || postId,
-                  parentId: r.parent_id,
-                  depth: 2,
-                  replyToUserName: r.reply_to_user?.fullname || undefined,
+          const mapped: ForumCommentItem[] = json.data.items.map((item: Record<string, unknown>) => {
+            const rawAuthor = (item.author as Record<string, unknown>) || {};
+            const rawReaction = (item.reaction_summary as Record<string, unknown>) || {};
+            const rawReplies = Array.isArray(item.replies)
+              ? (item.replies as Record<string, unknown>[])
+              : [];
+
+            return {
+              id: String(item.id || ''),
+              postId: String(item.post_id || item.postId || postId),
+              parentId: item.parent_id ? String(item.parent_id) : null,
+              depth: (item.depth === 2 ? 2 : 1) as 1 | 2,
+              author: {
+                name: String(rawAuthor.fullname || rawAuthor.name || 'Thành viên Schoolify'),
+                avatar: (rawAuthor.avatar_url || rawAuthor.avatar) as string | undefined,
+                role:
+                  rawAuthor.role === 'TEACHER' || rawAuthor.role === 'Giáo viên'
+                    ? 'Giáo viên'
+                    : String(rawAuthor.role || 'Học sinh'),
+                grade:
+                  rawAuthor.role === 'TEACHER'
+                    ? 'Tổ Chuyên Môn'
+                    : String(rawAuthor.grade || 'Lớp 12'),
+              },
+              content: String(item.content || ''),
+              attachments: Array.isArray(item.attachments)
+                ? (item.attachments as string[])
+                : null,
+              timeAgo: String(item.timeAgo || 'Gần đây'),
+              likesCount: Number(
+                item.likes_count ?? item.likesCount ?? rawReaction.total ?? 0
+              ),
+              isLiked: Boolean(item.isLiked ?? rawReaction.user_reaction),
+              isAccepted: Boolean(
+                item.is_accepted ?? item.isAccepted ?? item.is_pinned_best_answer
+              ),
+              replies: rawReplies.map((r: Record<string, unknown>) => {
+                const rAuthor = (r.author as Record<string, unknown>) || {};
+                const rReplyTo = (r.reply_to_user as Record<string, unknown>) || {};
+                return {
+                  id: String(r.id || ''),
+                  postId: String(r.post_id || r.postId || postId),
+                  parentId: String(r.parent_id || r.parentId || item.id || ''),
+                  depth: 2 as const,
+                  replyToUserName: (r.replyToUserName || rReplyTo.fullname) as
+                    | string
+                    | undefined,
                   author: {
-                    name: r.author?.fullname || 'Học sinh',
-                    avatar: r.author?.avatar_url || undefined,
-                    role: r.author?.role === 'TEACHER' ? 'Giáo viên' : 'Học sinh',
-                    grade: 'Lớp 12',
+                    name: String(rAuthor.fullname || rAuthor.name || 'Học sinh'),
+                    avatar: (rAuthor.avatar_url || rAuthor.avatar) as string | undefined,
+                    role:
+                      rAuthor.role === 'TEACHER' || rAuthor.role === 'Giáo viên'
+                        ? 'Giáo viên'
+                        : String(rAuthor.role || 'Học sinh'),
+                    grade: String(rAuthor.grade || 'Lớp 12'),
                   },
-                  content: r.content || '',
-                  attachments: Array.isArray(r.attachments) ? r.attachments : null,
-                  timeAgo: 'Gần đây',
-                  likesCount: r.likes_count || 0,
-                  isLiked: false,
-                }))
-              : [],
-          }));
+                  content: String(r.content || ''),
+                  attachments: Array.isArray(r.attachments)
+                    ? (r.attachments as string[])
+                    : null,
+                  timeAgo: String(r.timeAgo || 'Gần đây'),
+                  likesCount: Number(r.likes_count ?? r.likesCount ?? 0),
+                  isLiked: Boolean(r.isLiked),
+                };
+              }),
+            };
+          });
           setComments(mapped);
         }
       } catch {
-        // Fallback sang danh sách mẫu
+        // Fallback giữ nguyên initialComments
       }
     }
 
@@ -284,7 +220,7 @@ export function ForumCommentSection({
     }
   };
 
-  // Xử lý chọn ảnh từ máy (chụp vở bài giải)
+  // Xử lý chọn ảnh từ máy (chụp vở bài giải <= 5MB)
   const handleImageUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
     isReply = false
@@ -292,7 +228,12 @@ export function ForumCommentSection({
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    const MAX_BYTES = 5 * 1024 * 1024; // 5MB
     Array.from(files).forEach((file) => {
+      if (file.size > MAX_BYTES) {
+        alert(`Ảnh "${file.name}" vượt quá dung lượng tối đa 5MB cho phép!`);
+        return;
+      }
       const reader = new FileReader();
       reader.onload = (event) => {
         const result = event.target?.result as string;
@@ -422,7 +363,7 @@ export function ForumCommentSection({
             json?.message ||
               'Bài viết này đã bị Admin khóa bình luận (is_locked = true).'
           );
-          setIsLockedState(true);
+          setLockedByApi(true);
           setIsSubmitting(false);
           return;
         }
@@ -499,7 +440,7 @@ export function ForumCommentSection({
             json?.message ||
               'Bài viết này đã bị Admin khóa bình luận (is_locked = true).'
           );
-          setIsLockedState(true);
+          setLockedByApi(true);
           return;
         }
       } else if (json?.data?.comment?.id) {
@@ -549,7 +490,6 @@ export function ForumCommentSection({
     setReplyingToId(null);
     setReplyContent('');
     setReplyImages([]);
-    setReplyActiveTab('write');
   };
 
   // Sắp xếp: Luôn đưa Lời giải được công nhận (isAccepted = true) lên trên cùng
