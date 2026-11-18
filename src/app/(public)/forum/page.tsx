@@ -100,9 +100,9 @@ export default function ForumPage() {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [currentPage, setCurrentPage] = React.useState(1);
 
-  // ── DỮ LIỆU TỪ FORUM.SERVICE.TS (Task #14) & SEED FALLBACK ──
+  // ── DỮ LIỆU TỪ FORUM.SERVICE.TS (Task #14) ──
   const [posts, setPosts] = React.useState<ForumPost[]>(
-    () => (ALL_FORUM_SEED_POSTS as unknown as ForumPost[]) || []
+    () => (ALL_FORUM_SEED_POSTS as unknown as ForumPost[])
   );
   const [isLoading, setIsLoading] = React.useState(false);
   const [isNewPostModalOpen, setIsNewPostModalOpen] = React.useState(false);
@@ -126,7 +126,7 @@ export default function ForumPage() {
           limit: 100,
         });
         if (!isMounted) return;
-        if (res && res.items && res.items.length > 0) {
+        if (res.items && res.items.length > 0) {
           setPosts(res.items);
           setSavedPostIds((prev) => {
             const next = { ...prev };
@@ -137,9 +137,13 @@ export default function ForumPage() {
             }
             return next;
           });
+        } else {
+          // Khi Database Backend chưa seed hoặc rỗng, hiển thị đầy đủ 20 câu seed chuẩn của Huân
+          setPosts(ALL_FORUM_SEED_POSTS as unknown as ForumPost[]);
         }
       } catch {
-        // Fallback giữ nguyên 20 câu seed
+        if (!isMounted) return;
+        setPosts(ALL_FORUM_SEED_POSTS as unknown as ForumPost[]);
       } finally {
         if (isMounted) setIsLoading(false);
       }

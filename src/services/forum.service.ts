@@ -215,41 +215,6 @@ export function mapBackendPostToForumPost(item: Record<string, unknown>): ForumP
   };
 }
 
-function getMockSeedPosts(params?: ForumQueryParams): ForumPostsListResponse {
-  const seedItems = (ALL_FORUM_SEED_POSTS as unknown as ForumPost[]) || [];
-  let filtered = [...seedItems];
-
-  if (params?.subject && params.subject !== 'Tất cả') {
-    filtered = filtered.filter((p) => p.subject === params.subject);
-  }
-  if (params?.grade && params.grade !== 'ALL') {
-    filtered = filtered.filter((p) => p.grade === Number(params.grade));
-  }
-  if (params?.status && params.status !== 'ALL') {
-    if (params.status === 'UNSOLVED') filtered = filtered.filter((p) => !p.isSolved);
-    else if (params.status === 'SOLVED') filtered = filtered.filter((p) => Boolean(p.isSolved));
-    else if (params.status === 'HOT') filtered = filtered.filter((p) => p.likesCount >= 15 || p.repliesCount >= 3);
-  }
-  if (params?.search?.trim()) {
-    const q = params.search.trim().toLowerCase();
-    filtered = filtered.filter(
-      (p) => p.title.toLowerCase().includes(q) || p.content.toLowerCase().includes(q)
-    );
-  }
-
-  const page = Math.max(1, Number(params?.page || 1));
-  const limit = Math.max(1, Number(params?.limit || 100));
-  const total = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(total / limit));
-  const startIdx = (page - 1) * limit;
-  const items = filtered.slice(startIdx, startIdx + limit);
-
-  return {
-    items,
-    pagination: { page, limit, total, totalPages },
-  };
-}
-
 export const forumService = {
   /**
    * Lấy danh sách câu hỏi diễn đàn từ Backend API (`GET /api/v1/forum/posts`)
@@ -292,7 +257,15 @@ export const forumService = {
       });
 
       if (!res.ok) {
-        return getMockSeedPosts(params);
+        return {
+          items: ALL_FORUM_SEED_POSTS as unknown as ForumPost[],
+          pagination: {
+            page: 1,
+            limit: 100,
+            total: ALL_FORUM_SEED_POSTS.length,
+            totalPages: 1,
+          },
+        };
       }
 
       const json = (await res.json()) as Record<string, unknown>;
@@ -309,7 +282,15 @@ export const forumService = {
       const mapped = rawArray.map(mapBackendPostToForumPost);
 
       if (mapped.length === 0) {
-        return getMockSeedPosts(params);
+        return {
+          items: ALL_FORUM_SEED_POSTS as unknown as ForumPost[],
+          pagination: {
+            page: 1,
+            limit: 100,
+            total: ALL_FORUM_SEED_POSTS.length,
+            totalPages: 1,
+          },
+        };
       }
 
       const beMeta = (json?.pagination ||
@@ -347,8 +328,16 @@ export const forumService = {
         },
       };
     } catch (err) {
-      console.warn('[forumService.getPosts] Failed, using seed fallback:', err);
-      return getMockSeedPosts(params);
+      console.warn('[forumService.getPosts] Failed:', err);
+      return {
+        items: ALL_FORUM_SEED_POSTS as unknown as ForumPost[],
+        pagination: {
+          page: 1,
+          limit: 100,
+          total: ALL_FORUM_SEED_POSTS.length,
+          totalPages: 1,
+        },
+      };
     }
   },
 
@@ -356,6 +345,15 @@ export const forumService = {
    * Lấy chi tiết 1 bài thảo luận theo ID hoặc Slug (`GET /api/v1/forum/posts/:idOrSlug`)
    */
   async getPostBySlugOrId(idOrSlug: string): Promise<ForumPost | null> {
+    const clean = idOrSlug.trim().toLowerCase();
+    const findFallback = () =>
+      (ALL_FORUM_SEED_POSTS as unknown as ForumPost[]).find(
+        (p) =>
+          p.slug?.toLowerCase() === clean ||
+          p.id.toLowerCase() === clean ||
+          (p.slug && p.slug.toLowerCase().includes(clean))
+      ) || null;
+
     try {
       const res = await fetch(
         `/api/v1/forum/posts/${encodeURIComponent(idOrSlug)}`,
@@ -365,30 +363,18 @@ export const forumService = {
           cache: 'no-store',
         }
       );
-      if (res.ok) {
-        const json = (await res.json()) as Record<string, unknown>;
-        const dataObj = json?.data as Record<string, unknown> | undefined;
-        const raw = (dataObj?.post || dataObj || json?.post) as
-          | Record<string, unknown>
-          | undefined;
-        if (raw) {
-          return mapBackendPostToForumPost(raw);
-        }
-      }
+      if (!res.ok) return findFallback();
+      const json = (await res.json()) as Record<string, unknown>;
+      const dataObj = json?.data as Record<string, unknown> | undefined;
+      const raw = (dataObj?.post || dataObj || json?.post) as
+        | Record<string, unknown>
+        | undefined;
+      if (!raw) return findFallback();
+      return mapBackendPostToForumPost(raw);
     } catch (err) {
-      console.warn('[forumService.getPostBySlugOrId] Failed, using seed fallback:', err);
+      console.warn('[forumService.getPostBySlugOrId] Failed:', err);
+      return findFallback();
     }
-
-    // Fallback: Tìm trong ALL_FORUM_SEED_POSTS
-    const cleanSlug = idOrSlug.trim().toLowerCase();
-    const found = (ALL_FORUM_SEED_POSTS as unknown as ForumPost[]).find(
-      (p) =>
-        p.id.toLowerCase() === cleanSlug ||
-        p.slug?.toLowerCase() === cleanSlug ||
-        (p.slug && p.slug.toLowerCase().includes(cleanSlug)) ||
-        (p.slug && cleanSlug.includes(p.slug.toLowerCase()))
-    );
-    return found || null;
   },
 
   /**
