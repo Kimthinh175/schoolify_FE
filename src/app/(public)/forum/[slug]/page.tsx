@@ -22,7 +22,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { MathRenderer } from '@/components/ui/math-renderer';
 import { ForumCommentSection } from '@/components/features/forum/ForumCommentSection';
 import { cn } from '@/lib/utils';
-import { ForumPost, forumService } from '@/services/forum.service';
+import { ForumPost, forumService, applyModerationOverrides } from '@/services/forum.service';
 import { ALL_FORUM_SEED_POSTS } from '@/data/forum-seed-posts';
 
 export default function ForumDetailPage() {
@@ -32,15 +32,14 @@ export default function ForumDetailPage() {
 
   const seedFallback = React.useMemo(() => {
     const cleanSlug = decodedSlug.trim().toLowerCase();
-    return (
-      (ALL_FORUM_SEED_POSTS as any[]).find(
-        (p: any) =>
-          p.slug?.toLowerCase() === cleanSlug ||
-          p.id.toLowerCase() === cleanSlug ||
-          (p.slug && p.slug.toLowerCase().includes(cleanSlug)) ||
-          (p.slug && cleanSlug.includes(p.slug.toLowerCase()))
-      ) || null
+    const raw = (ALL_FORUM_SEED_POSTS as any[]).find(
+      (p: any) =>
+        p.slug?.toLowerCase() === cleanSlug ||
+        p.id.toLowerCase() === cleanSlug ||
+        (p.slug && p.slug.toLowerCase().includes(cleanSlug)) ||
+        (p.slug && cleanSlug.includes(p.slug.toLowerCase()))
     );
+    return raw ? applyModerationOverrides(raw) : null;
   }, [decodedSlug]);
 
   const [post, setPost] = React.useState<ForumPost | null>(seedFallback);
@@ -74,6 +73,31 @@ export default function ForumDetailPage() {
       isMounted = false;
     };
   }, [decodedSlug]);
+
+  // Lắng nghe cập nhật trạng thái kiểm duyệt (Ghim / Khóa / Ẩn) từ Admin thời gian thực
+  React.useEffect(() => {
+    const handleModerationUpdated = (e: any) => {
+      const { postId, patch } = e?.detail || {};
+      if (postId && patch && post) {
+        if (post.id === postId || post.slug === postId) {
+          setPost((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  ...(patch.isPinned !== undefined ? { isPinned: patch.isPinned } : {}),
+                  ...(patch.isLocked !== undefined ? { isLocked: patch.isLocked } : {}),
+                  ...(patch.isHidden !== undefined ? { isHidden: patch.isHidden } : {}),
+                }
+              : null
+          );
+        }
+      }
+    };
+    window.addEventListener('schoolify:forum-moderation-updated', handleModerationUpdated);
+    return () => {
+      window.removeEventListener('schoolify:forum-moderation-updated', handleModerationUpdated);
+    };
+  }, [post]);
 
   // Tự động cuộn mượt xuống phần bình luận khi mở trang chi tiết
   React.useEffect(() => {

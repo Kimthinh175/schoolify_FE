@@ -31,7 +31,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { ALL_FORUM_SEED_POSTS } from '@/data/forum-seed-posts';
-import { forumService } from '@/services/forum.service';
+import { forumService, applyModerationOverrides } from '@/services/forum.service';
 
 interface AdminForumPost {
   id: string;
@@ -128,25 +128,28 @@ export default function AdminForumPage() {
   const [statusFilter, setStatusFilter] = React.useState('ALL');
   const [reportStatusFilter, setReportStatusFilter] = React.useState<string>('ALL');
 
-  // Dữ liệu quản trị bài viết: Khởi tạo với 20 câu seed chuẩn mới nhất từ Huân
+  // Dữ liệu quản trị bài viết: Khởi tạo với 20 câu seed chuẩn mới nhất từ Huân kèm override Ghim/Khóa/Ẩn
   const [posts, setPosts] = React.useState<AdminForumPost[]>(() =>
-    ALL_FORUM_SEED_POSTS.map((p) => ({
-      id: p.id,
-      title: p.title,
-      slug: p.slug,
-      subject: p.subject,
-      grade: p.grade,
-      content: p.content || '',
-      author: p.author,
-      repliesCount: p.repliesCount,
-      likesCount: p.likesCount,
-      viewsCount: p.viewsCount,
-      isSolved: Boolean(p.isSolved),
-      isPinned: Boolean(p.isPinned),
-      isLocked: Boolean((p as any).isLocked || (p as any).is_locked),
-      isHidden: false,
-      timeAgo: p.timeAgo,
-    }))
+    ALL_FORUM_SEED_POSTS.map((p) => {
+      const merged = applyModerationOverrides(p);
+      return {
+        id: merged.id,
+        title: merged.title,
+        slug: merged.slug,
+        subject: merged.subject,
+        grade: merged.grade,
+        content: merged.content || '',
+        author: merged.author,
+        repliesCount: merged.repliesCount,
+        likesCount: merged.likesCount,
+        viewsCount: merged.viewsCount,
+        isSolved: Boolean(merged.isSolved),
+        isPinned: Boolean(merged.isPinned),
+        isLocked: Boolean(merged.isLocked),
+        isHidden: Boolean((merged as any).isHidden),
+        timeAgo: merged.timeAgo,
+      };
+    })
   );
 
   // Đồng bộ tải dữ liệu bài viết mới nhất từ API / Seed Service
@@ -248,14 +251,7 @@ export default function AdminForumPage() {
       prev.map((p) => (p.id === postId ? { ...p, isPinned: nextState } : p))
     );
 
-    try {
-      await fetch(`http://localhost:3005/api/v1/forum/moderation/posts/${postId}/pin`, {
-        method: 'PATCH',
-      });
-    } catch {
-      // offline fallback
-    }
-
+    await forumService.togglePinPost(postId, nextState);
     showToast(nextState ? '📌 Đã ghim bài viết lên đầu diễn đàn!' : 'Đã bỏ ghim bài viết.');
   };
 
@@ -269,14 +265,7 @@ export default function AdminForumPage() {
       prev.map((p) => (p.id === postId ? { ...p, isLocked: nextState } : p))
     );
 
-    try {
-      await fetch(`http://localhost:3005/api/v1/forum/moderation/posts/${postId}/lock`, {
-        method: 'PATCH',
-      });
-    } catch {
-      // offline fallback
-    }
-
+    await forumService.toggleLockPost(postId, nextState);
     showToast(
       nextState
         ? '🔒 Đã khóa bình luận bài viết (ngăn chặn spam phản hồi).'
@@ -294,14 +283,7 @@ export default function AdminForumPage() {
       prev.map((p) => (p.id === postId ? { ...p, isHidden: nextState } : p))
     );
 
-    try {
-      await fetch(`http://localhost:3005/api/v1/forum/moderation/posts/${postId}/hide`, {
-        method: 'PATCH',
-      });
-    } catch {
-      // offline fallback
-    }
-
+    await forumService.toggleHidePost(postId, nextState);
     showToast(
       nextState
         ? '👁️‍🗨️ Đã ẩn bài viết vi phạm khỏi diễn đàn công cộng.'

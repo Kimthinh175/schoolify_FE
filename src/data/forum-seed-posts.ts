@@ -43,6 +43,7 @@ export interface ForumPostItem {
   isSolved: boolean;
   isPinned: boolean;
   isLocked?: boolean;
+  isHidden?: boolean;
   timeAgo: string;
   tags: string[];
   initialComments: ForumCommentItemDef[];

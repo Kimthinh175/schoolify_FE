@@ -246,11 +246,54 @@ export default function ForumPage() {
       );
     };
 
+    const handleModerationUpdated = (e: any) => {
+      const { postId, patch } = e?.detail || {};
+      if (postId && patch) {
+        setPosts((prev) =>
+          prev.map((p) => {
+            if (p.id === postId || p.slug === postId) {
+              return {
+                ...p,
+                ...(patch.isPinned !== undefined ? { isPinned: patch.isPinned } : {}),
+                ...(patch.isLocked !== undefined ? { isLocked: patch.isLocked } : {}),
+                ...(patch.isHidden !== undefined ? { isHidden: patch.isHidden } : {}),
+              };
+            }
+            return p;
+          })
+        );
+      }
+    };
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'schoolify_forum_moderation_overrides') {
+        try {
+          const overrides = e.newValue ? JSON.parse(e.newValue) : {};
+          setPosts((prev) =>
+            prev.map((p) => {
+              const o = overrides[p.id] || (p.slug ? overrides[p.slug] : undefined);
+              if (!o) return p;
+              return {
+                ...p,
+                ...(o.isPinned !== undefined ? { isPinned: o.isPinned } : {}),
+                ...(o.isLocked !== undefined ? { isLocked: o.isLocked } : {}),
+                ...(o.isHidden !== undefined ? { isHidden: o.isHidden } : {}),
+              };
+            })
+          );
+        } catch {}
+      }
+    };
+
     window.addEventListener('schoolify:open-forum-post', handleOpenPostEvent);
     window.addEventListener('schoolify:forum-comment-added', handleCommentAdded);
+    window.addEventListener('schoolify:forum-moderation-updated', handleModerationUpdated);
+    window.addEventListener('storage', handleStorageChange);
     return () => {
       window.removeEventListener('schoolify:open-forum-post', handleOpenPostEvent);
       window.removeEventListener('schoolify:forum-comment-added', handleCommentAdded);
+      window.removeEventListener('schoolify:forum-moderation-updated', handleModerationUpdated);
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, [focusAndExpandPost]);
 
@@ -326,6 +369,7 @@ export default function ForumPage() {
   const baseMatchedPosts = React.useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return posts.filter((post) => {
+      if (post.isHidden) return false; // Không hiển thị bài viết đã bị Admin ẩn
       const matchesSubject =
         selectedSubject === 'Tất cả' || post.subject === selectedSubject;
       const matchesGrade =
@@ -349,14 +393,21 @@ export default function ForumPage() {
     };
   }, [baseMatchedPosts, savedPostIds]);
 
-  // Lọc theo Tab trạng thái đang chọn
+  // Lọc theo Tab trạng thái đang chọn và ưu tiên đưa bài Ghim (isPinned) lên trên đầu
   const filteredPosts = React.useMemo(() => {
-    return baseMatchedPosts.filter((post) => {
+    const list = baseMatchedPosts.filter((post) => {
       if (activeTab === 'UNSOLVED') return !post.isSolved;
       if (activeTab === 'SOLVED') return Boolean(post.isSolved);
       if (activeTab === 'SAVED') return Boolean(savedPostIds[post.id] || post.isBookmarked);
       if (activeTab === 'HOT') return post.likesCount >= 15 || post.repliesCount >= 3;
       return true;
+    });
+
+    return [...list].sort((a, b) => {
+      if (a.isPinned !== b.isPinned) {
+        return a.isPinned ? -1 : 1;
+      }
+      return 0;
     });
   }, [baseMatchedPosts, activeTab, savedPostIds]);
 

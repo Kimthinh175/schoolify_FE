@@ -30,6 +30,7 @@ export interface ForumPost {
   isSolved?: boolean;
   isPinned?: boolean;
   isLocked?: boolean;
+  isHidden?: boolean;
   isLiked?: boolean;
   isBookmarked?: boolean;
   timeAgo: string;
@@ -215,8 +216,57 @@ export function mapBackendPostToForumPost(item: Record<string, unknown>): ForumP
   };
 }
 
+export interface ForumModerationOverrides {
+  isPinned?: boolean;
+  isLocked?: boolean;
+  isHidden?: boolean;
+}
+
+export const FORUM_MODERATION_STORAGE_KEY = 'schoolify_forum_moderation_overrides';
+
+export function getForumModerationOverrides(): Record<string, ForumModerationOverrides> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.localStorage.getItem(FORUM_MODERATION_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveForumModerationOverride(
+  postId: string,
+  patch: Partial<ForumModerationOverrides>
+) {
+  if (typeof window === 'undefined') return;
+  try {
+    const current = getForumModerationOverrides();
+    current[postId] = { ...(current[postId] || {}), ...patch };
+    window.localStorage.setItem(FORUM_MODERATION_STORAGE_KEY, JSON.stringify(current));
+    window.dispatchEvent(
+      new CustomEvent('schoolify:forum-moderation-updated', {
+        detail: { postId, patch, all: current },
+      })
+    );
+  } catch {}
+}
+
+export function applyModerationOverrides<
+  T extends { id: string; slug?: string; isPinned?: boolean; isLocked?: boolean; isHidden?: boolean }
+>(post: T): T {
+  const overrides = getForumModerationOverrides();
+  const override = overrides[post.id] || (post.slug ? overrides[post.slug] : undefined);
+  if (!override) return post;
+  return {
+    ...post,
+    isPinned: override.isPinned !== undefined ? override.isPinned : post.isPinned,
+    isLocked: override.isLocked !== undefined ? override.isLocked : post.isLocked,
+    isHidden: override.isHidden !== undefined ? override.isHidden : post.isHidden,
+  };
+}
+
 function getSeedPostsFallback(params?: ForumQueryParams): ForumPostsListResponse {
-  let list = (ALL_FORUM_SEED_POSTS as unknown as ForumPost[]);
+  let list = (ALL_FORUM_SEED_POSTS as unknown as ForumPost[]).map(applyModerationOverrides);
 
   if (params?.subject && params.subject !== 'Tất cả') {
     list = list.filter((p) => p.subject === params.subject);
@@ -268,7 +318,7 @@ function getSeedPostBySlugOrIdFallback(idOrSlug: string): ForumPost | null {
       (p.slug && p.slug.toLowerCase().includes(clean)) ||
       (p.slug && clean.includes(p.slug.toLowerCase()))
   );
-  return found || null;
+  return found ? applyModerationOverrides(found) : null;
 }
 
 export const forumService = {
@@ -331,7 +381,7 @@ export const forumService = {
         return getSeedPostsFallback(params);
       }
 
-      const mapped = rawArray.map(mapBackendPostToForumPost);
+      const mapped = rawArray.map(mapBackendPostToForumPost).map(applyModerationOverrides);
 
       const beMeta = (json?.pagination ||
         json?.meta ||
@@ -392,7 +442,7 @@ export const forumService = {
         const raw = (dataObj?.post || dataObj || json?.post) as
           | Record<string, unknown>
           | undefined;
-        if (raw) return mapBackendPostToForumPost(raw);
+        if (raw) return applyModerationOverrides(mapBackendPostToForumPost(raw));
       }
       return getSeedPostBySlugOrIdFallback(idOrSlug);
     } catch (err) {
@@ -584,5 +634,53 @@ export const forumService = {
     } catch {
       return { ok: false };
     }
+  },
+
+  /**
+   * Ghim / Bỏ ghim bài viết (Admin)
+   */
+  async togglePinPost(postId: string, nextState: boolean): Promise<boolean> {
+    saveForumModerationOverride(postId, { isPinned: nextState });
+    try {
+      await fetch(`/api/v1/forum/moderation/posts/${encodeURIComponent(postId)}/pin`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(true),
+      });
+    } catch {
+      // offline fallback
+    }
+    return true;
+  },
+
+  /**
+   * Khóa / Mở khóa bài viết (Admin)
+   */
+  async toggleLockPost(postId: string, nextState: boolean): Promise<boolean> {
+    saveForumModerationOverride(postId, { isLocked: nextState });
+    try {
+      await fetch(`/api/v1/forum/moderation/posts/${encodeURIComponent(postId)}/lock`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(true),
+      });
+    } catch {
+      // offline fallback
+    }
+    return true;
+  },
+
+  /**
+   * Ẩn / Hiện bài viết (Admin)
+   */
+  async toggleHidePost(postId: string, nextState: boolean): Promise<boolean> {
+    saveForumModerationOverride(postId, { isHidden: nextState });
+    try {
+      await fetch(`/api/v1/forum/moderation/posts/${encodeURIComponent(postId)}/hide`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(true),
+      });
+    } catch {
+      // offline fallback
+    }
+    return true;
   },
 };
