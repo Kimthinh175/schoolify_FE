@@ -23,6 +23,8 @@ import {
   Season,
 } from '@/types/leaderboard';
 import { leaderboardService } from '@/services/leaderboard.service';
+import { catalogService } from '@/services/catalog.service';
+import { useAuthStore } from '@/store/auth.store';
 import { PodiumTopThree } from '@/components/features/leaderboard/PodiumTopThree';
 import { LeaderboardFilters } from '@/components/features/leaderboard/LeaderboardFilters';
 import { LeaderboardTable } from '@/components/features/leaderboard/LeaderboardTable';
@@ -33,11 +35,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 export default function LeaderboardPage() {
+  const { user: authUser, isAuthenticated } = useAuthStore();
   const [timeframe, setTimeframe] = React.useState<LeaderboardTimeframe>('WEEKLY');
   const [scope, setScope] = React.useState<LeaderboardScope>('NATIONAL');
   const [grade, setGrade] = React.useState<GradeLevel>('ALL');
   const [subject, setSubject] = React.useState<SubjectFilter>('ALL');
   const [search, setSearch] = React.useState('');
+  const [liveUsers, setLiveUsers] = React.useState<LeaderboardUser[] | undefined>(undefined);
 
   const [activeSeason, setActiveSeason] = React.useState<Season>(() =>
     leaderboardService.getActiveSeason()
@@ -46,6 +50,60 @@ export default function LeaderboardPage() {
   const [selectedUser, setSelectedUser] = React.useState<LeaderboardUser | null>(null);
   const [isRewardsModalOpen, setIsRewardsModalOpen] = React.useState(false);
   const [highlightUserId, setHighlightUserId] = React.useState<string | undefined>(undefined);
+
+  React.useEffect(() => {
+    let mounted = true;
+    catalogService.getLeaderboard().then((entries) => {
+      if (!mounted || !Array.isArray(entries) || entries.length === 0) return;
+      const mapped: LeaderboardUser[] = entries.map((entry, idx) => {
+        const gradeNum = Number(entry.grade || String(entry.gradeLevel || '12').match(/\d+/)?.[0] || 12);
+        const safeGrade = (`GRADE_${Math.min(12, Math.max(6, gradeNum))}`) as GradeLevel;
+        const pts = Number(entry.points || 0);
+        const tier =
+          idx === 0
+            ? 'DIAMOND'
+            : idx < 3
+              ? 'PLATINUM'
+              : idx < 10
+                ? 'GOLD'
+                : idx < 20
+                  ? 'SILVER'
+                  : 'BRONZE';
+        return {
+          id: entry.userId || entry.studentId || `lb-${idx + 1}`,
+          rank: Number(entry.rank || idx + 1),
+          previousRank: Number(entry.rank || idx + 1),
+          rankChange: 'SAME',
+          rankChangeAmount: 0,
+          name: entry.fullname || 'Học sinh Schoolify',
+          avatar:
+            entry.avatarUrl ||
+            'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+          schoolName: entry.schoolName || 'THPT Chuyên Schoolify',
+          className: `Lớp ${gradeNum}`,
+          grade: safeGrade,
+          primarySubject: 'MATH',
+          points: pts,
+          correctRate: Math.min(100, Math.round(Number(entry.avgScore || 8.5) * 10)),
+          quizzesCompleted: Number(entry.totalExams || 0),
+          streakDays: Number(entry.streakDays || 1),
+          gems: pts,
+          badgeTitle: idx < 3 ? 'Chiến Thần Tri Thức' : 'Học Viên Nỗ Lực',
+          badgeTier: tier,
+        };
+      });
+      setLiveUsers(mapped);
+    });
+
+    catalogService.getSeasons().then((seasons) => {
+      if (!mounted || !Array.isArray(seasons) || seasons.length === 0) return;
+      const active = seasons.find((s) => s.status === 'ACTIVE') || seasons[0];
+      if (active) setActiveSeason(active as Season);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Countdown timer for active season
   const [timeLeft, setTimeLeft] = React.useState({ days: 14, hours: 8, minutes: 24, seconds: 50 });
@@ -71,8 +129,19 @@ export default function LeaderboardPage() {
       grade,
       subject,
       search,
+      sourceUsers: liveUsers,
+      currentAuthUser:
+        isAuthenticated && authUser?.id
+          ? {
+              id: authUser.id,
+              fullname: authUser.fullname || 'Bạn',
+              avatar_url: authUser.avatar_url || (authUser as any).avatarUrl,
+              grade_level: (authUser as any)?.student_profile?.grade_level || (authUser as any)?.gradeLevel,
+              points: (authUser as any)?.student_profile?.points ?? (authUser as any)?.points ?? 0,
+            }
+          : null,
     });
-  }, [timeframe, scope, grade, subject, search]);
+  }, [timeframe, scope, grade, subject, search, liveUsers, isAuthenticated, authUser]);
 
   const handleScrollToMe = () => {
     if (!currentUser) return;

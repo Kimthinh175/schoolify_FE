@@ -143,6 +143,41 @@ function renderDifficultyBadge(difficulty?: QuestionDifficulty, isDark = false) 
   }
 }
 
+/**
+ * Kiểu màu thống nhất cho danh sách câu hỏi (cả thanh trên và sidebar phải):
+ * - Đã chọn đáp án: nền xanh (emerald)
+ * - Chưa chọn đáp án: nền vàng (amber)
+ * - Đã báo lỗi: viền đỏ (rose)
+ * - Đang chọn: viền nổi bật cyan (vẫn giữ màu xanh/vàng và viền đỏ nếu có)
+ */
+function getQuestionPaletteClass({
+  isActive,
+  isAnswered,
+  isReported,
+}: {
+  isActive: boolean;
+  isAnswered: boolean;
+  isReported: boolean;
+}): string {
+  const fillClass = isAnswered
+    ? 'bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-xs'
+    : 'bg-amber-100 hover:bg-amber-200 dark:bg-amber-950/65 text-amber-800 dark:text-amber-200 font-bold';
+
+  const borderClass = isReported
+    ? 'border-2 border-rose-500 dark:border-rose-500'
+    : isAnswered
+      ? 'border border-emerald-500'
+      : 'border border-amber-300 dark:border-amber-600';
+
+  const activeClass = isActive
+    ? isReported
+      ? 'ring-2 ring-rose-500/80 ring-offset-1 font-black shadow-md'
+      : 'ring-2 ring-[#00B8DD] ring-offset-1 font-black shadow-md'
+    : '';
+
+  return cn(fillClass, borderClass, activeClass);
+}
+
 function renderPreviousChapterBadge(q: ExamQuestion, isDark = false) {
   if (!q.isPreviousChapterReview) return null;
   const relCh = q.relatedChapterIds?.[0] || (q.chapterId > 1 ? q.chapterId - 1 : 1);
@@ -664,6 +699,7 @@ function StandardExamRoomContent() {
   const [trueFalseAnswers, setTrueFalseAnswers] = React.useState<Record<string, Record<string, boolean>>>({});
   const [shortAnswers, setShortAnswers] = React.useState<Record<string, string>>({});
   const [flaggedIds, setFlaggedIds] = React.useState<Record<string, boolean>>({});
+  const [reportedIds, setReportedIds] = React.useState<Record<string, boolean>>({});
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
   const [lastSaved, setLastSaved] = React.useState<string>('Đã lưu an toàn');
   const saveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -672,6 +708,7 @@ function StandardExamRoomContent() {
     trueFalseAnswers: {} as Record<string, Record<string, boolean>>,
     shortAnswers: {} as Record<string, string>,
     flaggedIds: {} as Record<string, boolean>,
+    reportedIds: {} as Record<string, boolean>,
   });
 
   React.useEffect(() => {
@@ -680,8 +717,9 @@ function StandardExamRoomContent() {
       trueFalseAnswers,
       shortAnswers,
       flaggedIds,
+      reportedIds,
     };
-  }, [multipleChoices, trueFalseAnswers, shortAnswers, flaggedIds]);
+  }, [multipleChoices, trueFalseAnswers, shortAnswers, flaggedIds, reportedIds]);
 
   // Quick jump to a question
   const handleJumpToQuestion = (_q: ExamQuestion, globalIdx: number) => {
@@ -887,6 +925,9 @@ function StandardExamRoomContent() {
           if (ans.flaggedIds && Object.keys(ans.flaggedIds).length > 0) {
             setFlaggedIds(ans.flaggedIds);
           }
+          if (ans.reportedIds && Object.keys(ans.reportedIds).length > 0) {
+            setReportedIds(ans.reportedIds);
+          }
           setLastSaved('Đã khôi phục bài làm');
         }
 
@@ -959,6 +1000,7 @@ function StandardExamRoomContent() {
       trueFalseAnswers: answersDraftRef.current.trueFalseAnswers,
       shortAnswers: answersDraftRef.current.shortAnswers,
       flaggedIds: answersDraftRef.current.flaggedIds,
+      reportedIds: answersDraftRef.current.reportedIds,
     };
 
     try {
@@ -1334,6 +1376,7 @@ function StandardExamRoomContent() {
     setTrueFalseAnswers({});
     setShortAnswers({});
     setFlaggedIds({});
+    setReportedIds({});
     setActiveQuestionIdx(0);
     setSubmittedTimeSpent(0);
     hasProcessedRewardRef.current = false;
@@ -4752,6 +4795,13 @@ function StandardExamRoomContent() {
               questionTitle={reportingQuestion.title}
               subjectName={exam.subjectName}
               questionContentSnippet={reportingQuestion.content}
+              onSuccess={(qId) => {
+                setReportedIds((prev) => {
+                  const updated = { ...prev, [qId]: true };
+                  triggerDebouncedSave({ reportedIds: updated });
+                  return updated;
+                });
+              }}
             />
           )}
 
@@ -5262,12 +5312,23 @@ function StandardExamRoomContent() {
           <button
             onClick={async () => {
               if (!isSubmitted) {
-                if (confirm('Bài thi đang diễn ra và thời gian vẫn tiếp tục tính ngầm. Bạn có chắc chắn muốn tạm thoát ra ngoài không?')) {
-                  router.push('/#kho-mon-hoc');
+                if (confirm('Bạn có chắc chắn muốn rời phòng thi? Phiên làm bài hiện tại sẽ kết thúc và bạn sẽ quay về trang luyện thi.')) {
+                  try {
+                    if (exam?.id) {
+                      sessionStorage.removeItem(`schoolify_started_pts_${exam.id}`);
+                    }
+                  } catch {}
+                  await examOfflineStorage.clearActiveExamSession().catch(() => {});
+                  router.push('/luyen-thi');
                 }
               } else {
-                await examOfflineStorage.clearActiveExamSession();
-                router.push('/#kho-mon-hoc');
+                try {
+                  if (exam?.id) {
+                    sessionStorage.removeItem(`schoolify_started_pts_${exam.id}`);
+                  }
+                } catch {}
+                await examOfflineStorage.clearActiveExamSession().catch(() => {});
+                router.push('/luyen-thi');
               }
             }}
             className="flex items-center justify-center w-8 h-8 sm:w-auto sm:h-auto sm:px-2.5 sm:py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition-colors shrink-0"
@@ -5340,7 +5401,8 @@ function StandardExamRoomContent() {
           {exam.questions.map((q, idx) => {
             const isActive = activeQuestionIdx === idx;
             const isAnswered = isQuestionAnswered(q);
-            const isFlagged = flaggedIds[q.id];
+            const isFlagged = Boolean(flaggedIds[q.id]);
+            const isReported = Boolean(reportedIds[q.id]);
 
             return (
               <button
@@ -5349,20 +5411,14 @@ function StandardExamRoomContent() {
                 type="button"
                 onClick={() => handleJumpToQuestion(q, idx)}
                 className={cn(
-                  'h-8 sm:h-9 min-w-[56px] sm:min-w-[66px] px-2.5 sm:px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1 shrink-0 transition-all cursor-pointer select-none active:scale-95',
-                  isActive
-                    ? 'bg-[#00B8DD] text-white shadow-md shadow-[#00B8DD]/30 ring-2 ring-[#00B8DD] font-black'
-                    : isFlagged
-                    ? 'bg-amber-100 dark:bg-amber-950/90 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-500 font-bold'
-                    : isAnswered
-                    ? 'bg-emerald-600 text-white border border-emerald-500 font-bold'
-                    : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white border border-slate-200 dark:border-slate-700'
+                  'relative h-8 sm:h-9 min-w-[56px] sm:min-w-[66px] px-2.5 sm:px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1 shrink-0 transition-all cursor-pointer select-none active:scale-95',
+                  getQuestionPaletteClass({ isActive, isAnswered, isReported })
                 )}
-                title={`Câu ${idx + 1}: ${q.title}`}
+                title={`Câu ${idx + 1}: ${q.title}${isFlagged ? ' (Đã cắm cờ)' : ''}${isReported ? ' (Đã báo lỗi)' : ''}`}
               >
                 <span>Câu {idx + 1}</span>
-                {isFlagged && !isActive && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                {isFlagged && (
+                  <span className="w-2 h-2 rounded-full bg-orange-500 ring-1 ring-white dark:ring-slate-900 shrink-0" />
                 )}
               </button>
             );
@@ -6253,17 +6309,15 @@ function StandardExamRoomContent() {
                 {exam.questions.map((q) => {
                   const globalIdx = exam.questions.findIndex((item) => item.id === q.id);
                   const isAnswered = isQuestionAnswered(q);
-                  const isFlagged = flaggedIds[q.id];
+                  const isFlagged = Boolean(flaggedIds[q.id]);
+                  const isReported = Boolean(reportedIds[q.id]);
                   const isActive = activeQuestionIdx === globalIdx;
 
-                  let btnClass = 'bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-400 hover:border-[#00B8DD] hover:text-[#007D99] dark:hover:text-[#00B8DD]';
-                  if (isActive) {
-                    btnClass = 'ring-2 ring-[#00B8DD] bg-[#00B8DD] text-white font-black border-[#00B8DD] shadow-sm shadow-[#00B8DD]/20';
-                  } else if (isFlagged) {
-                    btnClass = 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-500 font-bold';
-                  } else if (isAnswered) {
-                    btnClass = 'bg-emerald-600 text-white font-bold border border-emerald-500 shadow-xs';
-                  }
+                  const btnClass = getQuestionPaletteClass({
+                    isActive,
+                    isAnswered,
+                    isReported,
+                  });
 
                   return (
                     <button
@@ -6274,11 +6328,11 @@ function StandardExamRoomContent() {
                         'h-9 rounded-xl font-bold text-xs flex items-center justify-center relative transition-transform hover:scale-105 cursor-pointer',
                         btnClass
                       )}
-                      title={`Câu ${globalIdx + 1}: ${q.title}`}
+                      title={`Câu ${globalIdx + 1}: ${q.title}${isFlagged ? ' (Đã cắm cờ)' : ''}${isReported ? ' (Đã báo lỗi)' : ''}`}
                     >
                       {globalIdx + 1}
                       {isFlagged && (
-                        <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                        <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-orange-500 ring-1 ring-white dark:ring-slate-900 shrink-0" />
                       )}
                     </button>
                   );
@@ -6290,20 +6344,22 @@ function StandardExamRoomContent() {
           {/* Legend (Chú thích) */}
           <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-500 dark:text-slate-400 pt-3 border-t border-slate-200 dark:border-slate-800">
             <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-md bg-emerald-600" />
-              <span>Đã làm ({answeredCount})</span>
+              <span className="w-3 h-3 rounded-md bg-emerald-600 border border-emerald-500" />
+              <span>Đã chọn ({answeredCount})</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-md bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700" />
-              <span>Chưa làm ({exam.questions.length - answeredCount})</span>
+              <span className="w-3 h-3 rounded-md bg-amber-100 dark:bg-amber-950/65 border border-amber-300 dark:border-amber-600" />
+              <span>Chưa chọn ({exam.questions.length - answeredCount})</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-md bg-amber-100 dark:bg-amber-950 border border-amber-300 dark:border-amber-500" />
-              <span>Đánh dấu cờ</span>
+              <span className="relative w-3 h-3 rounded-md bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 inline-flex items-center justify-center">
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+              </span>
+              <span>Cắm cờ (+ chấm cam)</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-md border-2 border-[#00B8DD] bg-[#00B8DD]" />
-              <span>Đang chọn</span>
+              <span className="w-3 h-3 rounded-md bg-white dark:bg-slate-900 border-2 border-rose-500" />
+              <span>Báo lỗi (viền đỏ)</span>
             </div>
           </div>
         </div>
@@ -6458,6 +6514,13 @@ function StandardExamRoomContent() {
           questionTitle={reportingQuestion.title}
           subjectName={exam.subjectName}
           questionContentSnippet={reportingQuestion.content}
+          onSuccess={(qId) => {
+            setReportedIds((prev) => {
+              const updated = { ...prev, [qId]: true };
+              triggerDebouncedSave({ reportedIds: updated });
+              return updated;
+            });
+          }}
         />
       )}
 

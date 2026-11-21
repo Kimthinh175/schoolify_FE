@@ -317,6 +317,7 @@ export const catalogService = {
     try {
       const res = await fetch('/api/v1/catalog/orders', {
         method: 'GET',
+        credentials: 'include',
         cache: 'no-store',
       });
       if (!res.ok) return [];
@@ -344,11 +345,85 @@ export const catalogService = {
     }
   },
 
+  /** Lấy danh sách mùa giải BXH từ PostgreSQL (`GET /api/v1/catalog/seasons`) */
+  async getSeasons(): Promise<any[]> {
+    try {
+      const res = await fetch('/api/v1/catalog/seasons', {
+        method: 'GET',
+        credentials: 'include',
+        cache: 'no-store',
+      });
+      if (!res.ok) return [];
+      const json = await res.json();
+      return Array.isArray(json?.data) ? json.data : [];
+    } catch (err) {
+      console.warn('[catalogService.getSeasons] Failed:', err);
+      return [];
+    }
+  },
+
+  /** Tạo mùa giải BXH mới (`POST /api/v1/catalog/seasons`) */
+  async createSeason(payload: any): Promise<any | null> {
+    const res = await fetch('/api/v1/catalog/seasons', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok) throw new Error(json?.message || 'Không thể tạo mùa giải mới');
+    return json?.data || null;
+  },
+
+  /** Đóng băng / Mở khóa BXH mùa giải (`POST /api/v1/catalog/seasons/:id/freeze`) */
+  async toggleSeasonFreeze(id: string): Promise<any | null> {
+    const res = await fetch(`/api/v1/catalog/seasons/${encodeURIComponent(id)}/freeze`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok) throw new Error(json?.message || 'Không thể thay đổi trạng thái đóng băng');
+    return json?.data || null;
+  },
+
+  /** Phát thưởng Ngọc Tri Thức cuối mùa giải (`POST /api/v1/catalog/seasons/:id/distribute`) */
+  async distributeSeasonRewards(id: string): Promise<any | null> {
+    const res = await fetch(`/api/v1/catalog/seasons/${encodeURIComponent(id)}/distribute`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok) throw new Error(json?.message || 'Không thể phát thưởng mùa giải');
+    return json?.data || null;
+  },
+
+  /** Lịch sử phát thưởng mùa giải (`GET /api/v1/catalog/seasons/distribution-logs`) */
+  async getDistributionLogs(): Promise<any[]> {
+    try {
+      const res = await fetch('/api/v1/catalog/seasons/distribution-logs', {
+        method: 'GET',
+        credentials: 'include',
+        cache: 'no-store',
+      });
+      if (!res.ok) return [];
+      const json = await res.json();
+      return Array.isArray(json?.data) ? json.data : [];
+    } catch (err) {
+      console.warn('[catalogService.getDistributionLogs] Failed:', err);
+      return [];
+    }
+  },
+
   /** Lấy thống kê toàn hệ thống từ PostgreSQL (`GET /api/v1/catalog/stats`) */
   async getSystemStats(): Promise<SystemStats | null> {
     try {
       const res = await fetch('/api/v1/catalog/stats', {
         method: 'GET',
+        credentials: 'include',
         cache: 'no-store',
       });
       if (!res.ok) return null;
@@ -380,6 +455,7 @@ export const catalogService = {
   async redeemStoreItem(itemId: string, userId?: string): Promise<any> {
     const res = await fetch(`/api/v1/catalog/store-items/${encodeURIComponent(itemId)}/redeem`, {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId }),
     });
@@ -393,6 +469,7 @@ export const catalogService = {
       const q = userId ? `?userId=${encodeURIComponent(userId)}` : '';
       const res = await fetch(`/api/v1/catalog/inventory${q}`, {
         method: 'GET',
+        credentials: 'include',
         cache: 'no-store',
       });
       if (!res.ok) return [];
@@ -436,6 +513,7 @@ export const catalogService = {
     try {
       const res = await fetch('/api/v1/catalog/analytics/behavior', {
         method: 'GET',
+        credentials: 'include',
         cache: 'no-store',
       });
       if (!res.ok) return null;

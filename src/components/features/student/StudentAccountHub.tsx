@@ -123,10 +123,33 @@ export function StudentAccountHub() {
     }
     const reader = new FileReader();
     reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        setAvatarUrl(reader.result);
-        toast.success('Đã tải ảnh lên! Hãy bấm "Lưu Thông Tin" để hoàn tất.');
-      }
+      if (typeof reader.result !== 'string') return;
+      const rawDataUrl = reader.result;
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const maxSize = 256;
+          const ratio = Math.min(maxSize / img.width, maxSize / img.height, 1);
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(img.width * ratio));
+          canvas.height = Math.max(1, Math.round(img.height * ratio));
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const compressed = canvas.toDataURL('image/jpeg', 0.82);
+            setAvatarUrl(compressed);
+          } else {
+            setAvatarUrl(rawDataUrl);
+          }
+        } catch {
+          setAvatarUrl(rawDataUrl);
+        }
+        toast.success('Đã tải ảnh lên! Hãy bấm "Lưu Thay Đổi Thông Tin" để hoàn tất.');
+      };
+      img.onerror = () => {
+        setAvatarUrl(rawDataUrl);
+      };
+      img.src = rawDataUrl;
     };
     reader.readAsDataURL(file);
   };
@@ -154,11 +177,19 @@ export function StudentAccountHub() {
 
       if (updated) {
         updateUser({
-          fullname: fullname.trim(),
-          phone: phone.trim(),
-          avatar_url: avatarUrl.trim(),
-        });
-        await fetchMe();
+          fullname: updated.fullname || fullname.trim(),
+          phone: updated.phone ?? (phone.trim() || undefined),
+          avatar_url: updated.avatar_url ?? (avatarUrl.trim() || undefined),
+          ...((user as any)?.student_profile
+            ? {
+                student_profile: {
+                  ...(user as any).student_profile,
+                  grade_level: updated.gradeLevel || grade,
+                },
+              }
+            : {}),
+        } as any);
+        await fetchMe().catch(() => {});
         setSavedSuccess(true);
         toast.success('Cập nhật thông tin cá nhân thành công!');
         setTimeout(() => setSavedSuccess(false), 3500);
@@ -172,7 +203,7 @@ export function StudentAccountHub() {
     }
   };
 
-  const handleSavePassword = (e: React.FormEvent) => {
+  const handleSavePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentPassword) {
       toast.error('Vui lòng nhập mật khẩu hiện tại.');
@@ -187,16 +218,41 @@ export function StudentAccountHub() {
       return;
     }
 
-    setIsSavingPassword(true);
-    setTimeout(() => {
-      setIsSavingPassword(false);
+    try {
+      setIsSavingPassword(true);
+      const token = useAuthStore.getState().token;
+      const res = await fetch('/api/v1/auth/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+        }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok) {
+        const msg = Array.isArray(json?.message)
+          ? json.message.join(', ')
+          : json?.message || 'Đổi mật khẩu thất bại. Vui lòng kiểm tra mật khẩu hiện tại.';
+        toast.error(msg);
+        return;
+      }
+
       setPasswordSuccess(true);
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
       toast.success('Đổi mật khẩu tài khoản thành công!');
       setTimeout(() => setPasswordSuccess(false), 3000);
-    }, 600);
+    } catch (err: any) {
+      toast.error(err?.message || 'Lỗi kết nối khi đổi mật khẩu.');
+    } finally {
+      setIsSavingPassword(false);
+    }
   };
 
   if (!isMounted || (!authHydrated && !user)) {

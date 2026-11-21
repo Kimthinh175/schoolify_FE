@@ -16,7 +16,6 @@ import {
   Dna,
   FlaskConical,
   Globe,
-  GraduationCap,
   Landmark,
   Languages,
   RotateCcw,
@@ -334,46 +333,12 @@ export default function LuyenThiPage() {
               Bạn có thể bắt đầu ngay với cấp độ <strong>Cơ bản</strong> hoàn toàn miễn phí.
             </p>
 
-            {/* Thanh trạng thái Lớp & Kỳ học thời gian thực */}
+            {/* Thanh trạng thái Kỳ học thời gian thực */}
             <div className="flex flex-wrap items-center gap-2 pt-1">
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#00B8DD]/10 text-[#00B8DD] border border-[#00B8DD]/25">
                 <CalendarClock className="w-3.5 h-3.5 shrink-0" />
                 <span>{semesterInfo.badgeText}</span>
               </span>
-
-              {activeUserGrade ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                  <GraduationCap className="w-3.5 h-3.5 shrink-0" />
-                  <span>
-                    {!isLoggedIn && guestState?.fullname ? `${guestState.fullname} · ` : ''}
-                    Lộ trình Lớp {activeUserGrade}
-                  </span>
-                  {!isLoggedIn && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPendingSubjectAfterOnboarding(null);
-                        setGuestOnboardingOpen(true);
-                      }}
-                      className="ml-1 underline decoration-dotted hover:text-emerald-900 dark:hover:text-emerald-100 cursor-pointer"
-                    >
-                      Đổi lớp
-                    </button>
-                  )}
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPendingSubjectAfterOnboarding(K12_SUBJECTS[0]);
-                    setGuestOnboardingOpen(true);
-                  }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:border-[#00B8DD] transition-colors cursor-pointer"
-                >
-                  <GraduationCap className="w-3.5 h-3.5 text-[#00B8DD]" />
-                  <span>Chọn lớp để vẽ lộ trình chương (Lớp 10, 11, 12)</span>
-                </button>
-              )}
             </div>
           </div>
 
