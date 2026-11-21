@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Season, DistributionRecipient } from '@/types/leaderboard';
 import { leaderboardService } from '@/services/leaderboard.service';
+import { catalogService } from '@/services/catalog.service';
 import { Dialog } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,30 +42,58 @@ export function RewardDistributionModal({
   const [totalGems, setTotalGems] = React.useState(0);
 
   React.useEffect(() => {
-    if (isOpen && season) {
-      const recs = leaderboardService.getDistributionRecipients(season.id);
-      setRecipients(recs);
-      const total = recs
-        .filter((r) => r.status !== 'FLAGGED')
-        .reduce((sum, r) => sum + r.gemsAwarded, 0);
-      setTotalGems(total);
+    if (!isOpen || !season) return;
+    let mounted = true;
+    catalogService.getLeaderboard().then((entries) => {
+      if (!mounted) return;
+      if (entries.length > 0) {
+        const recs: DistributionRecipient[] = entries.slice(0, 50).map((u, idx) => {
+          const rank = Number(u.rank || idx + 1);
+          const matchedTier = season.rewards.find((t) => rank >= t.minRank && rank <= t.maxRank);
+          const gemsAwarded = matchedTier ? Number(matchedTier.gemReward || 0) : 0;
+          return {
+            userId: u.userId || u.studentId || `u-${idx}`,
+            userName: u.fullname,
+            avatar:
+              u.avatarUrl ||
+              'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+            schoolName: u.schoolName || 'THPT Chuyên Schoolify',
+            className: `Lớp ${u.grade || 12}`,
+            rank,
+            points: Number(u.points || 0),
+            gemsAwarded,
+            badgeAwarded: matchedTier?.badgeName || 'Chứng Nhận Mùa Giải',
+            status: 'PENDING',
+          };
+        });
+        setRecipients(recs);
+        setTotalGems(recs.reduce((sum, r) => sum + r.gemsAwarded, 0));
+      } else {
+        const recs = leaderboardService.getDistributionRecipients(season.id);
+        setRecipients(recs);
+        const total = recs
+          .filter((r) => r.status !== 'FLAGGED')
+          .reduce((sum, r) => sum + r.gemsAwarded, 0);
+        setTotalGems(total);
+      }
       setIsSuccess(false);
-    }
+    });
+    return () => {
+      mounted = false;
+    };
   }, [isOpen, season]);
 
-  const handleExecute = () => {
+  const handleExecute = async () => {
     setIsSubmitting(true);
-    setTimeout(() => {
-      try {
-        leaderboardService.executeSeasonRewardDistribution(season.id, adminName, auditNotes);
-        setIsSubmitting(false);
-        setIsSuccess(true);
-        onDistributionComplete();
-      } catch (err) {
-        setIsSubmitting(false);
-        alert('Có lỗi xảy ra khi phát thưởng: ' + String(err));
-      }
-    }, 1200);
+    try {
+      await catalogService.distributeSeasonRewards(season.id);
+      setIsSubmitting(false);
+      setIsSuccess(true);
+      onDistributionComplete();
+    } catch (err: any) {
+      setIsSubmitting(false);
+      alert('Có lỗi xảy ra khi phát thưởng: ' + (err?.message || String(err)));
+    }
   };
 
   return (

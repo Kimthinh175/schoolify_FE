@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { Bell, CheckCheck, Trash2, CheckCircle2, Info, AlertTriangle, AlertCircle } from 'lucide-react';
 import { useSonner } from 'sonner';
 import {
@@ -8,6 +9,7 @@ import {
   type AppNotificationItem,
   type AppNotificationType,
 } from '@/store/notifications.store';
+import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
 
 function extractSonnerText(value: unknown): string {
@@ -109,12 +111,15 @@ function NotificationTypeBadge({ type }: { type: AppNotificationItem['type'] }) 
 }
 
 export function NotificationBellMenu() {
+  const router = useRouter();
   const [isOpen, setIsOpen] = React.useState(false);
   const [isMounted, setIsMounted] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
+  const { isAuthenticated } = useAuthStore();
   const items = useNotificationsStore((s) => s.items);
   const hydrate = useNotificationsStore((s) => s.hydrate);
+  const syncFromBackend = useNotificationsStore((s) => s.syncFromBackend);
   const markAsRead = useNotificationsStore((s) => s.markAsRead);
   const markAllAsRead = useNotificationsStore((s) => s.markAllAsRead);
   const clearAll = useNotificationsStore((s) => s.clearAll);
@@ -125,7 +130,16 @@ export function NotificationBellMenu() {
   }, [hydrate]);
 
   React.useEffect(() => {
+    if (isAuthenticated) {
+      syncFromBackend();
+    }
+  }, [isAuthenticated, syncFromBackend]);
+
+  React.useEffect(() => {
     if (!isOpen) return;
+    if (isAuthenticated) {
+      syncFromBackend();
+    }
     const handleOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
@@ -231,7 +245,13 @@ export function NotificationBellMenu() {
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => markAsRead(item.id)}
+                  onClick={() => {
+                    markAsRead(item.id);
+                    if (item.link) {
+                      setIsOpen(false);
+                      router.push(item.link);
+                    }
+                  }}
                   className={cn(
                     'w-full text-left px-4 py-3 flex items-start gap-3 transition-colors cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60',
                     !item.read && 'bg-[#00B8DD]/[0.04] dark:bg-[#00B8DD]/[0.07]',

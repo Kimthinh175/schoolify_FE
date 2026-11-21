@@ -181,7 +181,11 @@ export const leaderboardService = {
 
   // --- LEADERBOARD RANKINGS ---
   getUsers(): LeaderboardUser[] {
-    return getStoredData<LeaderboardUser[]>(USERS_STORAGE_KEY, MOCK_LEADERBOARD_USERS);
+    return getStoredData<LeaderboardUser[]>(USERS_STORAGE_KEY, MOCK_LEADERBOARD_USERS).map((u) => ({
+      ...u,
+      name: u.name.replace(/\s*\(Bạn\)\s*$/i, ''),
+      isCurrentUser: false,
+    }));
   },
 
   getFilteredLeaderboard(params: {
@@ -190,13 +194,27 @@ export const leaderboardService = {
     subject: SubjectFilter;
     scope: LeaderboardScope;
     search?: string;
+    sourceUsers?: LeaderboardUser[];
+    currentAuthUser?: {
+      id: string;
+      fullname: string;
+      avatar_url?: string | null;
+      grade_level?: string | null;
+      points?: number;
+    } | null;
   }): {
     topThree: LeaderboardUser[];
     restOfUsers: LeaderboardUser[];
     currentUser: LeaderboardUser | undefined;
     totalCount: number;
   } {
-    let users = [...this.getUsers()];
+    let users = [...(params.sourceUsers && params.sourceUsers.length > 0 ? params.sourceUsers : this.getUsers())].map(
+      (u) => ({
+        ...u,
+        name: u.name.replace(/\s*\(Bạn\)\s*$/i, ''),
+        isCurrentUser: Boolean(params.currentAuthUser?.id && u.id === params.currentAuthUser.id),
+      })
+    );
 
     // Grade filter
     if (params.grade !== 'ALL') {
@@ -208,11 +226,11 @@ export const leaderboardService = {
       users = users.filter((u) => u.primarySubject === params.subject);
     }
 
-    // Scope filter (mock: National = all, School = THPT Chuyên Lê Hồng Phong, Class = 11 Toán 1)
+    // Scope filter (mock fallback when schoolName matches)
     if (params.scope === 'SCHOOL') {
-      users = users.filter((u) => u.schoolName.includes('Lê Hồng Phong'));
+      users = users.filter((u) => u.schoolName.includes('Lê Hồng Phong') || u.schoolName.includes('Schoolify'));
     } else if (params.scope === 'CLASS') {
-      users = users.filter((u) => u.className.includes('11 Toán 1') || u.className.includes('12 Toán 1'));
+      users = users.filter((u) => u.className.includes('11 Toán 1') || u.className.includes('12 Toán 1') || u.isCurrentUser);
     }
 
     // Search query
@@ -227,7 +245,7 @@ export const leaderboardService = {
     }
 
     // Adjust points slightly based on timeframe for realism
-    let timeframeUsers = users.map((u, i) => {
+    let timeframeUsers = users.map((u) => {
       let multiplier = 1;
       if (params.timeframe === 'WEEKLY') multiplier = 0.22;
       else if (params.timeframe === 'MONTHLY') multiplier = 0.65;
@@ -244,11 +262,45 @@ export const leaderboardService = {
     timeframeUsers = timeframeUsers.map((u, idx) => ({
       ...u,
       rank: idx + 1,
+      name: u.isCurrentUser ? `${u.name} (Bạn)` : u.name,
     }));
 
     const topThree = timeframeUsers.slice(0, 3);
     const restOfUsers = timeframeUsers.slice(3);
-    const currentUser = timeframeUsers.find((u) => u.isCurrentUser) || this.getCurrentUserMock();
+
+    let currentUser: LeaderboardUser | undefined = undefined;
+    if (params.currentAuthUser?.id) {
+      const matched = timeframeUsers.find((u) => u.id === params.currentAuthUser!.id);
+      if (matched) {
+        currentUser = matched;
+      } else {
+        const parsedGradeNum = Number(String(params.currentAuthUser.grade_level || '12').match(/\d+/)?.[0] || 12);
+        const mappedGrade = (`GRADE_${Math.min(12, Math.max(6, parsedGradeNum))}`) as GradeLevel;
+        currentUser = {
+          id: params.currentAuthUser.id,
+          rank: timeframeUsers.length + 1,
+          previousRank: timeframeUsers.length + 1,
+          rankChange: 'NEW',
+          rankChangeAmount: 0,
+          name: `${params.currentAuthUser.fullname} (Bạn)`,
+          avatar:
+            params.currentAuthUser.avatar_url ||
+            'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+          schoolName: 'Schoolify Toàn Quốc',
+          className: `Lớp ${parsedGradeNum}`,
+          grade: mappedGrade,
+          primarySubject: 'MATH',
+          points: Number(params.currentAuthUser.points || 0),
+          correctRate: 0,
+          quizzesCompleted: 0,
+          streakDays: 1,
+          gems: Number(params.currentAuthUser.points || 0),
+          badgeTitle: 'Thành Viên Mới',
+          badgeTier: 'BRONZE',
+          isCurrentUser: true,
+        };
+      }
+    }
 
     return {
       topThree,

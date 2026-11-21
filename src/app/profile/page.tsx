@@ -160,11 +160,19 @@ export default function ProfileSettingsPage() {
       if (updated) {
         // Cập nhật Auth Store ngay lập tức để Header và các trang khác đồng bộ
         updateUser({
-          fullname: fullname.trim(),
-          phone: phone.trim(),
-          avatar_url: avatarUrl.trim(),
-        });
-        await fetchMe();
+          fullname: updated.fullname || fullname.trim(),
+          phone: updated.phone ?? (phone.trim() || undefined),
+          avatar_url: updated.avatar_url ?? (avatarUrl.trim() || undefined),
+          ...((user as any)?.student_profile
+            ? {
+                student_profile: {
+                  ...(user as any).student_profile,
+                  grade_level: updated.gradeLevel || gradeLevel,
+                },
+              }
+            : {}),
+        } as any);
+        await fetchMe().catch(() => {});
 
         setSavedSuccess(true);
         setTimeout(() => setSavedSuccess(false), 3500);

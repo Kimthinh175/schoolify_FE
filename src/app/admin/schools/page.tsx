@@ -25,6 +25,7 @@ import { Dialog } from '@/components/ui/dialog';
 import { QuotaBar } from '@/components/features/admin/QuotaBar';
 import { cn } from '@/lib/utils';
 import { MOCK_SCHOOLS, MOCK_PACKAGES } from '@/services/mock/data';
+import { schoolService } from '@/services/school.service';
 import { School, SchoolSubscription, SubscriptionStatus, SchoolStatus } from '@/types';
 
 type BadgeVariant = 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'purple' | 'outline';
@@ -144,6 +145,22 @@ export default function AdminSchoolsPage() {
   const [schools, setSchools] = React.useState<School[]>(MOCK_SCHOOLS);
   const [search, setSearch] = React.useState('');
   const [selectedSchool, setSelectedSchool] = React.useState<School | null>(null);
+  const [isCreateOpen, setIsCreateOpen] = React.useState(false);
+  const [newName, setNewName] = React.useState('');
+  const [newCode, setNewCode] = React.useState('');
+  const [newEmail, setNewEmail] = React.useState('');
+  const [newPhone, setNewPhone] = React.useState('');
+  const [newAddress, setNewAddress] = React.useState('');
+  const [isSaving, setIsSaving] = React.useState(false);
+
+  const loadSchools = React.useCallback(async () => {
+    const list = await schoolService.getSchools();
+    setSchools(list);
+  }, []);
+
+  React.useEffect(() => {
+    loadSchools();
+  }, [loadSchools]);
 
   const filteredSchools = schools.filter(
     (s) =>
@@ -152,13 +169,45 @@ export default function AdminSchoolsPage() {
       (s.owner?.fullname ?? '').toLowerCase().includes(search.toLowerCase())
   );
 
-  const toggleStatus = (id: string) => {
-    setSelectedSchool((prev) =>
-      prev && prev.id === id ? { ...prev, status: prev.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE' } : prev
-    );
-    setSchools((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, status: s.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE' } : s))
-    );
+  const toggleStatus = async (id: string) => {
+    const target = schools.find((s) => s.id === id);
+    if (!target) return;
+    const nextStatus: SchoolStatus = target.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+
+    setSelectedSchool((prev) => (prev && prev.id === id ? { ...prev, status: nextStatus } : prev));
+    setSchools((prev) => prev.map((s) => (s.id === id ? { ...s, status: nextStatus } : s)));
+
+    try {
+      await schoolService.updateSchoolStatus(id, nextStatus);
+    } catch {
+      // keep optimistic UI if mock item
+    }
+  };
+
+  const handleCreateSchool = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newName.trim() || !newCode.trim()) return;
+    setIsSaving(true);
+    try {
+      await schoolService.createSchool({
+        name: newName.trim(),
+        code: newCode.trim().toUpperCase(),
+        email: newEmail.trim() || undefined,
+        phone: newPhone.trim() || undefined,
+        address: newAddress.trim() || undefined,
+      });
+      setNewName('');
+      setNewCode('');
+      setNewEmail('');
+      setNewPhone('');
+      setNewAddress('');
+      setIsCreateOpen(false);
+      await loadSchools();
+    } catch (err: any) {
+      alert(err?.message || 'Không thể tạo cơ sở mới');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const ownerName = selectedSchool?.owner?.fullname ?? selectedSchool?.owner?.email ?? '—';
@@ -173,7 +222,9 @@ export default function AdminSchoolsPage() {
             Duyệt cấp phép, giám sát hạn mức gói cước và quản lý cơ sở trường học
           </p>
         </div>
-        <Button leftIcon={<Plus className="w-4 h-4" />}>Thêm Cơ Sở Mới</Button>
+        <Button leftIcon={<Plus className="w-4 h-4" />} onClick={() => setIsCreateOpen(true)}>
+          Thêm Cơ Sở Mới
+        </Button>
       </div>
 
       {/* Filter bar */}
@@ -444,6 +495,63 @@ export default function AdminSchoolsPage() {
             )}
           </div>
         )}
+      </Dialog>
+
+      {/* Dialog tạo mới cơ sở */}
+      <Dialog
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        title="Thêm Cơ Sở Trường Học Mới"
+        description="Khởi tạo tenant trường học mới trong PostgreSQL"
+        maxWidth="lg"
+      >
+        <form onSubmit={handleCreateSchool} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input
+              label="Tên trường *"
+              placeholder="VD: THPT Chuyên Lê Hồng Phong"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              required
+            />
+            <Input
+              label="Mã trường *"
+              placeholder="VD: THPT-LHP-HCM"
+              value={newCode}
+              onChange={(e) => setNewCode(e.target.value)}
+              required
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input
+              label="Email liên hệ"
+              type="email"
+              placeholder="contact@school.edu.vn"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+            />
+            <Input
+              label="Số điện thoại"
+              placeholder="028 3835 1234"
+              value={newPhone}
+              onChange={(e) => setNewPhone(e.target.value)}
+            />
+          </div>
+          <Input
+            label="Địa chỉ"
+            placeholder="235 Nguyễn Văn Cừ, Q.5, TP.HCM"
+            value={newAddress}
+            onChange={(e) => setNewAddress(e.target.value)}
+          />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
+              Hủy
+            </Button>
+            <Button type="submit" disabled={isSaving}>
+              {isSaving ? 'Đang lưu...' : 'Tạo Cơ Sở'}
+            </Button>
+          </div>
+        </form>
       </Dialog>
     </div>
   );

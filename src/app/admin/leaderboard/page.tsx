@@ -13,8 +13,9 @@ import {
   ExternalLink,
   Sparkles,
 } from 'lucide-react';
-import { Season, SeasonDistributionLog } from '@/types/leaderboard';
+import { Season, SeasonDistributionLog, LeaderboardUser, GradeLevel } from '@/types/leaderboard';
 import { leaderboardService } from '@/services/leaderboard.service';
+import { catalogService } from '@/services/catalog.service';
 import { AdminSeasonStats } from '@/components/features/admin/leaderboard/AdminSeasonStats';
 import { AdminSeasonManager } from '@/components/features/admin/leaderboard/AdminSeasonManager';
 import { DistributionLogsTable } from '@/components/features/admin/leaderboard/DistributionLogsTable';
@@ -29,29 +30,71 @@ export default function AdminLeaderboardPage() {
   const [seasons, setSeasons] = React.useState<Season[]>([]);
   const [selectedSeason, setSelectedSeason] = React.useState<Season | null>(null);
   const [logs, setLogs] = React.useState<SeasonDistributionLog[]>([]);
+  const [liveUsers, setLiveUsers] = React.useState<LeaderboardUser[]>([]);
   const [activeTab, setActiveTab] = React.useState('seasons');
 
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
   const [isDistributeModalOpen, setIsDistributeModalOpen] = React.useState(false);
 
-  // Load data
-  const refreshData = React.useCallback(() => {
-    const sList = leaderboardService.getSeasons();
-    const lList = leaderboardService.getDistributionLogs();
+  // Load data from PostgreSQL (fallback to local mock if backend unavailable)
+  const refreshData = React.useCallback(async () => {
+    const [apiSeasons, apiLogs, apiLb] = await Promise.all([
+      catalogService.getSeasons(),
+      catalogService.getDistributionLogs(),
+      catalogService.getLeaderboard(),
+    ]);
+
+    const sList = (apiSeasons.length > 0 ? apiSeasons : leaderboardService.getSeasons()) as Season[];
+    const lList = (apiLogs.length > 0 ? apiLogs : leaderboardService.getDistributionLogs()) as SeasonDistributionLog[];
+
     setSeasons(sList);
     setLogs(lList);
-    if (!selectedSeason || !sList.find((s) => s.id === selectedSeason.id)) {
-      const active = sList.find((s) => s.status === 'ACTIVE') || sList[0];
-      setSelectedSeason(active);
+    setSelectedSeason((prev) => {
+      if (prev) {
+        const updated = sList.find((s) => s.id === prev.id);
+        if (updated) return updated;
+      }
+      return sList.find((s) => s.status === 'ACTIVE') || sList[0] || null;
+    });
+
+    if (apiLb.length > 0) {
+      setLiveUsers(
+        apiLb.map((entry, idx) => {
+          const gradeNum = Number(entry.grade || 12);
+          const safeGrade = (`GRADE_${Math.min(12, Math.max(6, gradeNum))}`) as GradeLevel;
+          const pts = Number(entry.points || 0);
+          return {
+            id: entry.userId || entry.studentId || `lb-${idx + 1}`,
+            rank: Number(entry.rank || idx + 1),
+            previousRank: Number(entry.rank || idx + 1),
+            rankChange: 'SAME',
+            rankChangeAmount: 0,
+            name: entry.fullname || 'Học sinh Schoolify',
+            avatar:
+              entry.avatarUrl ||
+              'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+            schoolName: entry.schoolName || 'THPT Chuyên Schoolify',
+            className: `Lớp ${gradeNum}`,
+            grade: safeGrade,
+            primarySubject: 'MATH',
+            points: pts,
+            correctRate: Math.min(100, Math.round(Number(entry.avgScore || 8.5) * 10)),
+            quizzesCompleted: Number(entry.totalExams || 0),
+            streakDays: Number(entry.streakDays || 1),
+            gems: pts,
+            badgeTitle: idx < 3 ? 'Chiến Thần Tri Thức' : 'Học Viên Nỗ Lực',
+            badgeTier: idx === 0 ? 'DIAMOND' : idx < 3 ? 'PLATINUM' : 'GOLD',
+          };
+        })
+      );
     } else {
-      const updated = sList.find((s) => s.id === selectedSeason.id);
-      if (updated) setSelectedSeason(updated);
+      setLiveUsers(leaderboardService.getUsers());
     }
-  }, [selectedSeason]);
+  }, []);
 
   React.useEffect(() => {
     refreshData();
-  }, []);
+  }, [refreshData]);
 
   const handleSeasonCreated = (newSeason: Season) => {
     refreshData();
@@ -67,7 +110,7 @@ export default function AdminLeaderboardPage() {
     setSelectedSeason(updated);
   };
 
-  const users = leaderboardService.getUsers();
+  const users = liveUsers.length > 0 ? liveUsers : leaderboardService.getUsers();
 
   const ADMIN_TABS = [
     {

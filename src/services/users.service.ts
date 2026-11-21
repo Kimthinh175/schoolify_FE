@@ -120,19 +120,20 @@ export const usersService = {
       grade_level?: string;
     }
   ): Promise<AdminUserItem | null> {
-    try {
-      const res = await fetch(`/api/v1/users/${encodeURIComponent(id)}`, {
-        method: 'PATCH',
-        headers: getAuthHeaders(true),
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) return null;
-      const json = await res.json();
-      return json?.user || null;
-    } catch (err) {
-      console.warn('[usersService.updateUser] Failed:', err);
-      return null;
+    const res = await fetch(`/api/v1/users/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(true),
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok) {
+      const msg = Array.isArray(json?.message)
+        ? json.message.join(', ')
+        : json?.message || `Cập nhật hồ sơ thất bại (${res.status})`;
+      throw new Error(msg);
     }
+    return json?.user || null;
   },
 
   /** Xóa người dùng (`DELETE /api/v1/users/:id`) */
