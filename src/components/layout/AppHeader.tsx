@@ -4,7 +4,6 @@ import * as React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Menu,
-  Bell,
   User,
   LogOut,
 } from 'lucide-react';
@@ -12,6 +11,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { AvatarFrame, useActiveAvatarFrame } from '@/components/ui/avatar-frame';
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { NotificationBellMenu } from '@/components/layout/NotificationBellMenu';
 import { useAuthStore } from '@/store/auth.store';
 
 export function AppHeader({ onOpenMobileSidebar }: { onOpenMobileSidebar: () => void }) {
@@ -51,13 +51,7 @@ export function AppHeader({ onOpenMobileSidebar }: { onOpenMobileSidebar: () => 
       <div className="flex items-center gap-3">
         <ThemeToggle />
 
-        <button className="relative rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors">
-          <Bell className="h-5 w-5" />
-          <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75"></span>
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500"></span>
-          </span>
-        </button>
+        <NotificationBellMenu />
 
         {!isMounted ? (
           <div className="flex items-center gap-2.5 py-1.5 px-2.5 rounded-xl animate-pulse">

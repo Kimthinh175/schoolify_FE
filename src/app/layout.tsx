@@ -52,6 +52,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        <meta name="google" content="notranslate" />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function() {
@@ -88,7 +89,7 @@ export default function RootLayout({
             {children}
             <GlobalFloatingWidgets />
             <SonnerNotificationSync />
-            <Toaster position="top-right" closeButton expand visibleToasts={4} gap={10} />
+            <Toaster position="top-right" closeButton expand visibleToasts={4} gap={8} />
           </ExamSessionGuardProvider>
         </ThemeProvider>
       </body>

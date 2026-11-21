@@ -218,7 +218,6 @@ html.compact-subtab footer {
    Sonner Toast (Schoolify Elevated Glass Card + Right-Aligned Close Button)
    ============================================================================ */
 [data-sonner-toaster] [data-sonner-toast] {
-  position: relative !important;
   overflow: hidden !important;
   border-radius: 16px !important;
   padding: 14px 52px 14px 18px !important;

@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Trophy, Calendar, Sparkles, Coins, Plus, Trash2 } from 'lucide-react';
 import { Season } from '@/types/leaderboard';
 import { leaderboardService } from '@/services/leaderboard.service';
+import { catalogService } from '@/services/catalog.service';
 import { DEFAULT_SEASON_REWARDS } from '@/services/mock/leaderboard-data';
 import { Dialog } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -30,7 +31,7 @@ export function CreateSeasonModal({
     'Mỗi bài thi đạt điểm 9-10: +150 EXP\nDuy trì chuỗi học tập 7 ngày: +200 EXP\nHệ số giờ vàng cuối tuần: 1.5x'
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !code) {
       alert('Vui lòng nhập tên và mã mùa giải');
@@ -42,21 +43,26 @@ export function CreateSeasonModal({
       .map((r) => r.trim())
       .filter((r) => r.length > 0);
 
-    const created = leaderboardService.createSeason({
+    const payload = {
       name,
       code: code.toUpperCase(),
       description,
-      status: 'UPCOMING',
+      status: 'UPCOMING' as const,
       startDate: new Date(startDate).toISOString(),
       endDate: new Date(endDate).toISOString(),
       totalGemsPool: gemsPool,
       scoringMultiplier: multiplier,
       rules,
       rewards: DEFAULT_SEASON_REWARDS,
-    });
+    };
 
-    onSeasonCreated(created);
-    onClose();
+    try {
+      const apiCreated = await catalogService.createSeason(payload);
+      onSeasonCreated((apiCreated || leaderboardService.createSeason(payload)) as Season);
+      onClose();
+    } catch (err: any) {
+      alert(err?.message || 'Lỗi tạo mùa giải');
+    }
   };
 
   return (

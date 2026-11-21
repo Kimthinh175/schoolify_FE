@@ -1,4 +1,3 @@
-import { demoDb } from '@/lib/demo-db';
 import { NewsArticle, NewsCategory, NewsStatus, NewsTocItem } from '@/types';
 import { MOCK_NEWS_ARTICLES, MOCK_NEWS_CATEGORIES } from './mock/news-data';
 
@@ -94,57 +93,23 @@ export function formatVietnameseDate(isoDate?: string | null): string {
   return `${day} Tháng ${month}, ${year}`;
 }
 
-let seedPromise: Promise<void> | null = null;
-
-async function ensureSeeded(): Promise<void> {
-  if (seedPromise) return seedPromise;
-  seedPromise = (async () => {
-    try {
-      const [existingCats, existingArticles] = await Promise.all([
-        demoDb.list<NewsCategory>('newsCategories'),
-        demoDb.list<NewsArticle>('newsArticles'),
-      ]);
-
-      if (existingCats.length === 0) {
-        for (const cat of [...MOCK_NEWS_CATEGORIES].reverse()) {
-          await demoDb.create('newsCategories', cat);
-        }
-      }
-
-      if (existingArticles.length === 0) {
-        for (const art of [...MOCK_NEWS_ARTICLES].reverse()) {
-          const toc = extractTableOfContents(art.content);
-          const search_text = removeVietnameseTones(
-            `${art.title} ${art.excerpt} ${(art.tags || []).join(' ')} ${art.author_name}`
-          );
-          await demoDb.create('newsArticles', {
-            ...art,
-            table_of_contents: toc,
-            search_text,
-          });
-        }
-      } else {
-        // Bổ sung các bài viết mẫu mới (như DRAFT / SCHEDULED) nếu chưa tồn tại trong DB
-        const existingIds = new Set(existingArticles.map((a) => a.id));
-        for (const art of MOCK_NEWS_ARTICLES) {
-          if (!existingIds.has(art.id)) {
-            const toc = extractTableOfContents(art.content);
-            const search_text = removeVietnameseTones(
-              `${art.title} ${art.excerpt} ${(art.tags || []).join(' ')} ${art.author_name}`
-            );
-            await demoDb.create('newsArticles', {
-              ...art,
-              table_of_contents: toc,
-              search_text,
-            });
-          }
-        }
-      }
-    } catch {
-      // Fallback sang dữ liệu bộ nhớ nếu môi trường hiện tại không ghi được file
-    }
-  })();
-  return seedPromise;
+async function fetchNewsJson<T>(url: string, init?: RequestInit): Promise<T | null> {
+  try {
+    const res = await fetch(url, {
+      ...init,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(init?.headers || {}),
+      },
+      cache: 'no-store',
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return (json?.data ?? json) as T;
+  } catch {
+    return null;
+  }
 }
 
 /** Kiểm tra bài viết SCHEDULED đã tới giờ xuất bản hay chưa */
@@ -158,33 +123,47 @@ function isArticleEffectivelyPublished(article: NewsArticle, nowMs = Date.now())
   return false;
 }
 
+function hydrateArticle(a: NewsArticle, catMap: Map<string, NewsCategory>, nowMs: number): NewsArticle {
+  const effectivePublished = isArticleEffectivelyPublished(a, nowMs);
+  const normalizedStatus: NewsStatus =
+    a.status === 'SCHEDULED' && effectivePublished ? 'PUBLISHED' : a.status;
+  return {
+    ...a,
+    status: normalizedStatus,
+    published_at:
+      normalizedStatus === 'PUBLISHED' && !a.published_at
+        ? a.scheduled_at || a.created_at
+        : a.published_at,
+    category: a.category || catMap.get(a.category_id),
+    table_of_contents:
+      a.table_of_contents && a.table_of_contents.length > 0
+        ? a.table_of_contents
+        : extractTableOfContents(a.content || ''),
+  };
+}
+
 export const newsService = {
   async getCategories(onlyActive = true): Promise<NewsCategory[]> {
-    await ensureSeeded();
-    try {
-      const [cats, articles] = await Promise.all([
-        demoDb.list<NewsCategory>('newsCategories'),
-        demoDb.list<NewsArticle>('newsArticles'),
-      ]);
-      const baseCats = cats.length > 0 ? cats : MOCK_NEWS_CATEGORIES;
-      const nowMs = Date.now();
+    const [apiCats, apiArticles] = await Promise.all([
+      fetchNewsJson<NewsCategory[]>(`/api/v1/news/categories?onlyActive=${onlyActive}`),
+      fetchNewsJson<NewsArticle[]>('/api/v1/news/articles?onlyPublic=false'),
+    ]);
 
-      const enriched = baseCats
-        .filter((c) => (onlyActive ? c.is_active : true))
-        .map((cat) => {
-          const count = articles.filter(
-            (a) =>
-              a.category_id === cat.id &&
-              (onlyActive ? isArticleEffectivelyPublished(a, nowMs) : !a.deleted_at)
-          ).length;
-          return { ...cat, articles_count: count };
-        })
-        .sort((a, b) => a.order_index - b.order_index);
+    const baseCats = apiCats && apiCats.length > 0 ? apiCats : MOCK_NEWS_CATEGORIES;
+    const articles = apiArticles && apiArticles.length > 0 ? apiArticles : MOCK_NEWS_ARTICLES;
+    const nowMs = Date.now();
 
-      return enriched;
-    } catch {
-      return MOCK_NEWS_CATEGORIES.filter((c) => (onlyActive ? c.is_active : true));
-    }
+    return baseCats
+      .filter((c) => (onlyActive ? c.is_active : true))
+      .map((cat) => {
+        const count = articles.filter(
+          (a) =>
+            a.category_id === cat.id &&
+            (onlyActive ? isArticleEffectivelyPublished(a, nowMs) : !a.deleted_at)
+        ).length;
+        return { ...cat, articles_count: cat.articles_count ?? count };
+      })
+      .sort((a, b) => a.order_index - b.order_index);
   },
 
   async getArticles(filters?: {
@@ -195,46 +174,22 @@ export const newsService = {
     status?: NewsStatus | 'ALL';
     onlyPublic?: boolean;
   }): Promise<NewsArticle[]> {
-    await ensureSeeded();
     const onlyPublic = filters?.onlyPublic ?? true;
 
-    let cats: NewsCategory[] = MOCK_NEWS_CATEGORIES;
-    let rawArticles: NewsArticle[] = MOCK_NEWS_ARTICLES;
+    const [apiCats, apiArticles] = await Promise.all([
+      fetchNewsJson<NewsCategory[]>('/api/v1/news/categories?onlyActive=false'),
+      fetchNewsJson<NewsArticle[]>(`/api/v1/news/articles?onlyPublic=${onlyPublic}`),
+    ]);
 
-    try {
-      const [dbCats, dbArts] = await Promise.all([
-        demoDb.list<NewsCategory>('newsCategories'),
-        demoDb.list<NewsArticle>('newsArticles'),
-      ]);
-      if (dbCats.length > 0) cats = dbCats;
-      if (dbArts.length > 0) rawArticles = dbArts;
-    } catch {
-      // fallback mock
-    }
+    const cats = apiCats && apiCats.length > 0 ? apiCats : MOCK_NEWS_CATEGORIES;
+    const rawArticles = apiArticles && apiArticles.length > 0 ? apiArticles : MOCK_NEWS_ARTICLES;
 
     const catMap = new Map(cats.map((c) => [c.id, c]));
     const nowMs = Date.now();
 
     let result = rawArticles
       .filter((a) => !a.deleted_at)
-      .map((a) => {
-        const effectivePublished = isArticleEffectivelyPublished(a, nowMs);
-        const normalizedStatus: NewsStatus =
-          a.status === 'SCHEDULED' && effectivePublished ? 'PUBLISHED' : a.status;
-        return {
-          ...a,
-          status: normalizedStatus,
-          published_at:
-            normalizedStatus === 'PUBLISHED' && !a.published_at
-              ? a.scheduled_at || a.created_at
-              : a.published_at,
-          category: catMap.get(a.category_id),
-          table_of_contents:
-            a.table_of_contents && a.table_of_contents.length > 0
-              ? a.table_of_contents
-              : extractTableOfContents(a.content),
-        };
-      });
+      .map((a) => hydrateArticle(a, catMap, nowMs));
 
     if (onlyPublic) {
       result = result.filter((a) => a.status === 'PUBLISHED');
@@ -269,7 +224,6 @@ export const newsService = {
       });
     }
 
-    // Sắp xếp: ưu tiên bài ghim (is_pinned) khi xem public, sau đó theo ngày xuất bản mới nhất
     result.sort((a, b) => {
       if (onlyPublic && a.is_pinned !== b.is_pinned) {
         return a.is_pinned ? -1 : 1;
@@ -283,14 +237,21 @@ export const newsService = {
   },
 
   async getArticleBySlug(slug: string, incrementView = true): Promise<NewsArticle | null> {
+    const apiFound = await fetchNewsJson<NewsArticle>(
+      `/api/v1/news/articles/${encodeURIComponent(slug)}?onlyPublic=false`
+    );
+    if (apiFound) {
+      const cats = await this.getCategories(false);
+      const catMap = new Map(cats.map((c) => [c.id, c]));
+      return hydrateArticle(apiFound, catMap, Date.now());
+    }
+
     const all = await this.getArticles({ onlyPublic: false });
     const found = all.find((a) => a.slug === slug || a.id === slug);
     if (!found) return null;
 
     if (incrementView) {
-      const nextViews = (found.view_count || 0) + 1;
-      found.view_count = nextViews;
-      demoDb.patch<NewsArticle>('newsArticles', found.id, { view_count: nextViews }).catch(() => {});
+      found.view_count = (found.view_count || 0) + 1;
     }
 
     return found;
@@ -320,12 +281,16 @@ export const newsService = {
   },
 
   async toggleLikeArticle(id: string): Promise<number> {
+    const updated = await fetchNewsJson<NewsArticle>(
+      `/api/v1/news/articles/${encodeURIComponent(id)}/like`,
+      { method: 'POST', body: JSON.stringify({}) }
+    );
+    if (updated && typeof updated.like_count === 'number') {
+      return updated.like_count;
+    }
     const all = await this.getArticles({ onlyPublic: false });
     const target = all.find((a) => a.id === id);
-    if (!target) return 0;
-    const nextLikes = (target.like_count || 0) + 1;
-    await demoDb.patch<NewsArticle>('newsArticles', id, { like_count: nextLikes }).catch(() => {});
-    return nextLikes;
+    return target ? (target.like_count || 0) + 1 : 0;
   },
 
   // ── ADMIN CMS: QUẢN TRỊ BÀI VIẾT ──
@@ -344,7 +309,6 @@ export const newsService = {
       >
     >
   ): Promise<NewsArticle | null> {
-    await ensureSeeded();
     const updatedPayload: Partial<NewsArticle> = {
       ...patch,
       updated_at: new Date().toISOString(),
@@ -352,20 +316,16 @@ export const newsService = {
     if (patch.status === 'PUBLISHED' && !patch.published_at) {
       updatedPayload.published_at = new Date().toISOString();
     }
-    try {
-      const updated = await demoDb.patch<NewsArticle>('newsArticles', id, updatedPayload);
-      return updated;
-    } catch {
-      return null;
-    }
+    return fetchNewsJson<NewsArticle>(`/api/v1/news/articles/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updatedPayload),
+    });
   },
 
   async saveArticle(
     payload: Partial<NewsArticle> & { title: string; category_id: string }
   ): Promise<NewsArticle> {
-    await ensureSeeded();
     const nowIso = new Date().toISOString();
-    const id = payload.id || `news-${Date.now()}`;
     const slug = payload.slug?.trim() ? slugify(payload.slug) : slugify(payload.title);
     const content = payload.content || '';
     const metrics = calculateReadingMetrics(content);
@@ -376,7 +336,7 @@ export const newsService = {
     const status: NewsStatus = payload.status || 'DRAFT';
 
     const record: NewsArticle = {
-      id,
+      id: payload.id || `news-${Date.now()}`,
       category_id: payload.category_id,
       title: payload.title.trim(),
       slug,
@@ -439,21 +399,22 @@ export const newsService = {
       deleted_at: null,
     };
 
-    try {
-      await demoDb.create<NewsArticle>('newsArticles', record);
-    } catch {
-      // ignore if offline
-    }
-    return record;
+    const isUpdate = Boolean(payload.id);
+    const saved = await fetchNewsJson<NewsArticle>(
+      isUpdate ? `/api/v1/news/articles/${encodeURIComponent(payload.id!)}` : '/api/v1/news/articles',
+      {
+        method: isUpdate ? 'PATCH' : 'POST',
+        body: JSON.stringify(record),
+      }
+    );
+
+    return saved || record;
   },
 
   async deleteArticle(id: string): Promise<void> {
-    await ensureSeeded();
-    try {
-      await demoDb.remove('newsArticles', id);
-    } catch {
-      // ignore
-    }
+    await fetchNewsJson(`/api/v1/news/articles/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
   },
 
   // ── ADMIN CMS: QUẢN TRỊ CHUYÊN MỤC ──
@@ -461,13 +422,11 @@ export const newsService = {
   async saveCategory(
     payload: Partial<NewsCategory> & { name: string }
   ): Promise<NewsCategory> {
-    await ensureSeeded();
     const nowIso = new Date().toISOString();
-    const id = payload.id || `cat-${Date.now()}`;
     const slug = payload.slug?.trim() ? slugify(payload.slug) : slugify(payload.name);
 
     const record: NewsCategory = {
-      id,
+      id: payload.id || `cat-${Date.now()}`,
       parent_id: payload.parent_id || null,
       name: payload.name.trim(),
       slug,
@@ -488,45 +447,39 @@ export const newsService = {
       updated_at: nowIso,
     };
 
-    try {
-      await demoDb.create<NewsCategory>('newsCategories', record);
-    } catch {
-      // ignore
-    }
-    return record;
+    const isUpdate = Boolean(payload.id);
+    const saved = await fetchNewsJson<NewsCategory>(
+      isUpdate ? `/api/v1/news/categories/${encodeURIComponent(payload.id!)}` : '/api/v1/news/categories',
+      {
+        method: isUpdate ? 'PATCH' : 'POST',
+        body: JSON.stringify(record),
+      }
+    );
+    return saved || record;
   },
 
   async toggleCategoryFlags(
     id: string,
     patch: Partial<Pick<NewsCategory, 'is_active' | 'is_featured' | 'order_index'>>
   ): Promise<NewsCategory | null> {
-    await ensureSeeded();
-    try {
-      return await demoDb.patch<NewsCategory>('newsCategories', id, {
-        ...patch,
-        updated_at: new Date().toISOString(),
-      });
-    } catch {
-      return null;
-    }
+    return fetchNewsJson<NewsCategory>(`/api/v1/news/categories/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    });
   },
 
   async deleteCategory(id: string): Promise<{ ok: boolean; message?: string }> {
-    await ensureSeeded();
-    const articles = await this.getArticles({ onlyPublic: false });
-    const usedCount = articles.filter((a) => a.category_id === id).length;
-    if (usedCount > 0) {
-      return {
-        ok: false,
-        message: `Không thể xoá chuyên mục đang chứa ${usedCount} bài viết. Vui lòng chuyển bài viết sang chuyên mục khác hoặc ẩn chuyên mục này.`,
-      };
+    const res = await fetch(`/api/v1/news/categories/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    }).catch(() => null);
+
+    if (!res) return { ok: false, message: 'Không thể kết nối máy chủ để xoá chuyên mục.' };
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      return { ok: false, message: json?.message || 'Không thể xoá chuyên mục.' };
     }
-    try {
-      await demoDb.remove('newsCategories', id);
-      return { ok: true };
-    } catch {
-      return { ok: false, message: 'Lỗi khi xoá chuyên mục.' };
-    }
+    return { ok: true };
   },
 };
 

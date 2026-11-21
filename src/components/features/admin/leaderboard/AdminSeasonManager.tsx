@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Season } from '@/types/leaderboard';
 import { leaderboardService } from '@/services/leaderboard.service';
+import { catalogService } from '@/services/catalog.service';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,18 +43,21 @@ export function AdminSeasonManager({
 }: AdminSeasonManagerProps) {
   const [isTogglingFreeze, setIsTogglingFreeze] = React.useState(false);
 
-  const handleToggleFreeze = () => {
+  const handleToggleFreeze = async () => {
     setIsTogglingFreeze(true);
-    setTimeout(() => {
-      try {
-        const updated = leaderboardService.toggleSeasonFreeze(selectedSeason.id);
-        onSeasonUpdated(updated);
-      } catch (err) {
-        alert(String(err));
-      } finally {
-        setIsTogglingFreeze(false);
+    try {
+      const updated = await catalogService.toggleSeasonFreeze(selectedSeason.id);
+      if (updated) {
+        onSeasonUpdated(updated as Season);
+      } else {
+        const localUpdated = leaderboardService.toggleSeasonFreeze(selectedSeason.id);
+        onSeasonUpdated(localUpdated);
       }
-    }, 400);
+    } catch (err: any) {
+      alert(err?.message || String(err));
+    } finally {
+      setIsTogglingFreeze(false);
+    }
   };
 
   const isCompleted = selectedSeason.status === 'COMPLETED';
