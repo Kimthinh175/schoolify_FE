@@ -209,7 +209,7 @@ export default function ProfileSettingsPage() {
       <div>
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E6F8FC] dark:bg-[#00B8DD]/15 text-xs font-bold text-[#007D99] dark:text-[#00B8DD] mb-2">
           <User className="w-3.5 h-3.5 text-[#00B8DD]" />
-          <span>Đợt 4 — Hồ Sơ Cá Nhân</span>
+          <span>Hồ Sơ Học Sinh K-12</span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
           Chỉnh Sửa Hồ Sơ Cá Nhân

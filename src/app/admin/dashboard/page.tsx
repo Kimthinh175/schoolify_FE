@@ -48,6 +48,14 @@ const SUBJECT_LABELS: Record<string, string> = {
   'gdcd': 'GD Kinh tế & Pháp luật',
   'cong-nghe': 'Công nghệ',
   'khtn': 'Khoa học tự nhiên',
+  'khoa-hoc-tu-nhien': 'Khoa học tự nhiên',
+  'lich-su-dia-li': 'Lịch sử & Địa lí',
+};
+
+const formatGradeLabel = (val: unknown) => {
+  const s = String(val ?? '').trim();
+  if (!s) return 'Lớp 12';
+  return /^lớp\s+/i.test(s) ? s : `Lớp ${s}`;
 };
 
 const DEFAULT_MONTHLY_STATS: MonthlyRevenueStat[] = Array.from({ length: 12 }, (_, i) => ({
@@ -102,13 +110,10 @@ export default function AdminDashboardPage() {
   // Số liệu tổng quan lấy chuẩn 100% từ PostgreSQL API
   const totalQuestions = systemStats?.totalQuestions ?? 0;
   const totalQuestionBanks = systemStats?.totalQuestionBanks ?? 0;
-  const totalCourses = systemStats?.totalCourses ?? 0;
-  const totalLessons = systemStats?.totalLessons ?? 0;
   const totalSubmissions = systemStats?.totalSubmissions ?? 0;
   const totalUsers = systemStats?.totalUsers ?? 0;
   const totalStudents = systemStats?.totalStudents ?? 0;
-  const totalTeachers = systemStats?.totalTeachers ?? 0;
-  const totalAdmins = Math.max(0, totalUsers - totalStudents - totalTeachers);
+  const totalAdmins = Math.max(0, totalUsers - totalStudents);
   const totalOrders = systemStats?.totalOrders ?? recentOrders.length;
   const totalPackages = systemStats?.totalPackages ?? 0;
 
@@ -255,7 +260,7 @@ export default function AdminDashboardPage() {
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
             Tổng Quan Quản Trị Hệ Thống
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 truncate">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             Theo dõi số liệu vận hành, ngân hàng đề thi K-12, kết quả học tập và doanh số toàn hệ thống.
           </p>
         </div>
@@ -344,7 +349,7 @@ export default function AdminDashboardPage() {
             {formatNumber(totalUsers)}
           </div>
           <div className="text-[11px] text-slate-400 mt-0.5">
-            {totalStudents} Học sinh • {totalTeachers} Giảng viên • {totalAdmins} Admin
+            {totalStudents} Học sinh • {totalAdmins} Admin
           </div>
         </Card>
 
@@ -445,9 +450,9 @@ export default function AdminDashboardPage() {
                 <select
                   value={monthRange}
                   onChange={(e) => setMonthRange(e.target.value as any)}
-                  className="h-9 w-full lg:w-52 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-xs rounded-xl pl-8 pr-3 py-1.5 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 font-medium"
+                  className="h-9 w-full lg:w-64 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-xs rounded-xl pl-8 pr-3 py-1.5 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 font-medium"
                 >
-                  <option value="active">Kỳ báo cáo: Từ đầu năm (T1 - T10)</option>
+                  <option value="active">Kỳ báo cáo: Từ đầu năm (T1 - T12)</option>
                   <option value="6m">Kỳ báo cáo: 6 tháng gần nhất</option>
                   <option value="q1">Kỳ báo cáo: Quý 1 (T1 - T3)</option>
                   <option value="q2">Kỳ báo cáo: Quý 2 (T4 - T6)</option>
@@ -834,7 +839,7 @@ export default function AdminDashboardPage() {
                     Hạ Tầng AI & Tài Nguyên Học Tập
                   </h3>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Vector Cache, Khóa học & Gói đăng ký
+                    Vector Cache, Ngân hàng đề & Gói đăng ký
                   </p>
                 </div>
               </div>
@@ -845,9 +850,9 @@ export default function AdminDashboardPage() {
 
             <div className="grid grid-cols-2 gap-2 text-[11px]">
               <div className="px-2.5 py-2 rounded-lg bg-slate-50 dark:bg-slate-800/60">
-                <span className="text-slate-400 block">Khóa học & Bài giảng</span>
+                <span className="text-slate-400 block">Ngân hàng câu hỏi</span>
                 <strong className="text-slate-900 dark:text-white text-xs">
-                  {totalCourses} khóa • {totalLessons} bài học
+                  {totalQuestionBanks} bộ đề • {totalQuestions} câu
                 </strong>
               </div>
               <div className="px-2.5 py-2 rounded-lg bg-slate-50 dark:bg-slate-800/60">
@@ -964,7 +969,7 @@ export default function AdminDashboardPage() {
                       </p>
                       <p className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-2">
                         <span>
-                          {studentName} (Lớp {gradeLevel})
+                          {studentName} ({formatGradeLabel(gradeLevel)})
                         </span>
                         {submittedTime && (
                           <span className="text-slate-400 inline-flex items-center gap-1">
@@ -1085,7 +1090,7 @@ export default function AdminDashboardPage() {
                         {stu.fullname}
                       </p>
                       <p className="text-[11px] text-slate-500 truncate">
-                        Lớp {stu.gradeLevel} • {stu.totalExams} đề đã làm • TB {stu.avgScore}đ
+                        {formatGradeLabel(stu.gradeLevel)} • {stu.totalExams} đề đã làm • TB {stu.avgScore}đ
                       </p>
                     </div>
                   </div>
@@ -1141,7 +1146,7 @@ export default function AdminDashboardPage() {
                       </p>
                       <p className="text-[11px] text-slate-500 truncate">
                         {u.email}
-                        {u.gradeLevel ? ` • Lớp ${u.gradeLevel}` : ''}
+                        {u.gradeLevel ? ` • ${formatGradeLabel(u.gradeLevel)}` : ''}
                       </p>
                     </div>
                     <div className="shrink-0 flex items-center gap-2">

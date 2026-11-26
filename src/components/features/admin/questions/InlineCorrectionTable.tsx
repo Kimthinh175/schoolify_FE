@@ -21,20 +21,27 @@ import {
   UploadCloud,
   Trash2,
   X,
+  Copy,
+  ShieldAlert,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  DuplicateAwareQuestion,
+  DuplicateResolutionAction,
+  recomputeDuplicateStates,
+} from '@/services/parsers/question-duplicate-checker';
 
-interface ParsedQuestionItem extends Question {
-  hasError?: boolean;
-  errorReason?: string;
-  originalIndex: number;
-  groupCode?: string;
-  group_code?: string;
-}
+type ParsedQuestionItem = DuplicateAwareQuestion;
 
 interface InlineCorrectionTableProps {
   initialQuestions: ParsedQuestionItem[];
-  onSaveToBank: (validQuestions: Question[]) => void;
+  onSaveToBank: (
+    validQuestions: Question[],
+    resolutions?: Record<
+      string,
+      { action: DuplicateResolutionAction; existingQuestionId?: string }
+    >,
+  ) => void;
   onReset: () => void;
 }
 
@@ -43,8 +50,12 @@ export function InlineCorrectionTable({
   onSaveToBank,
   onReset,
 }: InlineCorrectionTableProps) {
-  const [questions, setQuestions] = React.useState<ParsedQuestionItem[]>(initialQuestions);
-  const [filterMode, setFilterMode] = React.useState<'ALL' | 'ERROR' | 'VALID'>('ALL');
+  const [questions, setQuestions] = React.useState<ParsedQuestionItem[]>(() =>
+    recomputeDuplicateStates(initialQuestions),
+  );
+  const [filterMode, setFilterMode] = React.useState<
+    'ALL' | 'ERROR' | 'CONFLICT' | 'DUPLICATE' | 'VALID'
+  >('ALL');
   const [currentPage, setCurrentPage] = React.useState(1);
   const [editingQuestion, setEditingQuestion] = React.useState<ParsedQuestionItem | null>(null);
   const [questionToDelete, setQuestionToDelete] = React.useState<ParsedQuestionItem | null>(null);
@@ -52,7 +63,7 @@ export function InlineCorrectionTable({
   const ITEMS_PER_PAGE = 10;
 
   React.useEffect(() => {
-    setQuestions(initialQuestions);
+    setQuestions(recomputeDuplicateStates(initialQuestions));
     setCurrentPage(1);
   }, [initialQuestions]);
 
@@ -79,7 +90,7 @@ export function InlineCorrectionTable({
       }
 
       updated[qIndex] = targetQ;
-      return updated;
+      return recomputeDuplicateStates(updated);
     });
     toast.success('Đã cập nhật đáp án đúng!');
   };
@@ -105,7 +116,7 @@ export function InlineCorrectionTable({
         targetQ.errorReason = undefined;
       }
       updated[qIndex] = targetQ;
-      return updated;
+      return recomputeDuplicateStates(updated);
     });
   };
 
@@ -170,7 +181,7 @@ export function InlineCorrectionTable({
     setQuestions((prev) => {
       const list = [...prev];
       list[originalIdx] = updatedQ;
-      return list;
+      return recomputeDuplicateStates(list);
     });
 
     setEditingQuestion(null);
@@ -183,22 +194,51 @@ export function InlineCorrectionTable({
     const targetId = questionToDelete.id;
     const targetIdx = questionToDelete.originalIndex;
 
-    setQuestions((prev) => prev.filter((item) => item.id !== targetId));
+    setQuestions((prev) => recomputeDuplicateStates(prev.filter((item) => item.id !== targetId)));
     setQuestionToDelete(null);
     toast.success(`Đã loại bỏ câu #${targetIdx} khỏi danh sách import!`);
   };
 
+  const handleSetDuplicateResolution = (qIndex: number, action: DuplicateResolutionAction) => {
+    setQuestions((prev) => {
+      const updated = [...prev];
+      updated[qIndex] = { ...updated[qIndex], duplicateResolution: action };
+      return updated;
+    });
+  };
+
+  const handleSkipAllDuplicates = () => {
+    setQuestions((prev) =>
+      prev.map((q) =>
+        q.duplicateStatus === 'EXACT_DUPLICATE' ? { ...q, duplicateResolution: 'SKIP' } : q,
+      ),
+    );
+    toast.success('Đã đánh dấu bỏ qua toàn bộ câu hỏi trùng lặp!');
+  };
+
   const totalCount = questions.length;
   const errorCount = questions.filter((q) => q.hasError).length;
+  const conflictCount = questions.filter((q) => q.duplicateStatus === 'CONFLICT_ANSWER').length;
+  const unresolvedConflictCount = questions.filter(
+    (q) => q.duplicateStatus === 'CONFLICT_ANSWER' && !q.duplicateResolution,
+  ).length;
+  const duplicateCount = questions.filter((q) => q.duplicateStatus === 'EXACT_DUPLICATE').length;
   const validCount = totalCount - errorCount;
+  const effectiveSaveCount = questions.filter(
+    (q) => !q.hasError && q.duplicateResolution !== 'SKIP',
+  ).length;
 
-  const handleFilterModeChange = (mode: 'ALL' | 'ERROR' | 'VALID') => {
+  const handleFilterModeChange = (
+    mode: 'ALL' | 'ERROR' | 'CONFLICT' | 'DUPLICATE' | 'VALID',
+  ) => {
     setFilterMode(mode);
     setCurrentPage(1);
   };
 
   const filteredQuestions = questions.filter((q) => {
     if (filterMode === 'ERROR') return q.hasError;
+    if (filterMode === 'CONFLICT') return q.duplicateStatus === 'CONFLICT_ANSWER';
+    if (filterMode === 'DUPLICATE') return q.duplicateStatus === 'EXACT_DUPLICATE';
     if (filterMode === 'VALID') return !q.hasError;
     return true;
   });
@@ -215,7 +255,35 @@ export function InlineCorrectionTable({
       toast.error('Chưa có câu hỏi hợp lệ nào để lưu!');
       return;
     }
-    onSaveToBank(validOnly);
+    if (unresolvedConflictCount > 0) {
+      setFilterMode('CONFLICT');
+      setCurrentPage(1);
+      toast.error(
+        `Còn ${unresolvedConflictCount} câu xung đột đáp án chưa chọn hướng xử lý (Bỏ qua / Ghi đè / Giữ cả hai)!`,
+      );
+      return;
+    }
+
+    const questionsToSave = validOnly.filter((q) => q.duplicateResolution !== 'SKIP');
+    if (questionsToSave.length === 0) {
+      toast.info('Tất cả câu hỏi hợp lệ đều đang chọn Bỏ qua do trùng lặp.');
+      return;
+    }
+
+    const resolutions: Record<
+      string,
+      { action: DuplicateResolutionAction; existingQuestionId?: string }
+    > = {};
+    for (const q of questionsToSave) {
+      if (q.duplicateResolution) {
+        resolutions[String(q.id)] = {
+          action: q.duplicateResolution,
+          existingQuestionId: q.existingMatch?.id,
+        };
+      }
+    }
+
+    onSaveToBank(questionsToSave, resolutions);
   };
 
   return (
@@ -244,6 +312,36 @@ export function InlineCorrectionTable({
             <AlertTriangle className="w-3.5 h-3.5" />
             Cần sửa ({errorCount})
           </Button>
+          {conflictCount > 0 && (
+            <Button
+              size="sm"
+              variant={filterMode === 'CONFLICT' ? 'destructive' : 'outline'}
+              onClick={() => handleFilterModeChange('CONFLICT')}
+              className={`text-xs gap-1.5 ${
+                filterMode === 'CONFLICT'
+                  ? 'bg-rose-600 text-white'
+                  : 'text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40'
+              }`}
+            >
+              <ShieldAlert className="w-3.5 h-3.5" />
+              Xung đột đáp án ({conflictCount})
+            </Button>
+          )}
+          {duplicateCount > 0 && (
+            <Button
+              size="sm"
+              variant={filterMode === 'DUPLICATE' ? 'default' : 'outline'}
+              onClick={() => handleFilterModeChange('DUPLICATE')}
+              className={`text-xs gap-1.5 ${
+                filterMode === 'DUPLICATE'
+                  ? 'bg-amber-600 text-white'
+                  : 'text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40'
+              }`}
+            >
+              <Copy className="w-3.5 h-3.5" />
+              Trùng lặp ({duplicateCount})
+            </Button>
+          )}
           <Button
             size="sm"
             variant={filterMode === 'VALID' ? 'default' : 'outline'}
@@ -260,6 +358,17 @@ export function InlineCorrectionTable({
         </div>
 
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+          {duplicateCount > 0 && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleSkipAllDuplicates}
+              className="text-xs gap-1 border-amber-300 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/40"
+            >
+              <Copy className="w-3.5 h-3.5" />
+              Bỏ qua câu trùng ({duplicateCount})
+            </Button>
+          )}
           <Button
             size="sm"
             variant="ghost"
@@ -277,7 +386,7 @@ export function InlineCorrectionTable({
             className="bg-primary hover:bg-primary/90 text-white font-semibold text-xs gap-2 shadow-xs"
           >
             <Save className="w-4 h-4" />
-            Lưu vào Ngân Hàng ({validCount} câu)
+            Lưu vào Ngân Hàng ({effectiveSaveCount} câu)
           </Button>
         </div>
       </Card>
@@ -286,14 +395,24 @@ export function InlineCorrectionTable({
       <div className="space-y-3">
         {paginatedQuestions.map((q) => {
           const originalIdx = questions.findIndex((item) => item.id === q.id);
+          const isConflict = q.duplicateStatus === 'CONFLICT_ANSWER';
+          const isExactDup = q.duplicateStatus === 'EXACT_DUPLICATE';
+          const sourceLabel =
+            q.duplicateSource === 'BOTH'
+              ? 'DB & trong file'
+              : q.duplicateSource === 'DB'
+                ? 'Đã có trong DB'
+                : 'Trùng trong file';
 
           return (
             <Card
               key={q.id}
               className={`p-5 transition-all shadow-xs ${
-                q.hasError
+                q.hasError || isConflict
                   ? 'bg-rose-50/40 dark:bg-rose-950/30 border-rose-300 dark:border-rose-800 ring-1 ring-rose-200 dark:ring-rose-900'
-                  : 'bg-white dark:bg-slate-900 border-slate-200/90 dark:border-slate-800'
+                  : isExactDup
+                    ? 'bg-amber-50/30 dark:bg-amber-950/20 border-amber-300 dark:border-amber-800'
+                    : 'bg-white dark:bg-slate-900 border-slate-200/90 dark:border-slate-800'
               }`}
             >
               {/* Header câu hỏi: Trạng thái Hợp lệ/Lỗi ở bên trái nhận diện, Nút Bỏ câu ở ngoài cùng bên phải */}
@@ -313,6 +432,31 @@ export function InlineCorrectionTable({
                     <Badge className="bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 text-[11px] gap-1 font-semibold">
                       <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                       Hợp lệ
+                    </Badge>
+                  )}
+
+                  {isConflict && (
+                    <Badge className="bg-rose-600 text-white border-rose-700 text-[11px] gap-1 font-semibold">
+                      <ShieldAlert className="w-3 h-3" />
+                      Xung đột đáp án ({sourceLabel})
+                    </Badge>
+                  )}
+
+                  {isExactDup && (
+                    <Badge className="bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800 text-[11px] gap-1 font-semibold">
+                      <Copy className="w-3 h-3" />
+                      Trùng lặp ({sourceLabel})
+                    </Badge>
+                  )}
+
+                  {q.duplicateResolution === 'SKIP' && (
+                    <Badge variant="outline" className="text-[10px] text-slate-500 border-slate-300">
+                      Sẽ bỏ qua khi lưu
+                    </Badge>
+                  )}
+                  {q.duplicateResolution === 'OVERWRITE' && (
+                    <Badge className="bg-sky-100 text-sky-800 border-sky-300 text-[10px]">
+                      Sẽ ghi đè câu cũ
                     </Badge>
                   )}
 
@@ -378,6 +522,104 @@ export function InlineCorrectionTable({
                   </Button>
                 </div>
               </div>
+
+              {/* Cảnh báo & Hướng xử lý Trùng lặp / Xung đột đáp án */}
+              {(isConflict || isExactDup) && q.existingMatch && (
+                <div
+                  className={`p-3 rounded-xl border text-xs mb-3 space-y-2 ${
+                    isConflict
+                      ? 'bg-rose-50 dark:bg-rose-950/50 border-rose-300 dark:border-rose-800'
+                      : 'bg-amber-50/70 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800'
+                  }`}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="font-bold flex items-center gap-1.5 text-slate-900 dark:text-slate-100">
+                      {isConflict ? (
+                        <ShieldAlert className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                      ) : (
+                        <Copy className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                      )}
+                      <span>
+                        {isConflict
+                          ? 'Phát hiện câu hỏi giống nhau nhưng KHÁC ĐÁP ÁN — vui lòng chọn hướng xử lý:'
+                          : `Câu hỏi trùng khớp nội dung và đáp án (${sourceLabel}):`}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                      {q.existingMatch.id
+                        ? `DB ID: ${q.existingMatch.id}`
+                        : q.existingMatch.batchIndex
+                          ? `Trùng với Câu #${q.existingMatch.batchIndex} trong file`
+                          : ''}
+                    </span>
+                  </div>
+
+                  {isConflict && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="p-2 rounded-lg bg-white/90 dark:bg-slate-900 border border-rose-200 dark:border-rose-900">
+                        <span className="text-[10px] font-bold uppercase text-slate-500 block mb-0.5">
+                          Đáp án đã lưu ({q.existingMatch.id ? 'PostgreSQL' : `Câu #${q.existingMatch.batchIndex}`})
+                        </span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200 break-words">
+                          {q.existingMatch.answerSummary}
+                        </span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-white/90 dark:bg-slate-900 border border-rose-200 dark:border-rose-900">
+                        <span className="text-[10px] font-bold uppercase text-rose-600 block mb-0.5">
+                          Đáp án của câu đang nhập
+                        </span>
+                        <span className="font-semibold text-rose-700 dark:text-rose-300 break-words">
+                          {q.incomingAnswerSummary || '(Chưa xác định)'}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={q.duplicateResolution === 'SKIP' ? 'default' : 'outline'}
+                      onClick={() => handleSetDuplicateResolution(originalIdx, 'SKIP')}
+                      className={`h-7 text-[11px] px-2.5 ${
+                        q.duplicateResolution === 'SKIP'
+                          ? 'bg-slate-800 text-white'
+                          : 'bg-white dark:bg-slate-900'
+                      }`}
+                    >
+                      Bỏ qua câu mới
+                    </Button>
+                    {q.existingMatch.id && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={q.duplicateResolution === 'OVERWRITE' ? 'default' : 'outline'}
+                        onClick={() => handleSetDuplicateResolution(originalIdx, 'OVERWRITE')}
+                        className={`h-7 text-[11px] px-2.5 ${
+                          q.duplicateResolution === 'OVERWRITE'
+                            ? 'bg-sky-600 text-white'
+                            : 'bg-white dark:bg-slate-900 border-sky-300 text-sky-700 dark:text-sky-300'
+                        }`}
+                      >
+                        Ghi đè câu cũ trong DB
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={q.duplicateResolution === 'KEEP_BOTH' ? 'default' : 'outline'}
+                      onClick={() => handleSetDuplicateResolution(originalIdx, 'KEEP_BOTH')}
+                      className={`h-7 text-[11px] px-2.5 ${
+                        q.duplicateResolution === 'KEEP_BOTH'
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-white dark:bg-slate-900'
+                      }`}
+                    >
+                      Vẫn giữ cả hai
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               {/* Ngữ liệu đọc hiểu đính kèm nếu là câu con của chùm câu */}
               {q.passage_content && q.type !== 'GROUP_QUESTIONS' && (

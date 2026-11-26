@@ -21,7 +21,6 @@ export default function RegisterPage() {
   const [password, setPassword] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
-  const [role, setRole] = React.useState<'STUDENT' | 'TEACHER'>('STUDENT');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +35,7 @@ export default function RegisterPage() {
           email: email.trim(),
           phone: phone.trim(),
           password,
-          profile_type: role,
+          profile_type: 'STUDENT',
         }),
       });
 
@@ -50,16 +49,12 @@ export default function RegisterPage() {
         return;
       }
 
-      login(data.user, data.accessToken || '', role);
+      login(data.user, data.accessToken || '', 'STUDENT');
       toast.success('Đăng ký tài khoản thành công!', {
         description: `Chào mừng ${data.user.fullname} đến với Schoolify!`,
       });
 
-      if (role === 'TEACHER') {
-        router.push('/teacher/dashboard');
-      } else {
-        router.push('/luyen-thi');
-      }
+      router.push('/luyen-thi');
     } catch (err: any) {
       const msg = err?.message || 'Không thể kết nối đến máy chủ xác thực.';
       setErrorMsg(msg);
@@ -98,32 +93,6 @@ export default function RegisterPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Role selector buttons (Chỉ còn Người Luyện Thi & Người Bán Khóa Học) */}
-          <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-              Bạn đăng ký với vai trò nào?
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { id: 'STUDENT', label: '🎒 Người Luyện Thi' },
-                { id: 'TEACHER', label: '👨‍🏫 Người Bán Khóa Học' },
-              ].map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setRole(item.id as 'STUDENT' | 'TEACHER')}
-                  className={`py-2.5 px-3 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-                    role === item.id
-                      ? 'border-[#00B8DD] bg-[#E6F8FC] text-[#007D99] dark:bg-[#00B8DD]/20 dark:text-[#00B8DD] font-bold shadow-xs'
-                      : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
               Họ và tên *
@@ -195,7 +164,7 @@ export default function RegisterPage() {
 
         <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
           <GoogleLoginButton
-            role={role}
+            role="STUDENT"
             label="Đăng ký nhanh bằng tài khoản Google"
           />
           <div className="text-center text-xs text-slate-500">

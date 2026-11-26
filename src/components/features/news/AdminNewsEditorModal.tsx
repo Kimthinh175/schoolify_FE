@@ -1289,7 +1289,7 @@ export function AdminNewsEditorModal({
             {/* Cột phải: Tùy chọn Tiêu điểm, Ghim bài & Tin nóng (5 cols) */}
             <div className="lg:col-span-5 space-y-4">
               <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                Vị Trí Hiển Thị Ưu Tiên Trên Trang `/news`
+                Vị Trí Hiển Thị Ưu Tiên Trên Trang <span className="normal-case">/news</span>
               </h3>
 
               <Card className="rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5 space-y-4">
@@ -1300,7 +1300,7 @@ export function AdminNewsEditorModal({
                       Tin Tiêu Điểm Nổi Bật (Featured Hero)
                     </p>
                     <p className="text-xs text-slate-500">
-                      Hiển thị bài viết này ở khung Banner lớn nhất đầu trang `/news`.
+                      Hiển thị bài viết này ở khung Banner lớn nhất đầu trang /news.
                     </p>
                   </div>
                   <Switch checked={isFeatured} onCheckedChange={setIsFeatured} />

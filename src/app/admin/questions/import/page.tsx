@@ -27,6 +27,12 @@ import {
 import { InlineCorrectionTable } from '@/components/features/admin/questions/InlineCorrectionTable';
 import { ImportGuidelineModal } from '@/components/features/admin/questions/ImportGuidelineModal';
 import {
+  DuplicateAwareQuestion,
+  DuplicateMatchInfo,
+  DuplicateResolutionAction,
+  recomputeDuplicateStates,
+} from '@/services/parsers/question-duplicate-checker';
+import {
   downloadExcelTemplate,
   downloadWordTemplate,
 } from '@/services/parsers/template-generator.service';
@@ -38,13 +44,63 @@ function AdminQuestionsImportContent() {
   const initialMode = searchParams.get('mode') === 'raw' ? 'RAW_IMPORT' : 'AI_DOCX_GENERATE';
 
   const [activeTab, setActiveTab] = React.useState<'AI_DOCX_GENERATE' | 'RAW_IMPORT'>(initialMode);
-  const [parsedQuestions, setParsedQuestions] = React.useState<ParsedQuestionItem[] | null>(null);
+  const [parsedQuestions, setParsedQuestions] = React.useState<DuplicateAwareQuestion[] | null>(null);
   const [scopeReport, setScopeReport] = React.useState<KnowledgeScopeReport | null>(null);
   const [isSavingToDb, setIsSavingToDb] = React.useState(false);
+  const [isCheckingDuplicates, setIsCheckingDuplicates] = React.useState(false);
+
+  const runDuplicateCheck = React.useCallback(async (questions: ParsedQuestionItem[]) => {
+    const initialEvaluated = recomputeDuplicateStates(questions as DuplicateAwareQuestion[]);
+    setParsedQuestions(initialEvaluated);
+
+    if (questions.length === 0) return;
+    setIsCheckingDuplicates(true);
+
+    try {
+      const res = await fetch('/api/v1/agent/docx-check-duplicates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questions }),
+      });
+      if (!res.ok) return;
+
+      const json = await res.json();
+      const results = json?.data?.results;
+      if (!Array.isArray(results)) return;
+
+      const dbMatchById = new Map<string, DuplicateMatchInfo>();
+      for (const r of results) {
+        if ((r.source === 'DB' || r.source === 'BOTH') && r.existingMatch) {
+          dbMatchById.set(String(r.clientId), r.existingMatch);
+        }
+      }
+
+      setParsedQuestions((prev) => {
+        if (!prev) return prev;
+        const withDb = prev.map((q) => {
+          const matchedDb = dbMatchById.get(String(q.id));
+          return matchedDb ? { ...q, dbMatch: matchedDb } : q;
+        });
+        const evaluated = recomputeDuplicateStates(withDb);
+        const conflicts = evaluated.filter((x) => x.duplicateStatus === 'CONFLICT_ANSWER').length;
+        const dups = evaluated.filter((x) => x.duplicateStatus === 'EXACT_DUPLICATE').length;
+        if (conflicts > 0 || dups > 0) {
+          toast.warning(
+            `Kiểm tra trùng lặp: ${conflicts} câu xung đột đáp án, ${dups} câu trùng nội dung.`,
+          );
+        }
+        return evaluated;
+      });
+    } catch {
+      // Nếu chưa đăng nhập hoặc offline, vẫn giữ kết quả kiểm tra trùng lặp nội bộ trong file
+    } finally {
+      setIsCheckingDuplicates(false);
+    }
+  }, []);
 
   const handleParsedComplete = (questions: ParsedQuestionItem[]) => {
     setScopeReport(null);
-    setParsedQuestions(questions);
+    void runDuplicateCheck(questions);
   };
 
   const handleAiGeneratedComplete = (
@@ -52,10 +108,16 @@ function AdminQuestionsImportContent() {
     report: KnowledgeScopeReport,
   ) => {
     setScopeReport(report);
-    setParsedQuestions(questions);
+    void runDuplicateCheck(questions);
   };
 
-  const handleSaveToBank = async (validQuestions: Question[]) => {
+  const handleSaveToBank = async (
+    validQuestions: Question[],
+    resolutions?: Record<
+      string,
+      { action: DuplicateResolutionAction; existingQuestionId?: string }
+    >,
+  ) => {
     setIsSavingToDb(true);
     try {
       const res = await fetch('/api/v1/agent/docx-save-to-bank', {
@@ -65,26 +127,27 @@ function AdminQuestionsImportContent() {
           questions: validQuestions,
           subject: scopeReport?.detectedSubjectSlug || 'toan-hoc',
           grade: scopeReport?.detectedGrade || 12,
+          duplicateStrategy: 'SKIP_EXACT',
+          resolutions,
         }),
       });
       const json = await res.json();
       if (res.ok && json.success) {
+        const d = json.data || {};
+        const inserted = Number(d.insertedCount ?? d.savedCount ?? validQuestions.length);
+        const updated = Number(d.updatedCount ?? 0);
+        const skipped = Number(d.skippedCount ?? 0);
         toast.success(
-          `Đã lưu thành công ${validQuestions.length} câu hỏi vào Ngân hàng câu hỏi PostgreSQL!`,
+          `Lưu thành công: ${inserted} câu mới${updated > 0 ? `, cập nhật ${updated} câu` : ''}${skipped > 0 ? `, bỏ qua ${skipped} câu trùng` : ''}!`,
         );
+        setTimeout(() => {
+          router.push('/admin/questions');
+        }, 1000);
       } else {
-        toast.success(
-          `Đã nhập thành công ${validQuestions.length} câu hỏi vào Master Question Bank!`,
-        );
+        toast.error(json?.message || 'Không thể lưu câu hỏi vào Ngân hàng PostgreSQL.');
       }
-      setTimeout(() => {
-        router.push('/admin/questions');
-      }, 1000);
-    } catch {
-      toast.success(`Đã nhập thành công ${validQuestions.length} câu hỏi vào Master Question Bank!`);
-      setTimeout(() => {
-        router.push('/admin/questions');
-      }, 1000);
+    } catch (error: any) {
+      toast.error('Lỗi kết nối khi lưu câu hỏi: ' + (error?.message || 'Unknown error'));
     } finally {
       setIsSavingToDb(false);
     }
@@ -308,7 +371,9 @@ function AdminQuestionsImportContent() {
             <span className="text-xs text-slate-500 dark:text-slate-400">
               {isSavingToDb
                 ? 'Đang đồng bộ câu hỏi vào PostgreSQL...'
-                : 'Bạn có thể chỉnh sửa đáp án đúng và nội dung ngay tại đây trước khi lưu vào Ngân hàng câu hỏi.'}
+                : isCheckingDuplicates
+                  ? 'Đang đối chiếu trùng lặp & xung đột đáp án với PostgreSQL...'
+                  : 'Bạn có thể chỉnh sửa đáp án đúng và nội dung ngay tại đây trước khi lưu vào Ngân hàng câu hỏi.'}
             </span>
           </div>
 

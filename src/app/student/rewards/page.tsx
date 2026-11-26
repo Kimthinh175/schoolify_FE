@@ -469,7 +469,7 @@ export default function StudentRewardsStorePage() {
               <div className="relative flex-1 min-w-[200px]">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <Input
-                  placeholder="Tìm kiếm theo tên quà tặng, voucher, huy hiệu, tài liệu..."
+                  placeholder="Tìm quà tặng, voucher, huy hiệu..."
                   value={storeSearch}
                   onChange={(e) => {
                     setStoreSearch(e.target.value);
@@ -601,7 +601,7 @@ export default function StudentRewardsStorePage() {
                         <div className="absolute top-2.5 right-2.5">
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-900/85 text-cyan-300 font-bold text-xs shadow-sm backdrop-blur-xs">
                             <NgocIcon className="w-3.5 h-3.5" />
-                            {item.points_required} <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat />
+                            {item.points_required}
                           </span>
                         </div>
                       </div>

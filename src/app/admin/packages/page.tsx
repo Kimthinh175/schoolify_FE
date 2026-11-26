@@ -367,12 +367,9 @@ export default function AdminPackagesPage() {
                       </>
                     )}
                     {meta.extraTag && (
-                      <>
-                        <span className="text-slate-300 dark:text-slate-600">•</span>
-                        <span className="text-[10px] bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-1.5 py-0.2 rounded font-semibold">
-                          {meta.extraTag}
-                        </span>
-                      </>
+                      <span className="text-[10px] bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-2 py-0.5 rounded-md font-semibold whitespace-nowrap">
+                        {meta.extraTag}
+                      </span>
                     )}
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">

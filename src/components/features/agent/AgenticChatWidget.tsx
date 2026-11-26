@@ -170,7 +170,7 @@ export function AgenticChatWidget() {
       pathname?.startsWith('/school') ||
       pathname?.startsWith('/teacher')
   );
-  const [isBubbleDismissed, setIsBubbleDismissed] = React.useState(isManagementRoute);
+  const [isBubbleDismissed, setIsBubbleDismissed] = React.useState(true);
   const [emotion, setEmotion] = React.useState<RobotEmotion>('default');
   const emotionTimerRef = React.useRef<NodeJS.Timeout | null>(null);
 
@@ -185,30 +185,9 @@ export function AgenticChatWidget() {
     []
   );
 
-  // Vừa vào trang hiện bóng thoại (chỉ trên desktop, tự tắt sau 4s hoặc khi cuộn trang)
+  // Mặc định thu gọn bóng thoại để không che nút/thẻ thao tác phía dưới-phải; chỉ hiện khi hover hoặc bấm
   React.useEffect(() => {
-    if (isManagementRoute) {
-      setIsBubbleDismissed(true);
-      return;
-    }
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    if (isMobile) {
-      setIsBubbleDismissed(true);
-      return;
-    }
-
-    setIsBubbleDismissed(false);
-    const timer = setTimeout(() => {
-      setIsBubbleDismissed(true);
-    }, 4000);
-
-    const handleScroll = () => setIsBubbleDismissed(true);
-    window.addEventListener('scroll', handleScroll, { passive: true, once: true });
-
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('scroll', handleScroll);
-    };
+    setIsBubbleDismissed(true);
   }, [pathname, isManagementRoute]);
 
   // Kéo thả vị trí nút robot
@@ -1076,8 +1055,14 @@ export function AgenticChatWidget() {
 
   const showSidebarPanel = isSidebarOpen || isExpanded;
 
+  const isExamRoomRoute = Boolean(pathname?.startsWith('/student/practice/exam-room'));
+
   return (
-    <div className="fixed bottom-3 right-3 sm:bottom-5 sm:right-5 z-40 flex flex-col items-end">
+    <div
+      className={`fixed right-3 sm:right-5 z-40 flex flex-col items-end ${
+        isExamRoomRoute && !isOpen ? 'bottom-20 sm:bottom-20' : 'bottom-3 sm:bottom-5'
+      }`}
+    >
       {/* 1. Nút Floating mở Chatbox khi đang đóng */}
       {!isOpen && (
         <div
@@ -1103,7 +1088,7 @@ export function AgenticChatWidget() {
                 onClick={() => setIsOpen(true)}
                 className="cursor-pointer select-none text-xs leading-snug"
               >
-                <span className="font-bold text-[#007D99] dark:text-[#00B8DD]">Schoolify AI</span> sẵn sàng hỗ trợ giải bài &amp; tạo đề! ✨
+                <span className="font-bold text-[#007D99] dark:text-[#00B8DD]">Schoolify AI</span>{' '}sẵn sàng hỗ trợ giải bài &amp; tạo đề! ✨
               </div>
             </div>
           )}
@@ -1140,7 +1125,7 @@ export function AgenticChatWidget() {
                 : 'cursor-grab animate-sf-robot-drift hover:[animation-play-state:paused] transition-transform hover:scale-105'
             }`}
           >
-            <SchoolifyRobot size="lg" emotion={emotion} isFloating={!isDragging} />
+            <SchoolifyRobot size="md" emotion={emotion} isFloating={!isDragging} />
           </button>
         </div>
       )}

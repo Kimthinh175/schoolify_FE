@@ -9,8 +9,6 @@ import { GradeOnboardingModal } from '@/components/features/student/practice/Gra
 
 const IGNORED_PATH_PREFIXES = [
   '/admin',
-  '/teacher',
-  '/parent',
   '/login',
   '/register',
   '/auth',
@@ -42,11 +40,7 @@ export function StudentOnboardingGuard() {
     const isStudentRole =
       user.role !== 'SUPER_ADMIN' &&
       (currentRole as string) !== 'ADMIN' &&
-      currentRole !== 'SUPER_ADMIN' &&
-      currentRole !== 'TEACHER' &&
-      currentRole !== 'PARENT' &&
-      !(user as any).teacher_profile &&
-      !(user as any).parent_profile;
+      currentRole !== 'SUPER_ADMIN';
 
     if (!isStudentRole) {
       setShowFirstLoginModal(false);

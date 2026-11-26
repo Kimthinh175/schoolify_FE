@@ -57,20 +57,9 @@ export function RequireLoginModal({
           status: true,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-          school_memberships: [
-            {
-              id: 'mem-01',
-              user_id: 'usr-student-01',
-              school_id: 'sch-01',
-              school_name: 'THPT Chuyên Công Nghệ Schoolify',
-              role: 'STUDENT',
-              joined_at: new Date().toISOString(),
-            },
-          ],
         },
         'mock-student-token',
-        'STUDENT',
-        'sch-01'
+        'STUDENT'
       );
       toast.success('Đăng nhập thành công!', {
         description: 'Chào mừng Nguyễn Hoàng Minh (THPT Chuyên Công Nghệ Schoolify)',

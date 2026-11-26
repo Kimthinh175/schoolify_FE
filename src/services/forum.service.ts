@@ -120,8 +120,7 @@ export function mapBackendPostToForumPost(item: Record<string, unknown>): ForumP
   const roleStr = String(rawAuthor.role || '');
   const isTeacher =
     roleStr === 'TEACHER' ||
-    roleStr === 'Giáo viên' ||
-    Boolean(rawAuthor.teacher_profile);
+    roleStr === 'Giáo viên';
   const isAdmin =
     roleStr === 'SUPER_ADMIN' ||
     roleStr === 'ADMIN' ||

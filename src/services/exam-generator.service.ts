@@ -392,70 +392,68 @@ export function buildExamMatrixApiPayload(config: ExamMatrixConfig): ExamMatrixA
   };
 }
 
-/** Gửi Payload về Backend API để sinh đề, kèm fallback tự động */
+function getMatrixAuthHeaders(): Record<string, string> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.localStorage.getItem('schoolify-auth-storage');
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    const state = parsed?.state || {};
+    const token = state.token || '';
+    const userId = state.user?.id || '';
+    const role = state.currentRole || state.user?.role || '';
+    return {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(userId ? { 'x-user-id': String(userId) } : {}),
+      ...(role ? { 'x-user-role': String(role) } : {}),
+    };
+  } catch {
+    return {};
+  }
+}
+
+/** Gửi Payload về Backend API (PostgreSQL) để sinh đề */
 export async function sendExamMatrixToBackend(
   payload: ExamMatrixApiPayload,
-  pool: Question[]
+  _pool: Question[]
 ): Promise<{ success: boolean; variants: ExamVariant[]; message: string; isDemoFallback?: boolean }> {
   try {
     const res = await fetch('/api/v1/exams/matrix-generate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...getMatrixAuthHeaders(),
       },
       body: JSON.stringify(payload),
     });
 
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.variants && Array.isArray(data.variants) && data.variants.length > 0) {
-        return {
-          success: true,
-          variants: data.variants,
-          message: data.message || `Backend đã sinh thành công ${data.variants.length} mã đề theo ma trận!`,
-          isDemoFallback: false,
-        };
-      }
+    const data = await res.json().catch(() => null);
+    if (res.ok && data && Array.isArray(data.variants) && data.variants.length > 0) {
+      return {
+        success: true,
+        variants: data.variants,
+        message:
+          data.message ||
+          `Backend PostgreSQL đã sinh thành công ${data.variants.length} mã đề theo ma trận!`,
+        isDemoFallback: false,
+      };
     }
-  } catch (err) {
-    // Network or endpoint error, gracefully proceed to fallback
-    console.warn('[ExamGenerator] Backend API call failed, falling back to local matrix generator:', err);
+
+    return {
+      success: false,
+      variants: [],
+      message:
+        data?.message ||
+        `Backend trả về mã lỗi ${res.status} khi sinh đề từ PostgreSQL.`,
+      isDemoFallback: false,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      variants: [],
+      message:
+        'Không thể kết nối Backend để sinh đề từ PostgreSQL: ' + (err?.message || 'Unknown error'),
+      isDemoFallback: false,
+    };
   }
-
-  // Client-side fallback generator tuân thủ 100% quy tắc ma trận
-  const config: ExamMatrixConfig = {
-    title: payload.exam_info.title,
-    subject: payload.exam_info.subject,
-    grade_level: payload.exam_info.grade_level,
-    total_questions: payload.matrix_blueprint.total_questions,
-    duration_minutes: payload.exam_info.duration_minutes,
-    pass_score: payload.exam_info.pass_score,
-    scope_mode: payload.scope_config.scope_mode,
-    current_chapter: payload.scope_config.current_chapter,
-    previous_chapters: payload.scope_config.previous_chapters,
-    selected_chapters: payload.scope_config.selected_chapters,
-    scope_ratio: {
-      current_chapter: payload.scope_config.scope_ratio.current_chapter_percentage,
-      previous_chapters: payload.scope_config.scope_ratio.previous_chapters_percentage,
-    },
-    difficulty_ratio: {
-      recognition: payload.matrix_blueprint.bloom_ratio.recognition_percentage,
-      understanding: payload.matrix_blueprint.bloom_ratio.understanding_percentage,
-      application: payload.matrix_blueprint.bloom_ratio.application_percentage,
-      advanced_application: payload.matrix_blueprint.bloom_ratio.advanced_application_percentage,
-    },
-    category_distribution: payload.matrix_blueprint.category_distribution,
-    variant_count: payload.variants_config.variant_count,
-    variant_prefix: payload.variants_config.variant_prefix,
-    access_tier: payload.exam_info.access_tier,
-    upsell_course_id: payload.exam_info.upsell_course_id,
-  };
-
-  const variants = generateExamsFromMatrix(pool, config);
-  return {
-    success: true,
-    variants,
-    message: `Đã thu thập payload và khởi tạo thành công ${variants.length} mã đề theo chuẩn ma trận 4 danh mục GDPT 2018!`,
-    isDemoFallback: true,
-  };
 }
