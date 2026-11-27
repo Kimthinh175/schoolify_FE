@@ -108,7 +108,7 @@ export default function HomePage() {
 
   return (
     <>
-      <link rel="stylesheet" href="/homepage/styles.css?v=20261117_plane_autoscroll" />
+      <link rel="stylesheet" href="/homepage/styles.css?v=20261127_podium_cta" />
       <StaticHomepageRoot />
       {skeletonPhase !== 'gone' && (
         <HomePageSkeletonOverlay leaving={skeletonPhase === 'leaving'} />
