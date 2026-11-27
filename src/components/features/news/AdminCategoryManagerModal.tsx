@@ -288,7 +288,7 @@ export function AdminCategoryManagerModal({
 
           <div className="flex items-center justify-between pt-1">
             <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              Hiển thị công khai trên `/news`
+              Hiển thị công khai trên /news
             </span>
             <Switch checked={isActive} onCheckedChange={setIsActive} size="sm" />
           </div>

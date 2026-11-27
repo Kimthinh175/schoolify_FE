@@ -473,14 +473,6 @@ export default function NewsDetailPage() {
                   Vào Phòng Luyện Thi Ngay
                 </Button>
               </Link>
-              <Link href="/courses">
-                <Button
-                  variant="outline"
-                  className="w-full rounded-xl text-xs font-bold border-slate-200 dark:border-slate-700 cursor-pointer"
-                >
-                  Khám phá Khóa Học Chuyên Đề
-                </Button>
-              </Link>
             </div>
           </Card>
         </aside>

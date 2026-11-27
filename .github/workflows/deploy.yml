@@ -42,6 +42,8 @@ jobs:
         run: |
           rsync -az --delete \
             --filter='P data/' \
+            --filter='P .env' \
+            --filter='P .env.*' \
             --exclude='*.md' \
             --exclude='.env*' \
             -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes" \
@@ -53,7 +55,7 @@ jobs:
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" '
             set -e
             export PATH="/opt/plesk/node/24/bin:$PATH"
-            pm2 reload schoolify-fe --update-env || pm2 start /opt/apps/schoolify/ecosystem.config.cjs --only schoolify-fe
+            pm2 reload /opt/apps/schoolify/ecosystem.config.cjs --only schoolify-fe --update-env || pm2 start /opt/apps/schoolify/ecosystem.config.cjs --only schoolify-fe
             pm2 save
             sleep 3
             curl -sfI http://127.0.0.1:3050/ >/dev/null

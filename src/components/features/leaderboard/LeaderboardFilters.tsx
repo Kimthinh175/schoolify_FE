@@ -122,8 +122,8 @@ export function LeaderboardFilters({
 
       {/* Grade, Subject and Search Bar row */}
       <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-        {/* Subject Pills (Scrollable) */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 max-w-full">
+        {/* Subject Pills (Wrap cleanly on desktop so pills never overlap grade select) */}
+        <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
           {SUBJECT_OPTIONS.map((sub) => {
             const isActive = subject === sub.id;
             return (

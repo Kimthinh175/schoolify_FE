@@ -18,7 +18,6 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   const isFocusOrPractice =
     pathname?.startsWith('/student/practice/exam-room') ||
     pathname?.startsWith('/student/practice/remediation') ||
-    pathname?.startsWith('/student/learn') ||
     pathname?.startsWith('/student/exam/');
 
   if (isFocusOrPractice) {

@@ -50,7 +50,6 @@ const NAV_LINKS = [
   { label: 'Bảng Xếp Hạng', href: '/leaderboard' },
   { label: 'Diễn Đàn', href: '/forum' },
   { label: 'Gói Đăng Ký', href: '/pricing' },
-  { label: 'Khám Phá Khóa Học', href: '/courses' },
   { label: 'Tin Tức', href: '/news' },
   { label: 'Giới Thiệu', href: '/about' },
 ];
@@ -58,7 +57,6 @@ const NAV_LINKS = [
 export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => void } = {}) {
   const router = useRouter();
   const { user, isAuthenticated, logout, fetchMe, currentRole } = useAuthStore();
-  const isTeacher = currentRole === 'TEACHER' || !!user?.teacher_profile;
   const isAdmin =
     (currentRole as string) === 'ADMIN' ||
     currentRole === 'SUPER_ADMIN' ||
@@ -499,7 +497,7 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
       observer?.disconnect();
       window.removeEventListener('resize', recomputeVisibleNav);
     };
-  }, [recomputeVisibleNav, isMounted, isAuthenticated, isPointsLoading, isAdmin, isTeacher]);
+  }, [recomputeVisibleNav, isMounted, isAuthenticated, isPointsLoading, isAdmin]);
 
   React.useEffect(() => {
     if (visibleNavCount >= NAV_LINKS.length) {
@@ -969,13 +967,7 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
                       >
                         {/* Header Profile Info (Bấm vào để vào trang cá nhân) */}
                         <Link
-                          href={
-                            user.role === 'SUPER_ADMIN'
-                              ? '/admin/dashboard'
-                              : isTeacher
-                                ? '/profile'
-                                : '/student'
-                          }
+                          href={user.role === 'SUPER_ADMIN' ? '/admin/dashboard' : '/student'}
                           onClick={() => setUserMenuOpen(false)}
                           className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 mb-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer group"
                           title="Xem trang thông tin cá nhân"
@@ -998,11 +990,7 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
                             </p>
                             <div className="mt-1">
                               <span className="inline-flex items-center text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#00B8DD]/15 text-[#007D99] dark:text-[#00B8DD]">
-                                {user.role === 'SUPER_ADMIN'
-                                  ? 'Super Admin'
-                                  : isTeacher
-                                    ? 'Người Bán Khóa Học'
-                                    : 'Người Luyện Thi'}
+                                {user.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Người Luyện Thi'}
                               </span>
                             </div>
                           </div>
@@ -1010,42 +998,7 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
 
                         {/* Navigation Items */}
                         <div className="space-y-0.5 text-xs">
-                          {isTeacher ? (
-                            <>
-                              <Link
-                                href="/teacher/dashboard"
-                                onClick={() => setUserMenuOpen(false)}
-                                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-primary transition-colors font-medium"
-                              >
-                                <LayoutDashboard className="w-4 h-4 text-emerald-500" />
-                                <span>Bàn Làm Việc Giảng Viên</span>
-                              </Link>
-                              <Link
-                                href="/profile"
-                                onClick={() => setUserMenuOpen(false)}
-                                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-primary transition-colors font-medium"
-                              >
-                                <User className="w-4 h-4 text-primary" />
-                                <span>Tài Khoản Giảng Viên</span>
-                              </Link>
-                              <Link
-                                href="/teacher/courses"
-                                onClick={() => setUserMenuOpen(false)}
-                                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-primary transition-colors font-medium"
-                              >
-                                <BookOpen className="w-4 h-4 text-amber-500" />
-                                <span>Khóa Học &amp; Bộ Đề Của Tôi</span>
-                              </Link>
-                              <Link
-                                href="/teacher/revenue"
-                                onClick={() => setUserMenuOpen(false)}
-                                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-primary transition-colors font-medium"
-                              >
-                                <CreditCard className="w-4 h-4 text-emerald-500" />
-                                <span>Doanh Thu &amp; Ví Tiền</span>
-                              </Link>
-                            </>
-                          ) : user.role === 'SUPER_ADMIN' ? (
+                          {user.role === 'SUPER_ADMIN' ? (
                             <>
                               <Link
                                 href="/admin/dashboard"
@@ -1213,13 +1166,7 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
               />
             ) : isAuthenticated && user ? (
               <Link
-                href={
-                  user.role === 'SUPER_ADMIN'
-                    ? '/admin/dashboard'
-                    : isTeacher
-                      ? '/teacher/dashboard'
-                      : '/student'
-                }
+                href={user.role === 'SUPER_ADMIN' ? '/admin/dashboard' : '/student'}
                 className="flex items-center justify-center p-0.5 rounded-full hover:ring-2 hover:ring-[#00B8DD] transition-all shrink-0"
                 title={user.fullname || 'Trang cá nhân'}
               >

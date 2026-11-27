@@ -31,7 +31,6 @@ function PersistentGlobalNavbarInner() {
 
   const isIsolatedPortal =
     pathname.startsWith('/admin') ||
-    pathname.startsWith('/teacher') ||
     pathname === '/403' ||
     pathname.startsWith('/student/practice/remediation') ||
     pathname.startsWith('/student/exam/');
@@ -50,7 +49,6 @@ function PersistentGlobalNavbarInner() {
     pathname.startsWith('/student') &&
     !pathname.startsWith('/student/practice/exam-room') &&
     !pathname.startsWith('/student/practice/remediation') &&
-    !pathname.startsWith('/student/learn') &&
     !pathname.startsWith('/student/exam/');
 
   const handleOpenMobileSidebar = isStudentWithSidebar

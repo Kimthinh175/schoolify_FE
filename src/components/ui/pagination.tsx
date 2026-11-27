@@ -60,7 +60,7 @@ export function Pagination({
       <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
         Hiển thị <span className="font-bold text-slate-800 dark:text-slate-200">{startItem}</span> -{' '}
         <span className="font-bold text-slate-800 dark:text-slate-200">{endItem}</span> trên tổng số{' '}
-        <span className="font-bold text-slate-800 dark:text-slate-200">{totalItems}</span> dữ liệu (10 mục/trang)
+        <span className="font-bold text-slate-800 dark:text-slate-200">{totalItems}</span> dữ liệu ({itemsPerPage} mục/trang)
       </div>
 
       <div className="flex items-center gap-1.5">

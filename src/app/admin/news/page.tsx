@@ -260,7 +260,7 @@ export default function AdminNewsPage() {
               CMS QUẢN TRỊ NỘI DUNG
             </Badge>
             <span className="text-xs text-slate-500">
-              • Đồng bộ thời gian thực với `/news` &amp; `/news/[slug]`
+              • Đồng bộ thời gian thực với /news &amp; /news/[slug]
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -582,12 +582,12 @@ export default function AdminNewsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="min-w-[320px]">Bài viết &amp; Chuẩn SEO</TableHead>
-              <TableHead className="min-w-[160px]">Chuyên mục &amp; Tác giả</TableHead>
-              <TableHead className="min-w-[175px]">Trạng thái &amp; Lịch đăng</TableHead>
-              <TableHead className="min-w-[160px]">Tiêu điểm &amp; Ghim</TableHead>
-              <TableHead className="min-w-[130px]">Chỉ số đọc</TableHead>
-              <TableHead className="text-right min-w-[130px]">Thao tác</TableHead>
+              <TableHead className="min-w-[240px]">Bài viết &amp; Chuẩn SEO</TableHead>
+              <TableHead className="min-w-[130px]">Chuyên mục &amp; Tác giả</TableHead>
+              <TableHead className="min-w-[135px]">Trạng thái &amp; Lịch đăng</TableHead>
+              <TableHead className="min-w-[115px]">Tiêu điểm &amp; Ghim</TableHead>
+              <TableHead className="min-w-[90px]">Chỉ số đọc</TableHead>
+              <TableHead className="text-right min-w-[95px] whitespace-nowrap">Thao tác</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -599,11 +599,11 @@ export default function AdminNewsPage() {
                 <TableRow key={article.id}>
                   {/* CỘT 1: BÀI VIẾT & SLUG */}
                   <TableCell>
-                    <div className="flex items-start gap-3.5">
+                    <div className="flex items-start gap-2.5">
                       <img
                         src={article.thumbnail_url}
                         alt={article.title}
-                        className="w-20 h-14 rounded-xl object-cover border border-slate-200 dark:border-slate-800 shrink-0"
+                        className="w-16 h-12 rounded-xl object-cover border border-slate-200 dark:border-slate-800 shrink-0"
                       />
                       <div className="space-y-1 min-w-0">
                         <Link

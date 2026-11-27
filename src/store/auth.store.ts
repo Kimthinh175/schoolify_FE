@@ -2,32 +2,29 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { User, SchoolRole, SystemRole } from '@/types';
+import { User, SystemRole } from '@/types';
 
 interface AuthStoreState {
   user: User | null;
   token: string | null;
-  currentRole: SchoolRole | SystemRole;
-  currentSchoolId: string | null;
-  currentSchool: { id: string; name: string } | null;
+  currentRole: SystemRole | 'STUDENT';
   isAuthenticated: boolean;
 
   // Actions
-  login: (user: User, token: string, role?: SchoolRole | SystemRole, schoolId?: string) => void;
+  login: (user: User, token: string, role?: SystemRole | 'STUDENT', _unusedSchoolId?: string) => void;
   logout: () => void;
   fetchMe: () => Promise<User | null>;
-  setRole: (role: SchoolRole | SystemRole) => void;
-  setSchool: (schoolId: string, schoolName: string) => void;
+  setRole: (role: SystemRole | 'STUDENT') => void;
   updateUser: (userPartial: Partial<User>) => void;
 }
 
 const resolveUserRole = (
   user: User,
-  preferredRole?: SchoolRole | SystemRole
-): SchoolRole | SystemRole => {
+  preferredRole?: SystemRole | 'STUDENT'
+): SystemRole | 'STUDENT' => {
   if (preferredRole) return preferredRole;
   if (user.role === 'SUPER_ADMIN' || (user.role as string) === 'ADMIN') return 'SUPER_ADMIN';
-  return (user as any).teacher_profile ? 'TEACHER' : 'STUDENT';
+  return 'STUDENT';
 };
 
 export const useAuthStore = create<AuthStoreState>()(
@@ -36,11 +33,9 @@ export const useAuthStore = create<AuthStoreState>()(
       user: null,
       token: null,
       currentRole: 'STUDENT',
-      currentSchoolId: null,
-      currentSchool: null,
       isAuthenticated: false,
 
-      login: (user, token, role, schoolId) => {
+      login: (user, token, role) => {
         const resolvedRole = resolveUserRole(user, role);
         const prevUserId = get().user?.id;
         if (typeof window !== 'undefined' && prevUserId && prevUserId !== user.id) {
@@ -55,13 +50,6 @@ export const useAuthStore = create<AuthStoreState>()(
           user,
           token,
           currentRole: resolvedRole,
-          currentSchoolId: schoolId || (user.school_memberships?.[0]?.school_id ?? null),
-          currentSchool: user.school_memberships?.[0]
-            ? {
-                id: user.school_memberships[0].school_id,
-                name: user.school_memberships[0].school_name || 'Trường học',
-              }
-            : null,
           isAuthenticated: true,
         });
       },
@@ -83,8 +71,6 @@ export const useAuthStore = create<AuthStoreState>()(
           user: null,
           token: null,
           currentRole: 'STUDENT',
-          currentSchoolId: null,
-          currentSchool: null,
           isAuthenticated: false,
         });
       },
@@ -102,8 +88,6 @@ export const useAuthStore = create<AuthStoreState>()(
               user: null,
               token: null,
               currentRole: 'STUDENT',
-              currentSchoolId: null,
-              currentSchool: null,
               isAuthenticated: false,
             });
             return null;
@@ -133,12 +117,6 @@ export const useAuthStore = create<AuthStoreState>()(
       },
 
       setRole: (role) => set({ currentRole: role }),
-
-      setSchool: (schoolId, schoolName) =>
-        set({
-          currentSchoolId: schoolId,
-          currentSchool: { id: schoolId, name: schoolName },
-        }),
 
       updateUser: (userPartial) => {
         const currentUser = get().user;

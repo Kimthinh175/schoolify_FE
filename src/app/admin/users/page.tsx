@@ -115,7 +115,7 @@ export default function AdminUsersPage() {
 
   const [users, setUsers] = React.useState<AdminUserItem[]>([]);
   const [search, setSearch] = React.useState('');
-  const [roleFilter, setRoleFilter] = React.useState<'ALL' | 'SUPER_ADMIN' | 'TEACHER' | 'STUDENT'>('ALL');
+  const [roleFilter, setRoleFilter] = React.useState<'ALL' | 'SUPER_ADMIN' | 'STUDENT'>('ALL');
   const [gradeFilter, setGradeFilter] = React.useState<string>('ALL');
   const [statusFilter, setStatusFilter] = React.useState<'ALL' | 'ACTIVE' | 'LOCKED'>('ALL');
   const [packageFilter, setPackageFilter] = React.useState<'ALL' | 'VIP' | 'FREE'>('ALL');
@@ -128,7 +128,7 @@ export default function AdminUsersPage() {
   const [email, setEmail] = React.useState('');
   const [phone, setPhone] = React.useState('');
   const [password, setPassword] = React.useState('123456');
-  const [selectedRole, setSelectedRole] = React.useState<'SUPER_ADMIN' | 'TEACHER'>('TEACHER');
+  const [selectedRole, setSelectedRole] = React.useState<'SUPER_ADMIN' | 'STUDENT'>('STUDENT');
 
   // Modal chỉnh sửa điểm Tia Sáng & Ngọc Tri Thức trực tiếp cho học sinh
   const [pointsEditTarget, setPointsEditTarget] = React.useState<AdminUserItem | null>(null);
@@ -244,7 +244,7 @@ export default function AdminUsersPage() {
     setEmail('');
     setPhone('');
     setPassword('123456');
-    setSelectedRole('TEACHER');
+    setSelectedRole('STUDENT');
     setIsModalOpen(true);
   };
 
@@ -329,7 +329,6 @@ export default function AdminUsersPage() {
 
   // Số liệu tổng hợp
   const totalStudents = users.filter((u) => u.appRole === 'STUDENT').length;
-  const totalTeachers = users.filter((u) => u.appRole === 'TEACHER').length;
   const totalAdmins = users.filter((u) => u.appRole === 'SUPER_ADMIN').length;
   const totalLocked = users.filter((u) => !u.status).length;
 
@@ -347,7 +346,7 @@ export default function AdminUsersPage() {
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Tra cứu, phân quyền (Quản trị viên, Giảng viên, Học sinh) và quản lý tài khoản người dùng.
+            Tra cứu, phân quyền (Quản trị viên, Học sinh) và quản lý tài khoản người dùng.
           </p>
         </div>
 
@@ -383,17 +382,11 @@ export default function AdminUsersPage() {
       </div>
 
       {/* 2. Thẻ KPI Tóm Tắt */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs">
           <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Học Sinh (Student)</div>
           <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{totalStudents}</div>
           <p className="text-[11px] text-slate-400 mt-0.5">Tài khoản luyện thi & nộp bài</p>
-        </Card>
-
-        <Card className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs">
-          <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Giảng Viên (Teacher)</div>
-          <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">{totalTeachers}</div>
-          <p className="text-[11px] text-slate-400 mt-0.5">Soạn đề & xuất bản bài tập</p>
         </Card>
 
         <Card className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs">
@@ -419,7 +412,6 @@ export default function AdminUsersPage() {
             {[
               { id: 'ALL', label: `Tất cả (${users.length})` },
               { id: 'STUDENT', label: `Học sinh (${totalStudents})` },
-              { id: 'TEACHER', label: `Giảng viên (${totalTeachers})` },
               { id: 'SUPER_ADMIN', label: `Admin (${totalAdmins})` },
             ].map((tab) => (
               <button
@@ -514,7 +506,6 @@ export default function AdminUsersPage() {
             paginatedUsers.map((u) => {
               const initial = (u.name || u.fullname || 'U').charAt(0).toUpperCase();
               const isSuper = u.appRole === 'SUPER_ADMIN';
-              const isTeacher = u.appRole === 'TEACHER';
               const isStudent = u.appRole === 'STUDENT';
 
               return (
@@ -525,9 +516,7 @@ export default function AdminUsersPage() {
                         className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
                           isSuper
                             ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-400'
-                            : isTeacher
-                              ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-400'
-                              : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                            : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
                         }`}
                       >
                         {initial}
@@ -550,12 +539,10 @@ export default function AdminUsersPage() {
                       className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold shrink-0 ${
                         isSuper
                           ? 'bg-cyan-50 text-cyan-600 dark:bg-cyan-950/60 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800'
-                          : isTeacher
-                            ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800'
-                            : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                          : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
                       }`}
                     >
-                      {isSuper ? 'SUPER ADMIN' : isTeacher ? 'GIẢNG VIÊN' : 'HỌC SINH'}
+                      {isSuper ? 'SUPER ADMIN' : 'HỌC SINH'}
                     </span>
                   </div>
 
@@ -682,7 +669,6 @@ export default function AdminUsersPage() {
                 paginatedUsers.map((u) => {
                   const initial = (u.name || u.fullname || 'U').charAt(0).toUpperCase();
                   const isSuper = u.appRole === 'SUPER_ADMIN';
-                  const isTeacher = u.appRole === 'TEACHER';
                   const isStudent = u.appRole === 'STUDENT';
 
                   return (
@@ -697,8 +683,6 @@ export default function AdminUsersPage() {
                             className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
                               isSuper
                                 ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-400'
-                                : isTeacher
-                                ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-400'
                                 : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
                             }`}
                           >
@@ -724,12 +708,10 @@ export default function AdminUsersPage() {
                           className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold ${
                             isSuper
                               ? 'bg-cyan-50 text-cyan-600 dark:bg-cyan-950/60 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800'
-                              : isTeacher
-                              ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800'
                               : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
                           }`}
                         >
-                          {isSuper ? 'SUPER ADMIN' : isTeacher ? 'GIẢNG VIÊN' : 'HỌC SINH'}
+                          {isSuper ? 'SUPER ADMIN' : 'HỌC SINH'}
                         </span>
                       </TableCell>
 
@@ -918,10 +900,10 @@ export default function AdminUsersPage() {
                 </label>
                 <select
                   value={selectedRole}
-                  onChange={(e) => setSelectedRole(e.target.value as 'SUPER_ADMIN' | 'TEACHER')}
+                  onChange={(e) => setSelectedRole(e.target.value as 'SUPER_ADMIN' | 'STUDENT')}
                   className="w-full h-9 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1 text-xs text-slate-700 dark:text-slate-200 font-medium focus:outline-none focus:border-[#00B8DD]"
                 >
-                  <option value="TEACHER">Giảng viên (Teacher)</option>
+                  <option value="STUDENT">Học sinh (Student)</option>
                   <option value="SUPER_ADMIN">Quản trị (Admin)</option>
                 </select>
               </div>

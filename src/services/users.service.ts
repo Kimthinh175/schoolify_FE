@@ -7,7 +7,7 @@ export interface AdminUserItem {
   avatar_url?: string | null;
   google_id?: string | null;
   role: 'SUPER_ADMIN' | 'USER';
-  appRole: 'SUPER_ADMIN' | 'TEACHER' | 'STUDENT';
+  appRole: 'SUPER_ADMIN' | 'STUDENT';
   schoolName: string;
   province?: string | null;
   dateOfBirth?: string | null;
@@ -112,25 +112,19 @@ export const usersService = {
             ...u,
             name: u.name || u.fullname || 'Người dùng Schoolify',
             appRole:
-              u.appRole ||
-              (u.role === 'SUPER_ADMIN'
+              u.appRole === 'SUPER_ADMIN' || u.role === 'SUPER_ADMIN'
                 ? 'SUPER_ADMIN'
-                : u.teacher_profile
-                  ? 'TEACHER'
-                  : 'STUDENT'),
+                : 'STUDENT',
             schoolName:
               u.schoolName ||
               u.school_name ||
               sp.school_name ||
-              u.school_memberships?.[0]?.school?.name ||
               (u.role === 'SUPER_ADMIN'
                 ? 'Nền Tảng Gốc Schoolify'
-                : u.teacher_profile
-                  ? 'Hội Đồng Giảng Viên Schoolify'
-                  : 'Học Sinh Toàn Quốc'),
+                : 'Học Sinh Toàn Quốc'),
             province: u.province ?? sp.province ?? null,
             dateOfBirth: u.dateOfBirth ?? u.date_of_birth ?? sp.date_of_birth ?? null,
-            bio: u.bio ?? sp.bio ?? u.teacher_profile?.bio ?? null,
+            bio: u.bio ?? sp.bio ?? null,
             points: typeof u.points === 'number' ? u.points : sp.points,
             examPoints:
               typeof u.examPoints === 'number'
@@ -162,7 +156,7 @@ export const usersService = {
     email: string;
     phone?: string;
     password?: string;
-    role: 'SUPER_ADMIN' | 'TEACHER' | 'STUDENT';
+    role: 'SUPER_ADMIN' | 'STUDENT';
     grade_level?: string;
     date_of_birth?: string;
   }): Promise<AdminUserItem | null> {
@@ -190,7 +184,7 @@ export const usersService = {
       phone?: string;
       avatar_url?: string;
       status?: boolean;
-      role?: 'SUPER_ADMIN' | 'TEACHER' | 'STUDENT';
+      role?: 'SUPER_ADMIN' | 'STUDENT';
       points?: number;
       exam_points?: number;
       grade_level?: string;

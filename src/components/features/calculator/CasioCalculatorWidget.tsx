@@ -691,15 +691,15 @@ export function CasioCalculatorWidget() {
             )}
           >
             {/* Left: Genuine Casio Logos */}
-            <div className="flex flex-col min-w-0">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-base font-black tracking-[0.2em] text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] font-sans">
+            <div className="flex flex-col min-w-0 shrink-0">
+              <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+                <span className="text-base font-black tracking-[0.16em] text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] font-sans whitespace-nowrap">
                   CASIO
                 </span>
-                <span className="text-xs font-black text-cyan-400 tracking-tight font-mono">
+                <span className="text-xs font-black text-cyan-400 tracking-tight font-mono whitespace-nowrap">
                   {currentConfig.name}
                 </span>
-                <span className="italic text-[11px] font-black text-slate-300 tracking-wider hidden min-[360px]:inline">
+                <span className="italic text-[11px] font-black text-slate-300 tracking-wider hidden min-[380px]:inline whitespace-nowrap">
                   CLASSWIZ
                 </span>
               </div>
