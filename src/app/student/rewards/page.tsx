@@ -507,7 +507,7 @@ export default function StudentRewardsStorePage() {
             <div className="flex flex-col lg:flex-row lg:items-center gap-2.5">
               {/* Ô tìm kiếm quà tặng */}
               <div className="relative flex-1 min-w-[200px]">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#00B8DD]" />
                 <Input
                   placeholder="Tìm quà tặng, voucher, huy hiệu..."
                   value={storeSearch}
@@ -712,7 +712,7 @@ export default function StudentRewardsStorePage() {
           <Card className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2.5">
               <div className="relative flex-1">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#00B8DD]" />
                 <Input
                   placeholder="Tìm theo nội dung ghi chú, tên đề thi hoặc mã quà tặng..."
                   value={historySearch}

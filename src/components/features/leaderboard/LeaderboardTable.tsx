@@ -13,31 +13,44 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { LeaderboardUser } from '@/types/leaderboard';
+import { SUBJECT_DISPLAY_LABELS } from '@/services/leaderboard.service';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 interface LeaderboardTableProps {
   users: LeaderboardUser[];
+  totalCount?: number;
   onSelectUser?: (user: LeaderboardUser) => void;
   highlightUserId?: string;
 }
 
 export function LeaderboardTable({
   users,
+  totalCount = 0,
   onSelectUser,
   highlightUserId,
 }: LeaderboardTableProps) {
   if (users.length === 0) {
-    return (
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 text-center border border-slate-200/80 dark:border-slate-800">
-        <div className="w-16 h-16 mx-auto rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-3xl mb-3">
-          🔍
+    if (totalCount > 0) {
+      return (
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 text-center border border-slate-200/80 dark:border-slate-800">
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+            Tất cả {totalCount} thí sinh phù hợp đang hiển thị trên Podium Top 3 phía trên.
+          </p>
+          <p className="text-xs text-slate-500 mt-1">
+            Nhấn vào từng thẻ trên Podium để xem chi tiết hồ sơ thành tích.
+          </p>
         </div>
-        <h4 className="font-bold text-slate-800 dark:text-slate-200 text-base">
+      );
+    }
+
+    return (
+      <div className="bg-white dark:bg-slate-900 rounded-2xl p-10 text-center border border-slate-200/80 dark:border-slate-800">
+        <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm sm:text-base">
           Không tìm thấy thí sinh phù hợp
         </h4>
         <p className="text-xs text-slate-500 mt-1">
-          Hãy thử đổi bộ lọc khối lớp, môn học hoặc từ khóa tìm kiếm khác.
+          Hãy thử đổi bộ lọc môn học, khối lớp hoặc từ khóa tìm kiếm khác.
         </p>
       </div>
     );
@@ -157,7 +170,7 @@ export function LeaderboardTable({
                 <span className="md:hidden text-slate-400">Thế mạnh & Chuỗi:</span>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="text-[10px] font-medium">
-                    {user.primarySubject}
+                    {SUBJECT_DISPLAY_LABELS[user.primarySubject] || user.primarySubject}
                   </Badge>
                   <span className="flex items-center gap-0.5 font-bold text-orange-500 text-xs">
                     <Flame className="w-3.5 h-3.5 fill-orange-500 text-orange-500" />

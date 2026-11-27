@@ -1,39 +1,42 @@
 'use client';
 
 import * as React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
-  Trophy,
-  Flame,
   ArrowUp,
   Target,
   Gift,
-  ChevronUp,
-  ChevronDown,
   Navigation,
-  Sparkles,
 } from 'lucide-react';
 import { LeaderboardUser } from '@/types/leaderboard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 interface StickyUserRankProps {
   currentUser: LeaderboardUser;
+  nextRankUser?: LeaderboardUser | null;
+  totalCount?: number;
   onScrollToMe?: () => void;
   onOpenRewardsModal?: () => void;
 }
 
 export function StickyUserRank({
   currentUser,
+  nextRankUser = null,
+  totalCount = 0,
   onScrollToMe,
   onOpenRewardsModal,
 }: StickyUserRankProps) {
-  const [isExpanded, setIsExpanded] = React.useState(true);
-
-  // Compute points needed to reach rank 41 (or next rank)
-  const nextRankPoints = 1910;
-  const pointsGap = Math.max(0, nextRankPoints - currentUser.points);
+  const targetRank = nextRankUser ? nextRankUser.rank : Math.max(1, currentUser.rank - 1);
+  const pointsGap = nextRankUser
+    ? Math.max(1, nextRankUser.points - currentUser.points + 1)
+    : 0;
+  const percentile =
+    totalCount > 1
+      ? Math.max(0, Math.min(99, Math.round(((totalCount - currentUser.rank) / totalCount) * 100)))
+      : currentUser.rank === 1
+        ? 100
+        : 0;
 
   return (
     <div className="fixed bottom-4 left-0 right-0 z-40 px-3 sm:px-6 pointer-events-none">
@@ -59,10 +62,12 @@ export function StickyUserRank({
                   <span className="text-xl sm:text-2xl font-black text-amber-400">
                     #{currentUser.rank}
                   </span>
-                  <span className="text-xs text-emerald-400 font-bold flex items-center">
-                    <ArrowUp className="w-3 h-3 stroke-[3]" />
-                    +{currentUser.rankChangeAmount || 3}
-                  </span>
+                  {currentUser.rankChange === 'UP' && currentUser.rankChangeAmount > 0 && (
+                    <span className="text-xs text-emerald-400 font-bold flex items-center">
+                      <ArrowUp className="w-3 h-3 stroke-[3]" />
+                      +{currentUser.rankChangeAmount}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -101,12 +106,25 @@ export function StickyUserRank({
             <div className="hidden lg:flex flex-col items-center justify-center px-4 border-x border-slate-800">
               <div className="flex items-center gap-1.5 text-xs text-slate-300">
                 <Target className="w-3.5 h-3.5 text-[#00B8DD]" />
-                <span>
-                  Chỉ còn <strong className="text-amber-300">+{pointsGap} EXP</strong> để lên hạng <strong>#41</strong>
-                </span>
+                {currentUser.rank <= 1 || !nextRankUser ? (
+                  <span>
+                    Đang dẫn đầu bảng xếp hạng <strong className="text-amber-300">(#1)</strong>
+                  </span>
+                ) : (
+                  <span>
+                    Chỉ còn <strong className="text-amber-300">+{pointsGap.toLocaleString('vi-VN')} EXP</strong> để lên hạng{' '}
+                    <strong>#{targetRank}</strong>
+                  </span>
+                )}
               </div>
               <div className="text-[11px] text-slate-400 mt-0.5">
-                Đang vượt qua <strong>92%</strong> học sinh cùng khối
+                {totalCount > 0 ? (
+                  <>
+                    Đang vượt qua <strong>{percentile}%</strong> trong {totalCount} thí sinh
+                  </>
+                ) : (
+                  'Tiếp tục luyện đề để thăng hạng'
+                )}
               </div>
             </div>
 

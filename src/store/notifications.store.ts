@@ -99,20 +99,25 @@ export function inferNotificationCategory(item: {
   return 'SYSTEM';
 }
 
-export function mapRawNotificationToItem(n: any, isRemote = true): AppNotificationItem {
-  const title = String(n?.title || 'Thông báo hệ thống').trim();
-  const textBody = String(n?.message ?? n?.description ?? '').trim() || undefined;
-  const isRead = Boolean(n?.is_read ?? n?.read ?? false);
-  const createdIso = String(n?.created_at || n?.createdAt || new Date().toISOString());
-  const rawType = String(n?.type || 'info');
-  const link = n?.link ? String(n.link) : undefined;
+export function mapRawNotificationToItem(
+  raw: Record<string, unknown> | null | undefined,
+  isRemote = true
+): AppNotificationItem {
+  const n = raw || {};
+  const title = String(n.title || 'Thông báo hệ thống').trim();
+  const textBody = String(n.message ?? n.description ?? '').trim() || undefined;
+  const isRead = Boolean(n.is_read ?? n.read ?? false);
+  const createdIso = String(n.created_at || n.createdAt || new Date().toISOString());
+  const rawType = String(n.type || 'info');
+  const link = n.link ? String(n.link) : undefined;
+  const rawCategory = typeof n.category === 'string' ? (n.category as NotificationCategory) : undefined;
 
   return {
-    id: String(n?.id || `notif-${Date.now()}`),
-    userId: n?.user_id || n?.userId || undefined,
+    id: String(n.id || `notif-${Date.now()}`),
+    userId: n.user_id ? String(n.user_id) : n.userId ? String(n.userId) : undefined,
     type: normalizeNotificationType(rawType),
     rawType,
-    category: n?.category || inferNotificationCategory({ rawType, title, message: textBody, link }),
+    category: rawCategory || inferNotificationCategory({ rawType, title, message: textBody, link }),
     title,
     message: textBody,
     description: textBody,
@@ -143,6 +148,33 @@ function getAuthHeaders(): Record<string, string> {
   }
 }
 
+function getDedupeSignature(item: { title?: string; message?: string; description?: string }): string {
+  const t = String(item.title || '').trim().toLowerCase();
+  const b = String(item.message ?? item.description ?? '').trim().toLowerCase();
+  return `${t}::${b}`;
+}
+
+function deduplicateNotifications(list: AppNotificationItem[]): AppNotificationItem[] {
+  const seenIds = new Set<string>();
+  const seenRecentSig = new Map<string, number>();
+  const result: AppNotificationItem[] = [];
+
+  for (const item of list) {
+    if (seenIds.has(item.id)) continue;
+    const sig = getDedupeSignature(item);
+    const ts = new Date(item.createdAt || item.created_at || 0).getTime() || 0;
+    const prevTs = seenRecentSig.get(sig);
+    // Loại bỏ bản ghi trùng nội dung tuyệt đối trong vòng 5 phút (tránh lặp toast + remote)
+    if (prevTs !== undefined && Math.abs(prevTs - ts) <= 5 * 60 * 1000) {
+      continue;
+    }
+    seenIds.add(item.id);
+    seenRecentSig.set(sig, ts);
+    result.push(item);
+  }
+  return result;
+}
+
 function readInitialNotifications(): AppNotificationItem[] {
   if (typeof window === 'undefined') return [];
   try {
@@ -150,7 +182,9 @@ function readInitialNotifications(): AppNotificationItem[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed.slice(0, MAX_ITEMS).map((item) => mapRawNotificationToItem(item, Boolean(item?.remote)));
+    return deduplicateNotifications(
+      parsed.slice(0, MAX_ITEMS).map((item) => mapRawNotificationToItem(item, Boolean(item?.remote)))
+    );
   } catch {
     return [];
   }
@@ -225,7 +259,7 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
             ? json.data
             : [];
 
-      const remoteItems: AppNotificationItem[] = rawList.map((n: any) =>
+      const remoteItems: AppNotificationItem[] = rawList.map((n: Record<string, unknown>) =>
         mapRawNotificationToItem(n, true)
       );
 
@@ -241,9 +275,11 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
 
       const remoteIds = new Set(syncedRemote.map((it) => it.id));
       const localOnly = get().items.filter((it) => !it.remote && !remoteIds.has(it.id));
-      const merged = [...syncedRemote, ...localOnly]
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, MAX_ITEMS);
+      const merged = deduplicateNotifications(
+        [...syncedRemote, ...localOnly].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+      ).slice(0, MAX_ITEMS);
 
       persistNotifications(merged);
       set({ items: merged, hydrated: true });
@@ -281,7 +317,7 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
         read: false,
         is_read: false,
       };
-      const next: AppNotificationItem[] = [newItem, ...state.items].slice(0, MAX_ITEMS);
+      const next = deduplicateNotifications([newItem, ...state.items]).slice(0, MAX_ITEMS);
       persistNotifications(next);
       return { items: next, hydrated: true };
     });

@@ -650,10 +650,11 @@ export function ForumAskQuestionModal({
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const [activeField, setActiveField] = React.useState<'title' | 'content'>('content');
 
-  // Lọc danh sách công thức thông minh theo đúng Môn học & Khối lớp đang chọn (Lớp 10 chỉ tới L10, Lớp 11 tới L11, Lớp 12 đầy đủ)
+  // Lọc danh sách công thức thông minh theo đúng Môn học & Khối lớp đang chọn (khối 1-10 hiển thị bộ công thức nền tảng, lớp 11-12 mở rộng dần)
   const visibleToolbarItems = React.useMemo(() => {
+    const effectiveGrade = Math.max(10, Number(grade || 12));
     return FORUM_LATEX_TOOLBAR_ITEMS.filter(
-      (item) => item.subjects.includes(subject) && item.minGrade <= grade
+      (item) => item.subjects.includes(subject) && item.minGrade <= effectiveGrade
     );
   }, [subject, grade]);
 
