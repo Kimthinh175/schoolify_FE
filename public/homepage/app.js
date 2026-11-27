@@ -4076,6 +4076,68 @@
   // BOOTSTRAP ALL MODULES
   // =========================================================================
   let bootstrapRetryCount = 0;
+  function initNewsFiltersAndSpotlight() {
+    // CargoKite Cursor Spotlight Glow Tracking on Cards
+    document.querySelectorAll('.news-card.ck-spotlight').forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        card.style.setProperty('--mouse-x', `${x}px`);
+        card.style.setProperty('--mouse-y', `${y}px`);
+      });
+    });
+
+    // CargoKite News Category Filter Pills
+    const filterBtns = document.querySelectorAll('.news-filter-btn[data-filter]');
+    const newsCards = document.querySelectorAll('.news-card[data-cat]');
+
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+        const f = btn.getAttribute('data-filter');
+
+        newsCards.forEach(card => {
+          const cat = card.getAttribute('data-cat');
+          if (f === 'all' || cat === f) {
+            card.style.display = 'flex';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0) scale(1)';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    });
+  }
+
+  // =========================================================================
+  // BOOTSTRAP ALL MODULES (V7 HOMEPAGE: INCLUDES NEWS & LEADERBOARD MODAL)
+  // =========================================================================
+  initThemeMode();
+  initPreloader();
+  initScrollProgressBar();
+  initConstellationSkyCanvas();
+  initSmoothScrollAndNav();
+  initAuthAndWallet();
+  initOrigamiChoreography();
+  initRevealsAndCounters();
+  initInteractiveMiniDemo();
+  initGradeCatalogTabs();
+  initChampionshipPodium();
+  initLeaderboardModal();
+  initNewsFiltersAndSpotlight();
+  initFaqAccordion();
+  initContactSection();
+  initBackToTop();
+  initSubpageRoutePreview();
+  initImpactIsoInteractions();
+  initTechCardInteractions();
+  initMagneticButtons();
+    initNewsFiltersAndSpotlight();
+})();
+
   function bootstrap() {
     if (typeof window !== 'undefined' && window.__schoolifyHomepageRunning) {
       return;

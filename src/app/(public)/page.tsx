@@ -108,7 +108,7 @@ export default function HomePage() {
 
   return (
     <>
-      <link rel="stylesheet" href="/homepage/styles.css?v=20261127_lb_cta_v2" />
+      <link rel="stylesheet" href="/homepage/styles.css?v=20261127_news_filters_v4" />
       <StaticHomepageRoot />
       {skeletonPhase !== 'gone' && (
         <HomePageSkeletonOverlay leaving={skeletonPhase === 'leaving'} />
@@ -127,7 +127,7 @@ export default function HomePage() {
         strategy="afterInteractive"
       />
       <Script
-        src="/homepage/app.js?v=20261127_lb_cta_v2"
+        src="/homepage/app.js?v=20261127_news_filters_v4"
         strategy="afterInteractive"
         onLoad={() => {
           if (typeof window !== 'undefined' && (window as any).__initSchoolifyHomepage) {
