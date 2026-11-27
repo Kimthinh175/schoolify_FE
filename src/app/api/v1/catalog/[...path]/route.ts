@@ -43,7 +43,7 @@ export async function GET(
       cache: 'no-store',
     });
 
-    const data = await beRes.json();
+    const data = await beRes.json().catch(() => ({ success: beRes.ok }));
     return NextResponse.json(data, { status: beRes.status });
   } catch (error: any) {
     return NextResponse.json(
@@ -71,7 +71,7 @@ export async function POST(
       body: JSON.stringify(body),
     });
 
-    const data = await beRes.json();
+    const data = await beRes.json().catch(() => ({ success: beRes.ok }));
     return NextResponse.json(data, { status: beRes.status });
   } catch (error: any) {
     return NextResponse.json(
@@ -99,7 +99,7 @@ export async function PATCH(
       body: JSON.stringify(body),
     });
 
-    const data = await beRes.json();
+    const data = await beRes.json().catch(() => ({ success: beRes.ok }));
     return NextResponse.json(data, { status: beRes.status });
   } catch (error: any) {
     return NextResponse.json(
@@ -125,7 +125,7 @@ export async function DELETE(
       headers: buildHeaders(req),
     });
 
-    const data = await beRes.json();
+    const data = await beRes.json().catch(() => ({ success: beRes.ok }));
     return NextResponse.json(data, { status: beRes.status });
   } catch (error: any) {
     return NextResponse.json(

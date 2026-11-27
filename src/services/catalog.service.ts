@@ -327,14 +327,27 @@ export const catalogService = {
   },
 
   /** Lấy bảng xếp hạng học sinh từ PostgreSQL (`GET /api/v1/catalog/leaderboard`) */
-  async getLeaderboard(): Promise<LeaderboardEntry[]> {
+  async getLeaderboard(params?: {
+    timeframe?: string;
+    grade?: string;
+    subject?: string;
+    search?: string;
+  }): Promise<LeaderboardEntry[]> {
     try {
-      const res = await fetch('/api/v1/catalog/leaderboard', {
+      const qs = new URLSearchParams();
+      if (params?.timeframe) qs.set('timeframe', params.timeframe);
+      if (params?.grade && params.grade !== 'ALL') qs.set('grade', params.grade);
+      if (params?.subject && params.subject !== 'ALL') qs.set('subject', params.subject);
+      if (params?.search?.trim()) qs.set('search', params.search.trim());
+      const queryStr = qs.toString() ? `?${qs.toString()}` : '';
+
+      const res = await fetch(`/api/v1/catalog/leaderboard${queryStr}`, {
         method: 'GET',
+        credentials: 'include',
         cache: 'no-store',
       });
       if (!res.ok) return [];
-      const json = await res.json();
+      const json = await res.json().catch(() => null);
       return Array.isArray(json?.data) ? json.data : [];
     } catch (err) {
       console.warn('[catalogService.getLeaderboard] Failed:', err);
