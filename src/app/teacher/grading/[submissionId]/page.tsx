@@ -25,14 +25,10 @@ export default function TeacherGradingDetailPage() {
     MOCK_SUBMISSIONS.find((s) => s.id === params.submissionId) || MOCK_SUBMISSIONS[0];
   const exam = MOCK_EXAMS.find((e) => e.id === submission.exam_id) || MOCK_EXAMS[0];
 
-  // Grading states
-  const [essayPoints, setEssayPoints] = React.useState('2.0');
-  const [essayFeedback, setEssayFeedback] = React.useState(
-    'Lời giải xuất sắc và chặt chẽ, chỉ cần chú ý viết ký hiệu toán học chuẩn hơn.'
-  );
+  // Teacher feedback state
   const [generalNotes, setGeneralNotes] = React.useState(
     submission.teacher_notes ||
-      'Em nắm rất vững bản chất công thức lượng giác. Câu tự luận trình bày rõ ràng, đủ điều kiện k thuộc Z. Tiếp tục phát huy!'
+      'Em nắm rất vững kiến thức trọng tâm và hoàn thành tốt các câu hỏi trắc nghiệm. Tiếp tục phát huy!'
   );
   const [isSaved, setIsSaved] = React.useState(false);
 
@@ -54,7 +50,7 @@ export default function TeacherGradingDetailPage() {
             Quay lại danh sách bài nộp
           </Link>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-            Chấm Bài: {submission.student_name}
+            Nhận Xét Bài Làm: {submission.student_name}
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Bài thi: <span className="font-semibold text-slate-700 dark:text-slate-300">{submission.exam_title}</span> • Nộp lúc {new Date(submission.submitted_at || '').toLocaleString('vi-VN')}
@@ -66,7 +62,7 @@ export default function TeacherGradingDetailPage() {
           leftIcon={isSaved ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
           variant={isSaved ? 'success' : 'primary'}
         >
-          {isSaved ? 'Đã Lưu & Trả Điểm' : 'Lưu Điểm & Trả Bài'}
+          {isSaved ? 'Đã Lưu & Trả Bài' : 'Lưu Nhận Xét & Trả Bài'}
         </Button>
       </div>
 
@@ -79,51 +75,16 @@ export default function TeacherGradingDetailPage() {
               <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
                 Câu {idx + 1} ({q.type}) • Điểm tối đa: {q.points}đ
               </span>
-              <Badge variant={q.type === 'ESSAY' ? 'purple' : 'success'}>
-                {q.type === 'ESSAY' ? 'Chấm Tự Luận' : 'Trắc nghiệm tự động'}
-              </Badge>
+              <Badge variant="success">Trắc nghiệm tự động</Badge>
             </div>
 
             <p className="text-sm font-semibold text-slate-900 dark:text-white">{q.content}</p>
 
             {/* Answer Display */}
-            {q.type === 'ESSAY' ? (
-              <div className="space-y-4 pt-2">
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2">
-                  <span className="text-xs font-bold text-slate-500 uppercase">Bài Làm Của Học Sinh:</span>
-                  <p className="text-sm font-mono text-slate-800 dark:text-slate-200 whitespace-pre-line">
-                    {submission.answers[3]?.text_answer}
-                  </p>
-                </div>
-
-                <div className="p-3 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-800/60 text-xs text-indigo-900 dark:text-indigo-200">
-                  <span className="font-bold">Đáp án chuẩn tham khảo:</span> {q.sample_essay_answer}
-                </div>
-
-                {/* Grading Controls */}
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 pt-2">
-                  <div>
-                    <Input
-                      label="Điểm cho câu này (max 2.5đ)"
-                      value={essayPoints}
-                      onChange={(e) => setEssayPoints(e.target.value)}
-                    />
-                  </div>
-                  <div className="sm:col-span-3">
-                    <Input
-                      label="Lời nhận xét cho câu này"
-                      value={essayFeedback}
-                      onChange={(e) => setEssayFeedback(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/60 text-xs text-emerald-800 dark:text-emerald-300 flex items-center justify-between">
-                <span>Học sinh đã chọn đáp án đúng (+{q.points}đ)</span>
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              </div>
-            )}
+            <div className="p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/60 text-xs text-emerald-800 dark:text-emerald-300 flex items-center justify-between">
+              <span>Học sinh đã chọn đáp án đúng (+{q.points}đ)</span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            </div>
           </Card>
         ))}
 

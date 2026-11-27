@@ -2,11 +2,13 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   ArrowRight,
   Atom,
   BookOpen,
   Calculator,
+  CalendarClock,
   CheckCircle2,
   ChevronRight,
   Clock,
@@ -32,7 +34,18 @@ import { K12_SUBJECTS } from '@/services/mock/data';
 import { K12Subject } from '@/types/subject';
 import { LevelSelectionModal } from '@/components/features/student/practice/LevelSelectionModal';
 import { PendingSubjectModal } from '@/components/features/student/practice/PendingSubjectModal';
+import { GradeOnboardingModal } from '@/components/features/student/practice/GradeOnboardingModal';
+import { DiagnosticGateOverlay } from '@/components/features/student/practice/DiagnosticGateOverlay';
 import { RequireLoginModal, RequireLoginReason } from '@/components/features/auth/RequireLoginModal';
+import { useAuthStore } from '@/store/auth.store';
+import { chapterRoadmapService } from '@/services/chapter-roadmap.service';
+import {
+  getCurrentSchoolSemester,
+  getGuestOnboarding,
+  GuestOnboardingState,
+  parseHighSchoolGrade,
+} from '@/lib/semester-utils';
+import { buildTopicRoadmapHref } from '@/lib/topic-route-utils';
 import { cn } from '@/lib/utils';
 
 // Icon môn học nhẹ nhàng
@@ -51,27 +64,27 @@ const SUBJECT_ICON_MAP: Record<string, React.ReactNode> = {
   Sparkles: <Sparkles className="w-5 h-5 text-emerald-600" />,
 };
 
-// 4 cấp độ bài tập gần gũi
+// 3 cấp độ bài tập gần gũi
 const PRACTICE_LEVELS_LIST = [
   {
     level: 'CƠ BẢN',
     name: 'Sách giáo khoa',
     desc: 'Lý thuyết cốt lõi, công thức và dạng bài tập cơ bản giúp bạn nắm chắc kiến thức nền tảng.',
-    badge: 'Miễn phí',
+    badge: '3 Tia Sáng / đề',
     isFree: true,
   },
   {
     level: 'VỪA SỨC',
     name: 'Ôn thi học kỳ',
     desc: 'Bài tập thông hiểu và vận dụng bám sát đề thi giữa kỳ, cuối kỳ và tốt nghiệp THPT.',
-    badge: 'Miễn phí',
+    badge: '4 Tia Sáng / đề',
     isFree: true,
   },
   {
     level: 'NÂNG CAO',
     name: 'Vận dụng cao (9 - 10 điểm)',
     desc: 'Các bài toán biến tấu, rèn luyện tư duy logic và kỹ năng giải nhanh dạng bài phân loại.',
-    badge: 'Cần đăng nhập',
+    badge: '9 Tia Sáng / đề',
     isFree: false,
   },
 ];
@@ -105,6 +118,9 @@ const LEADERBOARD_PREVIEW = [
 ];
 
 export default function LuyenThiPage() {
+  const { isAuthenticated, user } = useAuthStore();
+  const router = useRouter();
+  const isLoggedIn = Boolean(isAuthenticated && user?.id);
   const [contactSubmitted, setContactSubmitted] = React.useState(false);
 
   // Practice Subjects State
@@ -112,6 +128,50 @@ export default function LuyenThiPage() {
   const [isChangingCategory, setIsChangingCategory] = React.useState(false);
   const [selectedSubject, setSelectedSubject] = React.useState<K12Subject | null>(null);
   const [isLevelModalOpen, setIsLevelModalOpen] = React.useState(false);
+  const [levelModalInitialMode, setLevelModalInitialMode] = React.useState<'TOPIC' | 'MOCK_EXAM' | undefined>(
+    undefined
+  );
+
+  // Guest Try-First Onboarding State
+  const [guestState, setGuestState] = React.useState<GuestOnboardingState | null>(null);
+  const [guestOnboardingOpen, setGuestOnboardingOpen] = React.useState(false);
+  const [pendingSubjectAfterOnboarding, setPendingSubjectAfterOnboarding] =
+    React.useState<K12Subject | null>(null);
+  const semesterInfo = React.useMemo(() => getCurrentSchoolSemester(), []);
+
+  React.useEffect(() => {
+    const syncGuest = () => setGuestState(getGuestOnboarding());
+    syncGuest();
+    window.addEventListener('schoolify-guest-onboarding-updated', syncGuest);
+    window.addEventListener('storage', syncGuest);
+    return () => {
+      window.removeEventListener('schoolify-guest-onboarding-updated', syncGuest);
+      window.removeEventListener('storage', syncGuest);
+    };
+  }, []);
+
+  // Tự động mở modal Thi thử tổng hợp nếu điều hướng từ trang chuyên đề (/luyen-thi?subject=toan-hoc&mode=mock)
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get('mode');
+    const subjSlug = params.get('subject');
+    if (mode === 'mock' && subjSlug) {
+      const matched = K12_SUBJECTS.find((s) => s.slug === subjSlug && s.status === 'ACTIVE');
+      if (matched) {
+        setSelectedSubject(matched);
+        setLevelModalInitialMode('MOCK_EXAM');
+        setIsLevelModalOpen(true);
+      }
+    }
+  }, []);
+
+  const activeUserGrade = React.useMemo(() => {
+    if (isLoggedIn) {
+      return parseHighSchoolGrade(user?.student_profile?.grade_level);
+    }
+    return guestState?.grade ?? null;
+  }, [isLoggedIn, user?.student_profile?.grade_level, guestState?.grade]);
 
   const handleCategoryChange = (catId: string) => {
     if (catId === activeCategory) return;
@@ -149,39 +209,93 @@ export default function LuyenThiPage() {
     });
   }, [activeCategory]);
 
-  // Pending Subject Modal State
+  // Pending Subject Modal & First-Time Diagnostic Gate State
   const [isPendingModalOpen, setIsPendingModalOpen] = React.useState(false);
   const [pendingSubjectName, setPendingSubjectName] = React.useState<string>('Môn học');
+  const [diagnosticGate, setDiagnosticGate] = React.useState<{
+    isOpen: boolean;
+    subjectSlug: string;
+    subjectName: string;
+    grade: 10 | 11 | 12;
+  }>({
+    isOpen: false,
+    subjectSlug: 'toan-hoc',
+    subjectName: 'Toán Học',
+    grade: 12,
+  });
+  const isCheckingGateRef = React.useRef(false);
 
-  const handleOpenSubjectLevels = (subject: K12Subject) => {
+  const openSubjectAfterGradeResolved = async (
+    subject: K12Subject,
+    resolvedGrade: 10 | 11 | 12,
+    preferredMode?: 'TOPIC' | 'MOCK_EXAM',
+  ) => {
+    if (isCheckingGateRef.current) return;
+    isCheckingGateRef.current = true;
+    try {
+      const forceGate =
+        typeof window !== 'undefined' &&
+        new URLSearchParams(window.location.search).get('forceGate') === '1';
+
+      const status = forceGate
+        ? { diagnosticRequired: true, isPrivileged: false }
+        : await chapterRoadmapService.getDiagnosticStatus(subject.slug, resolvedGrade);
+
+      if (status && status.diagnosticRequired && !status.isPrivileged) {
+        setDiagnosticGate({
+          isOpen: true,
+          subjectSlug: subject.slug,
+          subjectName: subject.name,
+          grade: resolvedGrade,
+        });
+        return;
+      }
+
+      if (preferredMode === 'TOPIC') {
+        router.push(buildTopicRoadmapHref(subject.slug, { grade: resolvedGrade }));
+        return;
+      }
+
+      setLevelModalInitialMode(preferredMode);
+      setSelectedSubject(subject);
+      setIsLevelModalOpen(true);
+    } finally {
+      isCheckingGateRef.current = false;
+    }
+  };
+
+  const handleOpenSubjectLevels = async (subject: K12Subject, preferredMode?: 'TOPIC' | 'MOCK_EXAM') => {
     if (subject.status === 'PENDING') {
       setPendingSubjectName(subject.name);
       setIsPendingModalOpen(true);
       return;
     }
-    setSelectedSubject(subject);
-    setIsLevelModalOpen(true);
+
+    if (!activeUserGrade) {
+      setPendingSubjectAfterOnboarding(subject);
+      setGuestOnboardingOpen(true);
+      return;
+    }
+
+    await openSubjectAfterGradeResolved(subject, activeUserGrade, preferredMode);
   };
 
   const handlePendingModalSelect = (slug: 'toan-hoc' | 'tin-hoc') => {
     setIsPendingModalOpen(false);
     const target = K12_SUBJECTS.find((s) => s.slug === slug);
     if (target) {
-      setSelectedSubject(target);
-      setIsLevelModalOpen(true);
+      handleOpenSubjectLevels(target);
     }
   };
 
   const handleLevelCardClick = (levelItem: (typeof PRACTICE_LEVELS_LIST)[0]) => {
-    if (levelItem.isFree) {
-      const defaultSubject = K12_SUBJECTS[0];
-      setSelectedSubject(defaultSubject);
-      setIsLevelModalOpen(true);
-    } else {
+    if (!isLoggedIn && !levelItem.isFree) {
       setTargetLevelName(levelItem.name);
       setLoginReason('ADVANCED_LEVEL');
       setRequireLoginOpen(true);
+      return;
     }
+    router.push('/luyen-thi/chuyen-de/toan');
   };
 
   const handleLeaderboardClick = () => {
@@ -210,14 +324,22 @@ export default function LuyenThiPage() {
             <span className="text-slate-800 dark:text-slate-200 font-semibold">Luyện thi</span>
           </div>
 
-          <div className="max-w-3xl">
+          <div className="max-w-3xl space-y-3">
             <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               Luyện thi trực tuyến
             </h1>
-            <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-              Rèn luyện kỹ năng làm bài thi theo chương trình học phổ thông.
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+              Rèn luyện kỹ năng làm bài thi theo lộ trình từng chương chuẩn GDPT 2018.
               Bạn có thể bắt đầu ngay với cấp độ <strong>Cơ bản</strong> hoàn toàn miễn phí.
             </p>
+
+            {/* Thanh trạng thái Kỳ học thời gian thực */}
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#00B8DD]/10 text-[#00B8DD] border border-[#00B8DD]/25">
+                <CalendarClock className="w-3.5 h-3.5 shrink-0" />
+                <span>{semesterInfo.badgeText}</span>
+              </span>
+            </div>
           </div>
 
           {/* 2 Khối Nổi Bật: Toán Học & Tin Học */}
@@ -447,10 +569,10 @@ export default function LuyenThiPage() {
 
                 <div className="mt-4 pt-3 border-t border-slate-200/70 dark:border-slate-800 flex items-center justify-between text-xs">
                   <span className="text-slate-400 dark:text-slate-500">
-                    {lvl.isFree ? 'Không cần tài khoản' : 'Yêu cầu đăng nhập'}
+                    {isLoggedIn ? 'Sẵn sàng tạo đề' : 'Yêu cầu đăng nhập'}
                   </span>
                   <span className="font-semibold text-sky-600 dark:text-sky-400 flex items-center gap-0.5">
-                    {lvl.isFree ? 'Vào ngay' : 'Mở khóa'} →
+                    {isLoggedIn ? 'Tạo đề ngay' : 'Đăng nhập'} →
                   </span>
                 </div>
               </Card>
@@ -621,8 +743,43 @@ export default function LuyenThiPage() {
       {/* ──────────────────────────────────────────────────────────── */}
       <LevelSelectionModal
         isOpen={isLevelModalOpen}
-        onClose={() => setIsLevelModalOpen(false)}
+        onClose={() => {
+          setIsLevelModalOpen(false);
+          setLevelModalInitialMode(undefined);
+        }}
         subject={selectedSubject}
+        isLoggedIn={isLoggedIn}
+        initialMode={levelModalInitialMode}
+      />
+
+      <DiagnosticGateOverlay
+        isOpen={diagnosticGate.isOpen}
+        subjectSlug={diagnosticGate.subjectSlug}
+        subjectName={diagnosticGate.subjectName}
+        grade={diagnosticGate.grade}
+        onClose={() => setDiagnosticGate((prev) => ({ ...prev, isOpen: false }))}
+        onReadyToEnterExam={(examUrl) => {
+          router.push(examUrl);
+        }}
+      />
+
+      <GradeOnboardingModal
+        isOpen={guestOnboardingOpen}
+        mode="GUEST_TRIAL"
+        subjectName={pendingSubjectAfterOnboarding?.name}
+        onClose={() => {
+          setGuestOnboardingOpen(false);
+          setPendingSubjectAfterOnboarding(null);
+        }}
+        onCompleted={(result) => {
+          setGuestOnboardingOpen(false);
+          setGuestState(getGuestOnboarding());
+          if (pendingSubjectAfterOnboarding) {
+            const subjectToOpen = pendingSubjectAfterOnboarding;
+            setPendingSubjectAfterOnboarding(null);
+            void openSubjectAfterGradeResolved(subjectToOpen, result.grade);
+          }
+        }}
       />
 
       <PendingSubjectModal

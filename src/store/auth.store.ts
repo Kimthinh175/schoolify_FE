@@ -26,7 +26,7 @@ const resolveUserRole = (
   preferredRole?: SchoolRole | SystemRole
 ): SchoolRole | SystemRole => {
   if (preferredRole) return preferredRole;
-  if (user.role === 'SUPER_ADMIN') return 'SUPER_ADMIN';
+  if (user.role === 'SUPER_ADMIN' || (user.role as string) === 'ADMIN') return 'SUPER_ADMIN';
   return (user as any).teacher_profile ? 'TEACHER' : 'STUDENT';
 };
 
@@ -97,7 +97,7 @@ export const useAuthStore = create<AuthStoreState>()(
             const current = get().user;
             const merged = { ...current, ...data.user } as User;
             const resolvedRole =
-              merged.role === 'SUPER_ADMIN'
+              merged.role === 'SUPER_ADMIN' || (merged.role as string) === 'ADMIN'
                 ? 'SUPER_ADMIN'
                 : isAuthenticated
                   ? currentRole

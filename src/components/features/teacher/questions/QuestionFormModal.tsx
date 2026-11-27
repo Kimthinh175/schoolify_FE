@@ -100,7 +100,7 @@ export function QuestionFormModal({
           { content: 'Sai', is_correct: false },
         ]);
       }
-    } else if (type !== 'ESSAY' && answers.length < 2) {
+    } else if (answers.length < 2) {
       setAnswers([
         { content: '', is_correct: true },
         { content: '', is_correct: false },
@@ -115,7 +115,7 @@ export function QuestionFormModal({
   };
 
   const handleRemoveAnswer = (index: number) => {
-    if (answers.length <= 2 && questionType !== 'ESSAY') return;
+    if (answers.length <= 2) return;
     setAnswers(answers.filter((_, i) => i !== index));
   };
 
@@ -148,17 +148,15 @@ export function QuestionFormModal({
       return;
     }
 
-    if (questionType !== 'ESSAY') {
-      const emptyAns = answers.some((a) => !a.content.trim());
-      if (emptyAns) {
-        setErrorMsg('Vui lòng nhập đầy đủ nội dung các lựa chọn đáp án');
-        return;
-      }
-      const hasCorrect = answers.some((a) => a.is_correct);
-      if (!hasCorrect) {
-        setErrorMsg('Vui lòng chọn ít nhất 1 đáp án đúng');
-        return;
-      }
+    const emptyAns = answers.some((a) => !a.content.trim());
+    if (emptyAns) {
+      setErrorMsg('Vui lòng nhập đầy đủ nội dung các lựa chọn đáp án');
+      return;
+    }
+    const hasCorrect = answers.some((a) => a.is_correct);
+    if (!hasCorrect) {
+      setErrorMsg('Vui lòng chọn ít nhất 1 đáp án đúng');
+      return;
     }
 
     setIsSubmitting(true);
@@ -197,7 +195,7 @@ export function QuestionFormModal({
               {questionToEdit ? 'Chỉnh Sửa Câu Hỏi' : 'Soạn Câu Hỏi Mới'}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Soạn thảo câu hỏi trắc nghiệm hoặc tự luận linh hoạt
+              Soạn thảo câu hỏi trắc nghiệm linh hoạt
             </p>
           </div>
           <button
@@ -221,12 +219,11 @@ export function QuestionFormModal({
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
               Loại Câu Hỏi
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               {[
                 { type: 'SINGLE_CHOICE', label: '1 Đáp án' },
                 { type: 'MULTIPLE_CHOICE', label: 'Nhiều đáp án' },
                 { type: 'TRUE_FALSE', label: 'Đúng / Sai' },
-                { type: 'ESSAY', label: 'Tự luận' },
               ].map((item) => (
                 <button
                   type="button"
@@ -308,90 +305,79 @@ export function QuestionFormModal({
             </div>
           </div>
 
-          {/* Danh sách đáp án (nếu không phải ESSAY) */}
-          {questionType === 'ESSAY' ? (
-            <div className="p-3.5 rounded-xl bg-slate-100/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 space-y-1">
-              <p className="font-bold flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
-                <span>ℹ️ Chế độ Câu hỏi Tự luận</span>
-              </p>
-              <p className="text-slate-500 dark:text-slate-400 text-[11px]">
-                Học sinh sẽ nhập câu trả lời dạng văn bản/đoạn văn trực tiếp. Các phương án lựa chọn A, B, C, D (nếu có) sẽ được tạm ẩn. Đổi lại Trắc nghiệm để mở lại danh sách lựa chọn.
-              </p>
+          {/* Danh sách đáp án */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                Danh sách đáp án lựa chọn
+              </label>
+              <span className="text-xs text-slate-400">
+                {questionType === 'MULTIPLE_CHOICE'
+                  ? 'Tích chọn 1 hoặc nhiều đáp án đúng'
+                  : 'Tích chọn 1 đáp án đúng'}
+              </span>
             </div>
-          ) : (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Danh sách đáp án lựa chọn
-                </label>
-                <span className="text-xs text-slate-400">
-                  {questionType === 'MULTIPLE_CHOICE'
-                    ? 'Tích chọn 1 hoặc nhiều đáp án đúng'
-                    : 'Tích chọn 1 đáp án đúng'}
-                </span>
-              </div>
 
-              <div className="space-y-2.5">
-                {answers.map((ans, idx) => {
-                  const letter = String.fromCharCode(65 + idx);
-                  return (
-                    <div
-                      key={idx}
-                      className={`flex items-center gap-2 p-2.5 border rounded-xl transition-all ${
+            <div className="space-y-2.5">
+              {answers.map((ans, idx) => {
+                const letter = String.fromCharCode(65 + idx);
+                return (
+                  <div
+                    key={idx}
+                    className={`flex items-center gap-2 p-2.5 border rounded-xl transition-all ${
+                      ans.is_correct
+                        ? 'border-emerald-300 bg-emerald-50/40 dark:bg-emerald-950/20 dark:border-emerald-800/60'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950'
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleAnswerToggleCorrect(idx)}
+                      className={`h-7 w-7 shrink-0 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${
                         ans.is_correct
-                          ? 'border-emerald-300 bg-emerald-50/40 dark:bg-emerald-950/20 dark:border-emerald-800/60'
-                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950'
+                          ? 'bg-emerald-500 text-white shadow-sm'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200'
                       }`}
+                      title="Tích để đánh dấu đáp án đúng"
                     >
+                      {ans.is_correct ? <CheckCircle2 className="w-4 h-4" /> : letter}
+                    </button>
+
+                    <Input
+                      value={ans.content}
+                      onChange={(e) => handleAnswerContentChange(idx, e.target.value)}
+                      placeholder={`Nội dung đáp án ${letter}...`}
+                      disabled={questionType === 'TRUE_FALSE'}
+                      className="flex-1 h-9 text-xs"
+                    />
+
+                    {questionType !== 'TRUE_FALSE' && answers.length > 2 && (
                       <button
                         type="button"
-                        onClick={() => handleAnswerToggleCorrect(idx)}
-                        className={`h-7 w-7 shrink-0 rounded-lg flex items-center justify-center font-bold text-xs transition-colors ${
-                          ans.is_correct
-                            ? 'bg-emerald-500 text-white shadow-sm'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200'
-                        }`}
-                        title="Tích để đánh dấu đáp án đúng"
+                        onClick={() => handleRemoveAnswer(idx)}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
                       >
-                        {ans.is_correct ? <CheckCircle2 className="w-4 h-4" /> : letter}
+                        <Trash2 className="w-4 h-4" />
                       </button>
-
-                      <Input
-                        value={ans.content}
-                        onChange={(e) => handleAnswerContentChange(idx, e.target.value)}
-                        placeholder={`Nội dung đáp án ${letter}...`}
-                        disabled={questionType === 'TRUE_FALSE'}
-                        className="flex-1 h-9 text-xs"
-                      />
-
-                      {questionType !== 'TRUE_FALSE' && answers.length > 2 && (
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveAnswer(idx)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {questionType !== 'TRUE_FALSE' && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddAnswer}
-                  leftIcon={<Plus className="w-3.5 h-3.5" />}
-                  className="w-full mt-2 text-xs border-dashed"
-                >
-                  Thêm Lựa Chọn Đáp Án
-                </Button>
-              )}
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          )}
+
+            {questionType !== 'TRUE_FALSE' && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddAnswer}
+                leftIcon={<Plus className="w-3.5 h-3.5" />}
+                className="w-full mt-2 text-xs border-dashed"
+              >
+                Thêm Lựa Chọn Đáp Án
+              </Button>
+            )}
+          </div>
 
           {/* Lời giải / Explain */}
           <div className="space-y-2">

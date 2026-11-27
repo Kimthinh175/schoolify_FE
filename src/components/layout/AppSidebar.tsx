@@ -29,6 +29,9 @@ import {
   ChevronRight,
   Sparkles,
   User,
+  Activity,
+  Newspaper,
+  Trophy,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth.store';
@@ -51,16 +54,43 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['SUPER_ADMIN'],
   },
   {
+    label: 'Thống Kê Hành Vi',
+    href: '/admin/behavior',
+    icon: <Activity className="w-5 h-5" />,
+    badge: 'Live',
+    roles: ['SUPER_ADMIN'],
+  },
+  {
     label: 'Ngân Hàng Câu Hỏi',
     href: '/admin/questions',
     icon: <Database className="w-5 h-5" />,
-    badge: 'Mới',
     roles: ['SUPER_ADMIN'],
   },
   {
     label: 'Quản Lý Ma Trận Đề Thi',
     href: '/admin/exams',
     icon: <FileCheck2 className="w-5 h-5" />,
+    roles: ['SUPER_ADMIN'],
+  },
+  {
+    label: 'Tin Tức & Bài Viết',
+    href: '/admin/news',
+    icon: <Newspaper className="w-5 h-5" />,
+    badge: 'CMS',
+    roles: ['SUPER_ADMIN'],
+  },
+  {
+    label: 'Bảng Xếp Hạng & Mùa Giải',
+    href: '/admin/leaderboard',
+    icon: <Trophy className="w-5 h-5 text-amber-500" />,
+    badge: 'Mùa 1',
+    roles: ['SUPER_ADMIN'],
+  },
+  {
+    label: 'Diễn Đàn & Kiểm Duyệt',
+    href: '/admin/forum',
+    icon: <MessageSquare className="w-5 h-5 text-[#00B8DD]" />,
+    badge: 'Mới',
     roles: ['SUPER_ADMIN'],
   },
   {
@@ -137,7 +167,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     label: 'Cổng Luyện Thi K-12',
     href: '/student/practice',
-    icon: <Sparkles className="w-5 h-5" />,
+    icon: <Sparkles className="w-5 h-5 text-[#00B8DD]" />,
     roles: ['STUDENT'],
   },
   {
@@ -156,6 +186,12 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Bảng Xếp Hạng',
     href: '/leaderboard',
     icon: <Award className="w-5 h-5" />,
+    roles: ['STUDENT'],
+  },
+  {
+    label: 'Thành Tựu & Huy Hiệu',
+    href: '/student/achievements',
+    icon: <Trophy className="w-5 h-5" />,
     roles: ['STUDENT'],
   },
   {
@@ -191,8 +227,7 @@ export function AppSidebar({
   const pathname = usePathname();
   const { currentRole, currentSchool } = useAuthStore();
 
-  // Ưu tiên đồng bộ menu theo phân khu route để /admin/* luôn hiển thị đúng sidebar Admin kể cả khi auth store chưa hydrate
-  const effectiveRole: SchoolRole | SystemRole = pathname?.startsWith('/admin')
+  const effectiveRole = pathname?.startsWith('/admin')
     ? 'SUPER_ADMIN'
     : pathname?.startsWith('/teacher')
       ? 'TEACHER'
@@ -207,10 +242,10 @@ export function AppSidebar({
         isMobile
           ? 'h-full w-full'
           : cn(
-            'fixed bottom-0 left-0 z-30',
-            withNavbar ? 'top-20 h-[calc(100vh-5rem)]' : 'top-0 h-screen',
-            collapsed ? 'w-20' : 'w-64'
-          )
+              'fixed bottom-0 left-0 z-30',
+              withNavbar ? 'top-20 h-[calc(100vh-5rem)]' : 'top-0 h-screen',
+              collapsed ? 'w-20' : 'w-64'
+            )
       )}
     >
       {/* Brand Header: chỉ hiển thị khi không có Navbar hoặc khi mở mobile drawer */}
@@ -218,7 +253,7 @@ export function AppSidebar({
         <div className="flex h-16 items-center justify-between px-3.5 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <Link href="/" className="flex items-center gap-2 overflow-hidden">
             {!isMobile && collapsed ? (
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs p-1">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs p-1">
                 <img src="/logo-icon.png" alt="Schoolify" className="h-full w-full object-contain" />
               </div>
             ) : (
@@ -226,11 +261,13 @@ export function AppSidebar({
                 <img
                   src="/schoolify-logo.png"
                   alt="Schoolify"
+                  suppressHydrationWarning
                   className="h-11 sm:h-12 w-auto object-contain dark:hidden"
                 />
                 <img
                   src="/am-ban.png"
                   alt="Schoolify"
+                  suppressHydrationWarning
                   className="h-11 sm:h-12 w-auto object-contain hidden dark:block"
                 />
               </div>
@@ -287,7 +324,7 @@ export function AppSidebar({
                     <span
                       className={cn(
                         'rounded-full px-2 py-0.5 text-xs font-bold shrink-0',
-                        isActive ? 'bg-white/20 text-white' : 'bg-[#00B8DD]/10 text-[#009BBD] dark:bg-[#00B8DD]/15 dark:text-[#00B8DD]'
+                        isActive ? 'bg-white/20 text-white' : 'bg-[#00B8DD]/10 text-[#009BBF] dark:bg-[#00B8DD]/20 dark:text-[#00B8DD]'
                       )}
                     >
                       {item.badge}

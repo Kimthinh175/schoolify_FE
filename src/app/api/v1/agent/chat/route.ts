@@ -60,7 +60,7 @@ Schoolify xây dựng một hệ sinh thái kết nối trọn vẹn 4 nhóm ng�
 
 1. 🎓 **Dành cho Học sinh (K-12)**:
    - **Luyện thi thích ứng 4 cấp độ**: Từ *Cơ bản* (bám sát SGK, chống liệt), *Trung bình* (thi học kỳ & tốt nghiệp THPT), *Nâng cao* (vận dụng cao 9-10 điểm) đến *Học sinh Giỏi (HSG Cấp Tỉnh & Quốc Gia)*.
-   - **Đa dạng hình thức thi**: Trắc nghiệm 4 lựa chọn, Đúng/Sai, Điền số kết quả ngắn, Tự luận chấm AI đa tầng theo barem, và Lập trình trực tiếp trong phòng thi IDE cho môn Tin học.
+   - **Đa dạng hình thức thi**: 9 dạng trắc nghiệm khách quan (Trắc nghiệm 4 lựa chọn, Nhiều đáp án, Đúng/Sai, Điền khuyết, Trả lời ngắn, Chùm ngữ liệu, Nối cặp, Sắp xếp, Đục lỗ inline) và Lập trình trực tiếp trong phòng thi IDE cho môn Tin học.
    - **Đánh giá năng lực chẩn đoán**: Hệ thống phát hiện chính xác lỗ hổng kiến thức theo chuẩn phân hóa Bloom và đề xuất lộ trình khắc phục.
    - **Góc học tập & Đổi thưởng**: Tích lũy Ngọc Tri Thức 💎 từ kết quả làm bài để đổi vật phẩm và quà tặng độc quyền.
 
@@ -69,7 +69,7 @@ Schoolify xây dựng một hệ sinh thái kết nối trọn vẹn 4 nhóm ng�
 
 3. 👨‍🏫 **Dành cho Giáo viên & Quản trị**:
    - **AI Quét đề thi Word (.docx)**: Bóc tách câu hỏi, công thức Toán học (KaTeX, MathType MTEF, OMML) và tự động sinh câu hỏi tương đương lưu vào Ngân hàng đề.
-   - Thiết kế ma trận đề thi phân hóa Bloom, chấm bài tự luận và quản lý lớp học.
+   - Thiết kế ma trận đề thi phân hóa Bloom, quản lý ngân hàng câu hỏi và theo dõi tiến độ lớp học.
 
 Bạn muốn tớ **hướng dẫn vào phòng luyện thi thử**, **giải đáp một bài toán**, hay **tìm hiểu tính năng nào trước**, cứ nhắn cho tớ nhé! 🚀`;
     emotion = 'excited';
@@ -363,17 +363,19 @@ export async function POST(req: NextRequest) {
     const query = body?.message || '';
     const currentUrl = body?.currentUrl || '/';
 
-    // Ưu tiên phản hồi tức thì nếu học sinh bấm "Hỏi Gia Sư AI câu này" kèm questionContext 4-axis Tag
-    if (body?.questionContext && typeof body.questionContext === 'object') {
-      const socraticData = generateSocraticQuestionTutorResponse(body.questionContext, query);
-      return NextResponse.json({ success: true, data: socraticData }, { status: 200 });
-    }
-
-    // 1. Thử gọi sang BE nếu BE đang chạy
+    // 1. Gọi sang BE (Gemini 3.8 Flash VIP API) kèm Cookie & Authorization JWT
     try {
+      const forwardHeaders: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      const cookie = req.headers.get('cookie');
+      if (cookie) forwardHeaders['cookie'] = cookie;
+      const auth = req.headers.get('authorization');
+      if (auth) forwardHeaders['authorization'] = auth;
+
       const beRes = await fetch(`${BE_BASE_URL}/agent/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: forwardHeaders,
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(15000), // Cho BE đủ thời gian xử lý AI
       });
@@ -411,28 +413,14 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // Nếu nội dung BE là câu chào mặc định mà câu hỏi về nền tảng -> dùng câu trả lời chuẩn Schoolify
-        const norm = normalizeText(query);
-        if (
-          norm.includes('nen tang') ||
-          norm.includes('schoolify') ||
-          norm.includes('la gi') ||
-          norm.includes('gioi thieu') ||
-          norm.includes('tinh nang')
-        ) {
-          const localData = generateLocalAiResponse(query, currentUrl);
-          return NextResponse.json({
+        return NextResponse.json(
+          {
             success: true,
-            data: localData,
+            data: payload,
             pointUsage: data?.pointUsage || payload?.pointUsage,
-          });
-        }
-
-        return NextResponse.json({
-          success: true,
-          data: payload,
-          pointUsage: data?.pointUsage || payload?.pointUsage,
-        }, { status: 200 });
+          },
+          { status: 200 }
+        );
       } else {
         try {
           const errData = await beRes.json();

@@ -7,7 +7,7 @@
  * 4. Tự động đồng bộ (auto-sync) lên BE khi khôi phục mạng.
  */
 
-export type ExamSessionType = 'OLYMPIAD_ESSAY' | 'CODING' | 'STANDARD';
+export type ExamSessionType = 'CODING' | 'STANDARD';
 export type ExamSessionStatus = 'IN_PROGRESS' | 'SUBMITTED_OFFLINE' | 'SYNCED';
 
 export interface ActiveExamSession {

@@ -437,7 +437,96 @@ export default function AdminOrdersPage() {
 
       {/* 4. Bảng Danh Sách Hóa Đơn */}
       <Card className="p-0 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Mobile & Tablet Card Stack (< 1024px) — Zero Horizontal Scroll */}
+        <div className="lg:hidden divide-y divide-slate-100 dark:divide-slate-800/60">
+          {paginatedOrders.length > 0 ? (
+            paginatedOrders.map((order) => {
+              const isPaid = order.status === 'PAID';
+              const isCancelled = order.status === 'CANCELLED';
+              const isPending = order.status === 'PENDING';
+              return (
+                <div key={order.id} className="p-4 space-y-2.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-mono font-bold text-xs text-slate-900 dark:text-white">
+                      #{order.code}
+                    </span>
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        isPaid
+                          ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+                          : isCancelled
+                            ? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
+                            : 'bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200 dark:border-amber-800'
+                      }`}
+                    >
+                      {isPaid ? (
+                        <CheckCircle2 className="w-3 h-3" />
+                      ) : isCancelled ? (
+                        <XCircle className="w-3 h-3" />
+                      ) : (
+                        <Clock className="w-3 h-3" />
+                      )}
+                      {isPaid ? 'ĐÃ THU TIỀN' : isCancelled ? 'ĐÃ HỦY' : 'CHỜ XÁC NHẬN'}
+                    </span>
+                  </div>
+
+                  <div className="space-y-0.5 min-w-0">
+                    <p className="text-xs font-semibold text-slate-900 dark:text-white break-words">
+                      {order.buyer_name || 'Học sinh'}
+                    </p>
+                    {order.buyer_email && (
+                      <p className="text-[11px] text-slate-400 break-all">{order.buyer_email}</p>
+                    )}
+                    <p className="text-xs font-medium text-slate-700 dark:text-slate-300 break-words pt-0.5">
+                      {order.item_name_snapshot || 'Gói SaaS'} •{' '}
+                      <span className="font-bold text-slate-900 dark:text-white">
+                        {formatVND(Number(order.item_price_snapshot || 0))}
+                      </span>
+                    </p>
+                    <p className="text-[11px] text-slate-400">{formatDate(order.created_at)}</p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-end gap-1.5 pt-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setSelectedOrder(order)}
+                      className="h-8 px-2.5 text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 cursor-pointer"
+                    >
+                      Chi tiết
+                    </Button>
+                    {isPending && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleOpenCancelModal(order)}
+                          className="h-8 px-2.5 text-xs font-semibold border-slate-200 dark:border-slate-700 text-slate-600 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50/70 dark:text-slate-300 dark:hover:text-rose-400 cursor-pointer"
+                        >
+                          Hủy
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleConfirmOrder(order)}
+                          className="h-8 px-3 text-xs font-semibold bg-[#00B8DD] hover:bg-[#009BBD] text-white cursor-pointer"
+                        >
+                          <Check className="w-3 h-3 mr-1" /> Duyệt
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="py-12 px-4 text-center text-xs text-slate-400">
+              Không tìm thấy hóa đơn nào phù hợp với bộ lọc.
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Table (lg+) */}
+        <div className="hidden lg:block">
           <Table>
             <TableHeader className="bg-slate-50/70 dark:bg-slate-800/40 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               <TableRow className="border-b border-slate-200/70 dark:border-slate-800">
@@ -494,7 +583,7 @@ export default function AdminOrdersPage() {
                       </TableCell>
 
                       {/* Ngày tạo */}
-                      <TableCell className="py-3.5 px-4 text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                      <TableCell className="py-3.5 px-4 text-[11px] text-slate-500 dark:text-slate-400 lg:whitespace-nowrap">
                         {formatDate(order.created_at)}
                       </TableCell>
 

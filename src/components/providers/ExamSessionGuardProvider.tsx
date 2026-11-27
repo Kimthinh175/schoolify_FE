@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { examOfflineStorage, ActiveExamSession } from '@/services/exam-offline-storage.service';
+import { useAuthStore } from '@/store/auth.store';
 import { toast } from 'sonner';
 import { WifiOff } from 'lucide-react';
 
@@ -10,20 +11,26 @@ interface ExamSessionGuardContextType {
   activeSession: ActiveExamSession | null;
   isOnline: boolean;
   refreshSession: () => Promise<ActiveExamSession | null>;
+  examNavbarVisible: boolean;
+  setExamNavbarVisible: (visible: boolean) => void;
 }
 
 export const ExamSessionGuardContext = React.createContext<ExamSessionGuardContextType>({
   activeSession: null,
   isOnline: true,
   refreshSession: async () => null,
+  examNavbarVisible: false,
+  setExamNavbarVisible: () => {},
 });
 
 export function ExamSessionGuardProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { isAuthenticated, user } = useAuthStore();
 
   const [activeSession, setActiveSession] = React.useState<ActiveExamSession | null>(null);
   const [isOnline, setIsOnline] = React.useState<boolean>(true);
+  const [examNavbarVisible, setExamNavbarVisible] = React.useState<boolean>(false);
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -88,8 +95,17 @@ export function ExamSessionGuardProvider({ children }: { children: React.ReactNo
 
   // ── KIỂM TRA KHÓA PHÒNG THI (LOCKDOWN ROUTE GUARD) ──
   React.useEffect(() => {
+    let isCancelled = false;
+
     if (typeof window !== 'undefined') {
-      // Nếu URL có attemptToken hoặc token (nghĩa là vừa nộp bài xong đang xem kết quả),
+      // 1. Nếu chưa đăng nhập, xóa ngay mọi khóa phiên thi còn sót để không bao giờ kẹt khách vãng lai
+      if (!isAuthenticated || !user?.id) {
+        examOfflineStorage.clearActiveExamSession().catch(() => {});
+        setActiveSession(null);
+        return;
+      }
+
+      // 2. Nếu URL có attemptToken hoặc token (vừa nộp bài xong đang xem kết quả),
       // giải phóng ngay toàn bộ khóa phiên thi còn sót trong IndexedDB & LocalStorage!
       if (
         window.location.search.includes('attemptToken=') ||
@@ -100,13 +116,23 @@ export function ExamSessionGuardProvider({ children }: { children: React.ReactNo
         return;
       }
 
-      let isCancelled = false;
       const fastLock = examOfflineStorage.getFastSyncActiveLock();
 
-      const checkAndEnforceLock = (sessionUrl: string, examTitle?: string) => {
-        if (isCancelled) return;
+      const checkAndEnforceLock = (sessionUrl: string, examTitle?: string, examId?: string) => {
         const currentPath = window.location.pathname;
         const targetPath = sessionUrl.split('?')[0];
+
+        // Nếu bài thi này chưa được xác thực trừ điểm (hoặc bị chặn hết điểm), giải phóng khóa ngay lập tức!
+        if (examId) {
+          const isStartedPaid = sessionStorage.getItem(`schoolify_started_pts_${examId}`) === '1';
+          const isAdminUser =
+            (user?.role as string) === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+          if (!isStartedPaid && !isAdminUser) {
+            examOfflineStorage.clearActiveExamSession().catch(() => {});
+            setActiveSession(null);
+            return;
+          }
+        }
 
         if (currentPath === targetPath) {
           return;
@@ -122,7 +148,7 @@ export function ExamSessionGuardProvider({ children }: { children: React.ReactNo
       };
 
       if (fastLock && fastLock.isActive && fastLock.roomUrl) {
-        checkAndEnforceLock(fastLock.roomUrl, fastLock.examTitle);
+        checkAndEnforceLock(fastLock.roomUrl, fastLock.examTitle, fastLock.examId);
       }
 
       examOfflineStorage.getActiveExamSession().then((session) => {
@@ -132,18 +158,17 @@ export function ExamSessionGuardProvider({ children }: { children: React.ReactNo
           setActiveSession(null);
           return;
         }
-
         setActiveSession(session);
         if (session && session.status === 'IN_PROGRESS') {
-          checkAndEnforceLock(session.roomUrl, session.examTitle);
+          checkAndEnforceLock(session.roomUrl, session.examTitle, session.examId);
         }
       });
-
-      return () => {
-        isCancelled = true;
-      };
     }
-  }, [pathname, router]);
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [pathname, router, isAuthenticated, user?.id, user?.role]);
 
   React.useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -163,7 +188,15 @@ export function ExamSessionGuardProvider({ children }: { children: React.ReactNo
   }, []);
 
   return (
-    <ExamSessionGuardContext.Provider value={{ activeSession, isOnline, refreshSession }}>
+    <ExamSessionGuardContext.Provider
+      value={{
+        activeSession,
+        isOnline,
+        refreshSession,
+        examNavbarVisible,
+        setExamNavbarVisible,
+      }}
+    >
       {!isOnline && (
         <div className="bg-amber-500/90 text-slate-950 px-3 py-1.5 text-xs font-bold flex items-center justify-center gap-2 sticky top-0 z-50 shadow-md">
           <WifiOff className="w-3.5 h-3.5 shrink-0 animate-pulse" />

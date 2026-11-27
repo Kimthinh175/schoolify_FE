@@ -90,13 +90,13 @@ export function RequireLoginModal({
         return {
           icon: <Crown className="w-7 h-7 text-amber-500" />,
           iconBg: 'bg-amber-100 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800',
-          badge: 'Quyền Lợi Thành Viên',
+          badge: 'Yêu Cầu Đăng Nhập',
           badgeVariant: 'warning' as const,
           title: targetLevelName
-            ? `Mở Khóa Cấp Độ: ${targetLevelName}`
-            : 'Mở Khóa Đề Nâng Cao & HSG',
+            ? `Đăng Nhập Để Tạo Đề: ${targetLevelName}`
+            : 'Đăng Nhập Để Tạo Đề & Luyện Thi',
           description:
-            'Cấp độ Nâng cao, HSG Tỉnh và HSG Quốc gia yêu cầu tài khoản học sinh để ghi nhận điểm số và mở khóa trọn bộ ngân hàng câu hỏi chuyên sâu.',
+            'Bạn cần đăng nhập tài khoản học sinh để tạo đề thi, kiểm tra số dư Tia Sáng và lưu trữ lịch sử làm bài cá nhân hóa.',
         };
       case 'LEADERBOARD':
         return {
@@ -122,11 +122,11 @@ export function RequireLoginModal({
         return {
           icon: <Lock className="w-7 h-7 text-[#00B8DD]" />,
           iconBg: 'bg-[#E6F8FC] dark:bg-[#00B8DD]/20 border-[#00B8DD]/30',
-          badge: 'Đăng Nhập Học Sinh',
+          badge: 'Yêu Cầu Đăng Nhập',
           badgeVariant: 'primary' as const,
-          title: 'Trải Nghiệm Toàn Diện Schoolify',
+          title: 'Đăng Nhập Để Tạo Đề Thi',
           description:
-            'Đăng nhập để mở khóa đầy đủ tính năng luyện thi, lưu tiến độ học tập và tham gia cộng đồng luyện thi K-12.',
+            'Vui lòng đăng nhập tài khoản học sinh để tạo đề thi mới, sử dụng Tia Sáng năng lượng và lưu tiến độ học tập K-12.',
         };
     }
   };
@@ -135,16 +135,16 @@ export function RequireLoginModal({
 
   const benefits = [
     {
-      title: 'Mở khóa 100% ngân hàng đề chuyên sâu',
-      desc: 'Hơn 50.000 câu hỏi vận dụng cao và đề thi chọn HSG Tỉnh, Quốc gia qua các năm.',
+      title: 'Tạo đề thi cá nhân hóa theo chương & cấp độ',
+      desc: 'Tự động kiểm tra Tia Sáng năng lượng và sinh đề bám sát chương trình học phổ thông.',
     },
     {
       title: 'Lưu tiến độ & Phân tích lỗ hổng kiến thức',
-      desc: 'Báo cáo radar chỉ rõ chủ đề còn yếu để đề xuất bài tập bổ trợ cá nhân hóa.',
+      desc: 'Báo cáo chỉ rõ chuyên đề còn yếu để đề xuất lộ trình ôn tập cá nhân hóa.',
     },
     {
-      title: 'Tích lũy ngọc tri thức 💎 & Đua top toàn quốc',
-      desc: 'Mỗi bài luyện thi hoàn thành đều được cộng điểm và xếp hạng thi đua tuần.',
+      title: 'Tích lũy Ngọc Tri Thức & Đua top toàn quốc',
+      desc: 'Mỗi bài luyện thi hoàn thành đều được ghi nhận điểm số và xếp hạng thi đua.',
     },
   ];
 
@@ -194,19 +194,6 @@ export function RequireLoginModal({
 
         {/* CTA Buttons */}
         <div className="mt-6 space-y-2.5">
-          {/* Quick 1-Click Login Button */}
-          <Button
-            type="button"
-            size="lg"
-            isLoading={isDemoLoggingIn}
-            onClick={handleQuickDemoLogin}
-            className="w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-black text-sm rounded-xl shadow-lg shadow-emerald-500/25 transition-all cursor-pointer"
-            leftIcon={<Zap className="w-4 h-4 text-amber-300 fill-amber-300" />}
-            rightIcon={<ArrowRight className="w-4 h-4" />}
-          >
-            ⚡ Đăng Nhập Nhanh 1-Click (Tài Khoản Mẫu)
-          </Button>
-
           {/* Standard Student Login Page Button */}
           <Link
             href={returnUrl ? `/login/student?returnUrl=${encodeURIComponent(returnUrl)}` : '/login/student'}
@@ -214,25 +201,20 @@ export function RequireLoginModal({
           >
             <Button
               size="lg"
-              variant="outline"
-              className="w-full border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-sm rounded-xl"
+              className="w-full bg-[#00B8DD] hover:bg-[#009dbd] text-white font-bold text-sm rounded-xl shadow-md shadow-cyan-500/20 cursor-pointer"
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
-              Đăng Nhập Bằng OTP Hoặc Google
+              Đăng Nhập Tài Khoản Học Sinh Ngay
             </Button>
           </Link>
 
           <Button
             type="button"
             variant="ghost"
-            onClick={() => {
-              onClose();
-              if (onContinueGuest) onContinueGuest();
-            }}
-            className="w-full text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-semibold"
-            leftIcon={<BookOpen className="w-3.5 h-3.5" />}
+            onClick={onClose}
+            className="w-full text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-semibold cursor-pointer"
           >
-            Tiếp Tục Luyện Thử Cấp Độ Cơ Bản (Miễn Phí)
+            Đóng &amp; Quay lại
           </Button>
         </div>
       </div>

@@ -86,21 +86,6 @@ export interface QuizSection {
   questions: QuizItem[];
 }
 
-export interface EssayItem {
-  id: string;
-  title: string;
-  problem: string;
-  hint: string;
-  solution: string;
-  scoreRubric: { criterion: string; points: number }[];
-  maxPoints: number;
-}
-
-export interface EssaySection {
-  totalExercises: number;
-  exercises: EssayItem[];
-}
-
 export interface LessonExamSection {
   id: string;
   title: string;
@@ -119,9 +104,8 @@ export interface PracticeLesson {
   description: string;
   theory: TheorySection;
   quiz: QuizSection;
-  essay: EssaySection;
   exam: LessonExamSection;
   progressPct: number; // 0 - 100%
-  completedParts: ('theory' | 'quiz' | 'essay' | 'exam')[];
+  completedParts: ('theory' | 'quiz' | 'exam')[];
   estimatedTotalMinutes: number;
 }

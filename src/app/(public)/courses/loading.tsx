@@ -1,5 +1,5 @@
-import { GenericPageSkeleton } from '@/components/skeletons/page-skeletons';
+import { CoursesPageSkeleton } from "@/components/skeletons/page-skeletons";
 
 export default function CoursesLoading() {
-  return <GenericPageSkeleton />;
+  return <CoursesPageSkeleton />;
 }

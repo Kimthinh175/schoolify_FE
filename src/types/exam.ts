@@ -4,7 +4,6 @@ export type QuestionType =
   | 'TRUE_FALSE'
   | 'FILL_BLANK'
   | 'SHORT_ANSWER'
-  | 'ESSAY'
   | 'GROUP_QUESTIONS'
   | 'MATCHING'
   | 'ORDERING'
@@ -77,7 +76,6 @@ export interface Question {
   audio_url?: string | null;
   image_url?: string | null;
   answers?: Answer[];
-  sample_essay_answer?: string | null;
   hints?: string[];
   rubric?: RubricItem[];
   // Dành cho GROUP_QUESTIONS (Chùm câu hỏi ngữ liệu)
@@ -90,12 +88,11 @@ export interface Question {
   // Dành cho CLOZE_DROPDOWN
   cloze_blanks?: ClozeBlank[];
   explain?: string | null;
-  // Dành cho 4 danh mục câu hỏi chuẩn GDPT 2018 / Bộ GD&ĐT 2025
+  // Dành cho 3 danh mục câu hỏi trắc nghiệm chuẩn GDPT 2018 / Bộ GD&ĐT 2025
   choices?: { key: string; content: string }[];
   correctChoice?: string;
   statements?: { subId: string; statement: string; isCorrect: boolean; explanation?: string }[];
   shortAnswerCorrect?: string;
-  gradingRubric?: { step: string; point: number; detail: string }[];
   section_title?: string;
   count_used?: number;
   created_at?: string;
@@ -171,12 +168,11 @@ export interface ExamSubmission {
 
 export type ExamScopeMode = 'CHAPTER_FOCUSED' | 'SEMESTER' | 'NATIONAL_EXAM';
 
-/** Phân bổ 4 danh mục câu hỏi chuẩn Bộ GD&ĐT 2025 */
+/** Phân bổ danh mục câu hỏi chuẩn trắc nghiệm */
 export interface ExamCategoryDistribution {
   multiple_choice: number; // Phần I: Trắc nghiệm 4 lựa chọn (số lượng câu)
   true_false: number;      // Phần II: Đúng / Sai 4 ý a,b,c,d (số lượng câu)
   short_answer: number;    // Phần III: Trả lời ngắn / điền số (số lượng câu)
-  essay: number;           // Phần IV: Tự luận kèm barem (số lượng câu)
 }
 
 /** Cấu hình sinh đề thi tự động theo ma trận */

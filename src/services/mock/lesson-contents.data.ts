@@ -147,22 +147,6 @@ export const MOCK_LESSON_CONTENTS: Record<string, LessonFullContent> = {
         },
       ],
     },
-    essay: {
-      title: 'Phần 3: Bài Tập Tự Luận Bài 1',
-      description: 'Luyện tập kỹ năng trình bày lập luận biến đổi lượng giác.',
-      problems: [
-        {
-          id: 'ess-1-1',
-          number: 1,
-          title: 'Bài tập 1: Tính giá trị biểu thức khi biết $\\cos(\\alpha)$',
-          difficulty: 'Trung bình',
-          problemStatement: 'Cho $\\cos(\\alpha) = -\\frac{5}{13}$ với $\\pi < \\alpha < \\frac{3\\pi}{2}$. Tính giá trị của biểu thức $P = \\sin(\\alpha) + \\tan(\\alpha)$.',
-          hints: ['Góc thuộc góc phần tư III nên sin(α) < 0', 'Áp dụng sin²(α) = 1 - cos²(α)'],
-          sampleSolution: 'Ta có: $\\sin^2(\\alpha) = 1 - \\cos^2(\\alpha) = 1 - \\left(-\\frac{5}{13}\\right)^2 = \\frac{144}{169}$.\nVì $\\pi < \\alpha < \\frac{3\\pi}{2}$ nên $\\sin(\\alpha) < 0 \\implies \\sin(\\alpha) = -\\frac{12}{13}$.\nDo đó $\\tan(\\alpha) = \\frac{-12/13}{-5/13} = \\frac{12}{5}$.\nSuy ra: $P = -\\frac{12}{13} + \\frac{12}{5} = \\frac{96}{65}$.',
-          maxPoints: 5,
-        },
-      ],
-    },
     exam: {
       title: 'Phần 4: Kiểm Tra Tổng Hợp Bài 1',
       description: 'Bài kiểm tra ngắn 10 phút đánh giá kiến thức Bài 1.',
@@ -309,22 +293,6 @@ export const MOCK_LESSON_CONTENTS: Record<string, LessonFullContent> = {
         },
       ],
     },
-    essay: {
-      title: 'Phần 3: Bài Tập Tự Luận Bài 2',
-      description: 'Rút gọn biểu thức lượng giác sử dụng công thức biến đổi.',
-      problems: [
-        {
-          id: 'ess-2-1',
-          number: 1,
-          title: 'Bài tập 1: Rút gọn biểu thức',
-          difficulty: 'Trung bình',
-          problemStatement: 'Rút gọn biểu thức $A = \\frac{\\sin(2x)}{1 + \\cos(2x)}$.',
-          hints: ['Sử dụng sin(2x) = 2sin(x)cos(x)', 'Sử dụng 1 + cos(2x) = 2cos²(x)'],
-          sampleSolution: 'Ta có $\\sin(2x) = 2\\sin(x)\\cos(x)$ và $1 + \\cos(2x) = 2\\cos^2(x)$.\nDo đó $A = \\frac{2\\sin(x)\\cos(x)}{2\\cos^2(x)} = \\frac{\\sin(x)}{\\cos(x)} = \\tan(x)$.',
-          maxPoints: 5,
-        },
-      ],
-    },
     exam: {
       title: 'Phần 4: Kiểm Tra Bài 2',
       description: 'Đánh giá kỹ năng vận dụng công thức nhân đôi.',
@@ -453,22 +421,6 @@ export const MOCK_LESSON_CONTENTS: Record<string, LessonFullContent> = {
             { id: 'o-3-2d', content: 'D. $y = \\cot(x)$' },
           ],
           explain: 'Vì $\\cos(-x) = \\cos(x)$ với mọi $x \\in \\mathbb{R}$ nên $y = \\cos(x)$ là hàm số chẵn.',
-        },
-      ],
-    },
-    essay: {
-      title: 'Phần 3: Tự Luận Bài 3',
-      description: 'Xét tính chẵn lẻ và tìm giá trị lớn nhất, nhỏ nhất.',
-      problems: [
-        {
-          id: 'ess-3-1',
-          number: 1,
-          title: 'Bài tập 1: Tìm giá trị lớn nhất và nhỏ nhất',
-          difficulty: 'Cơ bản',
-          problemStatement: 'Tìm giá trị lớn nhất $M$ và nhỏ nhất $m$ của hàm số $y = 3\\sin(x) - 2$.',
-          hints: ['Tập giá trị của sin(x) là [-1; 1]', 'Nhân cả 3 vế với 3 rồi trừ cho 2'],
-          sampleSolution: 'Ta có $-1 \\le \\sin(x) \\le 1 \\implies -3 \\le 3\\sin(x) \\le 3 \\implies -5 \\le 3\\sin(x) - 2 \\le 1$.\nDo đó giá trị lớn nhất $M = 1$ và nhỏ nhất $m = -5$.',
-          maxPoints: 10,
         },
       ],
     },
@@ -605,22 +557,6 @@ export const MOCK_LESSON_CONTENTS: Record<string, LessonFullContent> = {
         },
       ],
     },
-    essay: {
-      title: 'Phần 3: Tự Luận Bài 4',
-      description: 'Giải phương trình lượng giác chứa góc phức hợp.',
-      problems: [
-        {
-          id: 'ess-4-1',
-          number: 1,
-          title: 'Bài tập 1: Giải phương trình $\\cos(2x + \\pi/3) = 1/2$',
-          difficulty: 'Trung bình',
-          problemStatement: 'Giải phương trình $\\cos\\left(2x + \\frac{\\pi}{3}\\right) = \\frac{1}{2}$.',
-          hints: ['1/2 = cos(π/3)', 'Áp dụng công thức cos u = cos v ⇔ u = ±v + k2π'],
-          sampleSolution: '$\\cos\\left(2x + \\frac{\\pi}{3}\\right) = \\cos\\left(\\frac{\\pi}{3}\\right) \\iff 2x + \\frac{\\pi}{3} = \\pm \\frac{\\pi}{3} + k2\\pi$.\n• TH1: $2x + \\frac{\\pi}{3} = \\frac{\\pi}{3} + k2\\pi \\iff x = k\\pi$.\n• TH2: $2x + \\frac{\\pi}{3} = -\\frac{\\pi}{3} + k2\\pi \\iff x = -\\frac{\\pi}{3} + k\\pi$.',
-          maxPoints: 10,
-        },
-      ],
-    },
     exam: {
       title: 'Phần 4: Kiểm Tra Bài 4',
       description: 'Đánh giá kỹ năng giải phương trình cơ bản.',
@@ -752,22 +688,6 @@ export const MOCK_LESSON_CONTENTS: Record<string, LessonFullContent> = {
         },
       ],
     },
-    essay: {
-      title: 'Phần 3: Tự Luận Bài 5',
-      description: 'Giải phương trình cổ điển a*sin(x) + b*cos(x) = c.',
-      problems: [
-        {
-          id: 'ess-5-1',
-          number: 1,
-          title: 'Bài tập 1: Giải phương trình $\\sqrt{3}\\sin x + \\cos x = \\sqrt{2}$',
-          difficulty: 'Nâng cao',
-          problemStatement: 'Giải phương trình $\\sqrt{3}\\sin x + \\cos x = \\sqrt{2}$.',
-          hints: ['Chia cả 2 vế cho √(a² + b²) = 2', 'Đưa vế trái về dạng sin(x + π/6)'],
-          sampleSolution: 'Chia cả hai vế cho $\\sqrt{(\\sqrt{3})^2 + 1^2} = 2$:\n$\\frac{\\sqrt{3}}{2}\\sin x + \\frac{1}{2}\\cos x = \\frac{\\sqrt{2}}{2} \\iff \\sin x \\cos\\left(\\frac{\\pi}{6}\\right) + \\cos x \\sin\\left(\\frac{\\pi}{6}\\right) = \\frac{\\sqrt{2}}{2}$\n$\\iff \\sin\\left(x + \\frac{\\pi}{6}\\right) = \\sin\\left(\\frac{\\pi}{4}\\right)$.\n• $x + \\frac{\\pi}{6} = \\frac{\\pi}{4} + k2\\pi \\iff x = \\frac{\\pi}{12} + k2\\pi$.\n• $x + \\frac{\\pi}{6} = \\pi - \\frac{\\pi}{4} + k2\\pi \\iff x = \\frac{7\\pi}{12} + k2\\pi$.',
-          maxPoints: 10,
-        },
-      ],
-    },
     exam: {
       title: 'Phần 4: Kiểm Tra Bài 5',
       description: 'Đánh giá khả năng giải phương trình bậc hai lượng giác.',
@@ -891,22 +811,6 @@ export const MOCK_LESSON_CONTENTS: Record<string, LessonFullContent> = {
             { id: 'o-6-2d', content: 'D. $T = \\frac{\\omega}{2\\pi}$' },
           ],
           explain: 'Chu kỳ dao động điều hòa được xác định theo công thức $T = \\frac{2\\pi}{\\omega}$.',
-        },
-      ],
-    },
-    essay: {
-      title: 'Phần 3: Bài Tập Tự Luận Tổng Hợp Bài 6',
-      description: 'Giải bài toán ứng dụng thực tế theo thời gian.',
-      problems: [
-        {
-          id: 'ess-6-1',
-          number: 1,
-          title: 'Bài tập 1: Xác định thời điểm mực nước đạt 9.5 mét',
-          difficulty: 'Nâng cao',
-          problemStatement: 'Cho $h(t) = 3\\cos\\left(\\frac{\\pi t}{6}\\right) + 8$. Tìm thời điểm $t$ ($0 \\le t \\le 24$) để mực nước $h = 9.5$m.',
-          hints: ['Giải phương trình 3cos(πt/6) + 8 = 9.5', 'Suy ra cos(πt/6) = 0.5 = cos(π/3)'],
-          sampleSolution: '$3\\cos\\left(\\frac{\\pi t}{6}\\right) + 8 = 9.5 \\iff \\cos\\left(\\frac{\\pi t}{6}\\right) = 0.5 = \\cos\\left(\\frac{\\pi}{3}\\right)$.\n$\\iff \\frac{\\pi t}{6} = \\pm \\frac{\\pi}{3} + k2\\pi \\iff t = \\pm 2 + 12k$.\nTrong khoảng $0 \\le t \\le 24$, ta có $t = 2$h, $t = 10$h, $t = 14$h, $t = 22$h.',
-          maxPoints: 10,
         },
       ],
     },

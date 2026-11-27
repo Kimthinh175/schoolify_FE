@@ -56,17 +56,6 @@ d) Giá trị cực đại của hàm số là 2. [Đ]`,
 Lời giải: Diện tích S = 5 * 5 = 25 cm2.`,
   },
   {
-    type: 'ESSAY',
-    name: 'Tự luận / Barem điểm',
-    badge: 'Tự luận',
-    description: 'Học sinh trình bày bài giải tự luận hoặc tải ảnh bài làm.',
-    excelSyntax: 'LoaiCauHoi: TU_LUAN | De trong DapAnA-D | LoiGiai: Barem chấm',
-    wordSyntax: `Câu 5: [VDC] Trình bày các bước giải phương trình vi phân sau...
-Barem điểm:
-- Bước 1: 0.5 điểm
-- Bước 2: 0.5 điểm`,
-  },
-  {
     type: 'GROUP_QUESTIONS',
     name: 'Chùm câu hỏi / Ngữ liệu chung',
     badge: 'ĐGNL & Tiếng Anh',

@@ -82,8 +82,6 @@ export function mapFrontendTypeToBackendFormat(type?: QuestionType | null): stri
     case 'SHORT_ANSWER':
     case 'FILL_BLANK':
       return 'SHORT_ANSWER';
-    case 'ESSAY':
-      return 'ESSAY';
     default:
       return 'SINGLE_CHOICE';
   }
@@ -102,8 +100,6 @@ export function mapBackendQuestionToFrontend(raw: any): Question {
     qType = 'MULTIPLE_CHOICE';
   } else if (rawFormat === 'SHORT_ANSWER') {
     qType = 'SHORT_ANSWER';
-  } else if (rawFormat === 'ESSAY') {
-    qType = 'ESSAY';
   }
 
   const rawAnswers = Array.isArray(raw.answers) ? raw.answers : [];
@@ -144,15 +140,12 @@ export async function extractDocxTextWithMath(arrayBuffer: ArrayBuffer): Promise
   }
 }
 
-/** Hàm Bóc tách Văn bản Đề thi Thật (Phần 1: Trắc nghiệm 4 đáp án, Phần 2: Đúng/Sai, Phần 3: Trả lời ngắn/Tự luận) */
+/** Hàm Bóc tách Văn bản Đề thi Thật (Phần 1: Trắc nghiệm 4 đáp án, Phần 2: Đúng/Sai, Phần 3: Trả lời ngắn/Điền khuyết) */
 export function parseExamTextToQuestions(text: string): ParsedQuestionItem[] {
   const unifiedList = parseExamTextWithMathAndKeys(text);
 
   return unifiedList.map((item) => {
-    const qType =
-      item.questionType === 'FILL_BLANK'
-        ? 'ESSAY'
-        : (item.questionType as ParsedQuestionItem['question_type']);
+    const qType = item.questionType as ParsedQuestionItem['question_type'];
 
     const answers = item.answers.map((a) => ({
       content:
@@ -166,7 +159,7 @@ export function parseExamTextToQuestions(text: string): ParsedQuestionItem[] {
 
     const hasCorrect = answers.some((a) => a.is_correct);
     const hasContent = item.content.trim() !== '';
-    const isValid = qType === 'ESSAY' ? hasContent : hasContent && hasCorrect;
+    const isValid = hasContent && hasCorrect;
 
     return {
       temp_id: `temp-parsed-${item.index}`,
@@ -178,7 +171,7 @@ export function parseExamTextToQuestions(text: string): ParsedQuestionItem[] {
       is_valid: isValid,
       validation_errors: !hasContent
         ? ['Nội dung câu hỏi không được để trống']
-        : qType !== 'ESSAY' && !hasCorrect
+        : !hasCorrect
           ? ['Vui lòng chọn ít nhất 1 đáp án đúng']
           : [],
       answers,
@@ -529,7 +522,6 @@ export const questionBankService = {
           sub_questions: q.sub_questions,
           statements: q.statements,
           shortAnswerCorrect: q.shortAnswerCorrect,
-          sample_essay_answer: q.sample_essay_answer,
         }));
 
         const validCount = parsedItems.filter((i) => i.is_valid).length;
@@ -611,7 +603,6 @@ export const questionBankService = {
         sub_questions: item.sub_questions,
         statements: item.statements,
         shortAnswerCorrect: item.shortAnswerCorrect,
-        sample_essay_answer: item.sample_essay_answer,
         created_at: new Date().toISOString(),
         answers: item.answers.map((ans, idx) => ({
           id: uid('ans'),

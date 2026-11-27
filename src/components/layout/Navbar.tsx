@@ -11,21 +11,21 @@ import {
   BookOpen,
   Sparkles,
   ArrowRight,
-  Shield,
   ShieldCheck,
   LogIn,
-  UserCheck,
   Lock,
   LogOut,
   LayoutDashboard,
   User,
   Award,
   CreditCard,
+  ChevronDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
 import { AvatarFrame, useActiveAvatarFrame } from '@/components/ui/avatar-frame';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { NotificationBellMenu } from '@/components/layout/NotificationBellMenu';
 import { TiaSangIcon, NgocIcon } from '@/components/ui/point-icons';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth.store';
@@ -33,7 +33,7 @@ import { examPointsService } from '@/services/exam-points.service';
 import { AdminPointsEditModal } from '@/components/features/admin/AdminPointsEditModal';
 import { toast } from 'sonner';
 
-// 2 vai trò đăng nhập chính của nền tảng: Người Luyện Thi & Người Bán Khóa Học
+// Vai trò đăng nhập chính của nền tảng
 const LOGIN_ROLES = [
   {
     id: 'student',
@@ -43,14 +43,16 @@ const LOGIN_ROLES = [
     desc: 'Luyện đề thông minh theo ma trận, thi thử K-12, tốt nghiệp THPT, ĐGNL & HSG',
     href: '/login/student',
   },
-  {
-    id: 'teacher',
-    icon: BookOpen,
-    label: 'Người Bán Khóa Học',
-    badge: 'Giáo viên & Giảng viên',
-    desc: 'Tạo khóa học số, xuất bản đề thi theo ma trận, kinh doanh tài liệu & quản lý học viên',
-    href: '/login/teacher',
-  },
+];
+
+const NAV_LINKS = [
+  { label: 'Luyện Thi', href: '/luyen-thi' },
+  { label: 'Bảng Xếp Hạng', href: '/leaderboard' },
+  { label: 'Diễn Đàn', href: '/forum' },
+  { label: 'Gói Đăng Ký', href: '/pricing' },
+  { label: 'Khám Phá Khóa Học', href: '/courses' },
+  { label: 'Tin Tức', href: '/news' },
+  { label: 'Giới Thiệu', href: '/about' },
 ];
 
 export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => void } = {}) {
@@ -73,8 +75,30 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
   const pointsMenuTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const [checkedInToday, setCheckedInToday] = React.useState(false);
 
-  const [scrolled, setScrolled] = React.useState(false);
+  const headerRef = React.useRef<HTMLElement | null>(null);
+  const headerRowRef = React.useRef<HTMLDivElement | null>(null);
+  const logoGroupRef = React.useRef<HTMLDivElement | null>(null);
+  const rightCtasRef = React.useRef<HTMLDivElement | null>(null);
+  const measureNavRef = React.useRef<HTMLDivElement | null>(null);
+  const moreMenuRef = React.useRef<HTMLDivElement | null>(null);
+  const moreMenuTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const [visibleNavCount, setVisibleNavCount] = React.useState<number>(NAV_LINKS.length);
+  const [canCenterXlNav, setCanCenterXlNav] = React.useState<boolean>(true);
+  const [moreMenuOpen, setMoreMenuOpen] = React.useState<boolean>(false);
+
   const pathname = usePathname();
+
+  const handleMoreMenuEnter = () => {
+    if (moreMenuTimeoutRef.current) clearTimeout(moreMenuTimeoutRef.current);
+    setMoreMenuOpen(true);
+  };
+
+  const handleMoreMenuLeave = () => {
+    moreMenuTimeoutRef.current = setTimeout(() => {
+      setMoreMenuOpen(false);
+    }, 200);
+  };
 
   const handleUserMenuEnter = () => {
     if (userMenuTimeoutRef.current) clearTimeout(userMenuTimeoutRef.current);
@@ -100,8 +124,28 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
 
   const [isMounted, setIsMounted] = React.useState(false);
   const [isPointsLoading, setIsPointsLoading] = React.useState(true);
-  const [tokenBalance, setTokenBalance] = React.useState<number>(9);
-  const [diamondsBalance, setDiamondsBalance] = React.useState<number>(100);
+  const [tokenBalance, setTokenBalance] = React.useState<number>(() => {
+    if (typeof window === 'undefined') return 9;
+    try {
+      const stored = window.localStorage.getItem('schoolify_user_tokens');
+      if (stored !== null && stored !== '') {
+        const parsed = Number(stored);
+        if (Number.isFinite(parsed)) return parsed;
+      }
+    } catch {}
+    return 9;
+  });
+  const [diamondsBalance, setDiamondsBalance] = React.useState<number>(() => {
+    if (typeof window === 'undefined') return 0;
+    try {
+      const stored = window.localStorage.getItem('schoolify_user_diamonds');
+      if (stored !== null && stored !== '') {
+        const parsed = Number(stored);
+        if (Number.isFinite(parsed)) return parsed;
+      }
+    } catch {}
+    return 0;
+  });
   const [dailyAllowance, setDailyAllowance] = React.useState<number>(9);
   const [activePackage, setActivePackage] = React.useState<string>('FREE');
   const { frameTier } = useActiveAvatarFrame(activePackage);
@@ -172,6 +216,14 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
       }
       if (typeof customEvt?.detail?.diamonds === 'number') {
         setDiamondsBalance(customEvt.detail.diamonds);
+      } else if (typeof window !== 'undefined') {
+        const storedDiamonds = window.localStorage.getItem('schoolify_user_diamonds');
+        if (storedDiamonds !== null && storedDiamonds !== '') {
+          const parsedDiamonds = Number(storedDiamonds);
+          if (Number.isFinite(parsedDiamonds)) {
+            setDiamondsBalance(parsedDiamonds);
+          }
+        }
       }
       if (customEvt?.detail?.refreshFromBackend) {
         loadPointsFromBackend();
@@ -210,20 +262,36 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
 
   React.useEffect(() => {
     let ticking = false;
-    let lastState = false;
-    const onScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const isScrolled = window.scrollY > 20;
-          if (isScrolled !== lastState) {
-            lastState = isScrolled;
-            setScrolled(isScrolled);
+    let lastState: boolean | null = null;
+    const scrolledClasses = ['bg-white/98', 'dark:bg-slate-950/90', 'backdrop-blur-md', 'border-slate-200/90', 'shadow-md', 'shadow-slate-900/5'];
+    const defaultClasses = ['bg-white', 'dark:bg-slate-950', 'border-slate-200/80', 'shadow-xs'];
+
+    const applyHeaderScroll = () => {
+      ticking = false;
+      const isScrolled = window.scrollY > 20;
+      if (isScrolled !== lastState) {
+        lastState = isScrolled;
+        const el = headerRef.current;
+        if (el) {
+          if (isScrolled) {
+            el.classList.remove(...defaultClasses);
+            el.classList.add(...scrolledClasses);
+          } else {
+            el.classList.remove(...scrolledClasses);
+            el.classList.add(...defaultClasses);
           }
-          ticking = false;
-        });
-        ticking = true;
+        }
       }
     };
+
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        window.requestAnimationFrame(applyHeaderScroll);
+      }
+    };
+
+    applyHeaderScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
@@ -237,6 +305,7 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
       setMobileMenuOpen(false);
       setUserMenuOpen(false);
       setPointsMenuOpen(false);
+      setMoreMenuOpen(false);
     }
   }, [pathname]);
 
@@ -248,9 +317,20 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
         setMobileMenuOpen(false);
         setUserMenuOpen(false);
         setPointsMenuOpen(false);
+        setMoreMenuOpen(false);
+      }
+    };
+    const handleClickOutside = (e: MouseEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+        setMoreMenuOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   // Lắng nghe sự kiện đăng nhập thành công từ tab con / popup window
@@ -326,31 +406,157 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
     };
   }, []);
 
-  const navLinks = [
-    { label: 'Luyện Thi', href: '/luyen-thi' },
-    { label: 'Bảng Xếp Hạng', href: '/leaderboard' },
-    { label: 'Diễn Đàn', href: '/forum' },
-    { label: 'Gói Đăng Ký', href: '/pricing' },
-    { label: 'Khám Phá Khóa Học', href: '/courses' },
-    { label: 'Tin Tức', href: '/news' },
-    { label: 'Giới Thiệu', href: '/about' },
-  ];
+  const recomputeVisibleNav = React.useCallback(() => {
+    const rowEl = headerRowRef.current;
+    const logoEl = logoGroupRef.current;
+    const rightEl = rightCtasRef.current;
+    const measureEl = measureNavRef.current;
+    if (!rowEl || !logoEl || !rightEl || !measureEl) return;
+
+    if (window.innerWidth < 768) {
+      setCanCenterXlNav(true);
+      setVisibleNavCount(NAV_LINKS.length);
+      return;
+    }
+
+    const rowRect = rowEl.getBoundingClientRect();
+    const rowStyle = window.getComputedStyle(rowEl);
+    const padLeft = parseFloat(rowStyle.paddingLeft) || 0;
+    const padRight = parseFloat(rowStyle.paddingRight) || 0;
+    const innerWidth = rowRect.width - padLeft - padRight;
+
+    const logoWidth = logoEl.getBoundingClientRect().width;
+    const rightWidth = rightEl.getBoundingClientRect().width;
+
+    const itemEls = Array.from(measureEl.querySelectorAll<HTMLElement>('[data-measure-nav-item]'));
+    const moreEl = measureEl.querySelector<HTMLElement>('[data-measure-nav-more]');
+    if (itemEls.length !== NAV_LINKS.length || !moreEl) return;
+
+    const navStyle = window.getComputedStyle(measureEl);
+    const navGap = parseFloat(navStyle.columnGap || navStyle.gap) || 8;
+    const itemWidths = itemEls.map((el) => Math.ceil(el.getBoundingClientRect().width));
+    const moreBtnWidth = Math.ceil(moreEl.getBoundingClientRect().width);
+
+    const totalAllWidth =
+      itemWidths.reduce((sum, w) => sum + w, 0) + navGap * Math.max(0, itemWidths.length - 1);
+
+    const safetyBuffer = 24;
+    const isXl = window.innerWidth >= 1280;
+    const centeredSideMax = Math.max(logoWidth, rightWidth);
+    const centeredBudget = innerWidth - 2 * centeredSideMax - 2 * safetyBuffer;
+    const flexBudget = innerWidth - logoWidth - rightWidth - 2 * safetyBuffer;
+
+    if (isXl && totalAllWidth <= centeredBudget) {
+      setCanCenterXlNav(true);
+      setVisibleNavCount(NAV_LINKS.length);
+      return;
+    }
+
+    setCanCenterXlNav(false);
+
+    if (totalAllWidth <= flexBudget) {
+      setVisibleNavCount(NAV_LINKS.length);
+      return;
+    }
+
+    let usedWidth = 0;
+    let fitCount = 0;
+    for (let i = 0; i < itemWidths.length; i++) {
+      const nextItemWidth = itemWidths[i] + (fitCount > 0 ? navGap : 0);
+      const neededWithMore = usedWidth + nextItemWidth + navGap + moreBtnWidth;
+      if (neededWithMore <= flexBudget) {
+        usedWidth += nextItemWidth;
+        fitCount++;
+      } else {
+        break;
+      }
+    }
+
+    setVisibleNavCount(Math.max(0, fitCount));
+  }, []);
+
+  React.useEffect(() => {
+    recomputeVisibleNav();
+    const rafId = window.requestAnimationFrame(recomputeVisibleNav);
+
+    const observer =
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(() => recomputeVisibleNav())
+        : null;
+
+    if (observer) {
+      if (headerRowRef.current) observer.observe(headerRowRef.current);
+      if (logoGroupRef.current) observer.observe(logoGroupRef.current);
+      if (rightCtasRef.current) observer.observe(rightCtasRef.current);
+      if (measureNavRef.current) observer.observe(measureNavRef.current);
+    }
+
+    window.addEventListener('resize', recomputeVisibleNav);
+    document.fonts?.ready?.then(() => recomputeVisibleNav()).catch(() => {});
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      observer?.disconnect();
+      window.removeEventListener('resize', recomputeVisibleNav);
+    };
+  }, [recomputeVisibleNav, isMounted, isAuthenticated, isPointsLoading, isAdmin, isTeacher]);
+
+  React.useEffect(() => {
+    if (visibleNavCount >= NAV_LINKS.length) {
+      setMoreMenuOpen(false);
+    }
+  }, [visibleNavCount]);
+
+  const visibleNavLinks = NAV_LINKS.slice(0, visibleNavCount);
+  const overflowNavLinks = NAV_LINKS.slice(visibleNavCount);
+  const isOverflowActive = overflowNavLinks.some(
+    (item) => pathname === item.href || pathname.startsWith(item.href + '/')
+  );
 
   return (
     <>
       {/* ── MAIN NAVBAR HEADER ── */}
       <header
-        className={cn(
-          'fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300',
-          scrolled
-            ? 'bg-white/98 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800 shadow-md shadow-slate-900/5'
-            : 'bg-white dark:bg-slate-950 border-b border-slate-200/80 dark:border-slate-800 shadow-xs'
-        )}
+        ref={headerRef}
+        className="fixed top-0 left-0 right-0 z-50 w-full transition-colors duration-200 border-b dark:border-slate-800 bg-white dark:bg-slate-950 border-slate-200/80 shadow-xs"
       >
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        {/* Hidden measurer to compute exact desktop nav widths without layout flicker */}
+        <div
+          ref={measureNavRef}
+          aria-hidden="true"
+          className="pointer-events-none invisible fixed -top-[9999px] left-0 hidden md:flex items-center gap-1 sm:gap-1.5 lg:gap-2"
+        >
+          {NAV_LINKS.map((item) => (
+            <span
+              key={`measure-${item.href}`}
+              data-measure-nav-item
+              className="py-2.5 px-2 lg:px-3 text-xs lg:text-sm font-semibold whitespace-nowrap"
+            >
+              {item.label}
+            </span>
+          ))}
+          <span
+            data-measure-nav-more
+            className="inline-flex items-center gap-1 py-2.5 px-2 lg:px-3 text-xs lg:text-sm font-semibold whitespace-nowrap"
+          >
+            <span>Các mục khác</span>
+            <ChevronDown className="w-3.5 h-3.5 shrink-0" />
+          </span>
+        </div>
+
+        <div
+          ref={headerRowRef}
+          className={cn(
+            'mx-auto flex h-20 max-w-7xl items-center justify-between gap-2 px-4 sm:px-6 lg:px-8',
+            canCenterXlNav && 'xl:grid xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]'
+          )}
+        >
 
           {/* ── Brand Logo & Mobile Sidebar Trigger ── */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div
+            ref={logoGroupRef}
+            className={cn('flex items-center gap-1.5 shrink-0', canCenterXlNav && 'xl:justify-self-start')}
+          >
             {onOpenMobileSidebar && (
               <button
                 type="button"
@@ -367,19 +573,26 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
               <img
                 src="/schoolify-logo.png"
                 alt="Schoolify"
+                suppressHydrationWarning
                 className="h-11 sm:h-12 md:h-14 w-auto object-contain transition-transform duration-200 group-hover:scale-105 dark:hidden"
               />
               <img
                 src="/am-ban.png"
                 alt="Schoolify"
+                suppressHydrationWarning
                 className="h-11 sm:h-12 md:h-14 w-auto object-contain transition-transform duration-200 group-hover:scale-105 hidden dark:block"
               />
             </Link>
           </div>
 
           {/* ── Desktop Navigation Links ── */}
-          <nav className="hidden md:flex items-center gap-1 sm:gap-1.5 lg:gap-2 h-full">
-            {navLinks.map((item) => {
+          <nav
+            className={cn(
+              'hidden md:flex items-center gap-1 sm:gap-1.5 lg:gap-2 h-full min-w-0',
+              canCenterXlNav && 'xl:justify-self-center'
+            )}
+          >
+            {visibleNavLinks.map((item) => {
               const isActive =
                 item.href === '/'
                   ? pathname === '/'
@@ -390,10 +603,10 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'relative py-2.5 px-2 lg:px-3 text-xs lg:text-sm transition-colors whitespace-nowrap',
+                    'relative py-2.5 px-2 lg:px-3 text-xs lg:text-sm font-semibold transition-colors whitespace-nowrap shrink-0',
                     isActive
-                      ? 'text-[#007D99] dark:text-[#00B8DD] font-bold'
-                      : 'text-slate-600 hover:text-[#007D99] dark:text-slate-300 dark:hover:text-[#00B8DD] font-semibold'
+                      ? 'text-[#007D99] dark:text-[#00B8DD]'
+                      : 'text-slate-600 hover:text-[#007D99] dark:text-slate-300 dark:hover:text-[#00B8DD]'
                   )}
                 >
                   <span>{item.label}</span>
@@ -407,15 +620,104 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
                 </Link>
               );
             })}
+
+            {overflowNavLinks.length > 0 && (
+              <div
+                ref={moreMenuRef}
+                className="relative flex items-center h-full shrink-0"
+                onMouseEnter={handleMoreMenuEnter}
+                onMouseLeave={handleMoreMenuLeave}
+              >
+                <button
+                  type="button"
+                  onClick={() => setMoreMenuOpen((prev) => !prev)}
+                  data-testid="navbar-more-menu-btn"
+                  aria-expanded={moreMenuOpen}
+                  aria-haspopup="menu"
+                  className={cn(
+                    'relative inline-flex items-center gap-1 py-2.5 px-2 lg:px-3 text-xs lg:text-sm font-semibold transition-colors whitespace-nowrap cursor-pointer rounded-xl',
+                    isOverflowActive || moreMenuOpen
+                      ? 'text-[#007D99] dark:text-[#00B8DD]'
+                      : 'text-slate-600 hover:text-[#007D99] dark:text-slate-300 dark:hover:text-[#00B8DD]'
+                  )}
+                >
+                  <span>Các mục khác</span>
+                  <ChevronDown
+                    className={cn(
+                      'w-3.5 h-3.5 shrink-0 transition-transform duration-200',
+                      moreMenuOpen && 'rotate-180'
+                    )}
+                  />
+                  {isOverflowActive && (
+                    <motion.div
+                      layoutId="navbar-active-underline"
+                      className="absolute bottom-0 inset-x-1.5 h-[2.5px] bg-[#00B8DD] rounded-full"
+                      transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                    />
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {moreMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 6, scale: 0.96 }}
+                      transition={{ duration: 0.15, ease: 'easeOut' }}
+                      data-testid="navbar-more-menu-dropdown"
+                      role="menu"
+                      className={cn(
+                        'absolute top-[calc(100%-10px)] w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xl shadow-slate-900/10 dark:shadow-black/50 p-1.5 z-50',
+                        visibleNavCount === 0 ? 'left-0' : 'right-0'
+                      )}
+                    >
+                      {overflowNavLinks.map((item) => {
+                        const isActive =
+                          item.href === '/'
+                            ? pathname === '/'
+                            : pathname === item.href || pathname.startsWith(item.href + '/');
+
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            role="menuitem"
+                            onClick={() => setMoreMenuOpen(false)}
+                            className={cn(
+                              'flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors',
+                              isActive
+                                ? 'bg-[#E6F8FC] text-[#007D99] dark:bg-[#00B8DD]/15 dark:text-[#00B8DD]'
+                                : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-[#007D99] dark:hover:text-[#00B8DD]'
+                            )}
+                          >
+                            <span>{item.label}</span>
+                            {isActive && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#00B8DD] shrink-0" />
+                            )}
+                          </Link>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
           </nav>
 
           {/* ── Desktop Right CTAs ── */}
-          <div className="hidden md:flex items-center gap-2.5">
+          <div
+            ref={rightCtasRef}
+            className={cn(
+              'hidden md:flex items-center justify-end gap-2.5 shrink-0',
+              canCenterXlNav && 'xl:justify-self-end'
+            )}
+          >
+            <NotificationBellMenu />
             <ThemeToggle />
 
             {!isMounted ? (
               <div
-                className="w-9 h-9 rounded-full bg-slate-200/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 animate-pulse shrink-0"
+                className="w-9 h-9 rounded-full bg-slate-100/80 dark:bg-slate-900/80 border border-dashed border-slate-300 dark:border-slate-700 sk-bone shrink-0"
                 aria-busy="true"
                 aria-label="Đang tải thông tin tài khoản..."
               />
@@ -841,19 +1143,23 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
                 </div>
               </div>
             ) : (
-              /* Login button → Opens right drawer */
+              /* Guest default user icon button → Opens login drawer (distinct from logged-in letter Avatar) */
               <button
+                type="button"
                 onClick={() => setLoginDrawerOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-100 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 shadow-xs transition-all hover:scale-102 active:scale-98 cursor-pointer"
+                data-testid="navbar-login-btn"
+                aria-label="Đăng nhập"
+                title="Đăng nhập tài khoản"
+                className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50/80 hover:bg-[#00B8DD]/10 dark:bg-slate-900/70 dark:hover:bg-[#00B8DD]/15 text-slate-500 hover:text-[#009BBD] dark:text-slate-400 dark:hover:text-[#5CE1FF] hover:border-[#00B8DD] transition-all cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00B8DD]"
               >
-                <LogIn className="w-4 h-4 text-[#00B8DD]" />
-                <span>Đăng Nhập</span>
+                <User className="w-4 h-4" />
               </button>
             )}
           </div>
 
           {/* ── Mobile Hamburger & Theme ── */}
           <div className="flex items-center gap-2 md:hidden">
+            <NotificationBellMenu />
             <ThemeToggle />
             {isAuthenticated && user && (
               (!isMounted || isPointsLoading) ? (
@@ -910,7 +1216,7 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
 
             {!isMounted ? (
               <div
-                className="w-8 h-8 rounded-full bg-slate-200/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 animate-pulse shrink-0"
+                className="w-9 h-9 rounded-full bg-slate-100/80 dark:bg-slate-900/80 border border-dashed border-slate-300 dark:border-slate-700 sk-bone shrink-0"
                 aria-busy="true"
               />
             ) : isAuthenticated && user ? (
@@ -937,12 +1243,14 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
               </Link>
             ) : (
               <button
+                type="button"
                 onClick={() => setLoginDrawerOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                data-testid="navbar-login-btn-mobile"
+                className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50/80 hover:bg-[#00B8DD]/10 dark:bg-slate-900/70 dark:hover:bg-[#00B8DD]/15 text-slate-500 hover:text-[#009BBD] dark:text-slate-400 dark:hover:text-[#5CE1FF] hover:border-[#00B8DD] transition-all cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00B8DD]"
                 aria-label="Đăng nhập"
+                title="Đăng nhập tài khoản"
               >
-                <LogIn className="w-4 h-4 text-[#00B8DD]" />
-                <span className="sr-only sm:not-sr-only">Đăng nhập</span>
+                <User className="w-4 h-4" />
               </button>
             )}
             <button
@@ -967,7 +1275,7 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
             >
               <div className="flex flex-col space-y-4">
                 <div className="space-y-1">
-                  {navLinks.map((item) => {
+                  {NAV_LINKS.map((item) => {
                     const isActive =
                       item.href === '/'
                         ? pathname === '/'
@@ -1119,37 +1427,6 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
                         Xác thực tức thì bằng tài khoản Google (Gmail) hoặc nhận mã OTP gửi qua số điện thoại.
                       </p>
                     </div>
-                  </div>
-                </div>
-
-                {/* Drawer Footer */}
-                <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-3">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500 dark:text-slate-400">Chưa có tài khoản Schoolify?</span>
-                    <Link
-                      href="/register"
-                      onClick={() => setLoginDrawerOpen(false)}
-                      className="font-semibold text-[#00B8DD] hover:underline flex items-center gap-1"
-                    >
-                      Đăng ký ngay <ArrowRight className="w-3 h-3" />
-                    </Link>
-                  </div>
-                  <Link href="/register" onClick={() => setLoginDrawerOpen(false)} className="block">
-                    <Button
-                      className="w-full justify-center bg-[#00B8DD] hover:bg-[#009bbd] text-white font-medium py-2 rounded-lg transition-colors cursor-pointer"
-                      rightIcon={<ArrowRight className="w-4 h-4" />}
-                    >
-                      Đăng Ký Tài Khoản Miễn Phí
-                    </Button>
-                  </Link>
-                  <div className="flex items-center justify-center gap-3 pt-0.5 text-[11px] text-slate-400 dark:text-slate-500">
-                    <span className="flex items-center gap-1">
-                      <Shield className="w-3.5 h-3.5" /> Chuẩn K-12 GDPT 2018
-                    </span>
-                    <span className="text-slate-300 dark:text-slate-700">•</span>
-                    <span className="flex items-center gap-1">
-                      <UserCheck className="w-3.5 h-3.5" /> Bảo Mật An Toàn
-                    </span>
                   </div>
                 </div>
               </motion.div>

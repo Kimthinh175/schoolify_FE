@@ -121,7 +121,6 @@ export interface MatrixGenerationConfig {
   format: ExamFormat;
   totalQuestions: number;
   quizCount?: number;
-  essayCount?: number;
   practiceMode?: 'TOPIC' | 'MOCK_EXAM';
   targetDifficulty?: QuestionDifficulty | 'ALL';
   topicTagFilter?: string;
@@ -302,6 +301,216 @@ function shuffleArray<T>(array: T[]): T[] {
   return result;
 }
 
+function hashStringToUint32(input: string): number {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < input.length; i++) {
+    h ^= input.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x85ebca6b);
+  h ^= h >>> 13;
+  h = Math.imul(h, 0xc2b2ae35);
+  h ^= h >>> 16;
+  return h >>> 0;
+}
+
+function gcd(a: number, b: number): number {
+  let x = Math.abs(a);
+  let y = Math.abs(b);
+  while (y !== 0) {
+    const t = x % y;
+    x = y;
+    y = t;
+  }
+  return x;
+}
+
+function hasPositionDependentAnswerText(contents: string[]): boolean {
+  const positionalRegex =
+    /(cả\s+[abc]\b|tất\s+cả\s+(đều|các|ý|phương\s+án)|không\s+có\s+(đáp\s+án|phương\s+án)|đáp\s+án\s+khác|[abc]\s+và\s+[bcd]\s+đều|[abc]\s*,\s*[bcd]\s+(đều|đúng|sai))/i;
+  return contents.some((text) => positionalRegex.test(String(text || '')));
+}
+
+/**
+ * Đảo vị trí 4 phương án A, B, C, D với cam kết dịch chuyển khác vị trí gốc (Derangement / Non-Identity Shift)
+ * và cập nhật lại correctChoice tương ứng.
+ */
+export function permuteQuestionChoicesGuaranteedShift(
+  q: ExamQuestion,
+  seedStr: string
+): ExamQuestion {
+  if (
+    q.type !== 'MULTIPLE_CHOICE' ||
+    !Array.isArray(q.choices) ||
+    q.choices.length < 2 ||
+    hasPositionDependentAnswerText(q.choices.map((c) => c.content))
+  ) {
+    return q;
+  }
+
+  const n = q.choices.length;
+  const h1 = hashStringToUint32(`${seedStr}:${q.id}:shift`);
+  const shift = (h1 % (n - 1)) + 1; // 1 .. n-1 (cam kết luôn đổi vị trí!)
+  const shifted = new Array(n);
+  for (let i = 0; i < n; i++) {
+    shifted[(i + shift) % n] = q.choices[i];
+  }
+  if (n >= 4) {
+    const h2 = hashStringToUint32(`${seedStr}:${q.id}:swap`);
+    if (h2 % 2 === 1) {
+      const tmp = shifted[1];
+      shifted[1] = shifted[3];
+      shifted[3] = tmp;
+    }
+  }
+
+  const keys: Array<'A' | 'B' | 'C' | 'D'> = ['A', 'B', 'C', 'D'];
+  let newCorrectChoice: 'A' | 'B' | 'C' | 'D' = q.correctChoice || 'A';
+
+  const newChoices = shifted.map((origChoice, idx) => {
+    const newKey = keys[idx] || ('A' as const);
+    if (origChoice.key === q.correctChoice) {
+      newCorrectChoice = newKey;
+    }
+    return {
+      ...origChoice,
+      key: newKey,
+    };
+  });
+
+  return {
+    ...q,
+    choices: newChoices,
+    correctChoice: newCorrectChoice,
+  };
+}
+
+/**
+ * Bốc mẫu Đa Chu Kỳ (Multi-Epoch Coprime LCG Stride + Boundary Cooldown) trên bể câu hỏi đã lọc:
+ * - Chưa hết bể (Epoch 0): Đi qua đúng 100% câu trong bể mà không bao giờ trùng lặp.
+ * - Khi chạm đáy bể (Epoch >= 1): Tự động tăng Epoch, đổi hoán vị mới, chặn trùng giáp ranh và tự động đảo vị trí đáp án A/B/C/D!
+ */
+function samplePoolWithMultiEpochStride(
+  pool: ExamQuestion[],
+  needed: number,
+  poolKey: string
+): ExamQuestion[] {
+  const m = pool.length;
+  if (m === 0 || needed <= 0) return [];
+
+  const storageKey = `schoolify_pool_cursor_${poolKey}`;
+  let cursorPos = 0;
+  let epoch = 0;
+  let lastBoundaryIds: string[] = [];
+  let clientSeed = 'local-student';
+
+  if (typeof window !== 'undefined') {
+    try {
+      let savedSeed = localStorage.getItem('schoolify_client_seed');
+      if (!savedSeed) {
+        savedSeed = `seed_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+        localStorage.setItem('schoolify_client_seed', savedSeed);
+      }
+      clientSeed = savedSeed;
+
+      const rawCursor = localStorage.getItem(storageKey);
+      if (rawCursor) {
+        const parsed = JSON.parse(rawCursor);
+        cursorPos = Math.max(0, Number(parsed.cursorPos || 0) % m);
+        epoch = Math.max(0, Number(parsed.epoch || 0));
+        if (Array.isArray(parsed.lastBoundaryIds)) {
+          lastBoundaryIds = parsed.lastBoundaryIds;
+        }
+      }
+    } catch {}
+  }
+
+  const buildPermutation = (ep: number, cooldownSet: Set<string>): ExamQuestion[] => {
+    if (m <= 1) return [...pool];
+    const seedStr = `${clientSeed}:${poolKey}:ep:${ep}`;
+    const rawStep = (hashStringToUint32(`${seedStr}:step`) % (m - 1)) + 1;
+    let step = rawStep;
+    for (let delta = 0; delta < m; delta++) {
+      const candidate = ((rawStep - 1 + delta) % (m - 1)) + 1;
+      if (gcd(candidate, m) === 1) {
+        step = candidate;
+        break;
+      }
+    }
+    const offset = hashStringToUint32(`${seedStr}:offset`) % m;
+    const permuted: ExamQuestion[] = new Array(m);
+    for (let i = 0; i < m; i++) {
+      permuted[i] = pool[(step * i + offset) % m];
+    }
+    if (ep === 0 || cooldownSet.size === 0) return permuted;
+    const freshPart = permuted.filter((q) => !cooldownSet.has(q.id));
+    const cooldownPart = permuted.filter((q) => cooldownSet.has(q.id));
+    return [...freshPart, ...cooldownPart];
+  };
+
+  const target = Math.min(needed, m);
+  const cooldownWindow = Math.min(target, Math.max(1, Math.floor(m / 2)));
+  let activeBoundaryIds = [...lastBoundaryIds];
+  let curEpoch = epoch;
+  let curCursor = cursorPos;
+  let curPerm = buildPermutation(curEpoch, new Set<string>(activeBoundaryIds));
+
+  const picked: ExamQuestion[] = [];
+  const pickedIds = new Set<string>();
+  let steps = 0;
+
+  while (picked.length < target && steps < m * 3 + target) {
+    steps++;
+    if (curCursor >= m) {
+      const tailIds = curPerm.slice(Math.max(0, m - cooldownWindow)).map((q) => q.id);
+      activeBoundaryIds = Array.from(new Set([...tailIds, ...picked.map((p) => p.id)])).slice(
+        0,
+        cooldownWindow
+      );
+      curEpoch += 1;
+      curCursor = 0;
+      curPerm = buildPermutation(curEpoch, new Set<string>(activeBoundaryIds));
+    }
+    const item = curPerm[curCursor];
+    curCursor += 1;
+    if (item && !pickedIds.has(item.id)) {
+      pickedIds.add(item.id);
+      const finalQ =
+        curEpoch >= 1
+          ? permuteQuestionChoicesGuaranteedShift(
+              item,
+              `${clientSeed}:${poolKey}:ep:${curEpoch}`
+            )
+          : item;
+      picked.push(finalQ);
+    }
+  }
+
+  let nextEpoch = curEpoch;
+  let nextCursor = curCursor;
+  if (nextCursor >= m) {
+    activeBoundaryIds = curPerm.slice(Math.max(0, m - cooldownWindow)).map((q) => q.id);
+    nextEpoch += 1;
+    nextCursor = nextCursor % m;
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          cursorPos: nextCursor,
+          epoch: nextEpoch,
+          lastBoundaryIds: activeBoundaryIds,
+        })
+      );
+    } catch {}
+  }
+
+  return picked;
+}
+
 /**
  * Thuật toán bốc câu hỏi từ Kho câu hỏi dựa trên ma trận
  */
@@ -309,8 +518,7 @@ export function generateQuestionsByMatrix(
   questionBank: ExamQuestion[],
   config: MatrixGenerationConfig
 ): ExamQuestion[] {
-  const { grade, chapterId, level, format, subjectSlug } = config;
-  const isMixed = format === 'MIXED';
+  const { format, subjectSlug } = config;
 
   // LỌC CHẶT CHẼ THEO MÔN HỌC - TUYỆT ĐỐI KHÔNG ĐỂ LẪN CÂU HỎI MÔN KHÁC
   let subjectOnlyBank = questionBank.filter((q) =>
@@ -326,47 +534,8 @@ export function generateQuestionsByMatrix(
   // Sử dụng ngân hàng riêng của môn này để tránh rò rỉ câu hỏi môn khác
   const bank = subjectOnlyBank.length > 0 ? subjectOnlyBank : questionBank.filter((q) => !subjectSlug || isSubjectMatch(q.subjectSlug, subjectSlug));
 
-  if (isMixed) {
-    const targetQuiz = config.quizCount || 10;
-    const targetEssay = config.essayCount || 2;
-
-    const quizQuestions = sampleQuestionsForType(
-      bank.filter((q) => q.type !== 'ESSAY'),
-      { ...config, totalQuestions: targetQuiz, format: 'QUIZ' },
-      'QUIZ'
-    );
-
-    const essayQuestions = sampleQuestionsForType(
-      bank.filter((q) => q.type === 'ESSAY'),
-      { ...config, totalQuestions: targetEssay, format: 'ESSAY' },
-      'ESSAY'
-    );
-
-    // Điểm: Trắc nghiệm chiếm 7 điểm, Tự luận chiếm 3 điểm (chuẩn đề thi THPT)
-    const quizScoreEach = Math.round((7 / Math.max(1, quizQuestions.length)) * 100) / 100;
-    const essayScoreEach = Math.round((3 / Math.max(1, essayQuestions.length)) * 100) / 100;
-
-    const finalQuestions: ExamQuestion[] = [
-      ...quizQuestions.map((q, idx) => ({
-        ...q,
-        title: `Câu ${idx + 1} (${getQuestionTypeLabel(q.type)}): ${cleanTitle(q.title)}`,
-        score: quizScoreEach,
-      })),
-      ...essayQuestions.map((q, idx) => ({
-        ...q,
-        title: `Câu ${quizQuestions.length + idx + 1} (Tự luận): ${cleanTitle(q.title)}`,
-        score: essayScoreEach,
-      })),
-    ];
-
-    return finalQuestions;
-  }
-
-  // QUIZ hoặc ESSAY đơn thuần
-  const filteredBank =
-    format === 'ESSAY'
-      ? bank.filter((q) => q.type === 'ESSAY')
-      : bank.filter((q) => q.type !== 'ESSAY');
+  // Chỉ giữ lại các câu hỏi trắc nghiệm khách quan (loại bỏ hoàn toàn câu tự luận)
+  const filteredBank = bank.filter((q) => (q.type as string) !== 'ESSAY');
 
   const picked = sampleQuestionsForType(filteredBank, config, format);
   const scoreEach = Math.round((10 / Math.max(1, picked.length)) * 100) / 100;
@@ -436,17 +605,22 @@ function sampleQuestionsForType(
   const selectedIds = new Set<string>();
 
   const difficulties: QuestionDifficulty[] = ['EASY', 'MEDIUM', 'HARD', 'VERY_HARD'];
+  const basePoolKey = `${subjectSlug}:g${grade}:ch${chapterId}:${format}:${topicTagFilter || 'ALL'}`;
 
-  // 1. Bốc câu hỏi cho Chương Hiện Tại (hoặc Toàn bộ môn đối với ĐGNL / Thi thử) theo từng mức độ
+  // 1. Bốc câu hỏi cho Chương Hiện Tại theo con trỏ Đa Chu Kỳ (Multi-Epoch Coprime LCG Stride)
   difficulties.forEach((diff) => {
     const needed = quota.currentChapter[diff];
     if (needed <= 0) return;
 
-    const available = shuffleArray(
-      currentChapterPool.filter((q) => q.difficulty === diff && !selectedIds.has(q.id))
+    const diffPool = currentChapterPool.filter(
+      (q) => q.difficulty === diff && !selectedIds.has(q.id)
     );
 
-    const taken = available.slice(0, needed);
+    const taken = samplePoolWithMultiEpochStride(
+      diffPool,
+      needed,
+      `${basePoolKey}:cur:${diff}`
+    );
     taken.forEach((q) => {
       selectedQuestions.push(q);
       selectedIds.add(q.id);
@@ -455,16 +629,17 @@ function sampleQuestionsForType(
     // Fallback: Nếu chọn mức độ cụ thể ở TOPIC mode nhưng chương đó thiếu câu cùng mức độ, tìm câu cùng mức độ trong toàn môn trước
     if (taken.length < needed && practiceMode === 'TOPIC' && targetDifficulty && targetDifficulty !== 'ALL') {
       const remainingNeeded = needed - taken.length;
-      const sameDiffInSubject = shuffleArray(
+      const sameDiffInSubject = samplePoolWithMultiEpochStride(
         candidateBank.filter(
           (q) =>
             (!subjectSlug || isSubjectMatch(q.subjectSlug || q.subjectName, subjectSlug)) &&
             q.difficulty === diff &&
             !selectedIds.has(q.id)
-        )
+        ),
+        remainingNeeded,
+        `${basePoolKey}:subdiff:${diff}`
       );
-      const diffTaken = sameDiffInSubject.slice(0, remainingNeeded);
-      diffTaken.forEach((q) => {
+      sameDiffInSubject.forEach((q) => {
         selectedQuestions.push(q);
         selectedIds.add(q.id);
       });
@@ -474,17 +649,22 @@ function sampleQuestionsForType(
     const currentTakenCount = selectedQuestions.length;
     if (currentTakenCount < needed && practiceMode === 'TOPIC' && targetDifficulty && targetDifficulty !== 'ALL') {
       const remainingNeeded = needed - currentTakenCount;
-      const fallbackPool = shuffleArray(currentChapterPool.filter((q) => !selectedIds.has(q.id)));
-      fallbackPool.slice(0, remainingNeeded).forEach((q) => {
+      const fallbackPool = samplePoolWithMultiEpochStride(
+        currentChapterPool.filter((q) => !selectedIds.has(q.id)),
+        remainingNeeded,
+        `${basePoolKey}:curfb1`
+      );
+      fallbackPool.forEach((q) => {
         selectedQuestions.push(q);
         selectedIds.add(q.id);
       });
     } else if (taken.length < needed && (!practiceMode || practiceMode !== 'TOPIC' || targetDifficulty === 'ALL')) {
       const remainingNeeded = needed - taken.length;
-      const fallbackPool = shuffleArray(
-        currentChapterPool.filter((q) => !selectedIds.has(q.id))
+      const fallbackTaken = samplePoolWithMultiEpochStride(
+        currentChapterPool.filter((q) => !selectedIds.has(q.id)),
+        remainingNeeded,
+        `${basePoolKey}:curfb2`
       );
-      const fallbackTaken = fallbackPool.slice(0, remainingNeeded);
       fallbackTaken.forEach((q) => {
         selectedQuestions.push(q);
         selectedIds.add(q.id);
@@ -498,11 +678,12 @@ function sampleQuestionsForType(
       const needed = quota.previousChapters[diff];
       if (needed <= 0) return;
 
-      const available = shuffleArray(
-        prevChapterPool.filter((q) => q.difficulty === diff && !selectedIds.has(q.id))
+      const taken = samplePoolWithMultiEpochStride(
+        prevChapterPool.filter((q) => q.difficulty === diff && !selectedIds.has(q.id)),
+        needed,
+        `${basePoolKey}:prev:${diff}`
       );
 
-      const taken = available.slice(0, needed);
       taken.forEach((q) => {
         selectedQuestions.push({
           ...q,
@@ -514,10 +695,11 @@ function sampleQuestionsForType(
       // Fallback trong chương trước nếu thiếu mức độ này
       if (taken.length < needed) {
         const remainingNeeded = needed - taken.length;
-        const fallbackPool = shuffleArray(
-          prevChapterPool.filter((q) => !selectedIds.has(q.id))
+        const fallbackTaken = samplePoolWithMultiEpochStride(
+          prevChapterPool.filter((q) => !selectedIds.has(q.id)),
+          remainingNeeded,
+          `${basePoolKey}:prevfb`
         );
-        const fallbackTaken = fallbackPool.slice(0, remainingNeeded);
         fallbackTaken.forEach((q) => {
           selectedQuestions.push({
             ...q,
@@ -532,34 +714,39 @@ function sampleQuestionsForType(
   // 3. Fallback: Nếu tổng câu bốc được vẫn chưa đủ totalQuestions, CHỈ ĐƯỢC PHÉP LẤY TRONG CÙNG MÔN HỌC!
   if (selectedQuestions.length < totalQuestions) {
     const deficit = totalQuestions - selectedQuestions.length;
-    const remainingInSameSubject = shuffleArray(
+    const bonus = samplePoolWithMultiEpochStride(
       candidateBank.filter(
         (q) => (!subjectSlug || isSubjectMatch(q.subjectSlug || q.subjectName, subjectSlug)) && !selectedIds.has(q.id)
-      )
+      ),
+      deficit,
+      `${basePoolKey}:subjectfb`
     );
-    const bonus = remainingInSameSubject.slice(0, deficit);
     bonus.forEach((q) => {
       selectedQuestions.push(q);
       selectedIds.add(q.id);
     });
   }
 
-  // 4. Nếu toàn bộ kho câu hỏi của môn này vẫn ít hơn totalQuestions -> Tạo bản sao variant của CHÍNH MÔN NÀY (Không lấy môn khác)
+  // 4. Nếu toàn bộ kho câu hỏi của môn này vẫn ít hơn totalQuestions -> Tạo bản sao variant của CHÍNH MÔN NÀY và ĐẢO ĐÁP ÁN A/B/C/D
   if (selectedQuestions.length < totalQuestions && selectedQuestions.length > 0) {
     const baseList = [...selectedQuestions];
     let idx = 0;
     while (selectedQuestions.length < totalQuestions) {
       const baseQ = baseList[idx % baseList.length];
       const variantIdx = Math.floor(idx / baseList.length) + 1;
+      const permutedVariant = permuteQuestionChoicesGuaranteedShift(
+        baseQ,
+        `${basePoolKey}:var:${variantIdx}`
+      );
       selectedQuestions.push({
-        ...baseQ,
+        ...permutedVariant,
         id: `${baseQ.id}_var${variantIdx}`,
       });
       idx++;
     }
   }
 
-  return shuffleArray(selectedQuestions);
+  return selectedQuestions;
 }
 
 function cleanTitle(title: string): string {
@@ -574,8 +761,6 @@ function getQuestionTypeLabel(type: string): string {
       return 'Đúng/Sai';
     case 'SHORT_ANSWER':
       return 'Điền số';
-    case 'ESSAY':
-      return 'Tự luận';
     default:
       return 'Khảo thí';
   }

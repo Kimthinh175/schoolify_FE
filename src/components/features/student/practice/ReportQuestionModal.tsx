@@ -41,6 +41,7 @@ interface ReportQuestionModalProps {
   questionTitle: string;
   subjectName?: string;
   questionContentSnippet?: string;
+  onSuccess?: (questionId: string) => void;
 }
 
 const ISSUE_TYPES = [
@@ -78,6 +79,7 @@ export function ReportQuestionModal({
   questionTitle,
   subjectName = 'Toán Học',
   questionContentSnippet,
+  onSuccess,
 }: ReportQuestionModalProps) {
   const { user } = useAuthStore();
   const [selectedIssue, setSelectedIssue] = React.useState<(typeof ISSUE_TYPES)[number]['id']>(
@@ -110,6 +112,7 @@ export function ReportQuestionModal({
         'Đã gửi báo cáo cho Ban Khảo thí thành công! Cảm ơn bạn đã đóng góp để hoàn thiện đề thi.',
         { duration: 4000 }
       );
+      onSuccess?.(questionId);
       setDescription('');
       onClose();
     } catch (err: any) {

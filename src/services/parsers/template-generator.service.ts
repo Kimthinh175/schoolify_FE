@@ -162,22 +162,6 @@ export const SAMPLE_EXCEL_ROWS = [
     LoiGiai: 'Dẫn chứng câu 2: "produce little to no greenhouse gases during operation, making them essential for curbing climate change".',
     GoiY: 'Xem câu thứ 2 của đoạn văn.',
   },
-  {
-    STT: 11,
-    MaNhom: '',
-    LoaiCauHoi: 'TU_LUAN',
-    Chuong: 'Chương 1: Khảo sát hàm số',
-    MucDo: 'VDC',
-    NoiDung: 'Cho hàm số $y = x^3 - 3mx^2 + 3(m^2 - 1)x$. Tìm tất cả các giá trị của tham số $m$ để hàm số đồng biến trên khoảng $(1; 2)$.',
-    DapAnA: '',
-    DapAnB: '',
-    DapAnC: '',
-    DapAnD: '',
-    DapAnDung: 'm <= 0 hoặc m >= 3',
-    Diem: 1.5,
-    LoiGiai: "Barem điểm chi tiết: 1) Tính đạo hàm y' = 3x^2 - 6mx + 3(m^2-1) (0.5đ). 2) Lập điều kiện y' >= 0 với mọi x thuộc (1; 2) (0.5đ). 3) Biện luận nghiệm tam thức bậc hai và kết luận m <= 0 hoặc m >= 3 (0.5đ).",
-    GoiY: "Hàm số đồng biến trên khoảng khi và chỉ khi y' >= 0 với mọi x thuộc khoảng đó.",
-  },
 ];
 
 /** Bảng hướng dẫn chi tiết quy tắc điền từng dạng câu hỏi cho Admin */
@@ -261,16 +245,6 @@ export const EXCEL_GUIDE_ROWS = [
     CotDapAnDung: 'Câu mẹ để trống DapAnDung. Các câu con điền DapAnDung tương ứng',
     ViDuDapAnDung: 'Cột MaNhom điền N1 cho câu mẹ và tất cả câu con',
     GhiChu: 'Điểm câu mẹ là 0đ. Điểm tính vào từng câu con.',
-  },
-  {
-    STT: 9,
-    TenDang: 'Tự luận có barem điểm',
-    MaLoai: 'TU_LUAN',
-    MucDich: 'Bài tập tự luận, trình bày lời giải chi tiết',
-    CotDapAnA_D: 'Để trống các cột DapAnA..D',
-    CotDapAnDung: 'Nhập đáp số tóm tắt hoặc barem tiêu chí chấm điểm',
-    ViDuDapAnDung: 'm <= 0 hoặc m >= 3',
-    GhiChu: 'Cột LoiGiai ghi rõ barem điểm từng bước để giáo viên chấm bài.',
   },
 ];
 

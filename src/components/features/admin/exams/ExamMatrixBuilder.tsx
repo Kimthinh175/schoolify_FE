@@ -94,11 +94,10 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
   const [currentChapterRatio, setCurrentChapterRatio] = React.useState<number>(70);
   const prevChapterRatio = 100 - currentChapterRatio;
 
-  // 3. Phân bổ 4 danh mục câu hỏi (Chuẩn Bộ GD&ĐT 2025)
-  const [mcqCount, setMcqCount] = React.useState<number>(10);
+  // 3. Phân bổ 3 danh mục câu hỏi Trắc nghiệm (Chuẩn Bộ GD&ĐT 2025)
+  const [mcqCount, setMcqCount] = React.useState<number>(12);
   const [tfCount, setTfCount] = React.useState<number>(4);
   const [saCount, setSaCount] = React.useState<number>(4);
-  const [essayCount, setEssayCount] = React.useState<number>(2);
 
   // 4. Tỉ lệ Bloom
   const [recRatio, setRecRatio] = React.useState<number>(40);
@@ -130,47 +129,36 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
   }, [subject, gradeLevel]);
 
   // Kiểm tra tính hợp lệ
-  const categorySum = mcqCount + tfCount + saCount + essayCount;
+  const categorySum = mcqCount + tfCount + saCount;
   const isCategoryValid = categorySum === totalQuestions;
 
   const bloomSum = recRatio + undRatio + appRatio + advRatio;
   const isBloomValid = bloomSum === 100;
 
-  // Tự động cân đối 4 danh mục theo preset
-  const applyPreset = (preset: 'MOET_2025' | 'ONLY_MCQ' | 'MCQ_ESSAY' | 'COMPETENCY') => {
+  // Tự động cân đối 3 danh mục theo preset
+  const applyPreset = (preset: 'MOET_2025' | 'ONLY_MCQ' | 'COMPETENCY') => {
     if (preset === 'MOET_2025') {
-      // 50% MCQ, 20% TF, 20% SA, 10% Essay
-      const mcq = Math.round(totalQuestions * 0.5);
-      const tf = Math.round(totalQuestions * 0.2);
-      const sa = Math.round(totalQuestions * 0.2);
-      const es = Math.max(0, totalQuestions - (mcq + tf + sa));
-      setMcqCount(mcq);
-      setTfCount(tf);
-      setSaCount(sa);
-      setEssayCount(es);
-      toast.success('Đã áp dụng Preset: Cấu trúc toàn diện chuẩn Bộ GD&ĐT 2025 (4 Phần)');
-    } else if (preset === 'ONLY_MCQ') {
-      setMcqCount(totalQuestions);
-      setTfCount(0);
-      setSaCount(0);
-      setEssayCount(0);
-      toast.success('Đã áp dụng Preset: 100% Trắc nghiệm 4 lựa chọn');
-    } else if (preset === 'MCQ_ESSAY') {
-      const es = Math.max(1, Math.round(totalQuestions * 0.25));
-      setMcqCount(totalQuestions - es);
-      setTfCount(0);
-      setSaCount(0);
-      setEssayCount(es);
-      toast.success('Đã áp dụng Preset: Kết hợp Trắc nghiệm & Tự luận');
-    } else if (preset === 'COMPETENCY') {
-      // Đánh giá năng lực: 60% MCQ, 20% TF, 20% SA
+      // 60% MCQ, 20% TF, 20% SA
       const mcq = Math.round(totalQuestions * 0.6);
       const tf = Math.round(totalQuestions * 0.2);
       const sa = Math.max(0, totalQuestions - mcq - tf);
       setMcqCount(mcq);
       setTfCount(tf);
       setSaCount(sa);
-      setEssayCount(0);
+      toast.success('Đã áp dụng Preset: Cấu trúc chuẩn Bộ GD&ĐT 2025 (3 Phần Trắc nghiệm)');
+    } else if (preset === 'ONLY_MCQ') {
+      setMcqCount(totalQuestions);
+      setTfCount(0);
+      setSaCount(0);
+      toast.success('Đã áp dụng Preset: 100% Trắc nghiệm 4 lựa chọn');
+    } else if (preset === 'COMPETENCY') {
+      // Đánh giá năng lực: 50% MCQ, 25% TF, 25% SA
+      const mcq = Math.round(totalQuestions * 0.5);
+      const tf = Math.round(totalQuestions * 0.25);
+      const sa = Math.max(0, totalQuestions - mcq - tf);
+      setMcqCount(mcq);
+      setTfCount(tf);
+      setSaCount(sa);
       toast.success('Đã áp dụng Preset: Đánh giá năng lực ĐHQG (3 Phần trắc nghiệm)');
     }
   };
@@ -225,7 +213,6 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
       multiple_choice: mcqCount,
       true_false: tfCount,
       short_answer: saCount,
-      essay: essayCount,
     },
     variant_count: variantCount,
     variant_prefix: variantPrefix,
@@ -236,7 +223,7 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
     scopeMode, currentChapter, includePreviousChapters, previousChapters,
     selectedSemesterChapters, currentChapterRatio, prevChapterRatio,
     recRatio, undRatio, appRatio, advRatio,
-    mcqCount, tfCount, saCount, essayCount,
+    mcqCount, tfCount, saCount,
     variantCount, variantPrefix, accessTier, upsellCourseId
   ]);
 
@@ -482,10 +469,10 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
           <div>
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Layers className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              2. Phân Bổ 4 Danh Mục Câu Hỏi (Chuẩn Bộ GD&ĐT 2025)
+              2. Phân Bổ 3 Danh Mục Câu Hỏi Trắc Nghiệm (Chuẩn Bộ GD&ĐT 2025)
             </h3>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-              Cấu trúc theo chuẩn thi mới: Trắc nghiệm 4 lựa chọn, Đúng/Sai 4 ý, Trả lời ngắn, và Tự luận.
+              Cấu trúc chuẩn trắc nghiệm khách quan: Trắc nghiệm 4 lựa chọn, Đúng/Sai 4 ý, và Trả lời ngắn.
             </p>
           </div>
 
@@ -517,7 +504,7 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
         {/* Nút chọn nhanh Preset */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Preset phân bổ mẫu:</label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <Button
               type="button"
               variant="outline"
@@ -540,15 +527,6 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => applyPreset('MCQ_ESSAY')}
-              className="text-xs justify-start h-9 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-purple-300 dark:hover:border-purple-700 hover:bg-purple-50/50 dark:hover:bg-purple-950/40"
-            >
-              📝 TN + Tự luận
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
               onClick={() => applyPreset('ONLY_MCQ')}
               className="text-xs justify-start h-9 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-amber-300 dark:hover:border-amber-700 hover:bg-amber-50/50 dark:hover:bg-amber-950/40"
             >
@@ -557,8 +535,8 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
           </div>
         </div>
 
-        {/* 4 Khối cấu hình số lượng cho 4 danh mục */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+        {/* 3 Khối cấu hình số lượng cho 3 danh mục trắc nghiệm */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
           {/* Phần I: MCQ */}
           <div className="p-3.5 rounded-xl border border-sky-200 dark:border-sky-800/60 bg-sky-50/50 dark:bg-sky-950/30 space-y-2">
             <div className="flex items-center justify-between">
@@ -627,30 +605,6 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
               />
               <span className="text-xs font-semibold text-amber-800 dark:text-amber-300 shrink-0">
                 câu ({(saCount * 0.5).toFixed(2)} đ)
-              </span>
-            </div>
-          </div>
-
-          {/* Phần IV: Tự luận */}
-          <div className="p-3.5 rounded-xl border border-purple-200 dark:border-purple-800/60 bg-purple-50/50 dark:bg-purple-950/30 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-purple-950 dark:text-purple-200">Phần IV: Tự luận (Barem)</span>
-              <Badge className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-300 text-[10px] border-purple-300 dark:border-purple-700">2.0 đ/câu</Badge>
-            </div>
-            <p className="text-[11px] text-purple-700 dark:text-purple-400 leading-snug">
-              Trình bày tự luận chấm theo Barem rubric 4 bước
-            </p>
-            <div className="flex items-center gap-2 pt-1">
-              <Input
-                type="number"
-                min={0}
-                max={totalQuestions}
-                value={essayCount}
-                onChange={(e) => setEssayCount(parseInt(e.target.value) || 0)}
-                className="bg-white dark:bg-slate-900 border-purple-300 dark:border-purple-700 text-xs font-bold text-purple-900 dark:text-purple-100 h-8 text-center"
-              />
-              <span className="text-xs font-semibold text-purple-800 dark:text-purple-300 shrink-0">
-                câu ({(essayCount * 2.0).toFixed(2)} đ)
               </span>
             </div>
           </div>
@@ -1354,38 +1308,6 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
                         <span className="font-mono font-bold text-amber-950 dark:text-amber-300 bg-white dark:bg-slate-900 px-2.5 py-1 rounded border border-amber-300 dark:border-amber-700">
                           {q.shortAnswerCorrect || q.answers?.[0]?.content || 'Chưa cấu hình'}
                         </span>
-                      </div>
-                    )}
-
-                    {/* 4. Render Tự luận & Barem rubric */}
-                    {q.type === 'ESSAY' && (
-                      <div className="space-y-2 pt-1">
-                        {q.gradingRubric && q.gradingRubric.length > 0 && (
-                          <div className="p-2.5 rounded-lg bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/60 text-xs space-y-1.5">
-                            <span className="font-bold text-purple-950 dark:text-purple-200 block">Barem chấm điểm chi tiết (Rubric):</span>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                              {q.gradingRubric.map((r, rIdx) => (
-                                <div
-                                  key={rIdx}
-                                  className="p-1.5 rounded bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 text-[11px] flex items-center justify-between"
-                                >
-                                  <span className="text-purple-900 dark:text-purple-200 font-medium">
-                                    {r.step}: {r.detail}
-                                  </span>
-                                  <Badge className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800 text-[10px] shrink-0 ml-1">
-                                    +{r.point}đ
-                                  </Badge>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {q.explain && (
-                          <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-700 dark:text-slate-300">
-                            <strong>Hướng dẫn giải:</strong> {q.explain}
-                          </div>
-                        )}
                       </div>
                     )}
                   </div>

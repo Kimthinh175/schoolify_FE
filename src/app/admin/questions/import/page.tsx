@@ -7,6 +7,7 @@ import { Question } from '@/types/exam';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { AdminFormBuilderSkeleton } from '@/components/skeletons/page-skeletons';
 import {
   ArrowLeft,
   FileSpreadsheet,
@@ -324,13 +325,7 @@ function AdminQuestionsImportContent() {
 
 export default function AdminQuestionsImportPage() {
   return (
-    <React.Suspense
-      fallback={
-        <div className="p-8 text-center text-sm text-slate-500">
-          Đang tải công cụ AI Quét Đề (.docx)...
-        </div>
-      }
-    >
+    <React.Suspense fallback={<AdminFormBuilderSkeleton />}>
       <AdminQuestionsImportContent />
     </React.Suspense>
   );

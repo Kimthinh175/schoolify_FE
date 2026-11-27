@@ -6,6 +6,8 @@ export * from './order';
 export * from './store';
 export * from './question';
 export * from './subject';
+export * from './news';
+export * from './leaderboard';
 export type {
   TheoryDefinition,
   TheoryFormula,
@@ -13,7 +15,6 @@ export type {
   TheoryExample,
   QuizOption,
   QuizQuestion,
-  EssayProblem,
   LessonExamQuestion,
   LessonExamConfig,
   LessonFullContent,

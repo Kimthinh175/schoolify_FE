@@ -36,7 +36,6 @@ export function mapQuestionType(val: string | undefined): QuestionType {
   if (norm.includes('TN_NHIEU') || norm.includes('NHIEU_DAP_AN') || norm.includes('MULTI')) return 'MULTIPLE_CHOICE';
   if (norm.includes('DUNG_SAI') || norm.includes('TRUE_FALSE') || norm === 'DS' || norm === 'TF') return 'TRUE_FALSE';
   if (norm.includes('DIEN_SO') || norm.includes('DIEN_KHUYET') || norm.includes('FILL') || norm.includes('TRA_LOI_NGAN') || norm.includes('SHORT')) return 'FILL_BLANK';
-  if (norm.includes('TU_LUAN') || norm.includes('ESSAY') || norm === 'TL') return 'ESSAY';
   if (norm.includes('CHUM') || norm.includes('GROUP') || norm.includes('DOC_HIEU') || norm.includes('NGU_LIEU')) return 'GROUP_QUESTIONS';
   if (norm.includes('NOI') || norm.includes('MATCH') || norm.includes('GHEP')) return 'MATCHING';
   if (norm.includes('SAP_XEP') || norm.includes('ORDER') || norm.includes('THU_TU') || norm.includes('SAPXEP')) return 'ORDERING';
@@ -73,9 +72,9 @@ export async function parseExcelQuestions(file: File): Promise<ExcelParseResult>
     const explain = String(row.LoiGiai || row['Lời giải'] || '').trim();
     const hints = row.GoiY ? [String(row.GoiY).trim()] : [];
 
-    // Mặc định điểm: Đúng/sai = 1.0, Tự luận = 1.0, Trắc nghiệm = 0.25
+    // Mặc định điểm: Đúng/sai = 1.0, Trắc nghiệm = 0.25
     const defaultPoints =
-      questionType === 'TRUE_FALSE' || questionType === 'ESSAY'
+      questionType === 'TRUE_FALSE'
         ? 1.0
         : questionType === 'GROUP_QUESTIONS'
           ? 0.0
@@ -115,9 +114,8 @@ export async function parseExcelQuestions(file: File): Promise<ExcelParseResult>
     let clozeBlanks: ClozeBlank[] | undefined;
     let statements: { subId: string; statement: string; isCorrect: boolean; explanation?: string }[] | undefined;
     let shortAnswerCorrect: string | undefined;
-    let sampleEssayAnswer: string | undefined;
 
-    // 2. Xử lý & validate theo từng dạng trong 9 dạng câu hỏi
+    // 2. Xử lý & validate theo từng dạng trong 9 dạng câu hỏi trắc nghiệm
     switch (questionType) {
       case 'SINGLE_CHOICE': {
         if (rawAnswers.length < 2) {
@@ -253,13 +251,6 @@ export async function parseExcelQuestions(file: File): Promise<ExcelParseResult>
             label: 'ĐS',
           },
         ];
-        break;
-      }
-
-      case 'ESSAY': {
-        // Tự luận: Không bắt buộc có DapAnA..D hay DapAnDung
-        sampleEssayAnswer = correctStr || explain || 'Theo barem hướng dẫn chấm';
-        answers = [];
         break;
       }
 
@@ -456,7 +447,6 @@ export async function parseExcelQuestions(file: File): Promise<ExcelParseResult>
       cloze_blanks: clozeBlanks,
       statements,
       shortAnswerCorrect,
-      sample_essay_answer: sampleEssayAnswer,
       passage_content: questionType === 'GROUP_QUESTIONS' ? content : undefined,
       sub_questions: questionType === 'GROUP_QUESTIONS' ? [] : undefined,
       hasError,

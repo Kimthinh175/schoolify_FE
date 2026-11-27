@@ -4,8 +4,12 @@ import "./globals.css";
 import "katex/dist/katex.min.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ExamSessionGuardProvider } from "@/components/providers/ExamSessionGuardProvider";
+import { WebVisitTracker } from "@/components/providers/WebVisitTracker";
+import { StudentOnboardingGuard } from "@/components/providers/StudentOnboardingGuard";
 import { Toaster } from "sonner";
 import { GlobalFloatingWidgets } from "@/components/providers/GlobalFloatingWidgets";
+import { SonnerNotificationSync } from "@/components/layout/NotificationBellMenu";
+import { PersistentGlobalNavbar } from "@/components/layout/PersistentGlobalNavbar";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -48,6 +52,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        <meta name="google" content="notranslate" />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function() {
@@ -78,9 +83,13 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-sans bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased transition-colors duration-200 overflow-x-hidden w-full max-w-[100vw]" suppressHydrationWarning>
         <ThemeProvider>
           <ExamSessionGuardProvider>
+            <PersistentGlobalNavbar />
+            <WebVisitTracker />
+            <StudentOnboardingGuard />
             {children}
             <GlobalFloatingWidgets />
-            <Toaster richColors position="top-right" closeButton />
+            <SonnerNotificationSync />
+            <Toaster position="top-right" closeButton expand visibleToasts={4} gap={8} />
           </ExamSessionGuardProvider>
         </ThemeProvider>
       </body>

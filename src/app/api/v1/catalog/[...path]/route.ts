@@ -1,17 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const BE_BASE_URL = process.env.NEXT_PUBLIC_BE_URL || 'http://localhost:3001';
+const BE_BASE_URL = process.env.NEXT_PUBLIC_BE_URL || process.env.BE_URL || 'http://localhost:3005';
 
 function buildHeaders(req: NextRequest): Record<string, string> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
-  const cookie = req.headers.get('cookie');
-  if (cookie) headers['cookie'] = cookie;
-  const auth = req.headers.get('authorization');
-  if (auth) headers['authorization'] = auth;
-  const userId = req.headers.get('x-user-id');
-  if (userId) headers['x-user-id'] = userId;
+  const passthroughKeys = [
+    'cookie',
+    'authorization',
+    'x-user-id',
+    'user-agent',
+    'accept-language',
+    'cf-connecting-ip',
+    'true-client-ip',
+    'cf-ipcountry',
+    'cf-ipcity',
+    'cf-region',
+    'cf-timezone',
+    'x-real-ip',
+    'x-forwarded-for',
+  ];
+  for (const key of passthroughKeys) {
+    const val = req.headers.get(key);
+    if (val) headers[key] = val;
+  }
   return headers;
 }
 

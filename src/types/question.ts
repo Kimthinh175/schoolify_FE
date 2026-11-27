@@ -45,7 +45,6 @@ export interface ParsedQuestionItem {
   sub_questions?: Question[];
   statements?: { subId: string; statement: string; isCorrect: boolean; explanation?: string }[];
   shortAnswerCorrect?: string;
-  sample_essay_answer?: string | null;
 }
 
 export interface ParseImportSummary {
