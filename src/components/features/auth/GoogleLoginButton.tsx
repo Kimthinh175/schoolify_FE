@@ -12,7 +12,7 @@ const GOOGLE_CLIENT_ID =
   '353464933030-gs4nius9ik1kikb6meq9acigl5kju766.apps.googleusercontent.com';
 
 export interface GoogleLoginButtonProps {
-  role?: 'STUDENT' | 'TEACHER' | 'PARENT' | 'PRINCIPAL';
+  role?: 'STUDENT';
   returnUrl?: string;
   label?: string;
   className?: string;
@@ -78,8 +78,8 @@ export function GoogleLoginButton({
 
   const defaultRedirect = React.useMemo(() => {
     if (returnUrl) return returnUrl;
-    return role === 'TEACHER' ? '/teacher/dashboard' : '/luyen-thi';
-  }, [role, returnUrl]);
+    return '/luyen-thi';
+  }, [returnUrl]);
 
   const authenticateWithBackend = async (payload: {
     idToken?: string;
@@ -87,7 +87,7 @@ export function GoogleLoginButton({
   }) => {
     setIsLoading(true);
     try {
-      const profileType = role === 'TEACHER' ? 'TEACHER' : 'STUDENT';
+      const profileType = 'STUDENT';
 
       const res = await fetch('/api/v1/auth/google', {
         method: 'POST',

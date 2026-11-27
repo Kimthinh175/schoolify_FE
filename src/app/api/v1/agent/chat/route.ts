@@ -56,20 +56,17 @@ function generateLocalAiResponse(query: string, currentUrl: string = '/'): Agent
   ) {
     message = `Chào bạn! 👋 **Schoolify** là nền tảng **Giáo dục & Khảo thí K-12 thông minh**, bám sát 100% Chương trình Giáo dục phổ thông mới (GDPT 2018) của Bộ GD&ĐT.
 
-Schoolify xây dựng một hệ sinh thái kết nối trọn vẹn 4 nhóm người dùng:
+Schoolify tập trung vào 2 vai trò chính:
 
 1. 🎓 **Dành cho Học sinh (K-12)**:
-   - **Luyện thi thích ứng 4 cấp độ**: Từ *Cơ bản* (bám sát SGK, chống liệt), *Trung bình* (thi học kỳ & tốt nghiệp THPT), *Nâng cao* (vận dụng cao 9-10 điểm) đến *Học sinh Giỏi (HSG Cấp Tỉnh & Quốc Gia)*.
-   - **Đa dạng hình thức thi**: 9 dạng trắc nghiệm khách quan (Trắc nghiệm 4 lựa chọn, Nhiều đáp án, Đúng/Sai, Điền khuyết, Trả lời ngắn, Chùm ngữ liệu, Nối cặp, Sắp xếp, Đục lỗ inline) và Lập trình trực tiếp trong phòng thi IDE cho môn Tin học.
-   - **Đánh giá năng lực chẩn đoán**: Hệ thống phát hiện chính xác lỗ hổng kiến thức theo chuẩn phân hóa Bloom và đề xuất lộ trình khắc phục.
-   - **Góc học tập & Đổi thưởng**: Tích lũy Ngọc Tri Thức 💎 từ kết quả làm bài để đổi vật phẩm và quà tặng độc quyền.
+   - **Luyện thi thích ứng theo chương & ma trận**: Từ *Cơ bản* (bám sát SGK), *Trung bình* (ôn thi học kỳ & tốt nghiệp THPT) đến *Nâng cao* (vận dụng cao 9-10 điểm).
+   - **Đa dạng định dạng đề**: Trắc nghiệm 1 đáp án, Nhiều đáp án, Đúng/Sai 4 ý, Trả lời ngắn và Phòng thi Tập trung (Focus Mode).
+   - **Đánh giá năng lực chẩn đoán**: Phát hiện lỗ hổng theo phân hóa Bloom và sinh bài luyện lại 3 lượt (Remediation).
+   - **Tia Sáng & Ngọc Tri Thức 💎**: Nhận Tia Sáng miễn phí hàng ngày, tích lũy Ngọc Tri Thức khi đạt kết quả cao để đổi vật phẩm tại Cửa hàng.
 
-2. 👨‍👩‍👧 **Dành cho Phụ huynh**:
-   - Theo dõi tiến độ học tập, biểu đồ năng lực Bloom theo tuần/tháng, thời khóa biểu và thanh toán học phí trực tuyến minh bạch qua VietQR.
-
-3. 👨‍🏫 **Dành cho Giáo viên & Quản trị**:
-   - **AI Quét đề thi Word (.docx)**: Bóc tách câu hỏi, công thức Toán học (KaTeX, MathType MTEF, OMML) và tự động sinh câu hỏi tương đương lưu vào Ngân hàng đề.
-   - Thiết kế ma trận đề thi phân hóa Bloom, quản lý ngân hàng câu hỏi và theo dõi tiến độ lớp học.
+2. 🛠️ **Dành cho Quản trị viên (Admin)**:
+   - **Quét & Import đề thi Word (.docx) / Excel**: Bóc tách công thức Toán học (KaTeX, MathType MTEF, OMML) và chống trùng lặp/xung đột đáp án khi lưu Ngân hàng đề.
+   - Sinh bộ đề theo ma trận phân hóa Bloom, duyệt báo lỗi câu hỏi và quản lý gói hội viên PayOS VietQR.
 
 Bạn muốn tớ **hướng dẫn vào phòng luyện thi thử**, **giải đáp một bài toán**, hay **tìm hiểu tính năng nào trước**, cứ nhắn cho tớ nhé! 🚀`;
     emotion = 'excited';
@@ -377,7 +374,7 @@ export async function POST(req: NextRequest) {
         method: 'POST',
         headers: forwardHeaders,
         body: JSON.stringify(body),
-        signal: AbortSignal.timeout(15000), // Cho BE đủ thời gian xử lý AI
+        signal: AbortSignal.timeout(25000), // Cho BE đủ thời gian xử lý AI Gemini
       });
 
       if (beRes.ok) {

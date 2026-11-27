@@ -176,7 +176,7 @@ export function OutOfPointsModal({
               leftIcon={<NgocIcon className="w-4 h-4" flat />}
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
-              Dùng {safeRequired} Ngọc Tri Thức Mở Đề Ngay (Còn {Math.max(0, safeDiamonds - safeRequired)} 💎)
+              Dùng {safeRequired} Ngọc Tri Thức Mở Đề Ngay (Còn {Math.max(0, safeDiamonds - safeRequired)} Ngọc)
             </Button>
           )}
 

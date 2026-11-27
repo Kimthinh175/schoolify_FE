@@ -21,8 +21,64 @@
       --c-school: #10b981;
       --c-academic: #f59e0b;
       --c-saas: #ec4899;
+      --c-ai: #0ea5e9;
+      --c-community: #f97316;
       --c-store: #8b5cf6;
       --c-order: #06b6d4;
+    }
+
+    .filter-bar {
+      position: absolute;
+      top: 120px;
+      left: 20px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      max-width: calc(100vw - 270px);
+      z-index: 80;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    .filter-pill {
+      border: 1px solid var(--border-color);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .filter-pill:hover {
+      border-color: #38bdf8;
+      color: var(--text-main);
+    }
+
+    .filter-pill.active {
+      background: rgba(56, 189, 248, 0.18);
+      border-color: #38bdf8;
+      color: #38bdf8;
+    }
+
+    body.light-theme .filter-pill {
+      background: rgba(15, 23, 42, 0.04);
+      color: #475569;
+    }
+
+    body.light-theme .filter-pill.active {
+      background: rgba(2, 132, 199, 0.12);
+      border-color: #0284c7;
+      color: #0284c7;
     }
 
     body.light-theme {
@@ -179,7 +235,8 @@
     body.clean-mode header,
     body.clean-mode .floating-bar,
     body.clean-mode .diagram-legend,
-    body.clean-mode .tips-overlay {
+    body.clean-mode .tips-overlay,
+    body.clean-mode .filter-bar {
       display: none !important;
     }
 
@@ -644,8 +701,8 @@
     <div class="brand-section">
       <div class="brand-badge">S</div>
       <div class="title-group">
-        <h1>Schoolify - Interactive ERD <span class="badge-cardinality">Crow's Foot & 1:N / 1:1</span></h1>
-        <p>Hiển thị chi tiết quan hệ chuẩn Diagram • Kéo thả bảng tách dây • Zoom Pan mượt mà</p>
+        <h1>Schoolify - Interactive ERD <span class="badge-cardinality">36 Bảng • 47 Quan hệ • 22 Enums</span></h1>
+        <p>Đồng bộ 100% từ PostgreSQL Prisma Schema • Kéo thả bảng • Lọc theo phân hệ • Highlight khóa ngoại</p>
       </div>
     </div>
 
@@ -660,6 +717,22 @@
 
   <div class="tips-overlay">
     💡 <b>Chuẩn quan hệ:</b> Dây nối có ký hiệu <b>1:N (Một - Nhiều)</b> hoặc <b>1:1 (Một - Một)</b> kèm tên Foreign Key • Bấm dây để highlight!
+  </div>
+
+  <div class="filter-bar" id="group-filter-bar">
+    <button type="button" class="filter-pill active" data-group="ALL">Tất cả (36)</button>
+    <button type="button" class="filter-pill" data-group="identity"><span class="badge-dot" style="background:#2563eb"></span>Người dùng &amp; Hồ sơ (2)</button>
+    <button type="button" class="filter-pill" data-group="saas"><span class="badge-dot" style="background:#db2777"></span>Gói SaaS &amp; Đơn hàng (2)</button>
+    <button type="button" class="filter-pill" data-group="qbank"><span class="badge-dot" style="background:#d97706"></span>Ngân hàng câu hỏi (4)</button>
+    <button type="button" class="filter-pill" data-group="exam"><span class="badge-dot" style="background:#ea580c"></span>Bài thi &amp; Chấm điểm (4)</button>
+    <button type="button" class="filter-pill" data-group="roadmap"><span class="badge-dot" style="background:#0284c7"></span>Điểm &amp; Lộ trình (5)</button>
+    <button type="button" class="filter-pill" data-group="ai"><span class="badge-dot" style="background:#0891b2"></span>Trợ lý AI &amp; Cache (3)</button>
+    <button type="button" class="filter-pill" data-group="analytics"><span class="badge-dot" style="background:#64748b"></span>Nhật ký hành vi &amp; Log (2)</button>
+    <button type="button" class="filter-pill" data-group="store"><span class="badge-dot" style="background:#7c3aed"></span>Cửa hàng đổi quà (2)</button>
+    <button type="button" class="filter-pill" data-group="leaderboard"><span class="badge-dot" style="background:#10b981"></span>BXH &amp; Thành tựu (4)</button>
+    <button type="button" class="filter-pill" data-group="notification"><span class="badge-dot" style="background:#14b8a6"></span>Thông báo (1)</button>
+    <button type="button" class="filter-pill" data-group="forum"><span class="badge-dot" style="background:#f97316"></span>Diễn đàn (5)</button>
+    <button type="button" class="filter-pill" data-group="news"><span class="badge-dot" style="background:#eab308"></span>Tin tức CMS (2)</button>
   </div>
 
   <!-- Diagram Legend -->
@@ -736,13 +809,14 @@
 
   <script>
     // -------------------------------------------------------------
-    // DATABASE SCHEMA DATA (28 Tables + Full Cardinality)
+    // DATABASE SCHEMA DATA (36 Tables + 47 Full Cardinality Relations)
+    // Auto-synced directly from BE/prisma/schema.prisma
     // -------------------------------------------------------------
     const TABLES = [
     {
         "id": "User",
         "name": "User",
-        "group": "core",
+        "group": "identity",
         "x": 80,
         "y": 80,
         "fields": [
@@ -769,7 +843,7 @@
             },
             {
                 "name": "avatar_url",
-                "type": "String",
+                "type": "String?",
                 "pk": false,
                 "fk": false,
                 "uk": false
@@ -782,8 +856,15 @@
                 "uk": true
             },
             {
+                "name": "google_id",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
                 "name": "phone",
-                "type": "String",
+                "type": "String?",
                 "pk": false,
                 "fk": false,
                 "uk": false
@@ -804,7 +885,7 @@
             },
             {
                 "name": "last_login_at",
-                "type": "DateTime",
+                "type": "DateTime?",
                 "pk": false,
                 "fk": false,
                 "uk": false
@@ -826,106 +907,11 @@
         ]
     },
     {
-        "id": "SchoolMember",
-        "name": "SchoolMember",
-        "group": "core",
-        "x": 430,
-        "y": 80,
-        "fields": [
-            {
-                "name": "id",
-                "type": "String",
-                "pk": true,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "user_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "school_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "role",
-                "type": "SchoolRole",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "joined_at",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            }
-        ]
-    },
-    {
-        "id": "TeacherProfile",
-        "name": "TeacherProfile",
-        "group": "core",
-        "x": 430,
-        "y": 310,
-        "fields": [
-            {
-                "name": "id",
-                "type": "String",
-                "pk": true,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "user_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": true
-            },
-            {
-                "name": "department_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "bio",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "expertise",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "experience_years",
-                "type": "Int",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            }
-        ]
-    },
-    {
         "id": "StudentProfile",
         "name": "StudentProfile",
-        "group": "core",
-        "x": 430,
-        "y": 566,
+        "group": "identity",
+        "x": 80,
+        "y": 476,
         "fields": [
             {
                 "name": "id",
@@ -943,290 +929,49 @@
             },
             {
                 "name": "date_of_birth",
-                "type": "DateTime",
+                "type": "DateTime?",
                 "pk": false,
                 "fk": false,
                 "uk": false
             },
             {
                 "name": "grade_level",
-                "type": "String",
+                "type": "String?",
                 "pk": false,
                 "fk": false,
                 "uk": false
             },
             {
                 "name": "points",
+                "type": "Float",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "exam_points",
                 "type": "Int",
                 "pk": false,
                 "fk": false,
                 "uk": false
-            }
-        ]
-    },
-    {
-        "id": "ParentProfile",
-        "name": "ParentProfile",
-        "group": "core",
-        "x": 80,
-        "y": 722,
-        "fields": [
-            {
-                "name": "id",
-                "type": "String",
-                "pk": true,
-                "fk": false,
-                "uk": false
             },
             {
-                "name": "user_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": true
-            },
-            {
-                "name": "job_title",
-                "type": "String",
+                "name": "last_daily_grant_date",
+                "type": "String?",
                 "pk": false,
                 "fk": false,
                 "uk": false
             },
             {
-                "name": "address",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            }
-        ]
-    },
-    {
-        "id": "ParentStudent",
-        "name": "ParentStudent",
-        "group": "core",
-        "x": 80,
-        "y": 926,
-        "fields": [
-            {
-                "name": "id",
-                "type": "String",
-                "pk": true,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "parent_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "student_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "relationship_type",
-                "type": "String",
+                "name": "active_package",
+                "type": "String?",
                 "pk": false,
                 "fk": false,
                 "uk": false
             },
             {
-                "name": "created_at",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            }
-        ]
-    },
-    {
-        "id": "CustomFeatureRequest",
-        "name": "CustomFeatureRequest",
-        "group": "core",
-        "x": 80,
-        "y": 1156,
-        "fields": [
-            {
-                "name": "id",
-                "type": "String",
-                "pk": true,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "user_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "request_content",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "phone",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "contact_info",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "status",
-                "type": "CustomRequestStatus",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "created_at",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            }
-        ]
-    },
-    {
-        "id": "School",
-        "name": "School",
-        "group": "school",
-        "x": 780,
-        "y": 80,
-        "fields": [
-            {
-                "name": "id",
-                "type": "String",
-                "pk": true,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "owner_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "name",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "code",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": true
-            },
-            {
-                "name": "address",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "phone",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "email",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "status",
-                "type": "SchoolStatus",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "created_at",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "updated_at",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            }
-        ]
-    },
-    {
-        "id": "Department",
-        "name": "Department",
-        "group": "school",
-        "x": 780,
-        "y": 440,
-        "fields": [
-            {
-                "name": "id",
-                "type": "String",
-                "pk": true,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "school_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "name",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "head_teacher_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "created_at",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "updated_at",
-                "type": "DateTime",
+                "name": "package_expires_at",
+                "type": "DateTime?",
                 "pk": false,
                 "fk": false,
                 "uk": false
@@ -1237,8 +982,8 @@
         "id": "SubscriptionPackage",
         "name": "SubscriptionPackage",
         "group": "saas",
-        "x": 430,
-        "y": 796,
+        "x": 80,
+        "y": 852,
         "fields": [
             {
                 "name": "id",
@@ -1249,7 +994,7 @@
             },
             {
                 "name": "creator_id",
-                "type": "String",
+                "type": "String?",
                 "pk": false,
                 "fk": true,
                 "uk": false
@@ -1263,7 +1008,7 @@
             },
             {
                 "name": "description",
-                "type": "String",
+                "type": "String?",
                 "pk": false,
                 "fk": false,
                 "uk": false
@@ -1284,7 +1029,7 @@
             },
             {
                 "name": "duration_days",
-                "type": "Int",
+                "type": "Int?",
                 "pk": false,
                 "fk": false,
                 "uk": false
@@ -1340,14 +1085,14 @@
             },
             {
                 "name": "features",
-                "type": "Json",
+                "type": "Json?",
                 "pk": false,
                 "fk": false,
                 "uk": false
             },
             {
                 "name": "custom_features",
-                "type": "Json",
+                "type": "Json?",
                 "pk": false,
                 "fk": false,
                 "uk": false
@@ -1369,140 +1114,10 @@
         ]
     },
     {
-        "id": "SchoolSubscription",
-        "name": "SchoolSubscription",
-        "group": "saas",
-        "x": 430,
-        "y": 1364,
-        "fields": [
-            {
-                "name": "id",
-                "type": "String",
-                "pk": true,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "school_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "package_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "features_snapshot",
-                "type": "Json",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "start_date",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "end_date",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "status",
-                "type": "SubscriptionStatus",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "created_at",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            }
-        ]
-    },
-    {
-        "id": "TeacherSubscription",
-        "name": "TeacherSubscription",
-        "group": "saas",
-        "x": 430,
-        "y": 1672,
-        "fields": [
-            {
-                "name": "id",
-                "type": "String",
-                "pk": true,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "teacher_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "package_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "features_snapshot",
-                "type": "Json",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "start_date",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "end_date",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "status",
-                "type": "SubscriptionStatus",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "created_at",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            }
-        ]
-    },
-    {
         "id": "Category",
         "name": "Category",
-        "group": "academic",
-        "x": 1130,
+        "group": "qbank",
+        "x": 470,
         "y": 80,
         "fields": [
             {
@@ -1528,14 +1143,14 @@
             },
             {
                 "name": "parent_id",
-                "type": "String",
+                "type": "String?",
                 "pk": false,
                 "fk": true,
                 "uk": false
             },
             {
                 "name": "status",
-                "type": "String",
+                "type": "String?",
                 "pk": false,
                 "fk": false,
                 "uk": false
@@ -1564,445 +1179,11 @@
         ]
     },
     {
-        "id": "Course",
-        "name": "Course",
-        "group": "academic",
-        "x": 1130,
-        "y": 388,
-        "fields": [
-            {
-                "name": "id",
-                "type": "String",
-                "pk": true,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "school_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "department_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "subject_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "owner_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "title",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "description",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "price",
-                "type": "Decimal",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "is_marketplace",
-                "type": "Boolean",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "status",
-                "type": "CourseStatus",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "published_at",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "created_at",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "updated_at",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            }
-        ]
-    },
-    {
-        "id": "Lesson",
-        "name": "Lesson",
-        "group": "academic",
-        "x": 1130,
-        "y": 826,
-        "fields": [
-            {
-                "name": "id",
-                "type": "String",
-                "pk": true,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "course_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "title",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "content",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "video_url",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "order_index",
-                "type": "Int",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "created_at",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "updated_at",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            }
-        ]
-    },
-    {
-        "id": "LessonMaterial",
-        "name": "LessonMaterial",
-        "group": "academic",
-        "x": 1130,
-        "y": 1134,
-        "fields": [
-            {
-                "name": "id",
-                "type": "String",
-                "pk": true,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "lesson_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "material_type",
-                "type": "MaterialType",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "url",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "content_data",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "order_index",
-                "type": "Int",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            }
-        ]
-    },
-    {
-        "id": "Class",
-        "name": "Class",
-        "group": "academic",
-        "x": 780,
-        "y": 696,
-        "fields": [
-            {
-                "name": "id",
-                "type": "String",
-                "pk": true,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "school_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "teacher_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "course_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "class_name",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "status",
-                "type": "ClassStatus",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "created_at",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "updated_at",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            }
-        ]
-    },
-    {
-        "id": "ClassEnrollment",
-        "name": "ClassEnrollment",
-        "group": "academic",
-        "x": 780,
-        "y": 1004,
-        "fields": [
-            {
-                "name": "id",
-                "type": "String",
-                "pk": true,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "class_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "student_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "joined_date",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            }
-        ]
-    },
-    {
-        "id": "ClassCourse",
-        "name": "ClassCourse",
-        "group": "academic",
-        "x": 780,
-        "y": 1208,
-        "fields": [
-            {
-                "name": "id",
-                "type": "String",
-                "pk": true,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "teacher_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "course_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "class_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            }
-        ]
-    },
-    {
-        "id": "ClassSession",
-        "name": "ClassSession",
-        "group": "academic",
-        "x": 780,
-        "y": 1412,
-        "fields": [
-            {
-                "name": "id",
-                "type": "String",
-                "pk": true,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "class_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "teacher_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "title",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "start_time",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "end_time",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "room",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "meeting_url",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "created_at",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "updated_at",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            }
-        ]
-    },
-    {
         "id": "QuestionBank",
         "name": "QuestionBank",
-        "group": "academic",
-        "x": 1480,
-        "y": 80,
+        "group": "qbank",
+        "x": 470,
+        "y": 430,
         "fields": [
             {
                 "name": "id",
@@ -2020,14 +1201,7 @@
             },
             {
                 "name": "owner_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "school_id",
-                "type": "String",
+                "type": "String?",
                 "pk": false,
                 "fk": true,
                 "uk": false
@@ -2058,9 +1232,9 @@
     {
         "id": "Question",
         "name": "Question",
-        "group": "academic",
-        "x": 1480,
-        "y": 362,
+        "group": "qbank",
+        "x": 470,
+        "y": 728,
         "fields": [
             {
                 "name": "id",
@@ -2071,28 +1245,77 @@
             },
             {
                 "name": "bank_id",
-                "type": "String",
+                "type": "String?",
                 "pk": false,
                 "fk": true,
                 "uk": false
             },
             {
-                "name": "lesson_id",
-                "type": "String",
+                "name": "chapter_id",
+                "type": "Int?",
                 "pk": false,
-                "fk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "subject",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "grade",
+                "type": "Int?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "bloom_level",
+                "type": "BloomLevel?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "question_format",
+                "type": "QuestionFormat?",
+                "pk": false,
+                "fk": false,
                 "uk": false
             },
             {
                 "name": "type",
-                "type": "QuestionType",
+                "type": "QuestionType?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "topic_tag",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "cognitive_tag",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "trap_tag",
+                "type": "String?",
                 "pk": false,
                 "fk": false,
                 "uk": false
             },
             {
                 "name": "title",
-                "type": "String",
+                "type": "String?",
                 "pk": false,
                 "fk": false,
                 "uk": false
@@ -2106,7 +1329,21 @@
             },
             {
                 "name": "answer",
-                "type": "String",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "explanation",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "default_points",
+                "type": "Decimal?",
                 "pk": false,
                 "fk": false,
                 "uk": false
@@ -2123,9 +1360,9 @@
     {
         "id": "Answer",
         "name": "Answer",
-        "group": "academic",
-        "x": 1480,
-        "y": 670,
+        "group": "qbank",
+        "x": 470,
+        "y": 1124,
         "fields": [
             {
                 "name": "id",
@@ -2150,14 +1387,14 @@
             },
             {
                 "name": "explain",
-                "type": "String",
+                "type": "String?",
                 "pk": false,
                 "fk": false,
                 "uk": false
             },
             {
                 "name": "img_url",
-                "type": "String",
+                "type": "String?",
                 "pk": false,
                 "fk": false,
                 "uk": false
@@ -2168,14 +1405,21 @@
                 "pk": false,
                 "fk": false,
                 "uk": false
+            },
+            {
+                "name": "sub_label",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
             }
         ]
     },
     {
         "id": "ExamSubmission",
         "name": "ExamSubmission",
-        "group": "academic",
-        "x": 1830,
+        "group": "exam",
+        "x": 860,
         "y": 80,
         "fields": [
             {
@@ -2186,6 +1430,13 @@
                 "uk": false
             },
             {
+                "name": "attempt_token",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": true
+            },
+            {
                 "name": "student_id",
                 "type": "String",
                 "pk": false,
@@ -2194,23 +1445,23 @@
             },
             {
                 "name": "bank_id",
-                "type": "String",
+                "type": "String?",
                 "pk": false,
                 "fk": true,
                 "uk": false
             },
             {
-                "name": "lesson_id",
-                "type": "String",
+                "name": "exam_title",
+                "type": "String?",
                 "pk": false,
-                "fk": true,
+                "fk": false,
                 "uk": false
             },
             {
-                "name": "class_id",
-                "type": "String",
+                "name": "exam_type",
+                "type": "String?",
                 "pk": false,
-                "fk": true,
+                "fk": false,
                 "uk": false
             },
             {
@@ -2222,7 +1473,21 @@
             },
             {
                 "name": "score",
-                "type": "Decimal",
+                "type": "Decimal?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "total_points",
+                "type": "Decimal?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "time_spent_seconds",
+                "type": "Int?",
                 "pk": false,
                 "fk": false,
                 "uk": false
@@ -2236,21 +1501,21 @@
             },
             {
                 "name": "submitted_at",
-                "type": "DateTime",
+                "type": "DateTime?",
                 "pk": false,
                 "fk": false,
                 "uk": false
             },
             {
                 "name": "graded_at",
-                "type": "DateTime",
+                "type": "DateTime?",
                 "pk": false,
                 "fk": false,
                 "uk": false
             },
             {
-                "name": "teacher_notes",
-                "type": "String",
+                "name": "snapshot_data",
+                "type": "Json?",
                 "pk": false,
                 "fk": false,
                 "uk": false
@@ -2260,9 +1525,9 @@
     {
         "id": "SubmissionAnswer",
         "name": "SubmissionAnswer",
-        "group": "academic",
-        "x": 1830,
-        "y": 466,
+        "group": "exam",
+        "x": 860,
+        "y": 476,
         "fields": [
             {
                 "name": "id",
@@ -2287,93 +1552,49 @@
             },
             {
                 "name": "selected_answer_id",
-                "type": "String",
+                "type": "String?",
                 "pk": false,
                 "fk": true,
                 "uk": false
             },
             {
+                "name": "student_text_answer",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "sub_answers_json",
+                "type": "Json?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
                 "name": "text_answer",
-                "type": "String",
+                "type": "String?",
                 "pk": false,
                 "fk": false,
                 "uk": false
             },
             {
                 "name": "is_correct",
-                "type": "Boolean",
+                "type": "Boolean?",
                 "pk": false,
                 "fk": false,
                 "uk": false
             },
             {
                 "name": "points_earned",
-                "type": "Decimal",
+                "type": "Decimal?",
                 "pk": false,
                 "fk": false,
                 "uk": false
             },
             {
                 "name": "teacher_feedback",
-                "type": "String",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            }
-        ]
-    },
-    {
-        "id": "StudentProgress",
-        "name": "StudentProgress",
-        "group": "academic",
-        "x": 1480,
-        "y": 926,
-        "fields": [
-            {
-                "name": "id",
-                "type": "String",
-                "pk": true,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "student_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "course_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "lesson_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "completion_pct",
-                "type": "Int",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "last_accessed",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "is_completed",
-                "type": "Boolean",
+                "type": "String?",
                 "pk": false,
                 "fk": false,
                 "uk": false
@@ -2384,8 +1605,8 @@
         "id": "StoreItem",
         "name": "StoreItem",
         "group": "store",
-        "x": 1480,
-        "y": 1208,
+        "x": 2420,
+        "y": 80,
         "fields": [
             {
                 "name": "id",
@@ -2395,22 +1616,15 @@
                 "uk": false
             },
             {
-                "name": "teacher_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
                 "name": "user_id",
-                "type": "String",
+                "type": "String?",
                 "pk": false,
                 "fk": true,
                 "uk": false
             },
             {
                 "name": "type",
-                "type": "StoreItemType",
+                "type": "StoreItemType?",
                 "pk": false,
                 "fk": false,
                 "uk": false
@@ -2424,7 +1638,7 @@
             },
             {
                 "name": "description",
-                "type": "String",
+                "type": "String?",
                 "pk": false,
                 "fk": false,
                 "uk": false
@@ -2445,7 +1659,7 @@
             },
             {
                 "name": "image_url",
-                "type": "String",
+                "type": "String?",
                 "pk": false,
                 "fk": false,
                 "uk": false
@@ -2459,7 +1673,7 @@
             },
             {
                 "name": "expired",
-                "type": "DateTime",
+                "type": "DateTime?",
                 "pk": false,
                 "fk": false,
                 "uk": false
@@ -2484,8 +1698,8 @@
         "id": "StudentInventory",
         "name": "StudentInventory",
         "group": "store",
-        "x": 1480,
-        "y": 1646,
+        "x": 2420,
+        "y": 476,
         "fields": [
             {
                 "name": "id",
@@ -2510,7 +1724,7 @@
             },
             {
                 "name": "type",
-                "type": "String",
+                "type": "String?",
                 "pk": false,
                 "fk": false,
                 "uk": false
@@ -2541,9 +1755,9 @@
     {
         "id": "Order",
         "name": "Order",
-        "group": "order",
-        "x": 1830,
-        "y": 774,
+        "group": "saas",
+        "x": 80,
+        "y": 1248,
         "fields": [
             {
                 "name": "id",
@@ -2568,21 +1782,14 @@
             },
             {
                 "name": "subscription_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "course_id",
-                "type": "String",
+                "type": "String?",
                 "pk": false,
                 "fk": true,
                 "uk": false
             },
             {
                 "name": "item_name_snapshot",
-                "type": "Json",
+                "type": "Json?",
                 "pk": false,
                 "fk": false,
                 "uk": false
@@ -2610,7 +1817,7 @@
             },
             {
                 "name": "seller_id",
-                "type": "String",
+                "type": "String?",
                 "pk": false,
                 "fk": true,
                 "uk": false
@@ -2632,62 +1839,11 @@
         ]
     },
     {
-        "id": "Transaction",
-        "name": "Transaction",
-        "group": "order",
-        "x": 1830,
-        "y": 1186,
-        "fields": [
-            {
-                "name": "id",
-                "type": "String",
-                "pk": true,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "order_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "transaction_type",
-                "type": "TransactionType",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "amount",
-                "type": "Decimal",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            },
-            {
-                "name": "recipient_id",
-                "type": "String",
-                "pk": false,
-                "fk": true,
-                "uk": false
-            },
-            {
-                "name": "created_at",
-                "type": "DateTime",
-                "pk": false,
-                "fk": false,
-                "uk": false
-            }
-        ]
-    },
-    {
         "id": "Notification",
         "name": "Notification",
-        "group": "core",
-        "x": 80,
-        "y": 466,
+        "group": "notification",
+        "x": 2420,
+        "y": 2260,
         "fields": [
             {
                 "name": "id",
@@ -2704,6 +1860,13 @@
                 "uk": false
             },
             {
+                "name": "type",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
                 "name": "title",
                 "type": "String",
                 "pk": false,
@@ -2713,6 +1876,13 @@
             {
                 "name": "message",
                 "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "link",
+                "type": "String?",
                 "pk": false,
                 "fk": false,
                 "uk": false
@@ -2732,76 +1902,3545 @@
                 "uk": false
             }
         ]
+    },
+    {
+        "id": "SemanticCache",
+        "name": "SemanticCache",
+        "group": "ai",
+        "x": 1640,
+        "y": 80,
+        "fields": [
+            {
+                "name": "id",
+                "type": "String",
+                "pk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "query_text",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "query_vector",
+                "type": "Float[]",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "response_text",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "client_actions",
+                "type": "Json?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "emotion",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "suggestions",
+                "type": "Json?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "subject",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "grade",
+                "type": "Int?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "hit_count",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "ttl_days",
+                "type": "Int?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "last_accessed_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "created_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            }
+        ]
+    },
+    {
+        "id": "ChatSession",
+        "name": "ChatSession",
+        "group": "ai",
+        "x": 1640,
+        "y": 476,
+        "fields": [
+            {
+                "name": "id",
+                "type": "String",
+                "pk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "sessionKey",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": true
+            },
+            {
+                "name": "userId",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "title",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "isPinned",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "messageCount",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "lastMessagePreview",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "summaryText",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "sessionVector",
+                "type": "Json?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "messages",
+                "type": "Json",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "expiresAt",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "createdAt",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "updatedAt",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            }
+        ]
+    },
+    {
+        "id": "SemanticCheckpointLog",
+        "name": "SemanticCheckpointLog",
+        "group": "ai",
+        "x": 1640,
+        "y": 872,
+        "fields": [
+            {
+                "name": "id",
+                "type": "String",
+                "pk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "question_id",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "student_answer",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "rubric_checkpoint",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "matched_sentence",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "vector_similarity",
+                "type": "Float?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "is_correct",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "explanation",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "created_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            }
+        ]
+    },
+    {
+        "id": "ExamPointLog",
+        "name": "ExamPointLog",
+        "group": "roadmap",
+        "x": 1250,
+        "y": 80,
+        "fields": [
+            {
+                "name": "id",
+                "type": "String",
+                "pk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "student_id",
+                "type": "String",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "action_type",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "exam_level",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "exam_title",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "submission_id",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "exam_score",
+                "type": "Decimal?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "points_before",
+                "type": "Float",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "points_delta",
+                "type": "Float",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "points_after",
+                "type": "Float",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "note",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "created_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            }
+        ]
+    },
+    {
+        "id": "StudentTopicMastery",
+        "name": "StudentTopicMastery",
+        "group": "roadmap",
+        "x": 1250,
+        "y": 476,
+        "fields": [
+            {
+                "name": "id",
+                "type": "String",
+                "pk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "student_id",
+                "type": "String",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "subject",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "grade",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "chapter_id",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "chapter_name",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "topic_tag",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "total_attempted",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "total_correct",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "total_wrong",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "nhan_biet_attempted",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "nhan_biet_correct",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "thong_hieu_attempted",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "thong_hieu_correct",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "van_dung_attempted",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "van_dung_correct",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "van_dung_cao_attempted",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "van_dung_cao_correct",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "remediation_attempted",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "remediation_correct",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "quick_drill_sessions",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "quick_drill_completed_turns",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "quick_drill_skipped_turns",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "quick_drill_correct_turns",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "learning_spirit_score",
+                "type": "Float",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "learning_spirit_tag",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "intelligence_score",
+                "type": "Float",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "intelligence_tag",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "total_time_seconds",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "mastery_score",
+                "type": "Float",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "mastery_status",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "trap_counts",
+                "type": "Json?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "recent_history",
+                "type": "Json?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "last_practiced_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "created_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "updated_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            }
+        ]
+    },
+    {
+        "id": "StudentRoadmapStep",
+        "name": "StudentRoadmapStep",
+        "group": "roadmap",
+        "x": 1250,
+        "y": 872,
+        "fields": [
+            {
+                "name": "id",
+                "type": "String",
+                "pk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "student_id",
+                "type": "String",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "subject",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "grade",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "phase",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "step_order",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "chapter_id",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "chapter_name",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "topic_tag",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "title",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "diagnostic_reason",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "recommended_level",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "recommended_bloom",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "question_count",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "duration_minutes",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "current_mastery",
+                "type": "Float",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "target_mastery",
+                "type": "Float",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "attempted_count",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "correct_count",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "top_trap_tag",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "special_behavior_tag",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "learning_spirit_tag",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "learning_spirit_label",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "learning_spirit_score",
+                "type": "Float?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "intelligence_tag",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "intelligence_label",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "intelligence_score",
+                "type": "Float?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "behavior_adaptation_note",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "status",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "completed_at",
+                "type": "DateTime?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "created_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "updated_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            }
+        ]
+    },
+    {
+        "id": "StudentBehaviorHistory",
+        "name": "StudentBehaviorHistory",
+        "group": "analytics",
+        "x": 1640,
+        "y": 1248,
+        "fields": [
+            {
+                "name": "id",
+                "type": "String",
+                "pk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "student_id",
+                "type": "String",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "submission_id",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "attempt_token",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "subject",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "grade",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "chapter_id",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "chapter_name",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "topic_tag",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "source_question_id",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "source_question_title",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "bloom_level",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "trap_tag",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "special_tag",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "is_scored",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "total_turns",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "completed_turns",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "skipped_turns",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "correct_turns",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "wrong_turns",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "used_ai_example",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "total_time_seconds",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "turn_outcomes",
+                "type": "Json?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "learning_spirit_tag",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "learning_spirit_label",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "learning_spirit_score",
+                "type": "Float",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "intelligence_tag",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "intelligence_label",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "intelligence_score",
+                "type": "Float",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "roadmap_strategy_tag",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "roadmap_adaptation_note",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "created_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            }
+        ]
+    },
+    {
+        "id": "WebVisitLog",
+        "name": "WebVisitLog",
+        "group": "analytics",
+        "x": 1640,
+        "y": 1644,
+        "fields": [
+            {
+                "name": "id",
+                "type": "String",
+                "pk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "path",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "page_title",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "user_id",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "user_role",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "session_id",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "device_type",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "os_name",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "browser_name",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "device_model",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "screen_resolution",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "ip_address",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "country_code",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "country_name",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "region_name",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "city_name",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "isp_name",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "timezone",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "language",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "referrer",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "user_agent",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "created_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            }
+        ]
+    },
+    {
+        "id": "StudentChapterProgress",
+        "name": "StudentChapterProgress",
+        "group": "roadmap",
+        "x": 1250,
+        "y": 1268,
+        "fields": [
+            {
+                "name": "id",
+                "type": "String",
+                "pk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "student_id",
+                "type": "String",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "subject",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "grade",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "track",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "chapter_id",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "basic_completed",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "basic_best_score",
+                "type": "Float",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "medium_completed",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "medium_best_score",
+                "type": "Float",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "advanced_completed",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "advanced_best_score",
+                "type": "Float",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "unlocked_manually",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "basic_unlocked_manually",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "medium_unlocked_manually",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "advanced_unlocked_manually",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "crowns_earned",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "attempts_count",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "last_practiced_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "created_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "updated_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            }
+        ]
+    },
+    {
+        "id": "StudentSubjectDiagnostic",
+        "name": "StudentSubjectDiagnostic",
+        "group": "roadmap",
+        "x": 1250,
+        "y": 1664,
+        "fields": [
+            {
+                "name": "id",
+                "type": "String",
+                "pk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "student_id",
+                "type": "String",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "subject",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "grade",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "assigned_level",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "overall_score",
+                "type": "Float",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "track_scores",
+                "type": "Json?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "bloom_breakdown",
+                "type": "Json?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "submission_id",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "completed_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "created_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "updated_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            }
+        ]
+    },
+    {
+        "id": "QuestionBugReport",
+        "name": "QuestionBugReport",
+        "group": "exam",
+        "x": 860,
+        "y": 872,
+        "fields": [
+            {
+                "name": "id",
+                "type": "String",
+                "pk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "question_id",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "question_title",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "subject_name",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "question_snippet",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "issue_type",
+                "type": "QuestionIssueType",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "issue_type_label",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "description",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "reporter_id",
+                "type": "String?",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "reporter_name",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "status",
+                "type": "QuestionBugReportStatus",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "admin_note",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "resolved_by_id",
+                "type": "String?",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "resolved_at",
+                "type": "DateTime?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "created_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "updated_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            }
+        ]
+    },
+    {
+        "id": "StudentPoolCursor",
+        "name": "StudentPoolCursor",
+        "group": "exam",
+        "x": 860,
+        "y": 1268,
+        "fields": [
+            {
+                "name": "id",
+                "type": "String",
+                "pk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "student_id",
+                "type": "String",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "pool_key",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "cursor_pos",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "epoch",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "last_boundary_ids",
+                "type": "Json?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "created_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "updated_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            }
+        ]
+    },
+    {
+        "id": "ForumPost",
+        "name": "ForumPost",
+        "group": "forum",
+        "x": 2030,
+        "y": 80,
+        "fields": [
+            {
+                "name": "id",
+                "type": "String",
+                "pk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "author_id",
+                "type": "String",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "category_id",
+                "type": "String?",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "title",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "slug",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": true
+            },
+            {
+                "name": "content",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "content_format",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "content_plain",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "has_math",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "subject",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "grade",
+                "type": "Int?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "chapter_id",
+                "type": "Int?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "chapter_name",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "tags",
+                "type": "Json?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "thumbnail_url",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "attachments",
+                "type": "Json?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "views_count",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "likes_count",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "comments_count",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "bookmarks_count",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "is_solved",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "is_pinned",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "is_locked",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "accepted_comment_id",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "status",
+                "type": "ForumPostStatus",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "created_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "updated_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            }
+        ]
+    },
+    {
+        "id": "ForumComment",
+        "name": "ForumComment",
+        "group": "forum",
+        "x": 2030,
+        "y": 476,
+        "fields": [
+            {
+                "name": "id",
+                "type": "String",
+                "pk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "post_id",
+                "type": "String",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "author_id",
+                "type": "String",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "parent_id",
+                "type": "String?",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "reply_to_user_id",
+                "type": "String?",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "depth",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "content",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "attachments",
+                "type": "Json?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "likes_count",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "replies_count",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "is_accepted",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "is_edited",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "status",
+                "type": "ForumCommentStatus",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "created_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "updated_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            }
+        ]
+    },
+    {
+        "id": "ForumReaction",
+        "name": "ForumReaction",
+        "group": "forum",
+        "x": 2030,
+        "y": 872,
+        "fields": [
+            {
+                "name": "id",
+                "type": "String",
+                "pk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "user_id",
+                "type": "String",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "target_type",
+                "type": "ForumTargetType",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "post_id",
+                "type": "String?",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "comment_id",
+                "type": "String?",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "reaction_type",
+                "type": "ForumReactionType",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "created_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "updated_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            }
+        ]
+    },
+    {
+        "id": "ForumReport",
+        "name": "ForumReport",
+        "group": "forum",
+        "x": 2030,
+        "y": 1222,
+        "fields": [
+            {
+                "name": "id",
+                "type": "String",
+                "pk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "reporter_id",
+                "type": "String",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "target_type",
+                "type": "ForumTargetType",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "post_id",
+                "type": "String?",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "comment_id",
+                "type": "String?",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "reason",
+                "type": "ForumReportReason",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "description",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "evidence_urls",
+                "type": "Json?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "status",
+                "type": "ForumReportStatus",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "resolved_by_id",
+                "type": "String?",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "admin_note",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "moderation_action",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "resolved_at",
+                "type": "DateTime?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "created_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "updated_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            }
+        ]
+    },
+    {
+        "id": "ForumBookmark",
+        "name": "ForumBookmark",
+        "group": "forum",
+        "x": 2030,
+        "y": 1618,
+        "fields": [
+            {
+                "name": "id",
+                "type": "String",
+                "pk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "user_id",
+                "type": "String",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "post_id",
+                "type": "String",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "note",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "created_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            }
+        ]
+    },
+    {
+        "id": "NewsCategory",
+        "name": "NewsCategory",
+        "group": "news",
+        "x": 2030,
+        "y": 1890,
+        "fields": [
+            {
+                "name": "id",
+                "type": "String",
+                "pk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "parent_id",
+                "type": "String?",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "name",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "slug",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": true
+            },
+            {
+                "name": "description",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "icon",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "color",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "cover_image_url",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "order_index",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "is_active",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "is_featured",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "meta_title",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "meta_description",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "meta_keywords",
+                "type": "String[]",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "canonical_url",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "og_image_url",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "is_indexable",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "created_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "updated_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            }
+        ]
+    },
+    {
+        "id": "NewsArticle",
+        "name": "NewsArticle",
+        "group": "news",
+        "x": 2030,
+        "y": 2286,
+        "fields": [
+            {
+                "name": "id",
+                "type": "String",
+                "pk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "category_id",
+                "type": "String",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "title",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "slug",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": true
+            },
+            {
+                "name": "excerpt",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "content",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "table_of_contents",
+                "type": "Json?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "thumbnail_url",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "cover_image_url",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "image_alt",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "image_caption",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "attachments",
+                "type": "Json?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "reading_time_minutes",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "word_count",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "view_count",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "like_count",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "share_count",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "bookmark_count",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "tags",
+                "type": "String[]",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "grade_levels",
+                "type": "Int[]",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "subject_slugs",
+                "type": "String[]",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "target_roles",
+                "type": "String[]",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "search_text",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "related_article_ids",
+                "type": "String[]",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "meta_title",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "meta_description",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "meta_keywords",
+                "type": "String[]",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "focus_keyword",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "canonical_url",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "og_title",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "og_description",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "og_image_url",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "structured_data",
+                "type": "Json?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "is_indexable",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "author_id",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "author_name",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "author_avatar",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "author_role",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "author_bio",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "source_name",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "source_url",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "status",
+                "type": "NewsStatus",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "is_featured",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "is_pinned",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "is_breaking",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "allow_comments",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "reviewer_id",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "rejected_reason",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "published_at",
+                "type": "DateTime?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "scheduled_at",
+                "type": "DateTime?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "last_edited_by",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "created_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "updated_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "deleted_at",
+                "type": "DateTime?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            }
+        ]
+    },
+    {
+        "id": "LeaderboardSeason",
+        "name": "LeaderboardSeason",
+        "group": "leaderboard",
+        "x": 2420,
+        "y": 800,
+        "fields": [
+            {
+                "name": "id",
+                "type": "String",
+                "pk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "code",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": true
+            },
+            {
+                "name": "name",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "description",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "status",
+                "type": "SeasonStatus",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "start_date",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "end_date",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "freeze_date",
+                "type": "DateTime?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "total_participants",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "total_gems_pool",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "is_frozen",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "scoring_multiplier",
+                "type": "Float",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "rules",
+                "type": "Json?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "rewards",
+                "type": "Json?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "settlement_date",
+                "type": "DateTime?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "distributed_gems",
+                "type": "Int?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "distribution_status",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "distributed_by",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "created_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "updated_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            }
+        ]
+    },
+    {
+        "id": "SeasonDistributionLog",
+        "name": "SeasonDistributionLog",
+        "group": "leaderboard",
+        "x": 2420,
+        "y": 1196,
+        "fields": [
+            {
+                "name": "id",
+                "type": "String",
+                "pk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "season_id",
+                "type": "String",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "season_name",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "season_code",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "settled_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "admin_name",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "admin_email",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "total_recipients",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "total_gems_distributed",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "status",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "top_winners",
+                "type": "Json?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "audit_notes",
+                "type": "String?",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "created_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            }
+        ]
+    },
+    {
+        "id": "Achievement",
+        "name": "Achievement",
+        "group": "leaderboard",
+        "x": 2420,
+        "y": 1592,
+        "fields": [
+            {
+                "name": "id",
+                "type": "String",
+                "pk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "code",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": true
+            },
+            {
+                "name": "title",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "description",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "icon",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "category",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "rule_type",
+                "type": "String",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "threshold",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "reward_diamonds",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "is_active",
+                "type": "Boolean",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "created_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            }
+        ]
+    },
+    {
+        "id": "UserAchievement",
+        "name": "UserAchievement",
+        "group": "leaderboard",
+        "x": 2420,
+        "y": 1988,
+        "fields": [
+            {
+                "name": "id",
+                "type": "String",
+                "pk": true,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "user_id",
+                "type": "String",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "achievement_id",
+                "type": "String",
+                "pk": false,
+                "fk": true,
+                "uk": false
+            },
+            {
+                "name": "progress",
+                "type": "Int",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            },
+            {
+                "name": "unlocked_at",
+                "type": "DateTime",
+                "pk": false,
+                "fk": false,
+                "uk": false
+            }
+        ]
     }
 ];
 
-    // RELATIONSHIPS WITH EXPLICIT CARDINALITY
     const RELATIONS = [
-      { from: 'User', to: 'SchoolMember', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'user_id' },
-      { from: 'School', to: 'SchoolMember', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'school_id' },
-      { from: 'User', to: 'TeacherProfile', card: '1:1', fromEnd: '1', toEnd: '1', label: 'user_id' },
-      { from: 'User', to: 'StudentProfile', card: '1:1', fromEnd: '1', toEnd: '1', label: 'user_id' },
-      { from: 'User', to: 'ParentProfile', card: '1:1', fromEnd: '1', toEnd: '1', label: 'user_id' },
-      { from: 'ParentProfile', to: 'ParentStudent', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'parent_id' },
-      { from: 'StudentProfile', to: 'ParentStudent', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'student_id' },
-      { from: 'User', to: 'School', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'owner_id' },
-      { from: 'User', to: 'Notification', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'user_id' },
-      { from: 'School', to: 'Department', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'school_id' },
-      { from: 'Department', to: 'TeacherProfile', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'department_id' },
-      { from: 'School', to: 'SchoolSubscription', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'school_id' },
-      { from: 'SubscriptionPackage', to: 'SchoolSubscription', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'package_id' },
-      { from: 'TeacherProfile', to: 'TeacherSubscription', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'teacher_id' },
-      { from: 'SubscriptionPackage', to: 'TeacherSubscription', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'package_id' },
-      { from: 'Category', to: 'Course', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'subject_id' },
-      { from: 'School', to: 'Course', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'school_id' },
-      { from: 'Department', to: 'Course', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'department_id' },
-      { from: 'TeacherProfile', to: 'Course', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'owner_id' },
-      { from: 'Course', to: 'Lesson', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'course_id' },
-      { from: 'Lesson', to: 'LessonMaterial', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'lesson_id' },
-      { from: 'School', to: 'Class', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'school_id' },
-      { from: 'TeacherProfile', to: 'Class', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'teacher_id' },
-      { from: 'Class', to: 'ClassEnrollment', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'class_id' },
-      { from: 'StudentProfile', to: 'ClassEnrollment', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'student_id' },
-      { from: 'Class', to: 'ClassSession', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'class_id' },
-      { from: 'TeacherProfile', to: 'ClassSession', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'teacher_id' },
-      { from: 'User', to: 'QuestionBank', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'owner_id' },
-      { from: 'School', to: 'QuestionBank', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'school_id' },
-      { from: 'QuestionBank', to: 'Question', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'bank_id' },
-      { from: 'Question', to: 'Answer', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'question_id' },
-      { from: 'StudentProfile', to: 'ExamSubmission', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'student_id' },
-      { from: 'QuestionBank', to: 'ExamSubmission', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'bank_id' },
-      { from: 'ExamSubmission', to: 'SubmissionAnswer', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'submission_id' },
-      { from: 'Question', to: 'SubmissionAnswer', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'question_id' },
-      { from: 'StudentProfile', to: 'StudentProgress', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'student_id' },
-      { from: 'Course', to: 'StudentProgress', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'course_id' },
-      { from: 'TeacherProfile', to: 'StoreItem', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'teacher_id' },
-      { from: 'StoreItem', to: 'StudentInventory', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'item_id' },
-      { from: 'StudentProfile', to: 'StudentInventory', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'student_id' },
-      { from: 'User', to: 'Order', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'user_id' },
-      { from: 'Order', to: 'Transaction', card: '1:N', fromEnd: '1', toEnd: 'N', label: 'order_id' }
-    ];
+    {
+        "from": "User",
+        "to": "StudentProfile",
+        "card": "1:1",
+        "fromEnd": "1",
+        "toEnd": "1",
+        "label": "user_id"
+    },
+    {
+        "from": "User",
+        "to": "SubscriptionPackage",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "creator_id"
+    },
+    {
+        "from": "Category",
+        "to": "Category",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "parent_id"
+    },
+    {
+        "from": "User",
+        "to": "QuestionBank",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "owner_id"
+    },
+    {
+        "from": "QuestionBank",
+        "to": "Question",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "bank_id"
+    },
+    {
+        "from": "Question",
+        "to": "Answer",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "question_id"
+    },
+    {
+        "from": "StudentProfile",
+        "to": "ExamSubmission",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "student_id"
+    },
+    {
+        "from": "QuestionBank",
+        "to": "ExamSubmission",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "bank_id"
+    },
+    {
+        "from": "ExamSubmission",
+        "to": "SubmissionAnswer",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "submission_id"
+    },
+    {
+        "from": "Question",
+        "to": "SubmissionAnswer",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "question_id"
+    },
+    {
+        "from": "Answer",
+        "to": "SubmissionAnswer",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "selected_answer_id"
+    },
+    {
+        "from": "User",
+        "to": "StoreItem",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "user_id"
+    },
+    {
+        "from": "StudentProfile",
+        "to": "StudentInventory",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "student_id"
+    },
+    {
+        "from": "StoreItem",
+        "to": "StudentInventory",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "item_id"
+    },
+    {
+        "from": "User",
+        "to": "Order",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "user_id"
+    },
+    {
+        "from": "User",
+        "to": "Order",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "seller_id"
+    },
+    {
+        "from": "SubscriptionPackage",
+        "to": "Order",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "subscription_id"
+    },
+    {
+        "from": "User",
+        "to": "Notification",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "user_id"
+    },
+    {
+        "from": "StudentProfile",
+        "to": "ExamPointLog",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "student_id"
+    },
+    {
+        "from": "StudentProfile",
+        "to": "StudentTopicMastery",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "student_id"
+    },
+    {
+        "from": "StudentProfile",
+        "to": "StudentRoadmapStep",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "student_id"
+    },
+    {
+        "from": "StudentProfile",
+        "to": "StudentBehaviorHistory",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "student_id"
+    },
+    {
+        "from": "StudentProfile",
+        "to": "StudentChapterProgress",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "student_id"
+    },
+    {
+        "from": "StudentProfile",
+        "to": "StudentSubjectDiagnostic",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "student_id"
+    },
+    {
+        "from": "User",
+        "to": "QuestionBugReport",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "reporter_id"
+    },
+    {
+        "from": "User",
+        "to": "QuestionBugReport",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "resolved_by_id"
+    },
+    {
+        "from": "StudentProfile",
+        "to": "StudentPoolCursor",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "student_id"
+    },
+    {
+        "from": "User",
+        "to": "ForumPost",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "author_id"
+    },
+    {
+        "from": "Category",
+        "to": "ForumPost",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "category_id"
+    },
+    {
+        "from": "ForumPost",
+        "to": "ForumComment",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "post_id"
+    },
+    {
+        "from": "User",
+        "to": "ForumComment",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "author_id"
+    },
+    {
+        "from": "User",
+        "to": "ForumComment",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "reply_to_user_id"
+    },
+    {
+        "from": "ForumComment",
+        "to": "ForumComment",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "parent_id"
+    },
+    {
+        "from": "User",
+        "to": "ForumReaction",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "user_id"
+    },
+    {
+        "from": "ForumPost",
+        "to": "ForumReaction",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "post_id"
+    },
+    {
+        "from": "ForumComment",
+        "to": "ForumReaction",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "comment_id"
+    },
+    {
+        "from": "User",
+        "to": "ForumReport",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "reporter_id"
+    },
+    {
+        "from": "User",
+        "to": "ForumReport",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "resolved_by_id"
+    },
+    {
+        "from": "ForumPost",
+        "to": "ForumReport",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "post_id"
+    },
+    {
+        "from": "ForumComment",
+        "to": "ForumReport",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "comment_id"
+    },
+    {
+        "from": "User",
+        "to": "ForumBookmark",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "user_id"
+    },
+    {
+        "from": "ForumPost",
+        "to": "ForumBookmark",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "post_id"
+    },
+    {
+        "from": "NewsCategory",
+        "to": "NewsCategory",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "parent_id"
+    },
+    {
+        "from": "NewsCategory",
+        "to": "NewsArticle",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "category_id"
+    },
+    {
+        "from": "LeaderboardSeason",
+        "to": "SeasonDistributionLog",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "season_id"
+    },
+    {
+        "from": "User",
+        "to": "UserAchievement",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "user_id"
+    },
+    {
+        "from": "Achievement",
+        "to": "UserAchievement",
+        "card": "1:N",
+        "fromEnd": "1",
+        "toEnd": "N",
+        "label": "achievement_id"
+    }
+];
 
-    // -------------------------------------------------------------
-    // RENDER TABLES & CONNECTIONS WITH CROW'S FOOT & LABELS
-    // -------------------------------------------------------------
     const container = document.getElementById('tables-container');
     const wiresContainer = document.getElementById('wires-container');
     const viewport = document.getElementById('viewport');
     const canvas = document.getElementById('canvas');
 
     const groupColors = {
-      core: 'var(--c-core)',
-      school: 'var(--c-school)',
-      academic: 'var(--c-academic)',
-      saas: 'var(--c-saas)',
-      store: 'var(--c-store)',
-      order: 'var(--c-order)'
+      identity: '#2563eb',
+      saas: '#db2777',
+      qbank: '#d97706',
+      exam: '#ea580c',
+      roadmap: '#0284c7',
+      ai: '#0891b2',
+      analytics: '#64748b',
+      store: '#7c3aed',
+      leaderboard: '#10b981',
+      notification: '#14b8a6',
+      forum: '#f97316',
+      news: '#eab308'
     };
 
-    // Render HTML Cards
     TABLES.forEach(table => {
       const card = document.createElement('div');
       card.id = `card-${table.id}`;
+      card.dataset.group = table.group;
       card.className = 'table-card';
       card.style.left = `${table.x}px`;
       card.style.top = `${table.y}px`;
@@ -2839,14 +5478,26 @@
       container.appendChild(card);
     });
 
-    // Render Dynamic SVG Curves with Crow's Foot & Badges
     function drawConnections() {
       wiresContainer.innerHTML = '';
+      const pairTotals = {};
+      RELATIONS.forEach(rel => {
+        const key = `${rel.from}__${rel.to}`;
+        pairTotals[key] = (pairTotals[key] || 0) + 1;
+      });
+      const pairIndex = {};
 
-      RELATIONS.forEach((rel) => {
+      RELATIONS.forEach((rel, idx) => {
         const fromCard = document.getElementById(`card-${rel.from}`);
         const toCard = document.getElementById(`card-${rel.to}`);
         if (!fromCard || !toCard) return;
+        if (fromCard.style.display === 'none' || toCard.style.display === 'none') return;
+
+        const key = `${rel.from}__${rel.to}`;
+        const curIdx = pairIndex[key] || 0;
+        pairIndex[key] = curIdx + 1;
+        const totalForPair = pairTotals[key];
+        const multiOffset = totalForPair > 1 ? (curIdx - (totalForPair - 1) / 2) * 34 : 0;
 
         const fromRect = {
           x: parseFloat(fromCard.style.left),
@@ -2854,7 +5505,6 @@
           w: fromCard.offsetWidth,
           h: fromCard.offsetHeight
         };
-
         const toRect = {
           x: parseFloat(toCard.style.left),
           y: parseFloat(toCard.style.top),
@@ -2862,68 +5512,66 @@
           h: toCard.offsetHeight
         };
 
-        // Determine best connector sides (left or right)
-        let startX, startY, endX, endY;
+        let d = '';
+        let midX = 0;
+        let midY = 0;
 
-        if (fromRect.x + fromRect.w < toRect.x) {
-          // From is strictly on the left of To
-          startX = fromRect.x + fromRect.w;
-          startY = fromRect.y + fromRect.h / 2;
-          endX = toRect.x;
-          endY = toRect.y + toRect.h / 2;
-        } else if (toRect.x + toRect.w < fromRect.x) {
-          // From is strictly on the right of To
-          startX = fromRect.x;
-          startY = fromRect.y + fromRect.h / 2;
-          endX = toRect.x + toRect.w;
-          endY = toRect.y + toRect.h / 2;
+        if (rel.from === rel.to) {
+          const sx = fromRect.x + fromRect.w;
+          const sy = fromRect.y + fromRect.h * 0.35;
+          const ex = fromRect.x + fromRect.w;
+          const ey = fromRect.y + fromRect.h * 0.68;
+          const loopOut = 72;
+          d = `M ${sx} ${sy} C ${sx + loopOut} ${sy - 18}, ${ex + loopOut} ${ey + 18}, ${ex} ${ey}`;
+          midX = sx + loopOut * 0.78;
+          midY = (sy + ey) / 2;
         } else {
-          // Stacked vertically
-          startX = fromRect.x + fromRect.w / 2;
-          startY = fromRect.y > toRect.y ? fromRect.y : fromRect.y + fromRect.h;
-          endX = toRect.x + toRect.w / 2;
-          endY = fromRect.y > toRect.y ? toRect.y + toRect.h : toRect.y;
+          let startX, startY, endX, endY;
+          if (fromRect.x + fromRect.w < toRect.x) {
+            startX = fromRect.x + fromRect.w;
+            startY = fromRect.y + fromRect.h / 2 + multiOffset * 0.35;
+            endX = toRect.x;
+            endY = toRect.y + toRect.h / 2 + multiOffset * 0.35;
+          } else if (toRect.x + toRect.w < fromRect.x) {
+            startX = fromRect.x;
+            startY = fromRect.y + fromRect.h / 2 + multiOffset * 0.35;
+            endX = toRect.x + toRect.w;
+            endY = toRect.y + toRect.h / 2 + multiOffset * 0.35;
+          } else {
+            startX = fromRect.x + fromRect.w / 2 + multiOffset * 0.6;
+            startY = fromRect.y > toRect.y ? fromRect.y : fromRect.y + fromRect.h;
+            endX = toRect.x + toRect.w / 2 + multiOffset * 0.6;
+            endY = fromRect.y > toRect.y ? toRect.y + toRect.h : toRect.y;
+          }
+
+          const dx = Math.abs(endX - startX) * 0.5;
+          const cx1 = startX < endX ? startX + dx : startX - dx;
+          const cy1 = startY + multiOffset;
+          const cx2 = startX < endX ? endX - dx : endX + dx;
+          const cy2 = endY + multiOffset;
+          d = `M ${startX} ${startY} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${endX} ${endY}`;
+          midX = 0.125 * startX + 0.375 * cx1 + 0.375 * cx2 + 0.125 * endX;
+          midY = 0.125 * startY + 0.375 * cy1 + 0.375 * cy2 + 0.125 * endY;
         }
 
-        // Calculate smooth cubic bezier control points
-        const dx = Math.abs(endX - startX) * 0.5;
-        const dy = Math.abs(endY - startY) * 0.5;
-        const cx1 = startX < endX ? startX + dx : startX - dx;
-        const cy1 = startY;
-        const cx2 = startX < endX ? endX - dx : endX + dx;
-        const cy2 = endY;
-
-        // Group element for the wire
         const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         g.setAttribute('class', 'wire-group');
-        g.setAttribute('id', `wire-group-${rel.from}-${rel.to}`);
+        g.setAttribute('id', `wire-group-${idx}`);
+        g.setAttribute('data-from', rel.from);
+        g.setAttribute('data-to', rel.to);
+        g.setAttribute('data-to-end', rel.toEnd);
 
-        // Main Path
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', `M ${startX} ${startY} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${endX} ${endY}`);
+        path.setAttribute('d', d);
         path.setAttribute('class', 'wire-main');
-        path.setAttribute('id', `wire-${rel.from}-${rel.to}`);
-
-        // Crow's foot markers
         path.setAttribute('marker-start', 'url(#mark-one)');
-        if (rel.toEnd === '1') {
-          path.setAttribute('marker-end', 'url(#mark-one)');
-        } else {
-          path.setAttribute('marker-end', 'url(#mark-many)');
-        }
-
+        path.setAttribute('marker-end', rel.toEnd === '1' ? 'url(#mark-one)' : 'url(#mark-many)');
         g.appendChild(path);
 
-        // Midpoint coordinates on the cubic bezier curve (at t = 0.5)
-        const midX = 0.125 * startX + 0.375 * cx1 + 0.375 * cx2 + 0.125 * endX;
-        const midY = 0.125 * startY + 0.375 * cy1 + 0.375 * cy2 + 0.125 * endY;
-
-        // Relationship Pill Badge (Showing 1:N or 1:1 and Foreign Key)
         const badgeG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         badgeG.setAttribute('class', 'rel-badge');
-
         const badgeText = `${rel.card} [${rel.label}]`;
-        const textWidth = badgeText.length * 6.5 + 14;
+        const textWidth = badgeText.length * 6.4 + 14;
 
         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         rect.setAttribute('x', midX - textWidth / 2);
@@ -2940,10 +5588,9 @@
         badgeG.appendChild(text);
         g.appendChild(badgeG);
 
-        // Click on line to highlight relation
         g.addEventListener('click', (e) => {
           e.stopPropagation();
-          highlightWireGroup(rel.from, rel.to);
+          highlightWireGroup(idx, rel.from, rel.to);
         });
 
         wiresContainer.appendChild(g);
@@ -2952,9 +5599,6 @@
 
     drawConnections();
 
-    // -------------------------------------------------------------
-    // DRAG TABLE CARDS (Tách bảng, tránh đè dây)
-    // -------------------------------------------------------------
     let activeCard = null;
     let dragStartX = 0;
     let dragStartY = 0;
@@ -2963,18 +5607,14 @@
 
     document.querySelectorAll('.table-card').forEach(card => {
       const header = card.querySelector('.table-header');
-
       header.addEventListener('mousedown', (e) => {
         e.stopPropagation();
         activeCard = card;
         card.classList.add('dragging');
-
         dragStartX = e.clientX;
         dragStartY = e.clientY;
         cardInitX = parseFloat(card.style.left) || 0;
         cardInitY = parseFloat(card.style.top) || 0;
-
-        // Highlight connected wires
         highlightTable(card.id.replace('card-', ''));
       });
     });
@@ -2983,10 +5623,8 @@
       if (activeCard) {
         const dx = (e.clientX - dragStartX) / zoomScale;
         const dy = (e.clientY - dragStartY) / zoomScale;
-
         activeCard.style.left = `${cardInitX + dx}px`;
         activeCard.style.top = `${cardInitY + dy}px`;
-
         drawConnections();
       } else if (isPanning) {
         panX = e.clientX - panStartX;
@@ -3006,32 +5644,24 @@
       }
     });
 
-    // -------------------------------------------------------------
-    // PAN & ZOOM CANVAS
-    // -------------------------------------------------------------
-    let zoomScale = 0.85;
-    let panX = 100;
-    let panY = 50;
+    let zoomScale = 0.45;
+    let panX = 40;
+    let panY = 80;
     let isPanning = false;
     let panStartX = 0;
     let panStartY = 0;
 
     const urlParams = new URLSearchParams(window.location.search);
 
-    // -------------------------------------------------------------
-    // THEME SWITCHER (DARK / LIGHT) & LOCALSTORAGE
-    // -------------------------------------------------------------
     function updateThemeUI(isLight) {
       const icon = isLight ? '🌙' : '☀️';
       const text = isLight ? 'Nền tối' : 'Nền sáng';
-      
       const headerIcon = document.getElementById('theme-icon-header');
       const headerText = document.getElementById('theme-text-header');
       if (headerIcon && headerText) {
         headerIcon.textContent = icon;
         headerText.textContent = text;
       }
-      
       const floatIcon = document.getElementById('theme-icon-float');
       const floatText = document.getElementById('theme-text-float');
       if (floatIcon && floatText) {
@@ -3050,63 +5680,66 @@
         try { localStorage.setItem('schoolify_erd_theme', 'dark'); } catch (e) {}
       }
       updateThemeUI(isLight);
-      if (typeof drawConnections === 'function') {
-        drawConnections();
-      }
+      if (typeof drawConnections === 'function') drawConnections();
     }
 
     function toggleTheme() {
-      const isLight = document.body.classList.contains('light-theme');
-      setTheme(isLight ? 'dark' : 'light');
+      setTheme(document.body.classList.contains('light-theme') ? 'dark' : 'light');
     }
 
-    const btnHeaderTheme = document.getElementById('btn-theme-toggle-header');
-    if (btnHeaderTheme) {
-      btnHeaderTheme.addEventListener('click', toggleTheme);
-    }
+    document.getElementById('btn-theme-toggle-header')?.addEventListener('click', toggleTheme);
+    document.getElementById('btn-theme-toggle-float')?.addEventListener('click', toggleTheme);
 
-    const btnFloatTheme = document.getElementById('btn-theme-toggle-float');
-    if (btnFloatTheme) {
-      btnFloatTheme.addEventListener('click', toggleTheme);
-    }
-
-    // Initialize Theme: URL param > localStorage > default dark
     let initialTheme = 'dark';
     try {
-      const savedTheme = localStorage.getItem('schoolify_erd_theme');
-      if (savedTheme === 'light') initialTheme = 'light';
+      if (localStorage.getItem('schoolify_erd_theme') === 'light') initialTheme = 'light';
     } catch (e) {}
-
-    if (urlParams.get('theme') === 'light') {
-      initialTheme = 'light';
-    } else if (urlParams.get('theme') === 'dark') {
-      initialTheme = 'dark';
-    }
+    if (urlParams.get('theme') === 'light') initialTheme = 'light';
+    else if (urlParams.get('theme') === 'dark') initialTheme = 'dark';
 
     setTheme(initialTheme);
-    if (urlParams.has('clean') || urlParams.has('export')) {
-      document.body.classList.add('clean-mode');
-    }
-    if (urlParams.has('scale')) {
-      zoomScale = parseFloat(urlParams.get('scale'));
-    }
-    if (urlParams.has('panX')) {
-      panX = parseInt(urlParams.get('panX'), 10);
-    }
-    if (urlParams.has('panY')) {
-      panY = parseInt(urlParams.get('panY'), 10);
-    }
+    if (urlParams.has('clean') || urlParams.has('export')) document.body.classList.add('clean-mode');
+    if (urlParams.has('scale')) zoomScale = parseFloat(urlParams.get('scale'));
+    if (urlParams.has('panX')) panX = parseInt(urlParams.get('panX'), 10);
+    if (urlParams.has('panY')) panY = parseInt(urlParams.get('panY'), 10);
 
     function applyTransform() {
       canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomScale})`;
       document.getElementById('zoom-label').innerText = Math.round(zoomScale * 100) + '%';
-      
-      // Infinite Grid pattern follows pan & zoom smoothly
       viewport.style.backgroundPosition = `${panX}px ${panY}px`;
       viewport.style.backgroundSize = `${32 * zoomScale}px ${32 * zoomScale}px`;
     }
 
-    applyTransform();
+    function fitAllVisibleCards() {
+      const visibleCards = Array.from(document.querySelectorAll('.table-card')).filter(c => c.style.display !== 'none');
+      if (!visibleCards.length) return;
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      visibleCards.forEach(c => {
+        const x = parseFloat(c.style.left) || 0;
+        const y = parseFloat(c.style.top) || 0;
+        const w = c.offsetWidth || 300;
+        const h = c.offsetHeight || 220;
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x + w);
+        maxY = Math.max(maxY, y + h);
+      });
+      const vw = viewport.clientWidth || window.innerWidth;
+      const vh = viewport.clientHeight || (window.innerHeight - 62);
+      const pad = 70;
+      const scaleX = (vw - pad * 2) / Math.max(1, maxX - minX);
+      const scaleY = (vh - pad * 2) / Math.max(1, maxY - minY);
+      zoomScale = Math.min(1.0, Math.max(0.18, Math.min(scaleX, scaleY)));
+      panX = (vw - (maxX - minX) * zoomScale) / 2 - minX * zoomScale;
+      panY = (vh - (maxY - minY) * zoomScale) / 2 - minY * zoomScale;
+      applyTransform();
+    }
+
+    if (!urlParams.has('scale')) {
+      fitAllVisibleCards();
+    } else {
+      applyTransform();
+    }
 
     viewport.addEventListener('mousedown', (e) => {
       if (e.target.closest('.table-card')) return;
@@ -3114,8 +5747,6 @@
       viewport.classList.add('panning');
       panStartX = e.clientX - panX;
       panStartY = e.clientY - panY;
-
-      // Clear highlights when clicking background
       document.querySelectorAll('.table-card').forEach(c => c.classList.remove('highlighted'));
       document.querySelectorAll('.wire-group').forEach(w => w.classList.remove('active'));
     });
@@ -3123,37 +5754,25 @@
     viewport.addEventListener('wheel', (e) => {
       e.preventDefault();
       const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-      const newScale = Math.min(Math.max(zoomScale * zoomFactor, 0.15), 3.0);
-
-      // Zoom towards mouse pointer
+      const newScale = Math.min(Math.max(zoomScale * zoomFactor, 0.12), 3.0);
       const rect = viewport.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
-
       panX = mouseX - (mouseX - panX) * (newScale / zoomScale);
       panY = mouseY - (mouseY - panY) * (newScale / zoomScale);
       zoomScale = newScale;
-
       applyTransform();
     }, { passive: false });
 
-    // Toolbar actions
     document.getElementById('btn-zoom-in').addEventListener('click', () => {
       zoomScale = Math.min(zoomScale * 1.2, 3.0);
       applyTransform();
     });
-
     document.getElementById('btn-zoom-out').addEventListener('click', () => {
-      zoomScale = Math.max(zoomScale * 0.8, 0.15);
+      zoomScale = Math.max(zoomScale * 0.8, 0.12);
       applyTransform();
     });
-
-    document.getElementById('btn-fit').addEventListener('click', () => {
-      zoomScale = 0.52;
-      panX = 60;
-      panY = 30;
-      applyTransform();
-    });
+    document.getElementById('btn-fit').addEventListener('click', fitAllVisibleCards);
 
     document.getElementById('btn-reset-pos').addEventListener('click', () => {
       TABLES.forEach(table => {
@@ -3164,53 +5783,67 @@
         }
       });
       drawConnections();
-      zoomScale = 0.85;
-      panX = 100;
-      panY = 50;
-      applyTransform();
+      fitAllVisibleCards();
     });
 
-    // -------------------------------------------------------------
-    // HIGHLIGHTS & SEARCH
-    // -------------------------------------------------------------
+    document.querySelectorAll('#group-filter-bar .filter-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#group-filter-bar .filter-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filterVal = btn.dataset.group || 'ALL';
+        const allowed = filterVal === 'ALL' ? null : new Set(filterVal.split(','));
+        document.querySelectorAll('.table-card').forEach(c => {
+          const show = !allowed || allowed.has(c.dataset.group);
+          c.style.display = show ? 'flex' : 'none';
+          c.style.opacity = '1';
+          c.classList.remove('highlighted');
+        });
+        drawConnections();
+        fitAllVisibleCards();
+      });
+    });
+
     function highlightTable(tableId) {
       document.querySelectorAll('.table-card').forEach(c => c.classList.remove('highlighted'));
-      document.querySelectorAll('.wire-group').forEach(w => w.classList.remove('active'));
+      document.querySelectorAll('.wire-group').forEach(w => {
+        w.classList.remove('active');
+        const p = w.querySelector('.wire-main');
+        if (p) {
+          p.setAttribute('marker-start', 'url(#mark-one)');
+          p.setAttribute('marker-end', w.dataset.toEnd === '1' ? 'url(#mark-one)' : 'url(#mark-many)');
+        }
+      });
 
       const targetCard = document.getElementById(`card-${tableId}`);
-      if (targetCard) {
-        targetCard.classList.add('highlighted');
-      }
+      if (targetCard) targetCard.classList.add('highlighted');
 
-      // Highlight wires connected to this table
-      RELATIONS.forEach(rel => {
-        if (rel.from === tableId || rel.to === tableId) {
-          const wireGroup = document.getElementById(`wire-group-${rel.from}-${rel.to}`);
-          if (wireGroup) {
-            wireGroup.classList.add('active');
-            const path = wireGroup.querySelector('.wire-main');
-            path.setAttribute('marker-start', 'url(#mark-one-active)');
-            path.setAttribute('marker-end', rel.toEnd === '1' ? 'url(#mark-one-active)' : 'url(#mark-many-active)');
+      document.querySelectorAll('.wire-group').forEach(wireGroup => {
+        if (wireGroup.dataset.from === tableId || wireGroup.dataset.to === tableId) {
+          wireGroup.classList.add('active');
+          const p = wireGroup.querySelector('.wire-main');
+          if (p) {
+            p.setAttribute('marker-start', 'url(#mark-one-active)');
+            p.setAttribute('marker-end', wireGroup.dataset.toEnd === '1' ? 'url(#mark-one-active)' : 'url(#mark-many-active)');
           }
         }
       });
     }
 
-    function highlightWireGroup(fromId, toId) {
+    function highlightWireGroup(idx, fromId, toId) {
       document.querySelectorAll('.table-card').forEach(c => c.classList.remove('highlighted'));
       document.querySelectorAll('.wire-group').forEach(w => w.classList.remove('active'));
 
-      const fromCard = document.getElementById(`card-${fromId}`);
-      const toCard = document.getElementById(`card-${toId}`);
-      if (fromCard) fromCard.classList.add('highlighted');
-      if (toCard) toCard.classList.add('highlighted');
+      document.getElementById(`card-${fromId}`)?.classList.add('highlighted');
+      document.getElementById(`card-${toId}`)?.classList.add('highlighted');
 
-      const wireGroup = document.getElementById(`wire-group-${fromId}-${toId}`);
+      const wireGroup = document.getElementById(`wire-group-${idx}`);
       if (wireGroup) {
         wireGroup.classList.add('active');
-        const path = wireGroup.querySelector('.wire-main');
-        path.setAttribute('marker-start', 'url(#mark-one-active)');
-        path.setAttribute('marker-end', 'url(#mark-many-active)');
+        const p = wireGroup.querySelector('.wire-main');
+        if (p) {
+          p.setAttribute('marker-start', 'url(#mark-one-active)');
+          p.setAttribute('marker-end', wireGroup.dataset.toEnd === '1' ? 'url(#mark-one-active)' : 'url(#mark-many-active)');
+        }
       }
     }
 
@@ -3226,9 +5859,9 @@
       }
 
       let firstMatch = null;
-
       TABLES.forEach(table => {
         const card = document.getElementById(`card-${table.id}`);
+        if (!card || card.style.display === 'none') return;
         const match = table.name.toLowerCase().includes(q) || table.fields.some(f => f.name.toLowerCase().includes(q));
         if (match) {
           card.style.opacity = '1';
@@ -3239,10 +5872,7 @@
           card.classList.remove('highlighted');
         }
       });
-
-      if (firstMatch) {
-        highlightTable(firstMatch.id);
-      }
+      if (firstMatch) highlightTable(firstMatch.id);
     });
   </script>
 </body>

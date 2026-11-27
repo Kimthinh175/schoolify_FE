@@ -1510,19 +1510,19 @@ export default function AdminBehaviorAnalyticsPage() {
                 key={subj.slug}
                 className="p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-800 hover:border-indigo-400 transition-all"
               >
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
                     <span
                       className="w-3 h-3 rounded-full shrink-0"
                       style={{ backgroundColor: subj.color }}
                     />
-                    <span className="font-extrabold text-sm text-slate-900 dark:text-white truncate">
+                    <span className="font-extrabold text-sm text-slate-900 dark:text-white whitespace-nowrap">
                       {subj.name}
                     </span>
                   </div>
                   <Badge
                     variant="secondary"
-                    className="font-extrabold text-xs text-slate-900 dark:text-white shrink-0"
+                    className="font-extrabold text-xs text-slate-900 dark:text-white shrink-0 whitespace-nowrap"
                   >
                     {formatNumber(subj.count)} câu ({subj.percentage}%)
                   </Badge>
@@ -1598,10 +1598,6 @@ export default function AdminBehaviorAnalyticsPage() {
               </div>
             </div>
             <div className="flex justify-between pt-0.5">
-              <span>• Giáo viên &amp; Chuyên gia:</span>
-              <b className="text-slate-900 dark:text-white">{everything?.users?.teachersCount || 0}</b>
-            </div>
-            <div className="flex justify-between">
               <span>• Quản trị viên (Admin):</span>
               <b className="text-slate-900 dark:text-white">{everything?.users?.adminsCount || 0}</b>
             </div>
@@ -1657,10 +1653,6 @@ export default function AdminBehaviorAnalyticsPage() {
             <div className="flex justify-between">
               <span>• Dùng giải mẫu AI trong bài:</span>
               <b>{everything?.aiAndAdaptiveLearning?.usedAiExampleCount || 0} lượt</b>
-            </div>
-            <div className="flex justify-between">
-              <span>• Khóa học &amp; Bài giảng số:</span>
-              <b>{everything?.contentAndCourses?.totalCourses || 0} khóa / {everything?.contentAndCourses?.totalLessons || 0} bài</b>
             </div>
           </div>
         </Card>

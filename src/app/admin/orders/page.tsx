@@ -530,13 +530,13 @@ export default function AdminOrdersPage() {
           <Table>
             <TableHeader className="bg-slate-50/70 dark:bg-slate-800/40 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               <TableRow className="border-b border-slate-200/70 dark:border-slate-800">
-                <TableHead className="py-3 px-4">Mã Hóa Đơn</TableHead>
-                <TableHead className="py-3 px-4">Khách Hàng</TableHead>
-                <TableHead className="py-3 px-4">Gói Dịch Vụ</TableHead>
-                <TableHead className="py-3 px-4">Số Tiền</TableHead>
-                <TableHead className="py-3 px-4">Thời Gian</TableHead>
-                <TableHead className="py-3 px-4 text-center">Trạng Thái</TableHead>
-                <TableHead className="py-3 px-4 text-right">Thao Tác</TableHead>
+                <TableHead className="py-3 px-3 whitespace-nowrap">Mã Hóa Đơn</TableHead>
+                <TableHead className="py-3 px-3 whitespace-nowrap">Khách Hàng</TableHead>
+                <TableHead className="py-3 px-3 whitespace-nowrap">Gói Dịch Vụ</TableHead>
+                <TableHead className="py-3 px-3 whitespace-nowrap">Số Tiền</TableHead>
+                <TableHead className="py-3 px-3 whitespace-nowrap">Thời Gian</TableHead>
+                <TableHead className="py-3 px-3 text-center whitespace-nowrap">Trạng Thái</TableHead>
+                <TableHead className="py-3 px-3 text-right whitespace-nowrap">Thao Tác</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
@@ -551,12 +551,12 @@ export default function AdminOrdersPage() {
                       className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition-colors"
                     >
                       {/* Mã đơn */}
-                      <TableCell className="py-3.5 px-4 font-mono font-bold text-slate-900 dark:text-white">
+                      <TableCell className="py-3.5 px-3 font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap">
                         #{order.code}
                       </TableCell>
 
                       {/* Khách hàng */}
-                      <TableCell className="py-3.5 px-4">
+                      <TableCell className="py-3.5 px-3">
                         <div className="font-semibold text-slate-900 dark:text-white">
                           {order.buyer_name || 'Học sinh'}
                         </div>
@@ -568,8 +568,8 @@ export default function AdminOrdersPage() {
                       </TableCell>
 
                       {/* Tên gói */}
-                      <TableCell className="py-3.5 px-4">
-                        <span className="font-medium text-slate-800 dark:text-slate-200 block truncate max-w-[220px]">
+                      <TableCell className="py-3.5 px-3">
+                        <span className="font-medium text-slate-800 dark:text-slate-200 block truncate max-w-[200px]">
                           {order.item_name_snapshot || 'Gói SaaS'}
                         </span>
                         <span className="text-[10px] text-slate-400">
@@ -578,19 +578,19 @@ export default function AdminOrdersPage() {
                       </TableCell>
 
                       {/* Số tiền */}
-                      <TableCell className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
+                      <TableCell className="py-3.5 px-3 font-bold text-slate-900 dark:text-white whitespace-nowrap">
                         {formatVND(Number(order.item_price_snapshot || 0))}
                       </TableCell>
 
                       {/* Ngày tạo */}
-                      <TableCell className="py-3.5 px-4 text-[11px] text-slate-500 dark:text-slate-400 lg:whitespace-nowrap">
+                      <TableCell className="py-3.5 px-3 text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
                         {formatDate(order.created_at)}
                       </TableCell>
 
                       {/* Trạng thái */}
-                      <TableCell className="py-3.5 px-4 text-center">
+                      <TableCell className="py-3.5 px-3 text-center whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${
                             isPaid
                               ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
                               : isCancelled
@@ -599,18 +599,18 @@ export default function AdminOrdersPage() {
                           }`}
                         >
                           {isPaid ? (
-                            <CheckCircle2 className="w-3 h-3" />
+                            <CheckCircle2 className="w-3 h-3 shrink-0" />
                           ) : isCancelled ? (
-                            <XCircle className="w-3 h-3" />
+                            <XCircle className="w-3 h-3 shrink-0" />
                           ) : (
-                            <Clock className="w-3 h-3" />
+                            <Clock className="w-3 h-3 shrink-0" />
                           )}
                           {isPaid ? 'ĐÃ THU TIỀN' : isCancelled ? 'ĐÃ HỦY' : 'CHỜ XÁC NHẬN'}
                         </span>
                       </TableCell>
 
                       {/* Thao tác */}
-                      <TableCell className="py-3.5 px-4 text-right">
+                      <TableCell className="py-3.5 px-3 text-right whitespace-nowrap">
                         <div className="inline-flex items-center gap-1.5">
                           <Button
                             size="sm"

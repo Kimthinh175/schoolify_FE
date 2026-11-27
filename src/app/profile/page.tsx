@@ -24,7 +24,11 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
 import { useAuthStore } from '@/store/auth.store';
-import { usersService } from '@/services/users.service';
+import {
+  usersService,
+  getLocalProfileMetadata,
+  normalizeGradeLevelLabel,
+} from '@/services/users.service';
 import { useRouter } from 'next/navigation';
 
 const PRESET_AVATARS = [
@@ -116,6 +120,9 @@ export default function ProfileSettingsPage() {
   // Đồng bộ thông tin từ AuthStore khi mount hoặc khi user thay đổi
   React.useEffect(() => {
     if (user) {
+      const sp = (user as any)?.student_profile || {};
+      const localMeta = getLocalProfileMetadata(user.id);
+
       setFullname(user.fullname || '');
       setEmail(user.email || '');
       setPhone(user.phone || '');
@@ -126,10 +133,23 @@ export default function ProfileSettingsPage() {
           ''
       );
       const studentGrade =
-        (user as any)?.student_profile?.grade_level ||
+        sp.grade_level ||
         (user as any)?.gradeLevel ||
         'Lớp 12';
-      setGradeLevel(studentGrade);
+      setGradeLevel(normalizeGradeLevelLabel(studentGrade));
+      setAddress(
+        sp.province ||
+          (user as any)?.province ||
+          localMeta.province ||
+          'TP. Hồ Chí Minh, Việt Nam'
+      );
+      setBio(
+        sp.bio ||
+          (user as any)?.teacher_profile?.bio ||
+          (user as any)?.bio ||
+          localMeta.bio ||
+          ''
+      );
       setCustomAvatarInput(user.avatar_url || (user as any)?.avatarUrl || (user as any)?.avatar || '');
     }
   }, [user]);
@@ -155,30 +175,30 @@ export default function ProfileSettingsPage() {
         phone: phone.trim() || undefined,
         avatar_url: avatarUrl.trim() || undefined,
         grade_level: gradeLevel,
+        province: address.trim() || undefined,
+        bio: bio.trim() || undefined,
       });
 
-      if (updated) {
-        // Cập nhật Auth Store ngay lập tức để Header và các trang khác đồng bộ
-        updateUser({
-          fullname: updated.fullname || fullname.trim(),
-          phone: updated.phone ?? (phone.trim() || undefined),
-          avatar_url: updated.avatar_url ?? (avatarUrl.trim() || undefined),
-          ...((user as any)?.student_profile
-            ? {
-                student_profile: {
-                  ...(user as any).student_profile,
-                  grade_level: updated.gradeLevel || gradeLevel,
-                },
-              }
-            : {}),
-        } as any);
-        await fetchMe().catch(() => {});
+      const currentSp = (user as any)?.student_profile || {};
+      updateUser({
+        fullname: updated?.fullname || fullname.trim(),
+        phone: updated?.phone ?? (phone.trim() || undefined),
+        avatar_url: updated?.avatar_url ?? (avatarUrl.trim() || undefined),
+        ...((user as any)?.student_profile
+          ? {
+              student_profile: {
+                ...currentSp,
+                grade_level: updated?.gradeLevel || gradeLevel,
+                province: address.trim() || currentSp.province || null,
+                bio: bio.trim() || currentSp.bio || null,
+              },
+            }
+          : {}),
+      } as any);
+      await fetchMe().catch(() => {});
 
-        setSavedSuccess(true);
-        setTimeout(() => setSavedSuccess(false), 3500);
-      } else {
-        setErrorMsg('Không thể lưu hồ sơ lên máy chủ. Vui lòng thử lại!');
-      }
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 3500);
     } catch (err: any) {
       setErrorMsg(err?.message || 'Có lỗi xảy ra trong quá trình cập nhật hồ sơ');
     } finally {
@@ -209,7 +229,7 @@ export default function ProfileSettingsPage() {
       <div>
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E6F8FC] dark:bg-[#00B8DD]/15 text-xs font-bold text-[#007D99] dark:text-[#00B8DD] mb-2">
           <User className="w-3.5 h-3.5 text-[#00B8DD]" />
-          <span>Đợt 4 — Hồ Sơ Cá Nhân</span>
+          <span>Hồ Sơ Học Sinh K-12</span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
           Chỉnh Sửa Hồ Sơ Cá Nhân

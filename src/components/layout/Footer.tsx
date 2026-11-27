@@ -13,28 +13,24 @@ import {
 } from 'lucide-react';
 
 const FOOTER_COLUMNS = {
-  school: [
-    { label: 'Gói Bản Quyền SaaS (B2B)', href: '/pricing' },
-    { label: 'Tuyển Sinh & Quản Lý Học Vụ', href: '/login' },
-    { label: 'Sơ Đồ Tổ Bộ Môn & Quotas', href: '/login' },
-    { label: 'Sổ Liên Lạc Điện Tử K-12', href: '/login' },
-    { label: 'Thu Học Phí Tự Động VietQR', href: '/login' },
+  practice: [
+    { label: 'Luyện Đề Trắc Nghiệm 2025', href: '/luyen-thi' },
+    { label: 'Gia Sư AI Step-by-Step', href: '/luyen-thi' },
+    { label: 'Lộ Trình Học Tập Cá Nhân Hóa', href: '/student/roadmap' },
+    { label: 'Bảng Vàng Thi Đua K-12', href: '/leaderboard' },
+    { label: 'Tin Tức & Mẹo Ôn Thi', href: '/news' },
   ],
-  teacher: [
-    { label: 'Course Builder Đa Phương Tiện', href: '/login' },
-    { label: 'Khảo Thí & Luyện Đề Chuẩn GDPT 2018', href: '/login' },
-    { label: 'Kinh Doanh Trên Marketplace', href: '/courses' },
-    { label: 'Đối Soát & Rút Tiền Ngân Hàng', href: '/login' },
-    { label: 'Tạo Quà Thưởng Gamification', href: '/login' },
+  courses: [
+    { label: 'Luyện Đề Toán Học', href: '/student/practice/toan-hoc/basic' },
+    { label: 'Luyện Lập Trình Tin Học', href: '/student/practice/tin-hoc/basic' },
+    { label: 'Diễn Đàn Hỏi Đáp', href: '/forum' },
+    { label: 'Gói Nâng Cấp Hội Viên', href: '/pricing' },
   ],
   portals: [
     { label: 'Cổng Luyện Thi K-12', href: '/luyen-thi' },
-    { label: 'Luyện Đề Toán Học', href: '/student/practice/toan-hoc/basic' },
-    { label: 'Luyện Lập Trình Tin Học', href: '/student/practice/tin-hoc/basic' },
-    { label: 'Bảng Xếp Hạng Thi Đua', href: '/leaderboard' },
-    { label: 'Giáo Viên & Creator Studio', href: '/teacher/dashboard' },
     { label: 'Học Sinh & Hồ Sơ Luyện Tập', href: '/student' },
     { label: 'Cửa Hàng Đổi Thưởng', href: '/student/rewards' },
+    { label: 'Đăng Nhập / Đăng Ký', href: '/login' },
   ],
 };
 
@@ -55,12 +51,12 @@ export function Footer() {
                 className="h-11 w-auto object-contain group-hover:scale-102 transition-transform"
               />
               <span className="text-xs font-semibold text-[#00B8DD] mt-2 block">
-                Số hóa trường học, Khai phóng tri thức.
+                Luyện thi thông minh, Chinh phục điểm cao.
               </span>
             </Link>
 
             <p className="text-sm text-slate-400 leading-relaxed max-w-sm">
-              <strong className="text-slate-200">&ldquo;Nền tảng vận hành &amp; kinh doanh giáo dục toàn diện.&rdquo;</strong> Biến mọi không gian giảng dạy truyền thống thành một nền tảng số hóa tối ưu, trao quyền cho giáo viên và nâng cao chất lượng học tập K-12.
+              <strong className="text-slate-200">&ldquo;Nền tảng luyện thi trực tuyến K-12 tích hợp Gia sư AI.&rdquo;</strong> Đề thi chuẩn cấu trúc GDPT 2018-2025, phân tích lỗ hổng kiến thức và lộ trình ôn tập cá nhân hóa cho học sinh.
             </p>
 
             {/* Contact Details */}
@@ -98,14 +94,14 @@ export function Footer() {
             </div>
           </div>
 
-          {/* ── Column 2: Dành cho Nhà trường ── */}
+          {/* ── Column 2: Luyện Thi & AI ── */}
           <div>
             <h4 className="text-xs font-bold text-[#00B8DD] uppercase tracking-wider mb-4 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-[#00B8DD]" />
-              Dành Cho Nhà Trường (K-12)
+              Luyện Thi Thông Minh
             </h4>
             <ul className="space-y-2.5 text-xs">
-              {FOOTER_COLUMNS.school.map((item) => (
+              {FOOTER_COLUMNS.practice.map((item) => (
                 <li key={item.label}>
                   <Link
                     href={item.href}
@@ -118,14 +114,14 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* ── Column 3: Dành cho Giáo viên ── */}
+          {/* ── Column 3: Khóa Học & Cộng Đồng ── */}
           <div>
             <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-4 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-              Dành Cho Giáo Viên & Creator
+              Khóa Học &amp; Cộng Đồng
             </h4>
             <ul className="space-y-2.5 text-xs">
-              {FOOTER_COLUMNS.teacher.map((item) => (
+              {FOOTER_COLUMNS.courses.map((item) => (
                 <li key={item.label}>
                   <Link
                     href={item.href}
@@ -138,11 +134,11 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* ── Column 4: Phân Hệ Người Dùng ── */}
+          {/* ── Column 4: Phân Hệ Học Tập ── */}
           <div>
             <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-4 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              7 Phân Hệ Chuyên Biệt
+              Không Gian Học Tập
             </h4>
             <ul className="space-y-2 text-xs">
               {FOOTER_COLUMNS.portals.map((item) => (

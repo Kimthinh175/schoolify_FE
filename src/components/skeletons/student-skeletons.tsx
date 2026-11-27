@@ -269,46 +269,6 @@ export function LessonPlayerSkeleton() {
   );
 }
 
-/** Skeleton chuẩn cho /student/my-courses */
-export function MyCoursesSkeleton() {
-  return (
-    <SkeletonRoot label="Đang tải khóa học của tôi" className="space-y-6 pb-12">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80 dark:border-slate-800">
-        <div className="space-y-2">
-          <Skeleton variant="brand" className="h-5 w-28 rounded-full" />
-          <Skeleton className="h-8 w-56 rounded-xl" />
-        </div>
-        <Skeleton variant="brand" className="h-11 w-44 rounded-xl" />
-      </div>
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <SkeletonSurface key={i} className="p-4 space-y-2">
-            <Skeleton className="h-4 w-24 rounded" />
-            <Skeleton variant="brand" className="h-7 w-16 rounded-lg" />
-          </SkeletonSurface>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <SkeletonSurface key={i} className="overflow-hidden flex flex-col">
-            <Skeleton className="aspect-video w-full rounded-none" />
-            <div className="p-5 space-y-3">
-              <Skeleton className="h-5 w-5/6 rounded-lg" />
-              <Skeleton className="h-2.5 w-full rounded-full" />
-              <div className="flex items-center justify-between pt-2">
-                <Skeleton className="h-4 w-24 rounded" />
-                <Skeleton variant="brand" className="h-9 w-28 rounded-xl" />
-              </div>
-            </div>
-          </SkeletonSurface>
-        ))}
-      </div>
-    </SkeletonRoot>
-  );
-}
-
 /** Skeleton chuẩn cho /student/exams */
 export function ExamsHistorySkeleton() {
   return (

@@ -37,7 +37,6 @@ function StudentLoginForm() {
   // OTP state
   const [phone, setPhone] = React.useState('0987654321');
   const [otpCode, setOtpCode] = React.useState('');
-  const [devOtpHint, setDevOtpHint] = React.useState<string | null>(null);
   const [otpSent, setOtpSent] = React.useState(false);
   const [countdown, setCountdown] = React.useState(0);
 
@@ -75,15 +74,10 @@ function StudentLoginForm() {
         return;
       }
       setOtpSent(true);
+      setOtpCode('');
       setCountdown(60);
-      if (data?.devOtp) {
-        setDevOtpHint(data.devOtp);
-        setOtpCode(data.devOtp);
-      }
       toast.success('Đã gửi mã OTP!', {
-        description: data?.devOtp
-          ? `Mã OTP xác thực của bạn là: ${data.devOtp}`
-          : 'Vui lòng kiểm tra tin nhắn điện thoại.',
+        description: 'Vui lòng kiểm tra tin nhắn điện thoại và nhập mã 6 chữ số.',
       });
     } catch (err: any) {
       setErrorMsg(err?.message || 'Lỗi kết nối khi gửi OTP.');
@@ -235,7 +229,7 @@ function StudentLoginForm() {
                 </label>
                 <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3" />
-                  {devOtpHint ? `Mã OTP: ${devOtpHint}` : 'Đã gửi qua tin nhắn'}
+                  Đã gửi qua tin nhắn
                 </span>
               </div>
               <Input
@@ -267,25 +261,8 @@ function StudentLoginForm() {
           </Button>
         </form>
 
-        {/* Switch Role Footer */}
+        {/* Footer */}
         <div className="text-center text-xs text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-1.5">
-          <p>
-            Bạn là Người Bán Khóa Học?{' '}
-            <Link
-              href={
-                searchParams.get('popup') === '1'
-                  ? returnUrl
-                    ? `/login/teacher?returnUrl=${encodeURIComponent(returnUrl)}&popup=1`
-                    : '/login/teacher?popup=1'
-                  : returnUrl
-                    ? `/login/teacher?returnUrl=${encodeURIComponent(returnUrl)}`
-                    : '/login/teacher'
-              }
-              className="text-[#00B8DD] font-bold hover:underline"
-            >
-              Sang cổng Giảng viên
-            </Link>
-          </p>
           <p className="text-[11px] text-slate-400">
             Hệ thống đăng nhập tự động kích hoạt tài khoản ngay lần đầu xác thực OTP / Google.
           </p>

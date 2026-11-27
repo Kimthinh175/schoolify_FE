@@ -1,7 +1,25 @@
 export type OrderStatus = 'PENDING' | 'PAID' | 'CANCELLED';
 export type PaymentMethod = 'BANK' | 'COD' | 'MOMO' | 'VNPAY';
-export type OrderReferenceType = 'SUBSCRIPTION' | 'COURSE' | 'TUITION';
-export type TransactionType = 'PAYMENT_TO_ADMIN' | 'COMMISSION_FEE' | 'TEACHER_INCOME' | 'TUITION_FEE';
+export type OrderReferenceType = 'SUBSCRIPTION';
+
+export type BillingCycle = 'MONTHLY' | 'YEARLY' | 'LIFETIME';
+export type SubscriptionStatus = 'TRIALING' | 'ACTIVE' | 'EXPIRED' | 'CANCELED' | 'UPGRADED';
+
+export interface SubscriptionPackage {
+  id: string;
+  creator_id?: string | null;
+  name: string;
+  description?: string | null;
+  price: number;
+  billing_cycle: BillingCycle;
+  duration_days?: number | null;
+  max_students_total: number;
+  storage_limit_gb: number;
+  is_active: boolean;
+  features?: string[] | null;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface Order {
   id: string;
@@ -20,15 +38,4 @@ export interface Order {
   buyer_phone?: string;
   created_at: string;
   paid_at?: string | null;
-}
-
-export interface Transaction {
-  id: string;
-  order_id: string;
-  /** Giáo viên thụ hưởng giao dịch (ERD: TEACHER_INCOME / COMMISSION_FEE thuộc về 1 TeacherProfile) */
-  teacher_id?: string | null;
-  amount: number;
-  type: TransactionType;
-  description: string;
-  created_at: string;
 }

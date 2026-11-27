@@ -4579,10 +4579,12 @@ function StandardExamRoomContent() {
                                                 <span className="shrink-0">Ý {st.subId})</span>
                                                 <MathRenderer text={st.statement} inline />
                                               </div>
-                                              <div className="text-[11px] text-slate-500 flex items-start gap-1">
-                                                <span className="shrink-0">Giải thích:</span>
-                                                <MathRenderer text={st.explanation} inline />
-                                              </div>
+                                              {st.explanation?.trim() && (
+                                                <div className="text-[11px] text-slate-500 flex items-start gap-1">
+                                                  <span className="shrink-0">Giải thích:</span>
+                                                  <MathRenderer text={st.explanation} inline />
+                                                </div>
+                                              )}
                                             </div>
                                             <div className="flex flex-wrap items-center gap-2 shrink-0 text-[11px]">
                                               <span

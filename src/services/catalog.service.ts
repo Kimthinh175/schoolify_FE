@@ -88,11 +88,8 @@ export interface MonthlyRevenueStat {
 export interface SystemStats {
   totalUsers: number;
   totalStudents: number;
-  totalTeachers: number;
   totalQuestions: number;
   totalQuestionBanks?: number;
-  totalCourses?: number;
-  totalLessons?: number;
   totalSubmissions: number;
   totalPackages: number;
   totalOrders: number;
@@ -722,13 +719,9 @@ export interface BehaviorAnalyticsData {
       grade10Count?: number;
       otherGradesCount?: number;
       incompleteProfileCount?: number;
-      teachersCount: number;
-      parentsCount: number;
       adminsCount: number;
     };
     contentAndCourses: {
-      totalCourses: number;
-      totalLessons: number;
       totalQuestionBanks: number;
       totalQuestions: number;
     };
