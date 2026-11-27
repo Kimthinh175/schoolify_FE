@@ -792,6 +792,20 @@
     let gems = 20;
     let claimedToday = true;
 
+    try {
+      const stored = localStorage.getItem('schoolify-auth-storage');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed?.state?.isAuthenticated && parsed?.state?.user) {
+          isLoggedIn = true;
+          const u = parsed.state.user;
+          memberTitle = u.fullname || u.email?.split('@')[0] || 'Học viên Schoolify';
+          rays = u.exam_points ?? 9;
+          gems = u.points ?? 20;
+        }
+      }
+    } catch (_) {}
+
     const syncMemberUI = () => {
       if (headerLoginBtn) headerLoginBtn.hidden = isLoggedIn;
       if (hudWallet) hudWallet.hidden = !isLoggedIn;
@@ -2620,6 +2634,7 @@
 
     if (!tabs.length || !podium) return;
 
+    // Baseline offline/instant data (zero CLS)
     const BOARDS = {
       all: [
         { avatar: 'MK', name: 'Nguyễn Minh Khôi', school: 'THPT Chuyên KHTN', streak: '14 đề tuần này', score: '9.85đ', scale: 0.985, gems: '+240 Ngọc' },
@@ -2669,6 +2684,44 @@
     };
 
     let timer = null;
+    let currentActiveKey = 'all';
+    const LIVE_DATA_CACHE = {};
+
+    const getInitials = (fullname) => {
+      if (!fullname) return 'HV';
+      const parts = fullname.trim().split(/\s+/);
+      if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    };
+
+    const renderPodiumStage = (rows) => {
+      [1, 2, 3].forEach((rankIdx) => {
+        const d = rows[rankIdx - 1];
+        if (!d) return;
+        const av = document.getElementById('chAvatar' + rankIdx);
+        const nm = document.getElementById('chName' + rankIdx);
+        const sc = document.getElementById('chSchool' + rankIdx);
+        const st = document.getElementById('chStreak' + rankIdx);
+        const val = document.getElementById('chScore' + rankIdx);
+        const bar = document.getElementById('chBar' + rankIdx);
+        const gm = document.getElementById('chGems' + rankIdx);
+
+        if (av) av.textContent = d.avatar;
+        if (nm) nm.textContent = d.name;
+        if (sc) sc.textContent = d.school;
+        if (st) st.textContent = d.streak;
+        if (val) val.textContent = d.score;
+        if (gm) gm.textContent = d.gems;
+        if (bar) {
+          bar.style.setProperty('--p-scale', '0.25');
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              bar.style.setProperty('--p-scale', String(d.scale));
+            });
+          });
+        }
+      });
+    };
 
     const renderInPageTable = (key) => {
       if (!tableBody) return;
@@ -2677,7 +2730,7 @@
 
       rows.forEach(item => {
         const tr = document.createElement('tr');
-        const initials = item.name.split(' ').map(w => w[0]).slice(-2).join('');
+        const initials = getInitials(item.name);
 
         tr.innerHTML = `
           <td>
@@ -2707,12 +2760,162 @@
       });
     };
 
+    // Cập nhật Banner vị trí cá nhân theo trạng thái đăng nhập thực tế
+    const updatePersonalBanner = (liveList) => {
+      try {
+        const authDataStr = localStorage.getItem('schoolify-auth-storage');
+        let authUser = null;
+        if (authDataStr) {
+          const parsed = JSON.parse(authDataStr);
+          if (parsed?.state?.isAuthenticated && parsed?.state?.user) {
+            authUser = parsed.state.user;
+          }
+        }
+
+        const bannerAvatar = document.querySelector('.champ-user-avatar');
+        const bannerRankTag = document.querySelector('.champ-user-rank-tag');
+        const bannerSub = document.querySelector('.champ-user-sub');
+        const bannerTarget = document.querySelector('.champ-user-target');
+        const bannerCta = document.querySelector('.champ-user-cta');
+
+        if (authUser) {
+          const initials = getInitials(authUser.fullname || authUser.name || 'Học Viên');
+          if (bannerAvatar) bannerAvatar.textContent = initials;
+
+          let myRank = null;
+          if (Array.isArray(liveList)) {
+            const idx = liveList.findIndex(
+              (u) => u.userId === authUser.id || (authUser.email && u.email === authUser.email)
+            );
+            if (idx !== -1) myRank = idx + 1;
+          }
+
+          if (bannerRankTag) {
+            bannerRankTag.textContent = myRank
+              ? `HẠNG #${myRank < 10 ? '0' + myRank : myRank} TOÀN QUỐC`
+              : 'ĐÃ THAM GIA BẢNG VÀNG';
+          }
+
+          if (bannerSub) {
+            const exams = authUser.quizzesCompleted || authUser.totalExams || 6;
+            const points = authUser.exam_points ?? authUser.points ?? 135;
+            bannerSub.innerHTML = `Hoàn thành <strong>${exams} đề tuần này</strong> • Điểm tích lũy: <strong>${points} Tia Sáng</strong>`;
+          }
+
+          if (bannerTarget) {
+            bannerTarget.innerHTML = `Mục tiêu: <strong>Lọt Top 20 tuần</strong> bứt phá điểm số`;
+          }
+
+          if (bannerCta) {
+            bannerCta.textContent = 'Vào phòng thi ngay →';
+            bannerCta.setAttribute('href', '/exam-room');
+            bannerCta.removeAttribute('data-open-login');
+          }
+        } else {
+          // Chưa đăng nhập (hiển thị chế độ khách)
+          if (bannerAvatar) bannerAvatar.textContent = 'HV';
+          if (bannerRankTag) bannerRankTag.textContent = 'HẠNG #42 TOÀN QUỐC (MẪU)';
+          if (bannerSub) {
+            bannerSub.innerHTML = 'Đăng nhập để ghi danh vào <strong>Bảng Vàng Toàn Quốc</strong>';
+          }
+          if (bannerTarget) {
+            bannerTarget.innerHTML = 'Nhận ngay <strong>9 Tia Sáng / ngày</strong> trải nghiệm';
+          }
+          if (bannerCta) {
+            bannerCta.textContent = 'Đăng nhập ghi danh →';
+            bannerCta.setAttribute('href', '#');
+            bannerCta.setAttribute('data-open-login', 'true');
+          }
+        }
+      } catch (err) {
+        // Safe fallback
+      }
+    };
+
+    // Gọi API Backend thật để nạp dữ liệu Bảng Xếp Hạng
+    const fetchLiveLeaderboard = async (key) => {
+      if (LIVE_DATA_CACHE[key]) {
+        applyLiveData(key, LIVE_DATA_CACHE[key]);
+        return;
+      }
+
+      try {
+        const subjectParam = key === 'math' ? 'math' : key === 'cs' ? 'cs' : '';
+        const url = `/api/v1/catalog/leaderboard${subjectParam ? '?subject=' + subjectParam : ''}`;
+        const res = await fetch(url);
+        if (!res.ok) return;
+
+        const json = await res.json();
+        if (json?.success && Array.isArray(json?.data) && json.data.length >= 3) {
+          LIVE_DATA_CACHE[key] = json.data;
+          applyLiveData(key, json.data);
+        }
+      } catch (err) {
+        // Nếu fetch lỗi, dữ liệu mặc định đã sẵn sàng
+      }
+    };
+
+    const applyLiveData = (key, list) => {
+      if (!Array.isArray(list) || list.length < 3) return;
+
+      // Map 3 quán quân hàng đầu
+      BOARDS[key] = [
+        {
+          avatar: getInitials(list[0].fullname),
+          name: list[0].fullname,
+          school: list[0].schoolName || 'THPT Chuyên',
+          streak: `${list[0].totalExams || 14} đề tuần này`,
+          score: `${Number(list[0].avgScore || 9.85).toFixed(2)}đ`,
+          scale: Number(list[0].scale || 0.985),
+          gems: `+${list[0].gems || 240} Ngọc`
+        },
+        {
+          avatar: getInitials(list[1].fullname),
+          name: list[1].fullname,
+          school: list[1].schoolName || 'THPT Chuyên',
+          streak: `${list[1].totalExams || 12} đề tuần này`,
+          score: `${Number(list[1].avgScore || 9.60).toFixed(2)}đ`,
+          scale: Number(list[1].scale || 0.96),
+          gems: `+${list[1].gems || 195} Ngọc`
+        },
+        {
+          avatar: getInitials(list[2].fullname),
+          name: list[2].fullname,
+          school: list[2].schoolName || 'THPT Chuyên',
+          streak: `${list[2].totalExams || 11} đề tuần này`,
+          score: `${Number(list[2].avgScore || 9.50).toFixed(2)}đ`,
+          scale: Number(list[2].scale || 0.95),
+          gems: `+${list[2].gems || 170} Ngọc`
+        }
+      ];
+
+      // Map top 4 đến top 10
+      if (list.length >= 4) {
+        IN_PAGE_TABLE_DATA[key] = list.slice(3, 10).map((u, i) => ({
+          rank: i + 4,
+          name: u.fullname,
+          school: u.schoolName || 'THPT Chuẩn Bộ',
+          streak: u.totalExams || 8,
+          score: Number(u.avgScore || 9.0).toFixed(2),
+          gems: `+${u.gems || 100} Ngọc`
+        }));
+      }
+
+      // Nếu tab hiện tại khớp với key vừa tải xong, cập nhật giao diện ngay
+      if (currentActiveKey === key) {
+        renderPodiumStage(BOARDS[key]);
+        renderInPageTable(key);
+      }
+
+      updatePersonalBanner(list);
+    };
+
     tabs.forEach((tab) => {
       tab.addEventListener('click', () => {
         const key = tab.getAttribute('data-board');
-        const rows = BOARDS[key];
-        if (!rows || tab.classList.contains('is-active')) return;
+        if (!key || tab.classList.contains('is-active')) return;
 
+        currentActiveKey = key;
         tabs.forEach((t) => t.classList.toggle('is-active', t === tab));
 
         if (!prefersReducedMotion) {
@@ -2723,34 +2926,14 @@
           timer = setTimeout(() => podium.classList.remove('is-switching'), 520);
         }
 
-        [1, 2, 3].forEach((rankIdx) => {
-          const d = rows[rankIdx - 1];
-          const av = document.getElementById(`chAvatar${rankIdx}`);
-          const nm = document.getElementById(`chName${rankIdx}`);
-          const sc = document.getElementById(`chSchool${rankIdx}`);
-          const st = document.getElementById(`chStreak${rankIdx}`);
-          const val = document.getElementById(`chScore${rankIdx}`);
-          const bar = document.getElementById(`chBar${rankIdx}`);
-          const gm = document.getElementById(`chGems${rankIdx}`);
+        const rows = BOARDS[key];
+        if (rows) {
+          renderPodiumStage(rows);
+          renderInPageTable(key);
+        }
 
-          if (av) av.textContent = d.avatar;
-          if (nm) nm.textContent = d.name;
-          if (sc) sc.textContent = d.school;
-          if (st) st.textContent = d.streak;
-          if (val) val.textContent = d.score;
-          if (gm) gm.textContent = d.gems;
-          if (bar) {
-            bar.style.setProperty('--p-scale', '0.25');
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                bar.style.setProperty('--p-scale', String(d.scale));
-              });
-            });
-          }
-        });
-
-        // Also update the in-page table
-        renderInPageTable(key);
+        // Tải dữ liệu thật cho tab vừa chọn
+        fetchLiveLeaderboard(key);
       });
     });
 
@@ -2766,8 +2949,13 @@
       });
     }
 
-    // Initial table render
+    // Khởi tạo ban đầu
+    renderPodiumStage(BOARDS.all);
     renderInPageTable('all');
+    updatePersonalBanner();
+
+    // Tự động nạp dữ liệu thật từ Backend API
+    fetchLiveLeaderboard('all');
   }
 
   function initSubpageRoutePreview() {
