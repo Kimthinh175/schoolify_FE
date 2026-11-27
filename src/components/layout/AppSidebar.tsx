@@ -116,7 +116,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     label: 'Cổng Luyện Thi K-12',
     href: '/student/practice',
-    icon: <Sparkles className="w-5 h-5 text-[#00B8DD]" />,
+    icon: <Sparkles className="w-5 h-5" />,
     roles: ['STUDENT'],
   },
   {

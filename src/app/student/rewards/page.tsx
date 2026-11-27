@@ -36,8 +36,7 @@ import {
 import { catalogService } from '@/services/catalog.service';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { NgocIcon } from '@/components/ui/point-icons';
-import { AdminPointsEditModal } from '@/components/features/admin/AdminPointsEditModal';
+import { TiaSangIcon, NgocIcon } from '@/components/ui/point-icons';
 
 const STORE_ITEMS_PER_PAGE = 6;
 const HISTORY_ITEMS_PER_PAGE = 8;
@@ -45,46 +44,42 @@ const HISTORY_ITEMS_PER_PAGE = 8;
 const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
   VOUCHER: {
     label: 'Voucher Ưu Đãi',
-    color: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800',
+    color: 'bg-white/95 text-[#007D99] border-[#00B8DD]/30 dark:bg-slate-900/90 dark:text-[#00B8DD] dark:border-[#00B8DD]/40',
   },
   BADGE: {
     label: 'Huy Hiệu Vinh Danh',
-    color: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800',
+    color: 'bg-white/95 text-slate-700 border-slate-200/90 dark:bg-slate-900/90 dark:text-slate-200 dark:border-slate-700',
   },
   THEME: {
     label: 'Học Liệu & Giao Diện',
-    color: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800',
+    color: 'bg-white/95 text-[#007D99] border-[#00B8DD]/30 dark:bg-slate-900/90 dark:text-[#00B8DD] dark:border-[#00B8DD]/40',
   },
   OTHER: {
     label: 'Quà Tặng Hiện Vật',
-    color: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800',
+    color: 'bg-white/95 text-slate-700 border-slate-200/90 dark:bg-slate-900/90 dark:text-slate-200 dark:border-slate-700',
   },
 };
 
 const ACTION_TYPE_LABELS: Record<string, { label: string; variant: 'success' | 'danger' | 'warning' | 'primary' | 'secondary' }> = {
-  DAILY_CHECKIN: { label: 'Điểm danh hàng ngày', variant: 'success' },
-  DAILY_GRANT: { label: 'Cấp 9đ đầu ngày', variant: 'primary' },
-  START_EXAM: { label: 'Mở đề luyện thi', variant: 'warning' },
-  SCORE_REWARD_8_5_TO_9_9: { label: 'Thưởng đạt 8.5+ (+1đ)', variant: 'success' },
-  SCORE_REWARD_10: { label: 'Thưởng đạt 10đ (+2đ)', variant: 'success' },
-  SCORE_NEUTRAL: { label: 'Hoàn thành đề (0đ)', variant: 'secondary' },
-  SCORE_PENALTY_UNDER_5: { label: 'Phạt dưới 5.0đ (-1đ)', variant: 'danger' },
-  REDEEM_REWARD: { label: 'Đổi quà cửa hàng', variant: 'primary' },
+  DAILY_CHECKIN: { label: 'Điểm danh (+9 Tia)', variant: 'primary' },
+  DAILY_GRANT: { label: 'Cấp 9 Tia đầu ngày', variant: 'primary' },
+  START_EXAM: { label: 'Mở đề luyện thi', variant: 'secondary' },
+  SCORE_REWARD_8_5_TO_9_9: { label: 'Thưởng 8.5–9.9đ (+1 Tia)', variant: 'success' },
+  SCORE_REWARD_10: { label: 'Thưởng 10đ (+2 Tia)', variant: 'success' },
+  SCORE_NEUTRAL: { label: 'Hoàn thành đề (0 Tia)', variant: 'secondary' },
+  SCORE_PENALTY_UNDER_5: { label: 'Phạt dưới 5.0đ (-1 Tia)', variant: 'danger' },
+  REDEEM_REWARD: { label: 'Đổi quà bằng Ngọc', variant: 'primary' },
+  ADMIN_CSKH_ADJUST: { label: 'Hỗ trợ CSKH (Admin)', variant: 'primary' },
 };
 
 export default function StudentRewardsStorePage() {
-  const { user, currentRole } = useAuthStore();
-  const isAdmin =
-    user?.role === 'SUPER_ADMIN' ||
-    (user?.role as string) === 'ADMIN' ||
-    (currentRole as string) === 'ADMIN' ||
-    currentRole === 'SUPER_ADMIN';
-  const [adminModalOpen, setAdminModalOpen] = React.useState(false);
+  const { user } = useAuthStore();
   const [activeTab, setActiveTab] = React.useState<'STORE' | 'HISTORY' | 'QUOTA'>('STORE');
 
-  // Số dư điểm & trạng thái điểm danh
+  // Số dư điểm & trạng thái điểm danh (Tách bạch Tia Sáng ⚡ & Ngọc Tri Thức 💎)
   const [balanceData, setBalanceData] = React.useState<ExamPointsBalanceResponse | null>(null);
   const [points, setPoints] = React.useState<number>(9);
+  const [diamonds, setDiamonds] = React.useState<number>(100);
   const [alreadyClaimedToday, setAlreadyClaimedToday] = React.useState<boolean>(false);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [isClaiming, setIsClaiming] = React.useState<boolean>(false);
@@ -114,6 +109,19 @@ export default function StudentRewardsStorePage() {
   const loadAllData = React.useCallback(async () => {
     setIsLoading(true);
     try {
+      if (!user?.id) {
+        setBalanceData(null);
+        setPoints(0);
+        setDiamonds(0);
+        setAlreadyClaimedToday(false);
+        setHistoryItems([]);
+        const items = await catalogService.getStoreItems();
+        if (Array.isArray(items) && items.length > 0) {
+          setStoreItems(items);
+        }
+        return;
+      }
+
       const [bal, hist, items] = await Promise.all([
         examPointsService.getBalance(user?.id),
         examPointsService.getHistory({ userId: user?.id, page: 1, limit: 100 }),
@@ -123,6 +131,7 @@ export default function StudentRewardsStorePage() {
       if (bal) {
         setBalanceData(bal);
         setPoints(bal.currentPoints);
+        setDiamonds(typeof bal.diamonds === 'number' ? bal.diamonds : bal.currentPoints);
         setAlreadyClaimedToday(Boolean(bal.alreadyClaimedToday));
       }
       if (hist?.items) {
@@ -156,15 +165,16 @@ export default function StudentRewardsStorePage() {
         toast.warning('Hôm nay bạn đã điểm danh rồi!', {
           description:
             res.message ||
-            'Mỗi ngày hệ thống chỉ cấp 9 Ngọc Tri Thức (💎) 1 lần. Vui lòng quay lại vào ngày mai nhé!',
+            'Mỗi ngày hệ thống chỉ cấp 9 Tia Sáng (⚡) 1 lần. Vui lòng quay lại vào ngày mai nhé!',
         });
         return;
       }
 
       if (res?.success && res?.data) {
         setPoints(res.data.currentPoints);
+        notifyExamPointsUpdated(res.data.currentPoints);
         setAlreadyClaimedToday(true);
-        toast.success('Điểm danh nhận 9 Ngọc Tri Thức thành công!', {
+        toast.success('Điểm danh nhận 9 Tia Sáng (⚡) thành công!', {
           description: res.message,
         });
         await loadAllData();
@@ -178,10 +188,12 @@ export default function StudentRewardsStorePage() {
     }
   };
 
-  // Đổi quà tặng trực tiếp trên PostgreSQL
+  // Đổi quà tặng bằng Ngọc Tri Thức (💎)
   const handleRedeemItem = async (item: StoreItem) => {
-    if (points < item.points_required) {
-      toast.error(`Bạn cần ${item.points_required} điểm để đổi quà này (hiện có ${points} điểm).`);
+    if (diamonds < item.points_required) {
+      toast.error(
+        `Bạn cần ${item.points_required} Ngọc Tri Thức (💎) để đổi quà này (hiện có ${diamonds} 💎).`
+      );
       return;
     }
 
@@ -189,9 +201,10 @@ export default function StudentRewardsStorePage() {
     try {
       const res = await catalogService.redeemStoreItem(item.id, user?.id);
       if (res?.ok && res?.success && res?.data) {
-        const newPts = Number(res.data.currentPoints ?? points - item.points_required);
-        setPoints(newPts);
-        notifyExamPointsUpdated(newPts);
+        const nextDiamonds = Number(
+          res.data.diamonds ?? res.data.currentPoints ?? diamonds - item.points_required
+        );
+        setDiamonds(nextDiamonds);
         setRedeemedResult({
           item,
           voucherCode: res.data.voucherCode || `SCH-GIFT-${Date.now().toString().slice(-6)}`,
@@ -221,7 +234,7 @@ export default function StudentRewardsStorePage() {
         return false;
       }
       const reqPts = Number(item.points_required || 0);
-      if (selectedPriceFilter === 'AFFORDABLE' && reqPts > points) return false;
+      if (selectedPriceFilter === 'AFFORDABLE' && reqPts > diamonds) return false;
       if (selectedPriceFilter === 'LE_5' && reqPts > 5) return false;
       if (selectedPriceFilter === '6_TO_12' && (reqPts < 6 || reqPts > 12)) return false;
       if (selectedPriceFilter === 'GT_12' && reqPts <= 12) return false;
@@ -234,7 +247,7 @@ export default function StudentRewardsStorePage() {
       if (storeSort === 'STOCK_DESC') return b.quantity_available - a.quantity_available;
       return 0;
     });
-  }, [storeItems, storeSearch, selectedCategory, selectedPriceFilter, storeSort, points]);
+  }, [storeItems, storeSearch, selectedCategory, selectedPriceFilter, storeSort, diamonds]);
 
   const totalStorePages = Math.max(1, Math.ceil(filteredStoreItems.length / STORE_ITEMS_PER_PAGE));
   const paginatedStoreItems = React.useMemo(() => {
@@ -274,8 +287,8 @@ export default function StudentRewardsStorePage() {
   }, [filteredHistoryItems, historyPage]);
 
   const affordableCount = React.useMemo(
-    () => storeItems.filter((i) => i.points_required <= points && i.quantity_available > 0).length,
-    [storeItems, points]
+    () => storeItems.filter((i) => i.points_required <= diamonds && i.quantity_available > 0).length,
+    [storeItems, diamonds]
   );
 
   const basicQuota = balanceData?.quotaByLevel?.BASIC?.maxExamsAvailable ?? Math.floor(points / 3);
@@ -283,143 +296,71 @@ export default function StudentRewardsStorePage() {
   const advQuota = balanceData?.quotaByLevel?.ADVANCED?.maxExamsAvailable ?? Math.floor(points / 9);
 
   return (
-    <div className="space-y-6 pb-10">
-      {/* Header gọn gàng trên 1 hàng ngang (đồng bộ style /admin/questions) */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-200/80 dark:border-slate-800">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-            Cửa Hàng Đổi Quà &amp; Ngọc Tri Thức
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Mỗi ngày điểm danh nhận 9 Ngọc Tri Thức (<NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat />), làm bài đạt 8.5+ tích lũy thêm để đổi Voucher, Huy hiệu và Quà tặng.
-          </p>
-        </div>
+    <div className="space-y-5 pb-24">
+      {/* Header + Tab Switcher (Đồng bộ hoàn toàn với Cổng Luyện Thi K-12 & Lịch Sử Luyện Đề) */}
+      <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3.5 shadow-xs">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 pb-3.5 border-b border-slate-100 dark:border-slate-800">
+          <div className="space-y-1.5 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-[#00B8DD]/10 text-[#00B8DD] text-xs font-semibold">
+                <Gift className="w-3.5 h-3.5" />
+                Đổi quà &amp; Quản lý điểm
+              </span>
+              {user?.fullname && (
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  {user.fullname}
+                </span>
+              )}
+            </div>
+            <h1 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight flex flex-wrap items-center gap-2">
+              <span className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 inline-flex items-center justify-center shrink-0">
+                <Gift className="w-4 h-4 text-[#00B8DD]" />
+              </span>
+              <span>Cửa Hàng Đổi Quà &amp; Ví Điểm</span>
+            </h1>
+          </div>
 
-        {/* Cụm nút hành động bên phải */}
-        <div className="flex items-center gap-2.5 shrink-0">
-          <Link href="/student/inventory">
+          {/* Cụm nút hành động bên phải */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <Link href="/student/inventory">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 px-3.5 rounded-xl text-xs font-semibold border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-[#00B8DD]/60 text-slate-700 dark:text-slate-200 gap-1.5 whitespace-nowrap shadow-2xs cursor-pointer"
+              >
+                <ShoppingBag className="w-3.5 h-3.5 text-[#00B8DD]" />
+                Túi đồ của tôi
+              </Button>
+            </Link>
+
             <Button
-              variant="outline"
               size="sm"
-              className="h-9 px-3.5 text-xs font-semibold border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 text-slate-700 dark:text-slate-200 gap-1.5 whitespace-nowrap shadow-2xs"
+              variant="primary"
+              onClick={handleDailyClaim}
+              isLoading={isClaiming}
+              className="h-9 px-3.5 rounded-xl bg-[#00B8DD] hover:bg-[#009bbd] active:scale-[0.98] text-white text-xs font-semibold gap-1.5 whitespace-nowrap shadow-xs shadow-[#00B8DD]/25 transition-all cursor-pointer"
+              leftIcon={
+                alreadyClaimedToday ? (
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                ) : (
+                  <CalendarCheck className="w-3.5 h-3.5" />
+                )
+              }
             >
-              <ShoppingBag className="w-3.5 h-3.5 text-indigo-600" />
-              Túi đồ của tôi
+              {alreadyClaimedToday ? 'Đã điểm danh hôm nay (+9 Tia)' : 'Điểm danh nhận 9 Tia Sáng'}
             </Button>
-          </Link>
-
-          <Button
-            size="sm"
-            variant="primary"
-            onClick={handleDailyClaim}
-            isLoading={isClaiming}
-            className="h-9 px-3.5 bg-primary hover:bg-primary/90 text-white text-xs font-semibold gap-1.5 whitespace-nowrap shadow-xs cursor-pointer"
-            leftIcon={
-              alreadyClaimedToday ? (
-                <CheckCircle2 className="w-3.5 h-3.5" />
-              ) : (
-                <CalendarCheck className="w-3.5 h-3.5" />
-              )
-            }
-          >
-            {alreadyClaimedToday ? 'Đã điểm danh hôm nay (+9 tia)' : 'Điểm danh nhận 9 Tia Sáng hôm nay'}
-          </Button>
+          </div>
         </div>
-      </div>
 
-      {/* 4 Thẻ Thống Kê Tổng Quan Gọn Nhẹ */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card
-          onDoubleClick={(e) => {
-            if (isAdmin) {
-              e.preventDefault();
-              setAdminModalOpen(true);
-            }
-          }}
-          className={cn(
-            "p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs select-none",
-            isAdmin && "cursor-pointer hover:border-amber-400 hover:ring-2 hover:ring-amber-400/20"
-          )}
-          title={isAdmin ? "⚡ Quản trị viên: Nhấn đúp (2 lần) để chỉnh sửa điểm" : undefined}
-          data-testid="rewards-points-card"
-        >
-          <div className="text-xs font-semibold text-primary dark:text-[#00B8DD]">
-            Số dư Ngọc Tri Thức hiện tại
-          </div>
-          <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1 flex items-center gap-1.5">
-            {isLoading ? (
-              <Skeleton className="h-8 w-16 my-0.5 inline-block" />
-            ) : (
-              <span>{points}</span>
-            )}
-            <NgocIcon className="w-5 h-5" />
-          </div>
-          <div className="text-[11px] text-slate-400 mt-0.5">
-            {alreadyClaimedToday ? 'Đã điểm danh nhận 9 💎 hôm nay' : 'Cấp cố định 9 💎 / ngày'}
-          </div>
-        </Card>
-
-        <Card className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
-          <div className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-            Quà đủ điểm đổi ngay
-          </div>
-          <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-            {isLoading ? (
-              <Skeleton className="h-8 w-24 my-0.5 inline-block" />
-            ) : (
-              <>
-                {affordableCount}{' '}
-                <span className="text-xs font-medium text-slate-400">/ {storeItems.length} phần quà</span>
-              </>
-            )}
-          </div>
-          <div className="text-[11px] text-slate-400 mt-0.5">
-            Voucher, Huy hiệu &amp; Học liệu PDF
-          </div>
-        </Card>
-
-        <Card className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
-          <div className="text-xs font-semibold text-sky-600 dark:text-sky-400">
-            Số lượt làm đề khả dụng
-          </div>
-          <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-            {isLoading ? (
-              <Skeleton className="h-8 w-28 my-0.5 inline-block" />
-            ) : (
-              <>
-                {basicQuota} đề{' '}
-                <span className="text-xs font-medium text-slate-400">(Cơ bản)</span>
-              </>
-            )}
-          </div>
-          <div className="text-[11px] text-slate-400 mt-0.5">
-            Hoặc {mediumQuota} đề TB (-4đ) • {advQuota} đề Giỏi (-9đ)
-          </div>
-        </Card>
-
-        <Card className="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
-          <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-            Cơ chế thưởng điểm thi
-          </div>
-          <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-            +1đ / +2đ
-          </div>
-          <div className="text-[11px] text-slate-400 mt-0.5">
-            Đạt 8.5–9.9đ (+1đ) • Đạt 10đ (+2đ) • &lt;5đ (-1đ)
-          </div>
-        </Card>
-      </div>
-
-      {/* Thanh Chuyển Đổi Tab (Cửa hàng đổi quà / Lịch sử biến động điểm / Quy tắc hạn mức) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 w-fit shrink-0">
+        {/* Thanh Chuyển Đổi Tab đồng bộ màu chủ đạo */}
+        <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-slate-950 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 w-fit">
           <button
             type="button"
             onClick={() => setActiveTab('STORE')}
             className={cn(
-              'flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all',
+              'flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer',
               activeTab === 'STORE'
-                ? 'bg-white dark:bg-slate-900 text-primary dark:text-[#00B8DD] shadow-xs'
+                ? 'bg-[#00B8DD] text-white shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             )}
           >
@@ -431,30 +372,129 @@ export default function StudentRewardsStorePage() {
             type="button"
             onClick={() => setActiveTab('HISTORY')}
             className={cn(
-              'flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all',
+              'flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer',
               activeTab === 'HISTORY'
-                ? 'bg-white dark:bg-slate-900 text-primary dark:text-[#00B8DD] shadow-xs'
+                ? 'bg-[#00B8DD] text-white shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             )}
           >
             <History className="w-3.5 h-3.5" />
-            Lịch Sử Điểm Danh &amp; Giao Dịch ({historyItems.length})
+            Lịch Sử Giao Dịch ({historyItems.length})
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('QUOTA')}
             className={cn(
-              'flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all',
+              'flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer',
               activeTab === 'QUOTA'
-                ? 'bg-white dark:bg-slate-900 text-primary dark:text-[#00B8DD] shadow-xs'
+                ? 'bg-[#00B8DD] text-white shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             )}
           >
             <FileCheck2 className="w-3.5 h-3.5" />
-            Hạn Mức Làm Đề Theo Cấp Độ
+            Hạn Mức Làm Đề
           </button>
         </div>
+      </section>
+
+      {/* 4 Thẻ Thống Kê Tổng Quan (Tông chủ đạo #00B8DD + Slate, giải thích rõ ràng dễ hiểu) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card
+          className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 shadow-xs"
+          data-testid="rewards-points-card"
+        >
+          <div className="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400">
+            <span>Ví Ngọc &amp; Tia Sáng</span>
+            <Sparkles className="w-4 h-4 text-[#00B8DD]" />
+          </div>
+          <div className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5 flex-wrap">
+            {isLoading ? (
+              <Skeleton className="h-8 w-24 my-0.5 inline-block" />
+            ) : (
+              <>
+                <span className="inline-flex items-center gap-1 text-[#007D99] dark:text-[#00B8DD] tabular-nums" title="Ngọc Tri Thức dùng đổi quà">
+                  <span>{diamonds}</span>
+                  <NgocIcon className="w-5 h-5" />
+                </span>
+                <span className="text-slate-300 dark:text-slate-700 text-base">|</span>
+                <span
+                  className="inline-flex items-center gap-1 text-slate-900 dark:text-white text-xl tabular-nums"
+                  title="Tia Sáng dùng mở đề thi"
+                >
+                  <span>{points}</span>
+                  <TiaSangIcon className="w-5 h-5" />
+                </span>
+              </>
+            )}
+          </div>
+          <div className="text-[11px] text-slate-500 dark:text-slate-400">
+            {alreadyClaimedToday ? 'Đã điểm danh hôm nay (+9 Tia)' : 'Cấp miễn phí 9 Tia Sáng/ngày'}
+          </div>
+        </Card>
+
+        <Card className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 shadow-xs">
+          <div className="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400">
+            <span>Quà đủ Ngọc đổi ngay</span>
+            <Gift className="w-4 h-4 text-[#00B8DD]" />
+          </div>
+          <div className="text-2xl font-bold text-slate-900 dark:text-white tabular-nums">
+            {isLoading ? (
+              <Skeleton className="h-8 w-24 my-0.5 inline-block" />
+            ) : (
+              <>
+                {affordableCount}{' '}
+                <span className="text-xs font-medium text-slate-400">/ {storeItems.length} phần quà</span>
+              </>
+            )}
+          </div>
+          <div className="text-[11px] text-slate-500 dark:text-slate-400">
+            Đổi bằng Ngọc Tri Thức tích lũy
+          </div>
+        </Card>
+
+        <Card className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 shadow-xs">
+          <div className="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400">
+            <span>Lượt mở đề bằng Tia Sáng</span>
+            <FileCheck2 className="w-4 h-4 text-[#00B8DD]" />
+          </div>
+          <div className="text-2xl font-bold text-slate-900 dark:text-white tabular-nums">
+            {isLoading ? (
+              <Skeleton className="h-8 w-28 my-0.5 inline-block" />
+            ) : (
+              <>
+                {basicQuota} đề{' '}
+                <span className="text-xs font-medium text-slate-400">Cơ bản (3 Tia/đề)</span>
+              </>
+            )}
+          </div>
+          <div
+            className="text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap truncate"
+            title={`Trung bình: ${mediumQuota} đề (4 Tia/đề) • Nâng cao: ${advQuota} đề (9 Tia/đề)`}
+          >
+            TB: <strong className="text-slate-700 dark:text-slate-200">{mediumQuota} đề</strong> (4 Tia) • Nâng cao:{' '}
+            <strong className="text-slate-700 dark:text-slate-200">{advQuota} đề</strong> (9 Tia)
+          </div>
+        </Card>
+
+        <Card className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 shadow-xs">
+          <div className="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400">
+            <span>Thưởng / Phạt khi nộp bài</span>
+            <Award className="w-4 h-4 text-[#00B8DD]" />
+          </div>
+          <div className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-1.5 tabular-nums">
+            <span className="text-[#007D99] dark:text-[#00B8DD]">+1 đến +2</span>
+            <TiaSangIcon className="w-5 h-5" />
+          </div>
+          <div
+            className="text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap truncate"
+            title="Đạt 8.5–9.9đ: +1 Tia • Đạt 10đ: +2 Tia • Dưới 5đ: -1 Tia"
+          >
+            8.5–9.9đ: <strong className="text-slate-700 dark:text-slate-200">+1</strong> • 10đ:{' '}
+            <strong className="text-slate-700 dark:text-slate-200">+2</strong> • &lt;5đ:{' '}
+            <strong className="text-slate-700 dark:text-slate-200">-1 Tia</strong>
+          </div>
+        </Card>
       </div>
 
       {/* ===================================================================== */}
@@ -463,7 +503,7 @@ export default function StudentRewardsStorePage() {
       {activeTab === 'STORE' && (
         <div className="space-y-4">
           {/* Thanh Bộ Lọc Đa Tiêu Chí (1 hàng ngang trên Desktop) */}
-          <Card className="p-3.5 sm:p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+          <Card className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
             <div className="flex flex-col lg:flex-row lg:items-center gap-2.5">
               {/* Ô tìm kiếm quà tặng */}
               <div className="relative flex-1 min-w-[200px]">
@@ -475,7 +515,7 @@ export default function StudentRewardsStorePage() {
                     setStoreSearch(e.target.value);
                     setStorePage(1);
                   }}
-                  className="pl-9 h-9 bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white dark:focus:bg-slate-900"
+                  className="pl-9 h-9 rounded-xl bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white dark:focus:bg-slate-900 focus:border-[#00B8DD]"
                 />
               </div>
 
@@ -487,7 +527,7 @@ export default function StudentRewardsStorePage() {
                     setSelectedCategory(e.target.value);
                     setStorePage(1);
                   }}
-                  className="h-9 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-3 py-1.5 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-primary font-medium"
+                  className="h-9 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-3 py-1.5 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-[#00B8DD] font-medium"
                 >
                   <option value="ALL">Danh mục: Tất cả quà tặng</option>
                   <option value="VOUCHER">Voucher ưu đãi học phí</option>
@@ -502,13 +542,13 @@ export default function StudentRewardsStorePage() {
                     setSelectedPriceFilter(e.target.value);
                     setStorePage(1);
                   }}
-                  className="h-9 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-3 py-1.5 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-primary font-medium"
+                  className="h-9 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-3 py-1.5 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-[#00B8DD] font-medium"
                 >
-                  <option value="ALL">Mức điểm: Tất cả</option>
-                  <option value="AFFORDABLE">Đủ điểm đổi ngay (≤ {points}đ)</option>
-                  <option value="LE_5">Từ 1 - 5 điểm</option>
-                  <option value="6_TO_12">Từ 6 - 12 điểm</option>
-                  <option value="GT_12">Trên 12 điểm</option>
+                  <option value="ALL">Mức Ngọc: Tất cả</option>
+                  <option value="AFFORDABLE">Đủ Ngọc đổi ngay (≤ {diamonds} Ngọc)</option>
+                  <option value="LE_5">Từ 1 - 5 Ngọc</option>
+                  <option value="6_TO_12">Từ 6 - 12 Ngọc</option>
+                  <option value="GT_12">Trên 12 Ngọc</option>
                 </select>
 
                 <select
@@ -517,10 +557,10 @@ export default function StudentRewardsStorePage() {
                     setStoreSort(e.target.value as any);
                     setStorePage(1);
                   }}
-                  className="h-9 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-3 py-1.5 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-primary font-medium"
+                  className="h-9 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-3 py-1.5 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-[#00B8DD] font-medium"
                 >
-                  <option value="POINTS_ASC">Sắp xếp: Điểm thấp → cao</option>
-                  <option value="POINTS_DESC">Sắp xếp: Điểm cao → thấp</option>
+                  <option value="POINTS_ASC">Sắp xếp: Ngọc thấp → cao</option>
+                  <option value="POINTS_DESC">Sắp xếp: Ngọc cao → thấp</option>
                   <option value="STOCK_DESC">Sắp xếp: Còn nhiều suất nhất</option>
                 </select>
 
@@ -536,10 +576,10 @@ export default function StudentRewardsStorePage() {
                       setStoreSort('POINTS_ASC');
                       setStorePage(1);
                     }}
-                    className="h-9 px-2.5 text-xs text-slate-500 hover:text-rose-600 gap-1"
+                    className="h-9 px-2.5 rounded-xl text-xs text-slate-500 hover:text-[#00B8DD] hover:bg-[#00B8DD]/10 gap-1 cursor-pointer"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
-                    Đặt lại
+                    Làm mới
                   </Button>
                 )}
               </div>
@@ -574,12 +614,12 @@ export default function StudentRewardsStorePage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {paginatedStoreItems.map((item) => {
-                const canAfford = points >= item.points_required && item.quantity_available > 0;
+                const canAfford = diamonds >= item.points_required && item.quantity_available > 0;
                 const catInfo = CATEGORY_LABELS[item.type] || CATEGORY_LABELS.VOUCHER;
                 return (
                   <Card
                     key={item.id}
-                    className="p-0 overflow-hidden bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-primary/40 hover:shadow-md transition-all flex flex-col justify-between group"
+                    className="p-0 overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-[#00B8DD]/50 hover:shadow-md transition-all flex flex-col justify-between group"
                   >
                     <div>
                       <div className="relative h-36 w-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
@@ -591,7 +631,7 @@ export default function StudentRewardsStorePage() {
                         <div className="absolute top-2.5 left-2.5">
                           <span
                             className={cn(
-                              'inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold border shadow-2xs',
+                              'inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-semibold border backdrop-blur-xs shadow-2xs',
                               catInfo.color
                             )}
                           >
@@ -599,15 +639,15 @@ export default function StudentRewardsStorePage() {
                           </span>
                         </div>
                         <div className="absolute top-2.5 right-2.5">
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-900/85 text-cyan-300 font-bold text-xs shadow-sm backdrop-blur-xs">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-900/85 text-[#00B8DD] font-bold text-xs shadow-sm backdrop-blur-xs tabular-nums">
+                            <span>{item.points_required}</span>
                             <NgocIcon className="w-3.5 h-3.5" />
-                            {item.points_required}
                           </span>
                         </div>
                       </div>
 
                       <div className="p-4 space-y-1.5">
-                        <h3 className="text-sm font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-primary transition-colors">
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-[#00B8DD] transition-colors">
                           {item.name}
                         </h3>
                         <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
@@ -630,13 +670,18 @@ export default function StudentRewardsStorePage() {
                         disabled={!canAfford || redeemingId === item.id}
                         isLoading={redeemingId === item.id}
                         onClick={() => handleRedeemItem(item)}
-                        className="h-8 px-3 text-xs font-semibold cursor-pointer"
+                        className={cn(
+                          'h-8 px-3 rounded-xl text-xs font-semibold transition-all',
+                          canAfford
+                            ? 'bg-[#00B8DD] hover:bg-[#009bbd] text-white shadow-xs shadow-[#00B8DD]/25 cursor-pointer'
+                            : 'border-slate-200 dark:border-slate-700 text-slate-400'
+                        )}
                       >
                         {item.quantity_available <= 0
                           ? 'Hết quà'
                           : canAfford
-                            ? `Đổi ngay (-${item.points_required}đ)`
-                            : `Thiếu ${item.points_required - points}đ`}
+                            ? `Đổi ngay (-${item.points_required} Ngọc)`
+                            : `Thiếu ${item.points_required - diamonds} Ngọc`}
                       </Button>
                     </div>
                   </Card>
@@ -664,7 +709,7 @@ export default function StudentRewardsStorePage() {
       {activeTab === 'HISTORY' && (
         <div className="space-y-4">
           {/* Bộ lọc lịch sử điểm */}
-          <Card className="p-3.5 sm:p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+          <Card className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2.5">
               <div className="relative flex-1">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -675,7 +720,7 @@ export default function StudentRewardsStorePage() {
                     setHistorySearch(e.target.value);
                     setHistoryPage(1);
                   }}
-                  className="pl-9 h-9 bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs"
+                  className="pl-9 h-9 rounded-xl bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs focus:border-[#00B8DD]"
                 />
               </div>
 
@@ -685,16 +730,17 @@ export default function StudentRewardsStorePage() {
                   setSelectedActionType(e.target.value);
                   setHistoryPage(1);
                 }}
-                className="h-9 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-3 py-1.5 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-primary font-medium"
+                className="h-9 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-3 py-1.5 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-[#00B8DD] font-medium"
               >
                 <option value="ALL">Loại giao dịch: Tất cả ({historyItems.length})</option>
-                <option value="DAILY_CHECKIN">Điểm danh hàng ngày</option>
-                <option value="DAILY_GRANT">Cấp 9 điểm đầu ngày</option>
-                <option value="START_EXAM">Mở đề thi (-3đ / -4đ / -9đ)</option>
-                <option value="SCORE_REWARD_8_5_TO_9_9">Thưởng đạt 8.5 - 9.9đ (+1đ)</option>
-                <option value="SCORE_REWARD_10">Thưởng đạt 10đ (+2đ)</option>
-                <option value="SCORE_PENALTY_UNDER_5">Phạt dưới 5.0đ (-1đ)</option>
-                <option value="REDEEM_REWARD">Đổi quà tặng cửa hàng</option>
+                <option value="DAILY_CHECKIN">Điểm danh hàng ngày (+9 Tia)</option>
+                <option value="DAILY_GRANT">Cấp 9 Tia đầu ngày</option>
+                <option value="START_EXAM">Mở đề thi (-3 / -4 / -9 Tia)</option>
+                <option value="SCORE_REWARD_8_5_TO_9_9">Thưởng đạt 8.5–9.9đ (+1 Tia)</option>
+                <option value="SCORE_REWARD_10">Thưởng đạt 10đ (+2 Tia)</option>
+                <option value="SCORE_PENALTY_UNDER_5">Phạt dưới 5.0đ (-1 Tia)</option>
+                <option value="REDEEM_REWARD">Đổi quà tặng bằng Ngọc</option>
+                <option value="ADMIN_CSKH_ADJUST">Hỗ trợ CSKH (Admin)</option>
               </select>
 
               {(historySearch !== '' || selectedActionType !== 'ALL') && (
@@ -707,10 +753,10 @@ export default function StudentRewardsStorePage() {
                     setSelectedActionType('ALL');
                     setHistoryPage(1);
                   }}
-                  className="h-9 px-2.5 text-xs text-slate-500 hover:text-rose-600 gap-1"
+                  className="h-9 px-2.5 rounded-xl text-xs text-slate-500 hover:text-[#00B8DD] hover:bg-[#00B8DD]/10 gap-1 cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                  Đặt lại
+                  Làm mới
                 </Button>
               )}
             </div>
@@ -868,28 +914,44 @@ export default function StudentRewardsStorePage() {
             ].map((lvl) => (
               <Card
                 key={lvl.key}
-                className="p-5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between gap-4"
+                className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-[#00B8DD]/50 transition-colors flex flex-col justify-between gap-4 shadow-xs"
               >
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                       {lvl.title}
                     </h3>
-                    <Badge variant={lvl.canStart ? 'success' : 'danger'} className="text-[10px]">
-                      -{lvl.cost} điểm / đề
-                    </Badge>
+                    <span
+                      className={cn(
+                        'inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-semibold border whitespace-nowrap',
+                        lvl.canStart
+                          ? 'bg-[#00B8DD]/10 text-[#007D99] dark:text-[#00B8DD] border-[#00B8DD]/25'
+                          : 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+                      )}
+                    >
+                      -{lvl.cost} Tia / đề
+                    </span>
                   </div>
-                  <p className="text-xs text-slate-500">{lvl.desc}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{lvl.desc}</p>
                 </div>
 
                 <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                  <span className="text-xs text-slate-500">
-                    Làm được ngay:{' '}
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    Mở được ngay:{' '}
                     <strong className="text-slate-900 dark:text-white">{lvl.available} đề</strong>
                   </span>
                   <Link href={`/luyen-thi`}>
-                    <Button size="sm" disabled={!lvl.canStart} className="h-8 text-xs">
-                      {lvl.canStart ? 'Vào luyện đề' : 'Chưa đủ điểm'}
+                    <Button
+                      size="sm"
+                      disabled={!lvl.canStart}
+                      className={cn(
+                        'h-8 px-3 rounded-xl text-xs font-semibold transition-all',
+                        lvl.canStart
+                          ? 'bg-[#00B8DD] hover:bg-[#009bbd] text-white shadow-xs shadow-[#00B8DD]/25 cursor-pointer'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+                      )}
+                    >
+                      {lvl.canStart ? 'Vào luyện đề' : 'Chưa đủ Tia'}
                     </Button>
                   </Link>
                 </div>
@@ -908,7 +970,7 @@ export default function StudentRewardsStorePage() {
         description={`Bạn đã quy đổi thành công: ${redeemedResult?.item.name || ''}`}
       >
         <div className="py-3 flex flex-col items-center text-center space-y-4">
-          <div className="h-14 w-14 rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 flex items-center justify-center border border-emerald-200">
+          <div className="h-14 w-14 rounded-2xl bg-[#00B8DD]/10 text-[#00B8DD] flex items-center justify-center border border-[#00B8DD]/25">
             <Gift className="w-7 h-7" />
           </div>
 
@@ -917,7 +979,7 @@ export default function StudentRewardsStorePage() {
               Mã Quà Tặng / Voucher Của Bạn:
             </p>
             <div className="flex items-center justify-center gap-2">
-              <span className="font-mono text-base font-bold text-primary tracking-wider">
+              <span className="font-mono text-base font-bold text-[#007D99] dark:text-[#00B8DD] tracking-wider">
                 {redeemedResult?.voucherCode}
               </span>
               <Button
@@ -930,7 +992,7 @@ export default function StudentRewardsStorePage() {
                     setTimeout(() => setCopiedCode(false), 2000);
                   }
                 }}
-                className="h-7 px-2 text-xs"
+                className="h-7 px-2 text-xs hover:text-[#00B8DD]"
               >
                 <Copy className="w-3.5 h-3.5 mr-1" />
                 {copiedCode ? 'Đã chép' : 'Sao chép'}
@@ -944,32 +1006,19 @@ export default function StudentRewardsStorePage() {
           <div className="flex gap-2 w-full">
             <Button
               variant="outline"
-              className="flex-1 justify-center text-xs"
+              className="flex-1 justify-center rounded-xl text-xs"
               onClick={() => setRedeemedResult(null)}
             >
               Tiếp tục đổi quà
             </Button>
             <Link href="/student/inventory" className="flex-1">
-              <Button className="w-full justify-center text-xs">Mở Túi Đồ</Button>
+              <Button className="w-full justify-center rounded-xl bg-[#00B8DD] hover:bg-[#009bbd] text-white text-xs font-semibold">
+                Mở Túi Đồ
+              </Button>
             </Link>
           </div>
         </div>
       </Dialog>
-
-      {/* Admin Points Edit Modal (Nhấn đúp 2 lần vào số điểm để mở) */}
-      {isAdmin && (
-        <AdminPointsEditModal
-          isOpen={adminModalOpen}
-          onClose={() => setAdminModalOpen(false)}
-          currentTokenBalance={balanceData?.currentPoints ?? 9}
-          currentDiamondsBalance={points}
-          userId={user?.id}
-          onUpdated={async (newPoints, newDiamonds) => {
-            setPoints(newDiamonds);
-            await loadAllData();
-          }}
-        />
-      )}
     </div>
   );
 }

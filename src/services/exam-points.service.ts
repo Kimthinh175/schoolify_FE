@@ -224,6 +224,7 @@ export const examPointsService = {
       const res = await fetch(`/api/v1/exams/points/balance${query}`, {
         method: 'GET',
         headers,
+        credentials: 'include',
         cache: 'no-store',
       });
       const json = await res.json();
@@ -256,6 +257,7 @@ export const examPointsService = {
         'Content-Type': 'application/json',
         ...headers,
       },
+      credentials: 'include',
       body: JSON.stringify({
         userId: effectiveUserId,
         forceReset: params?.forceReset ?? false,
@@ -285,12 +287,14 @@ export const examPointsService = {
         'Content-Type': 'application/json',
         ...headers,
       },
+      credentials: 'include',
       body: JSON.stringify({
         userId: effectiveUserId,
         level: payload.level,
         examTitle: payload.examTitle,
         subjectSlug: payload.subjectSlug,
         grade: payload.grade,
+        chapterId: payload.chapterId,
         useDiamonds: payload.useDiamonds,
       }),
     });
@@ -317,14 +321,15 @@ export const examPointsService = {
         'Content-Type': 'application/json',
         ...headers,
       },
+      credentials: 'include',
       body: JSON.stringify({
         ...payload,
         userId: effectiveUserId,
       }),
     });
     const json = await res.json();
-    if (res.ok && json?.data?.currentPoints !== undefined) {
-      notifyExamPointsUpdated(json.data.currentPoints);
+    if (res.ok && (json?.data?.currentPoints !== undefined || json?.data?.diamonds !== undefined)) {
+      notifyExamPointsUpdated(json.data.currentPoints, json.data.diamonds);
     }
     return { ok: res.ok, status: res.status, ...json };
   },
@@ -352,6 +357,7 @@ export const examPointsService = {
       const res = await fetch(`/api/v1/exams/points/history?${searchParams.toString()}`, {
         method: 'GET',
         headers,
+        credentials: 'include',
         cache: 'no-store',
       });
       const json = await res.json();
@@ -382,13 +388,19 @@ export const examPointsService = {
         'Content-Type': 'application/json',
         ...headers,
       },
+      credentials: 'include',
       body: JSON.stringify({
         ...payload,
         userId: effectiveUserId,
       }),
     });
     const json = await res.json().catch(() => ({}));
-    if (json?.data?.currentPoints !== undefined || json?.data?.diamonds !== undefined) {
+    const currentAuthUserId = headers['x-user-id'];
+    const isAdjustingSelf = !payload.userId || payload.userId === currentAuthUserId;
+    if (
+      isAdjustingSelf &&
+      (json?.data?.currentPoints !== undefined || json?.data?.diamonds !== undefined)
+    ) {
       notifyExamPointsUpdated(json?.data?.currentPoints, json?.data?.diamonds);
     }
     return { ok: res.ok, ...json };

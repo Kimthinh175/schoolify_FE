@@ -332,7 +332,7 @@ export const chapterRoadmapService = {
   ): Promise<DiagnosticStatusInfo | null> {
     const normalizedSubject = (subjectSlug || 'toan-hoc').trim().toLowerCase();
     const safeGrade =
-      grade && [10, 11, 12].includes(Number(grade)) ? Number(grade) : 12;
+      grade && Number(grade) >= 1 && Number(grade) <= 12 ? Number(grade) : 12;
 
     try {
       const qs = new URLSearchParams();
@@ -344,6 +344,7 @@ export const chapterRoadmapService = {
         headers: {
           ...getAuthHeaders(),
         },
+        credentials: 'include',
         cache: 'no-store',
       });
 
@@ -385,7 +386,7 @@ export const chapterRoadmapService = {
     try {
       const qs = new URLSearchParams();
       qs.set('subject', subjectSlug || 'toan-hoc');
-      if (grade && [10, 11, 12].includes(Number(grade))) {
+      if (grade && Number(grade) >= 1 && Number(grade) <= 12) {
         qs.set('grade', String(grade));
       }
 
@@ -394,6 +395,7 @@ export const chapterRoadmapService = {
         headers: {
           ...getAuthHeaders(),
         },
+        credentials: 'include',
         cache: 'no-store',
       });
 
