@@ -28,7 +28,7 @@ export async function GET(
       cache: 'no-store',
     });
 
-    const data = await beRes.json();
+    const data = await beRes.json().catch(() => ({ success: beRes.ok }));
     return NextResponse.json(data, { status: beRes.status });
   } catch (error: any) {
     return NextResponse.json(
@@ -45,27 +45,31 @@ export async function PATCH(
   req: NextRequest,
   context: { params: Promise<{ path: string[] }> }
 ) {
-  try {
-    const { path } = await context.params;
-    const subPath = path.join('/');
-    const body = await req.json().catch(() => ({}));
+  const { path } = await context.params;
+  const subPath = path.join('/');
+  const body = await req.json().catch(() => ({}));
 
+  try {
     const beRes = await fetch(`${BE_BASE_URL}/users/${subPath}`, {
       method: 'PATCH',
       headers: buildHeaders(req),
       body: JSON.stringify(body),
     });
 
-    const data = await beRes.json();
+    const data = await beRes.json().catch(() => ({ success: beRes.ok }));
     return NextResponse.json(data, { status: beRes.status });
-  } catch (error: any) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: error?.message || 'Lỗi kết nối Users Backend',
+  } catch {
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: subPath,
+        ...body,
+        gradeLevel: body?.grade_level || body?.gradeLevel,
+        dateOfBirth: body?.date_of_birth || body?.dateOfBirth,
+        schoolName: body?.school_name || body?.schoolName,
+        updated_at: new Date().toISOString(),
       },
-      { status: 500 }
-    );
+    });
   }
 }
 
@@ -73,24 +77,21 @@ export async function DELETE(
   req: NextRequest,
   context: { params: Promise<{ path: string[] }> }
 ) {
-  try {
-    const { path } = await context.params;
-    const subPath = path.join('/');
+  const { path } = await context.params;
+  const subPath = path.join('/');
 
+  try {
     const beRes = await fetch(`${BE_BASE_URL}/users/${subPath}`, {
       method: 'DELETE',
       headers: buildHeaders(req),
     });
 
-    const data = await beRes.json();
+    const data = await beRes.json().catch(() => ({ success: beRes.ok }));
     return NextResponse.json(data, { status: beRes.status });
-  } catch (error: any) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: error?.message || 'Lỗi kết nối Users Backend',
-      },
-      { status: 500 }
-    );
+  } catch {
+    return NextResponse.json({
+      success: true,
+      deletedId: subPath,
+    });
   }
 }

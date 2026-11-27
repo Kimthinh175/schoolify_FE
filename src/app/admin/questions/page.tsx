@@ -785,10 +785,10 @@ export default function AdminQuestionsPage() {
           </div>
 
           {/* Thanh tỷ lệ tổng quát toàn sàn */}
-          <div className="w-full lg:w-64 space-y-1">
-            <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-              <span>Tỷ lệ độ khó toàn sàn</span>
-              <span className="font-mono font-bold text-slate-700 dark:text-slate-200">
+          <div className="w-full lg:w-80 space-y-1">
+            <div className="flex items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+              <span className="whitespace-nowrap">Tỷ lệ độ khó toàn sàn</span>
+              <span className="font-mono font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">
                 {globalBloomCounts.recPct}% • {globalBloomCounts.undPct}% • {globalBloomCounts.appPct}% • {globalBloomCounts.advPct}%
               </span>
             </div>
@@ -1124,7 +1124,7 @@ export default function AdminQuestionsPage() {
                           </span>
                         )}
 
-                        <span className="text-[11px] font-semibold text-primary dark:text-[#00B8DD] inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                        <span className="text-[11px] font-semibold text-primary dark:text-[#00B8DD] inline-flex items-center gap-1 whitespace-nowrap shrink-0 group-hover:translate-x-0.5 transition-transform">
                           Xem kho
                           <ArrowRight className="w-3.5 h-3.5" />
                         </span>
@@ -1359,7 +1359,7 @@ export default function AdminQuestionsPage() {
                   </div>
 
                   {/* Nhóm select lọc */}
-                  <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  <div className="flex flex-wrap items-center gap-2 min-w-0">
                     {/* Lọc môn học */}
                     <select
                       value={selectedSubject}

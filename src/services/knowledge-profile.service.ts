@@ -253,6 +253,7 @@ export const knowledgeProfileService = {
     const res = await fetch(`/api/v1/exams/knowledge-profile?${query.toString()}`, {
       method: 'GET',
       headers,
+      credentials: 'include',
       cache: 'no-store',
     });
 
@@ -290,6 +291,7 @@ export const knowledgeProfileService = {
     const res = await fetch(`/api/v1/exams/personalized-roadmap?${query.toString()}`, {
       method: 'GET',
       headers,
+      credentials: 'include',
       cache: 'no-store',
     });
 

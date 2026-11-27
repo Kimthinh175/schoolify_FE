@@ -142,8 +142,30 @@ export function ReportQuestionModal({
           </div>
         </div>
       }
+      footer={
+        <div className="w-full flex items-center justify-between gap-3">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onClose}
+            className="text-xs font-bold text-slate-500"
+          >
+            Hủy Bỏ
+          </Button>
+
+          <Button
+            type="submit"
+            form="report-question-form"
+            isLoading={isSubmitting}
+            className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-md shadow-rose-600/20"
+            leftIcon={<Send className="w-3.5 h-3.5" />}
+          >
+            Gửi Báo Cáo Cho Khảo Thí
+          </Button>
+        </div>
+      }
     >
-      <form onSubmit={handleSubmit} className="space-y-4 pt-1">
+      <form id="report-question-form" onSubmit={handleSubmit} className="space-y-4 pt-1">
         {questionContentSnippet && (
           <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 line-clamp-2 italic">
             &ldquo;{questionContentSnippet}&rdquo;
@@ -199,26 +221,6 @@ export function ReportQuestionModal({
             placeholder="Ví dụ: Ở bước biến đổi thứ 2, công thức đạo hàm bị thiếu dấu trừ, đáp án đúng phải là C thay vì A..."
             className="w-full p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all placeholder:text-slate-400"
           />
-        </div>
-
-        <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onClose}
-            className="text-xs font-bold text-slate-500"
-          >
-            Hủy Bỏ
-          </Button>
-
-          <Button
-            type="submit"
-            isLoading={isSubmitting}
-            className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-md shadow-rose-600/20"
-            leftIcon={<Send className="w-3.5 h-3.5" />}
-          >
-            Gửi Báo Cáo Cho Khảo Thí
-          </Button>
         </div>
       </form>
     </Dialog>

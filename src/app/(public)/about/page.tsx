@@ -23,10 +23,10 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 const fadeUp = (delay = 0) => ({
-  initial: { opacity: 0, y: 20 },
+  initial: { opacity: 0, y: 16 },
   whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-40px' },
-  transition: { duration: 0.5, delay, ease: 'easeOut' as const },
+  viewport: { once: true, amount: 0.05 },
+  transition: { duration: 0.35, delay, ease: 'easeOut' as const },
 });
 
 export default function AboutPage() {
@@ -68,7 +68,7 @@ export default function AboutPage() {
     <div className="py-12 sm:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16 sm:space-y-24">
       {/* ── HERO SECTION ── */}
       <div className="text-center max-w-3xl mx-auto space-y-4">
-        <motion.div {...fadeUp(0)}>
+        <div>
           <Badge variant="primary" className="bg-[#00B8DD] text-white font-bold mb-3">
             VỀ CHÚNG TÔI • SCHOOLIFY VIỆT NAM
           </Badge>
@@ -79,7 +79,7 @@ export default function AboutPage() {
           <p className="mt-4 text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
             Schoolify là hệ sinh thái giáo dục số kết nối toàn diện giữa <strong>Nhà trường - Giáo viên - Học sinh - Phụ huynh</strong>. Chúng tôi mang đến công cụ tự động hóa khảo thí, phân hóa lộ trình học tập và tạo dựng thói quen tự học bền vững cho thế hệ học sinh Việt Nam.
           </p>
-        </motion.div>
+        </div>
       </div>
 
       {/* ── STATS SECTION ── */}

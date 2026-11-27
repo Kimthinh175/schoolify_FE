@@ -70,6 +70,31 @@ export async function parseWordQuestions(file: File): Promise<WordParseResult> {
         error_type: 'MISSING_CONTENT',
         message: errorReason,
       });
+    } else if (
+      (qType === 'SINGLE_CHOICE' || qType === 'MULTIPLE_CHOICE') &&
+      answers.length > 0 &&
+      !answers.some((a) => a.is_answer)
+    ) {
+      hasError = true;
+      errorReason = 'Chưa xác định được đáp án đúng — vui lòng chọn thủ công';
+      errors.push({
+        row_or_index: item.index,
+        field: 'Answers',
+        error_type: 'MISSING_CORRECT_ANSWER',
+        message: errorReason,
+      });
+    } else if (
+      qType === 'FILL_BLANK' &&
+      (!item.shortAnswer?.trim() || item.shortAnswer.trim() === '(Điền đáp số)')
+    ) {
+      hasError = true;
+      errorReason = 'Chưa xác định được đáp số trả lời ngắn — vui lòng nhập thủ công';
+      errors.push({
+        row_or_index: item.index,
+        field: 'CorrectAnswer',
+        error_type: 'MISSING_CORRECT_ANSWER',
+        message: errorReason,
+      });
     }
 
     const parsedQuestion: Question & {
@@ -88,6 +113,10 @@ export async function parseWordQuestions(file: File): Promise<WordParseResult> {
       img_urls: item.imageUrls.length > 0 ? item.imageUrls : undefined,
       answers,
       explain: item.explain || undefined,
+      shortAnswerCorrect:
+        qType === 'FILL_BLANK' && item.shortAnswer && item.shortAnswer !== '(Điền đáp số)'
+          ? item.shortAnswer
+          : undefined,
       hasError,
       errorReason,
       originalIndex: item.index,

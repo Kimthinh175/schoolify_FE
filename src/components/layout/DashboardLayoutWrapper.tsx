@@ -15,7 +15,6 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
     pathname === '/admin/login' ||
     pathname?.startsWith('/student/practice/exam-room') ||
     pathname?.startsWith('/student/practice') ||
-    pathname?.startsWith('/student/learn') ||
     pathname?.startsWith('/student/exam/'); // chỉ phòng thi /student/exam/:id, KHÔNG gồm /student/exams
 
   if (isFocusOrPractice) {
