@@ -37,6 +37,40 @@ function setStoredData<T>(key: string, data: T): void {
   }
 }
 
+function stripDiacritics(input: string): string {
+  return String(input || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase()
+    .trim();
+}
+
+export function normalizeLeaderboardSubject(raw?: string | null): SubjectFilter {
+  const norm = stripDiacritics(raw || '').replace(/[\s-]+/g, '_');
+  if (!norm || norm === 'all') return 'ALL';
+  if (norm.includes('toan') || norm.includes('math')) return 'MATH';
+  if (norm.includes('tin') || norm.includes('info') || norm.includes('cs')) return 'INFORMATICS';
+  if (norm.includes('ly') || norm.includes('phys')) return 'PHYSICS';
+  if (norm.includes('hoa') || norm.includes('chem')) return 'CHEMISTRY';
+  if (norm.includes('sinh') || norm.includes('bio')) return 'BIOLOGY';
+  if (norm.includes('anh') || norm.includes('eng')) return 'ENGLISH';
+  if (norm.includes('van') || norm.includes('lit')) return 'LITERATURE';
+  return 'MATH';
+}
+
+export const SUBJECT_DISPLAY_LABELS: Record<SubjectFilter, string> = {
+  ALL: 'Tất cả môn',
+  MATH: 'Toán Học',
+  INFORMATICS: 'Tin Học',
+  PHYSICS: 'Vật Lý',
+  CHEMISTRY: 'Hóa Học',
+  BIOLOGY: 'Sinh Học',
+  ENGLISH: 'Tiếng Anh',
+  LITERATURE: 'Ngữ Văn',
+};
+
 export const leaderboardService = {
   // --- SEASONS MANAGEMENT ---
   getSeasons(): Season[] {
@@ -192,7 +226,7 @@ export const leaderboardService = {
     timeframe: LeaderboardTimeframe;
     grade: GradeLevel;
     subject: SubjectFilter;
-    scope: LeaderboardScope;
+    scope?: LeaderboardScope;
     search?: string;
     sourceUsers?: LeaderboardUser[];
     currentAuthUser?: {
@@ -206,6 +240,7 @@ export const leaderboardService = {
     topThree: LeaderboardUser[];
     restOfUsers: LeaderboardUser[];
     currentUser: LeaderboardUser | undefined;
+    nextRankUser: LeaderboardUser | null;
     totalCount: number;
   } {
     let users = [...(params.sourceUsers && params.sourceUsers.length > 0 ? params.sourceUsers : this.getUsers())].map(
@@ -226,22 +261,23 @@ export const leaderboardService = {
       users = users.filter((u) => u.primarySubject === params.subject);
     }
 
-    // Scope filter (mock fallback when schoolName matches)
+    // Scope filter (chỉ chạy khi truyền khác NATIONAL)
     if (params.scope === 'SCHOOL') {
       users = users.filter((u) => u.schoolName.includes('Lê Hồng Phong') || u.schoolName.includes('Schoolify'));
     } else if (params.scope === 'CLASS') {
       users = users.filter((u) => u.className.includes('11 Toán 1') || u.className.includes('12 Toán 1') || u.isCurrentUser);
     }
 
-    // Search query
+    // Search query (hỗ trợ tìm có dấu & không dấu theo tên, trường, lớp, môn học)
     if (params.search && params.search.trim() !== '') {
-      const q = params.search.toLowerCase().trim();
-      users = users.filter(
-        (u) =>
-          u.name.toLowerCase().includes(q) ||
-          u.schoolName.toLowerCase().includes(q) ||
-          u.className.toLowerCase().includes(q)
-      );
+      const qRaw = params.search.toLowerCase().trim();
+      const qFold = stripDiacritics(params.search);
+      users = users.filter((u) => {
+        const subjectLabel = SUBJECT_DISPLAY_LABELS[u.primarySubject] || u.primarySubject;
+        const haystackRaw = `${u.name} ${u.schoolName} ${u.className} ${subjectLabel}`.toLowerCase();
+        const haystackFold = stripDiacritics(haystackRaw);
+        return haystackRaw.includes(qRaw) || haystackFold.includes(qFold);
+      });
     }
 
     // Adjust points slightly based on timeframe for realism
@@ -269,17 +305,24 @@ export const leaderboardService = {
     const restOfUsers = timeframeUsers.slice(3);
 
     let currentUser: LeaderboardUser | undefined = undefined;
+    let nextRankUser: LeaderboardUser | null = null;
     if (params.currentAuthUser?.id) {
-      const matched = timeframeUsers.find((u) => u.id === params.currentAuthUser!.id);
-      if (matched) {
-        currentUser = matched;
+      const matchedIdx = timeframeUsers.findIndex((u) => u.id === params.currentAuthUser!.id);
+      if (matchedIdx !== -1) {
+        currentUser = timeframeUsers[matchedIdx];
+        nextRankUser = matchedIdx > 0 ? timeframeUsers[matchedIdx - 1] : null;
       } else {
         const parsedGradeNum = Number(String(params.currentAuthUser.grade_level || '12').match(/\d+/)?.[0] || 12);
-        const mappedGrade = (`GRADE_${Math.min(12, Math.max(6, parsedGradeNum))}`) as GradeLevel;
+        const mappedGrade = (`GRADE_${Math.min(12, Math.max(1, parsedGradeNum))}`) as GradeLevel;
+        const rawPoints = Number(params.currentAuthUser.points || 0);
+        const multiplier = params.timeframe === 'WEEKLY' ? 0.22 : params.timeframe === 'MONTHLY' ? 0.65 : 1;
+        const scaledPoints = Math.round(rawPoints * multiplier);
+        const betterCount = timeframeUsers.filter((u) => u.points > scaledPoints).length;
+        nextRankUser = betterCount > 0 ? timeframeUsers[betterCount - 1] : null;
         currentUser = {
           id: params.currentAuthUser.id,
-          rank: timeframeUsers.length + 1,
-          previousRank: timeframeUsers.length + 1,
+          rank: betterCount + 1,
+          previousRank: betterCount + 1,
           rankChange: 'NEW',
           rankChangeAmount: 0,
           name: `${params.currentAuthUser.fullname} (Bạn)`,
@@ -290,11 +333,11 @@ export const leaderboardService = {
           className: `Lớp ${parsedGradeNum}`,
           grade: mappedGrade,
           primarySubject: 'MATH',
-          points: Number(params.currentAuthUser.points || 0),
+          points: scaledPoints,
           correctRate: 0,
           quizzesCompleted: 0,
           streakDays: 1,
-          gems: Number(params.currentAuthUser.points || 0),
+          gems: rawPoints,
           badgeTitle: 'Thành Viên Mới',
           badgeTier: 'BRONZE',
           isCurrentUser: true,
@@ -306,6 +349,7 @@ export const leaderboardService = {
       topThree,
       restOfUsers,
       currentUser,
+      nextRankUser,
       totalCount: timeframeUsers.length,
     };
   },

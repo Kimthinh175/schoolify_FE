@@ -617,7 +617,7 @@ export function PracticeHistoryList({ showHeader = true }: PracticeHistoryListPr
               setSearchQuery(e.target.value);
               setCurrentPage(1);
             }}
-            leftIcon={<Search className="w-4 h-4 text-slate-400" />}
+            leftIcon={<Search className="w-4 h-4 text-[#00B8DD]" />}
             className="w-full text-xs h-10 pr-8 bg-white dark:bg-slate-900 rounded-xl"
           />
           {searchQuery && (

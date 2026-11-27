@@ -13,6 +13,7 @@ import {
   GraduationCap,
 } from 'lucide-react';
 import { LeaderboardUser } from '@/types/leaderboard';
+import { SUBJECT_DISPLAY_LABELS } from '@/services/leaderboard.service';
 import { Dialog } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -120,7 +121,9 @@ export function UserRankDetailModal({
         <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
           <div className="flex items-center justify-between">
             <span className="text-slate-500">Môn sở trường:</span>
-            <span className="font-bold text-slate-800 dark:text-slate-200">{user.primarySubject}</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200">
+              {SUBJECT_DISPLAY_LABELS[user.primarySubject] || user.primarySubject}
+            </span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-slate-500">Bài tập & đề thi đã giải:</span>

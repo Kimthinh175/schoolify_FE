@@ -12,7 +12,13 @@ interface PodiumTopThreeProps {
 }
 
 export function PodiumTopThree({ topThree, onSelectUser }: PodiumTopThreeProps) {
-  if (!topThree || topThree.length === 0) return null;
+  if (!topThree || topThree.length === 0) {
+    return (
+      <div className="py-8 px-4 text-center text-xs text-slate-500 dark:text-slate-400">
+        Chưa có thí sinh nào phù hợp với bộ lọc môn học / khối lớp hiện tại.
+      </div>
+    );
+  }
 
   const first = topThree.find((u) => u.rank === 1) || topThree[0];
   const second = topThree.find((u) => u.rank === 2) || topThree[1];
