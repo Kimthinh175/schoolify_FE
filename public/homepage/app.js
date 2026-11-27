@@ -4072,10 +4072,6 @@
     });
   }
 
-  // =========================================================================
-  // BOOTSTRAP ALL MODULES
-  // =========================================================================
-  let bootstrapRetryCount = 0;
   function initNewsFiltersAndSpotlight() {
     // CargoKite Cursor Spotlight Glow Tracking on Cards
     document.querySelectorAll('.news-card.ck-spotlight').forEach(card => {
@@ -4113,30 +4109,9 @@
   }
 
   // =========================================================================
-  // BOOTSTRAP ALL MODULES (V7 HOMEPAGE: INCLUDES NEWS & LEADERBOARD MODAL)
+  // BOOTSTRAP ALL MODULES
   // =========================================================================
-  initThemeMode();
-  initPreloader();
-  initScrollProgressBar();
-  initConstellationSkyCanvas();
-  initSmoothScrollAndNav();
-  initAuthAndWallet();
-  initOrigamiChoreography();
-  initRevealsAndCounters();
-  initInteractiveMiniDemo();
-  initGradeCatalogTabs();
-  initChampionshipPodium();
-  initLeaderboardModal();
-  initNewsFiltersAndSpotlight();
-  initFaqAccordion();
-  initContactSection();
-  initBackToTop();
-  initSubpageRoutePreview();
-  initImpactIsoInteractions();
-  initTechCardInteractions();
-  initMagneticButtons();
-    initNewsFiltersAndSpotlight();
-})();
+  let bootstrapRetryCount = 0;
 
   function bootstrap() {
     if (typeof window !== 'undefined' && window.__schoolifyHomepageRunning) {
@@ -4170,6 +4145,7 @@
     initInteractiveMiniDemo();
     initGradeCatalogTabs();
     initChampionshipPodium();
+    initNewsFiltersAndSpotlight();
     initFaqAccordion();
     initContactSection();
     initBackToTop();
