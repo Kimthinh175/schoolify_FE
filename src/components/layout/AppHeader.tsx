@@ -36,7 +36,7 @@ export function AppHeader({ onOpenMobileSidebar }: { onOpenMobileSidebar: () => 
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 min-h-[64px] shrink-0 w-full items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 sm:px-6 backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-950/95">
+    <header className="sticky top-0 z-40 flex h-16 min-h-[64px] shrink-0 w-full items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 sm:px-6 backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-950/95">
       {/* Left: Mobile hamburger */}
       <div className="flex items-center gap-3">
         <button

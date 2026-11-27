@@ -167,7 +167,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     label: 'Cổng Luyện Thi K-12',
     href: '/student/practice',
-    icon: <Sparkles className="w-5 h-5 text-[#00B8DD]" />,
+    icon: <Sparkles className="w-5 h-5" />,
     roles: ['STUDENT'],
   },
   {
@@ -192,12 +192,6 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Thành Tựu & Huy Hiệu',
     href: '/student/achievements',
     icon: <Trophy className="w-5 h-5" />,
-    roles: ['STUDENT'],
-  },
-  {
-    label: 'Khóa Học Của Tôi',
-    href: '/student/my-courses',
-    icon: <BookOpen className="w-5 h-5" />,
     roles: ['STUDENT'],
   },
   {

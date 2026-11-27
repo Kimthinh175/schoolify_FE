@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import {
   User,
   Mail,
@@ -16,8 +17,23 @@ import {
   Upload,
   ShieldCheck,
   Sparkles,
+  Calendar,
+  Crown,
+  Clock,
+  ArrowUpRight,
+  FileText,
 } from 'lucide-react';
-import { usersService } from '@/services/users.service';
+import {
+  usersService,
+  getLocalProfileMetadata,
+  normalizeGradeLevelLabel,
+} from '@/services/users.service';
+import { examPointsService } from '@/services/exam-points.service';
+import { chapterRoadmapService } from '@/services/chapter-roadmap.service';
+import { getGuestOnboarding } from '@/lib/semester-utils';
+import { useNotificationsStore } from '@/store/notifications.store';
+import { Progress } from '@/components/ui/progress';
+import { TiaSangIcon, NgocIcon } from '@/components/ui/point-icons';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -76,14 +92,23 @@ export function StudentAccountHub() {
     }
   }, []);
 
-  // Form profile state
+  // Form profile state (Đồng bộ bảng users + student_profile)
   const [fullname, setFullname] = React.useState(user?.fullname || '');
   const [email, setEmail] = React.useState(user?.email || '');
   const [phone, setPhone] = React.useState(user?.phone || '');
   const [avatarUrl, setAvatarUrl] = React.useState(user?.avatar_url || '');
-  const [school, setSchool] = React.useState('THPT Chuyên Công Nghệ Schoolify');
+  const [dateOfBirth, setDateOfBirth] = React.useState('');
+  const [school, setSchool] = React.useState('');
   const [grade, setGrade] = React.useState('Lớp 12');
-  const [city, setCity] = React.useState('TP. Hồ Chí Minh');
+  const [city, setCity] = React.useState('');
+  const [bio, setBio] = React.useState('');
+
+  // Snapshot các trường kinh tế & gói cước của student_profile
+  const [examPointsBalance, setExamPointsBalance] = React.useState<number>(9);
+  const [diamondsBalance, setDiamondsBalance] = React.useState<number>(100);
+  const [activePackageName, setActivePackageName] = React.useState<string>('FREE');
+  const [packageExpiresAt, setPackageExpiresAt] = React.useState<string | null>(null);
+  const [lastDailyGrantDate, setLastDailyGrantDate] = React.useState<string | null>(null);
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [isSaving, setIsSaving] = React.useState(false);
@@ -98,17 +123,112 @@ export function StudentAccountHub() {
 
   React.useEffect(() => {
     if (user) {
+      const sp = (user as any)?.student_profile || {};
+      const localMeta = getLocalProfileMetadata(user.id);
+
       setFullname(user.fullname || '');
       setEmail(user.email || '');
       setPhone(user.phone || '');
       setAvatarUrl(user.avatar_url || (user as any)?.avatarUrl || (user as any)?.avatar || '');
-      const studentGrade =
-        (user as any)?.student_profile?.grade_level ||
-        (user as any)?.gradeLevel ||
-        'Lớp 12';
-      setGrade(studentGrade);
+
+      const rawGrade = sp.grade_level || (user as any)?.gradeLevel || 'Lớp 12';
+      setGrade(normalizeGradeLevelLabel(rawGrade));
+
+      const rawDob = sp.date_of_birth || (user as any)?.dateOfBirth || localMeta.date_of_birth || '';
+      setDateOfBirth(rawDob ? String(rawDob).slice(0, 10) : '');
+
+      setSchool(
+        sp.school_name ||
+          (user as any)?.schoolName ||
+          localMeta.school_name ||
+          ''
+      );
+      setCity(sp.province || (user as any)?.province || localMeta.province || '');
+      setBio(sp.bio || (user as any)?.bio || localMeta.bio || '');
+
+      if (typeof sp.exam_points === 'number') setExamPointsBalance(sp.exam_points);
+      if (typeof sp.points === 'number') setDiamondsBalance(sp.points);
+      if (sp.active_package) setActivePackageName(sp.active_package);
+      if (sp.package_expires_at) setPackageExpiresAt(sp.package_expires_at);
+      if (sp.last_daily_grant_date) setLastDailyGrantDate(sp.last_daily_grant_date);
     }
   }, [user]);
+
+  // Đồng bộ số dư Tia Sáng & Ngọc Tri Thức thực tế từ Backend
+  React.useEffect(() => {
+    if (!user?.id) {
+      setExamPointsBalance(0);
+      setDiamondsBalance(0);
+      setLastDailyGrantDate(null);
+      setFullname('');
+      setEmail('');
+      setPhone('');
+      setAvatarUrl('');
+      setDateOfBirth('');
+      setSchool('');
+      setCity('');
+      setBio('');
+      return;
+    }
+    examPointsService
+      .getBalance(user.id)
+      .then((bal) => {
+        if (!bal) return;
+        if (typeof bal.currentPoints === 'number') setExamPointsBalance(bal.currentPoints);
+        if (typeof bal.diamonds === 'number') setDiamondsBalance(bal.diamonds);
+        if (bal.activePackage) setActivePackageName(bal.activePackage);
+        if (bal.lastDailyGrantDate) setLastDailyGrantDate(bal.lastDailyGrantDate);
+      })
+      .catch(() => {});
+  }, [user?.id]);
+
+  // Tự động kiểm tra và đồng bộ tiến độ làm bài thử ở chế độ Khách (Guest Try-First) vào tài khoản
+  React.useEffect(() => {
+    if (!user?.id) return;
+    const guest = getGuestOnboarding();
+    if (!guest) return;
+    const hasGuestProgress =
+      Object.keys(guest.completedChapters || {}).length > 0 ||
+      Object.keys(guest.completedDiagnostics || {}).length > 0 ||
+      Boolean(guest.pendingTrialSubmission);
+
+    if (hasGuestProgress) {
+      chapterRoadmapService
+        .syncGuestOnboarding()
+        .then((synced) => {
+          if (synced) {
+            useNotificationsStore.getState().addNotification({
+              id: `guest-sync-${Date.now()}`,
+              type: 'success',
+              category: 'LEARNING',
+              title: 'Đã đồng bộ tiến độ làm thử vào Hồ sơ',
+              message:
+                'Kết quả đánh giá năng lực và tiến độ chương bạn làm thử trước khi đăng nhập đã được hợp nhất vào tài khoản.',
+              link: '/student/practice',
+            });
+          }
+        })
+        .catch(() => {});
+    }
+  }, [user?.id]);
+
+  // Tính toán Độ hoàn thiện Hồ sơ Học sinh (Profile Completeness 0% -> 100%)
+  const profileCompletion = React.useMemo(() => {
+    const checks = [
+      { label: 'Họ và tên', done: Boolean(fullname.trim()) },
+      { label: 'Email định danh', done: Boolean(email.trim()) },
+      { label: 'Số điện thoại', done: Boolean(phone.trim()) },
+      { label: 'Ảnh đại diện', done: Boolean(avatarUrl.trim() || user?.avatar_url) },
+      { label: 'Ngày sinh', done: Boolean(dateOfBirth.trim()) },
+      { label: 'Khối lớp', done: Boolean(grade.trim()) },
+      { label: 'Trường THPT', done: Boolean(school.trim()) },
+      { label: 'Mục tiêu học tập (Bio)', done: Boolean(bio.trim()) },
+    ];
+    const doneCount = checks.filter((c) => c.done).length;
+    const percent = Math.round((doneCount / checks.length) * 100);
+    const missing = checks.filter((c) => !c.done).map((c) => c.label);
+    return { percent, doneCount, total: checks.length, missing };
+  }, [fullname, email, phone, avatarUrl, user?.avatar_url, dateOfBirth, grade, school, bio]);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -166,6 +286,22 @@ export function StudentAccountHub() {
       return;
     }
 
+    const trimmedPhone = phone.trim();
+    if (trimmedPhone && !/^(0|\+84)[0-9]{8,10}$/.test(trimmedPhone.replace(/\s+/g, ''))) {
+      toast.error('Số điện thoại không hợp lệ (VD: 0912345678 hoặc +84912345678).');
+      return;
+    }
+
+    if (dateOfBirth) {
+      const dobDate = new Date(dateOfBirth);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      if (Number.isNaN(dobDate.getTime()) || dobDate > today) {
+        toast.error('Ngày sinh không hợp lệ hoặc không thể ở tương lai.');
+        return;
+      }
+    }
+
     try {
       setIsSaving(true);
       const updated = await usersService.updateUser(user.id, {
@@ -173,29 +309,32 @@ export function StudentAccountHub() {
         phone: phone.trim() || undefined,
         avatar_url: avatarUrl.trim() || undefined,
         grade_level: grade,
+        date_of_birth: dateOfBirth.trim() || undefined,
+        school_name: school.trim() || undefined,
+        province: city.trim() || undefined,
+        bio: bio.trim() || undefined,
+        equipped_frame: frameTier,
       });
 
-      if (updated) {
-        updateUser({
-          fullname: updated.fullname || fullname.trim(),
-          phone: updated.phone ?? (phone.trim() || undefined),
-          avatar_url: updated.avatar_url ?? (avatarUrl.trim() || undefined),
-          ...((user as any)?.student_profile
-            ? {
-                student_profile: {
-                  ...(user as any).student_profile,
-                  grade_level: updated.gradeLevel || grade,
-                },
-              }
-            : {}),
-        } as any);
-        await fetchMe().catch(() => {});
-        setSavedSuccess(true);
-        toast.success('Cập nhật thông tin cá nhân thành công!');
-        setTimeout(() => setSavedSuccess(false), 3500);
-      } else {
-        toast.error('Không thể lưu hồ sơ vào máy chủ. Vui lòng thử lại!');
-      }
+      const currentSp = (user as any)?.student_profile || {};
+      updateUser({
+        fullname: updated?.fullname || fullname.trim(),
+        phone: updated?.phone ?? (phone.trim() || undefined),
+        avatar_url: updated?.avatar_url ?? (avatarUrl.trim() || undefined),
+        student_profile: {
+          ...currentSp,
+          grade_level: updated?.gradeLevel || grade,
+          date_of_birth: dateOfBirth.trim() || currentSp.date_of_birth || null,
+          school_name: school.trim() || currentSp.school_name || null,
+          province: city.trim() || currentSp.province || null,
+          bio: bio.trim() || currentSp.bio || null,
+          equipped_frame: frameTier,
+        },
+      } as any);
+      await fetchMe().catch(() => {});
+      setSavedSuccess(true);
+      toast.success('Cập nhật thông tin cá nhân thành công!');
+      setTimeout(() => setSavedSuccess(false), 3500);
     } catch (err: any) {
       toast.error(err?.message || 'Có lỗi xảy ra khi lưu hồ sơ');
     } finally {
@@ -259,20 +398,65 @@ export function StudentAccountHub() {
     return <StudentAccountSkeleton />;
   }
 
+  if (authHydrated && !user) {
+    return (
+      <Card className="max-w-lg mx-auto my-12 p-8 text-center space-y-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+        <div className="w-12 h-12 rounded-2xl bg-[#00B8DD]/10 text-[#00B8DD] flex items-center justify-center mx-auto">
+          <User className="w-6 h-6" />
+        </div>
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+          Phiên đăng nhập đã kết thúc
+        </h2>
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+          Vui lòng đăng nhập tài khoản học sinh để xem và quản lý hồ sơ cá nhân của bạn.
+        </p>
+        <Link href="/login/student?returnUrl=/student" className="inline-block">
+          <Button className="bg-[#00B8DD] hover:bg-[#009bbd] text-white font-semibold rounded-xl px-5">
+            Đăng nhập ngay
+          </Button>
+        </Link>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6 pb-12 max-w-5xl mx-auto">
       {/* ── 1. Page Header (Thuần túy Thông Tin Cá Nhân) ── */}
-      <div className="pb-4 border-b border-slate-100 dark:border-slate-800">
-        <Badge variant="outline" className="mb-2 bg-[#00B8DD]/10 text-[#007D99] dark:text-[#00B8DD] border-[#00B8DD]/25 font-bold">
-          <User className="w-3.5 h-3.5 mr-1 text-[#00B8DD]" />
-          Hồ Sơ Cá Nhân
-        </Badge>
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-          Thông Tin Cá Nhân
-        </h1>
-        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Quản lý thông tin hồ sơ học sinh, ảnh đại diện, khối lớp học tập và bảo mật tài khoản.
-        </p>
+      <div className="pb-4 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <Badge variant="outline" className="mb-2 bg-[#00B8DD]/10 text-[#007D99] dark:text-[#00B8DD] border-[#00B8DD]/25 font-bold">
+            <User className="w-3.5 h-3.5 mr-1 text-[#00B8DD]" />
+            Hồ Sơ Cá Nhân
+          </Badge>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+            Thông Tin Cá Nhân
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Quản lý thông tin hồ sơ học sinh, ảnh đại diện, khối lớp học tập và bảo mật tài khoản.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <Link href="/student/exams">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 px-3.5 text-xs font-bold border-[#00B8DD]/40 text-[#007D99] dark:text-[#00B8DD] hover:bg-[#00B8DD]/10 rounded-xl cursor-pointer gap-1.5"
+            >
+              <FileText className="w-3.5 h-3.5 text-[#00B8DD]" />
+              <span>Lịch Sử Luyện Thi &amp; Điểm Số</span>
+            </Button>
+          </Link>
+          <Link href="/student/practice">
+            <Button
+              size="sm"
+              className="h-9 px-3.5 text-xs font-bold bg-[#00B8DD] hover:bg-[#009bbd] text-white rounded-xl cursor-pointer gap-1.5 shadow-2xs"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Hồ Sơ Năng Lực &amp; Lộ Trình AI</span>
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Thông báo thành công */}
@@ -282,6 +466,179 @@ export function StudentAccountHub() {
           <span>Cập nhật thông tin cá nhân thành công và đã đồng bộ toàn hệ thống!</span>
         </div>
       )}
+
+      {/* ── 1.5. Dashboard Tóm Tắt Hồ Sơ Học Sinh (student_profile Snapshot) ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        {/* Card 1: Gói cước & Hạn dùng (active_package, package_expires_at) */}
+        <Card className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs flex flex-col justify-between gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+              Gói học tập hiện tại
+            </span>
+            <Crown className="w-4 h-4 text-amber-500" />
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-base font-black text-slate-900 dark:text-white tracking-tight">
+              {activePackageName && activePackageName !== 'FREE'
+                ? activePackageName
+                : 'Gói Cơ Bản (Free)'}
+            </span>
+            <Link
+              href="/pricing"
+              className="inline-flex items-center gap-0.5 text-[11px] font-bold text-[#00B8DD] hover:underline shrink-0"
+            >
+              <span>Nâng cấp</span>
+              <ArrowUpRight className="w-3 h-3" />
+            </Link>
+          </div>
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate">
+            {packageExpiresAt
+              ? `Hết hạn: ${new Date(packageExpiresAt).toLocaleDateString('vi-VN')}`
+              : 'Hiệu lực: Vĩnh viễn (Cấp 9 tia/ngày)'}
+          </p>
+        </Card>
+
+        {/* Card 2: Năng lượng Tia Sáng (exam_points & last_daily_grant_date) */}
+        <Card className="p-4 rounded-2xl border border-amber-200/70 dark:border-amber-900/50 bg-amber-50/40 dark:bg-amber-950/15 shadow-2xs flex flex-col justify-between gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-amber-800 dark:text-amber-300">
+              Tia Sáng luyện đề
+            </span>
+            <TiaSangIcon className="w-4 h-4" flat />
+          </div>
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-2xl font-black text-amber-700 dark:text-amber-300 tabular-nums">
+              {examPointsBalance}
+            </span>
+            <span className="text-xs font-semibold text-amber-600/80 dark:text-amber-400/80">
+              tia khả dụng
+            </span>
+          </div>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+            {lastDailyGrantDate
+              ? `Cấp gần nhất: ${lastDailyGrantDate}`
+              : 'Cấp tự động 9 Tia Sáng mỗi ngày'}
+          </p>
+        </Card>
+
+        {/* Card 3: Ngọc Tri Thức tích lũy (points) */}
+        <Card className="p-4 rounded-2xl border border-cyan-200/70 dark:border-cyan-900/50 bg-cyan-50/40 dark:bg-cyan-950/15 shadow-2xs flex flex-col justify-between gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-cyan-800 dark:text-cyan-300">
+              Ngọc Tri Thức đổi quà
+            </span>
+            <NgocIcon className="w-4 h-4" flat />
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-2xl font-black text-[#007D99] dark:text-[#00B8DD] tabular-nums">
+                {new Intl.NumberFormat('vi-VN').format(diamondsBalance)}
+              </span>
+              <span className="text-xs font-semibold text-cyan-700/80 dark:text-cyan-400/80">
+                ngọc
+              </span>
+            </div>
+            <Link
+              href="/student/rewards"
+              className="inline-flex items-center gap-0.5 text-[11px] font-bold text-[#00B8DD] hover:underline shrink-0"
+            >
+              <span>Đổi quà</span>
+              <ArrowUpRight className="w-3 h-3" />
+            </Link>
+          </div>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+            Tích lũy từ điểm danh, BXH & thành tựu
+          </p>
+        </Card>
+
+        {/* Card 4: Khối lớp & Định danh tài khoản (grade_level, last_login_at) */}
+        <Card className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs flex flex-col justify-between gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+              Khối lớp & Trạng thái
+            </span>
+            <GraduationCap className="w-4 h-4 text-[#00B8DD]" />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-black text-slate-900 dark:text-white">
+              {grade || 'Lớp 12'}
+            </span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+              Đang hoạt động
+            </span>
+          </div>
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate flex items-center gap-1">
+            <Clock className="w-3 h-3 shrink-0" />
+            <span>
+              {user?.last_login_at
+                ? `Đăng nhập: ${new Date(user.last_login_at).toLocaleDateString('vi-VN')}`
+                : 'Phiên đăng nhập bảo mật'}
+            </span>
+          </p>
+        </Card>
+      </div>
+
+      {/* ── 1.8. Thanh Độ Hoàn Thiện Hồ Sơ & Trạng Thái Liên Kết Định Danh ── */}
+      <Card className="p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-bold text-slate-900 dark:text-white">
+              Độ hoàn thiện hồ sơ học sinh:
+            </span>
+            <span
+              className={cn(
+                'px-2 py-0.5 rounded-full text-[11px] font-black tabular-nums',
+                profileCompletion.percent === 100
+                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                  : 'bg-[#00B8DD]/15 text-[#007D99] dark:text-[#00B8DD]'
+              )}
+            >
+              {profileCompletion.percent}% ({profileCompletion.doneCount}/{profileCompletion.total} mục)
+            </span>
+          </div>
+
+          {/* Trạng thái xác thực tài khoản (users.email, users.phone, users.google_id) */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/60">
+              <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+              <span>Email đã xác thực</span>
+            </span>
+            {phone.trim() ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/60">
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                <span>Đã liên kết SĐT</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200/70 dark:border-amber-800/60">
+                <span>Chưa có SĐT</span>
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 border border-sky-200/70 dark:border-sky-800/60">
+              <ShieldCheck className="w-3 h-3 text-[#00B8DD]" />
+              <span>{user?.google_id ? 'Đã liên kết Google' : 'Bảo mật SSO / OTP'}</span>
+            </span>
+          </div>
+        </div>
+
+        <Progress
+          value={profileCompletion.percent}
+          className="h-2 bg-slate-100 dark:bg-slate-800"
+        />
+
+        {profileCompletion.missing.length > 0 ? (
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            💡 Bổ sung thêm{' '}
+            <strong className="text-slate-700 dark:text-slate-200">
+              {profileCompletion.missing.join(', ')}
+            </strong>{' '}
+            ở bên dưới để đạt 100% hồ sơ và giúp AI cá nhân hóa lộ trình chính xác nhất.
+          </p>
+        ) : (
+          <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+            ✓ Hồ sơ học tập của bạn đã hoàn thiện 100% tất cả các trường dữ liệu!
+          </p>
+        )}
+      </Card>
 
       {/* ── 2. Card 1: Ảnh Đại Diện & Khung Danh Hiệu ── */}
       <Card className="p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-6">
@@ -476,6 +833,18 @@ export function StudentAccountHub() {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                Ngày sinh (date_of_birth)
+              </label>
+              <Input
+                type="date"
+                value={dateOfBirth}
+                onChange={(e) => setDateOfBirth(e.target.value)}
+                leftIcon={<Calendar className="w-4 h-4 text-[#00B8DD]" />}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                 Khối lớp học tập
               </label>
               <div className="relative">
@@ -515,6 +884,19 @@ export function StudentAccountHub() {
                 onChange={(e) => setCity(e.target.value)}
                 placeholder="TP. Hồ Chí Minh"
                 leftIcon={<MapPin className="w-4 h-4 text-[#00B8DD]" />}
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                Mục tiêu học tập & Giới thiệu ngắn (Bio)
+              </label>
+              <textarea
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                rows={2}
+                placeholder="Ví dụ: Mục tiêu đạt 9+ Toán kỳ thi THPT Quốc Gia & ĐGNL..."
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00B8DD]"
               />
             </div>
           </div>

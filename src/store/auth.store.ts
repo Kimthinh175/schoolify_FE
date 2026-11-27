@@ -42,6 +42,14 @@ export const useAuthStore = create<AuthStoreState>()(
 
       login: (user, token, role, schoolId) => {
         const resolvedRole = resolveUserRole(user, role);
+        const prevUserId = get().user?.id;
+        if (typeof window !== 'undefined' && prevUserId && prevUserId !== user.id) {
+          try {
+            window.localStorage.removeItem('schoolify_notifications_v1');
+            window.localStorage.removeItem('schoolify_user_tokens');
+            window.localStorage.removeItem('schoolify_user_diamonds');
+          } catch {}
+        }
 
         set({
           user,
@@ -60,7 +68,16 @@ export const useAuthStore = create<AuthStoreState>()(
 
       logout: () => {
         if (typeof window !== 'undefined') {
-          fetch('/api/v1/auth/logout', { method: 'POST' }).catch(() => {});
+          fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
+          try {
+            window.localStorage.removeItem('schoolify_user_tokens');
+            window.localStorage.removeItem('schoolify_user_diamonds');
+            window.localStorage.removeItem('schoolify_notifications_v1');
+            window.localStorage.removeItem('schoolify-notifications-storage');
+            window.localStorage.removeItem('schoolify_guest_onboarding');
+            window.dispatchEvent(new CustomEvent('exam-points-updated', { detail: { points: 0, diamonds: 0 } }));
+            window.dispatchEvent(new Event('knowledge-profile-updated'));
+          } catch {}
         }
         set({
           user: null,

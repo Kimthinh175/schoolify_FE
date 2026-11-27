@@ -4,11 +4,21 @@ import * as React from 'react';
 import Link from 'next/link';
 import {
   ArrowRight,
+  Atom,
   BookOpen,
+  Calculator,
   Calendar,
   Clock,
+  Cpu,
+  Dna,
+  FlaskConical,
+  Globe,
   History,
+  Home,
+  Landmark,
+  Languages,
   RefreshCw,
+  Scale,
   Search,
   Filter,
   X,
@@ -17,22 +27,130 @@ import {
   TrendingUp,
   Sparkles,
   RotateCcw,
+  ChevronDown,
+  Check,
+  Wrench,
 } from 'lucide-react';
+import { useAuthStore } from '@/store/auth.store';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Pagination } from '@/components/ui/pagination';
+import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { ExamSnapshotModal } from '@/components/features/student/practice/ExamSnapshotModal';
+import { cn } from '@/lib/utils';
 import {
   examSnapshotService,
   ExamSnapshot,
   EXAM_SNAPSHOTS_EVENT,
 } from '@/services/exam-snapshot.service';
 import { studentExamsService, PracticeHistoryItem } from '@/services/student-exams.service';
+import { K12_SUBJECTS } from '@/services/mock/subject-data';
 
 const ITEMS_PER_PAGE = 10;
+
+const PRIORITY_SUBJECT_ORDER: string[] = [
+  'toan-hoc',
+  'tin-hoc',
+  ...K12_SUBJECTS.filter((s) => s.slug !== 'toan-hoc' && s.slug !== 'tin-hoc').map((s) => s.slug),
+];
+
+function normalizeSubjectMeta(rawSlug?: string | null, rawName?: string | null): {
+  slug: string;
+  name: string;
+} {
+  const cleanSlug = String(rawSlug || '').trim().toLowerCase();
+  const cleanName = String(rawName || '').trim().toLowerCase();
+
+  // Khớp trực tiếp theo slug trong K12_SUBJECTS
+  const bySlug = K12_SUBJECTS.find((s) => s.slug === cleanSlug);
+  if (bySlug) return { slug: bySlug.slug, name: bySlug.name };
+
+  // Suy luận thông minh từ tên hoặc slug viết tắt
+  if (cleanSlug.includes('toan') || cleanName.includes('toán')) {
+    return { slug: 'toan-hoc', name: 'Toán Học' };
+  }
+  if (cleanSlug.includes('tin') || cleanName.includes('tin học') || cleanName.includes('lập trình')) {
+    return { slug: 'tin-hoc', name: 'Tin Học' };
+  }
+  if (cleanSlug.includes('ly') || cleanName.includes('vật lý')) {
+    return { slug: 'vat-ly', name: 'Vật Lý' };
+  }
+  if (cleanSlug.includes('hoa') || cleanName.includes('hóa')) {
+    return { slug: 'hoa-hoc', name: 'Hóa Học' };
+  }
+  if (cleanSlug.includes('sinh') || cleanName.includes('sinh học')) {
+    return { slug: 'sinh-hoc', name: 'Sinh Học' };
+  }
+  if (cleanSlug.includes('anh') || cleanName.includes('tiếng anh')) {
+    return { slug: 'tieng-anh', name: 'Tiếng Anh' };
+  }
+  if (cleanSlug.includes('van') || cleanName.includes('ngữ văn')) {
+    return { slug: 'ngu-van', name: 'Ngữ Văn' };
+  }
+  if (cleanSlug.includes('su') || cleanName.includes('lịch sử')) {
+    return { slug: 'lich-su', name: 'Lịch Sử' };
+  }
+  if (cleanSlug.includes('dia') || cleanName.includes('địa lý')) {
+    return { slug: 'dia-ly', name: 'Địa Lý' };
+  }
+  if (cleanSlug.includes('gdcd') || cleanSlug.includes('gdkt') || cleanName.includes('pháp luật')) {
+    return { slug: 'gdcd', name: 'GDKT & Pháp Luật' };
+  }
+  if (cleanSlug.includes('cong-nghe') || cleanName.includes('công nghệ')) {
+    return { slug: 'cong-nghe', name: 'Công Nghệ' };
+  }
+  if (cleanSlug.includes('khtn') || cleanName.includes('tự nhiên')) {
+    return { slug: 'khoa-hoc-tu-nhien', name: 'Khoa Học Tự Nhiên' };
+  }
+
+  // Mặc định chuẩn hóa những nhãn chung như "Môn Học K-12" về Toán Học
+  return { slug: 'toan-hoc', name: 'Toán Học' };
+}
+
+function renderHistorySubjectLogo(slug: string, className = 'w-4 h-4') {
+  switch (slug) {
+    case 'toan-hoc':
+      return <Calculator className={`${className} text-sky-600 dark:text-sky-400`} />;
+    case 'tin-hoc':
+      return <Cpu className={`${className} text-cyan-600 dark:text-cyan-400`} />;
+    case 'vat-ly':
+      return <Atom className={`${className} text-indigo-500 dark:text-indigo-400`} />;
+    case 'hoa-hoc':
+      return <FlaskConical className={`${className} text-emerald-500 dark:text-emerald-400`} />;
+    case 'sinh-hoc':
+      return <Dna className={`${className} text-teal-500 dark:text-teal-400`} />;
+    case 'tieng-anh':
+      return <Languages className={`${className} text-amber-500 dark:text-amber-400`} />;
+    case 'ngu-van':
+      return <BookOpen className={`${className} text-rose-500 dark:text-rose-400`} />;
+    case 'lich-su':
+      return <Landmark className={`${className} text-orange-500 dark:text-orange-400`} />;
+    case 'dia-ly':
+      return <Globe className={`${className} text-blue-500 dark:text-blue-400`} />;
+    case 'gdcd':
+      return <Scale className={`${className} text-purple-500 dark:text-purple-400`} />;
+    case 'cong-nghe':
+      return <Wrench className={`${className} text-slate-500 dark:text-slate-400`} />;
+    case 'khoa-hoc-tu-nhien':
+      return <Sparkles className={`${className} text-emerald-600 dark:text-emerald-400`} />;
+    default:
+      return <BookOpen className={`${className} text-[#00B8DD]`} />;
+  }
+}
+
+function normalizeHighSchoolGrade(rawGrade?: number | string | null, rawTitle?: string | null): number {
+  const num = Number(rawGrade);
+  if (num >= 1 && num <= 12) return num;
+  const titleMatch = String(rawTitle || '').match(/(?:Khối|Lớp|Toán|Tin)\s*(1[0-2]|[1-9])\b/i);
+  if (titleMatch) {
+    const parsed = Number(titleMatch[1]);
+    if (parsed >= 1 && parsed <= 12) return parsed;
+  }
+  return 12;
+}
 
 const BLOOM_LEVELS = [
   { key: 'EASY', label: 'Nhận biết', color: 'text-emerald-600 dark:text-emerald-400' },
@@ -78,6 +196,80 @@ export interface UnifiedHistoryItem {
   remediationCorrectCount?: number;
   remediationTotalQuestions?: number;
   chapterId?: number;
+}
+
+function HistorySelectDropdown({
+  value,
+  options,
+  onChange,
+  prefixLabel,
+  menuClassName,
+  align = 'left',
+}: {
+  value: string;
+  options: Array<{ value: string; label: string; count?: number; icon?: React.ReactNode }>;
+  onChange: (next: string) => void;
+  prefixLabel?: string;
+  menuClassName?: string;
+  align?: 'left' | 'right';
+}) {
+  const current = options.find((o) => o.value === value) || options[0];
+
+  return (
+    <DropdownMenu
+      align={align}
+      className={cn(
+        'min-w-[210px] max-h-72 overflow-y-auto rounded-2xl p-1.5 shadow-xl border-slate-200 dark:border-slate-800',
+        menuClassName
+      )}
+      trigger={
+        <div className="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-[#00B8DD]/60 dark:hover:border-[#00B8DD]/50 text-xs text-slate-900 dark:text-white font-semibold inline-flex items-center justify-between gap-2 transition-all select-none cursor-pointer shadow-2xs">
+          <span className="inline-flex items-center gap-1.5 truncate">
+            {current?.icon}
+            {prefixLabel && (
+              <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
+                {prefixLabel}
+              </span>
+            )}
+            <span className="truncate">{current?.label}</span>
+          </span>
+          <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+        </div>
+      }
+    >
+      {options.map((opt) => {
+        const isSelected = opt.value === value;
+        return (
+          <DropdownMenuItem
+            key={opt.value}
+            onClick={() => onChange(opt.value)}
+            className={cn(
+              'py-2 px-2.5 rounded-xl text-xs',
+              isSelected && 'bg-[#00B8DD]/10 text-[#007D99] dark:text-[#00B8DD] font-bold'
+            )}
+            icon={
+              opt.icon ? (
+                opt.icon
+              ) : isSelected ? (
+                <Check className="w-3.5 h-3.5 text-[#00B8DD]" />
+              ) : (
+                <span className="w-3.5 h-3.5 block" />
+              )
+            }
+          >
+            <div className="flex items-center justify-between gap-3">
+              <span>{opt.label}</span>
+              {typeof opt.count === 'number' && opt.count > 0 && (
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 tabular-nums">
+                  {opt.count}
+                </span>
+              )}
+            </div>
+          </DropdownMenuItem>
+        );
+      })}
+    </DropdownMenu>
+  );
 }
 
 function BloomGrid({ values }: { values: string[] }) {
@@ -129,21 +321,56 @@ interface PracticeHistoryListProps {
   showHeader?: boolean;
 }
 
+function extractUserGradeNumber(rawGrade?: string | number | null): string | null {
+  if (rawGrade === null || rawGrade === undefined) return null;
+  const match = String(rawGrade).match(/(1[0-2]|[1-9])\b/);
+  if (!match) return null;
+  const num = Number(match[1]);
+  return num >= 1 && num <= 12 ? String(num) : null;
+}
+
 export function PracticeHistoryList({ showHeader = true }: PracticeHistoryListProps) {
+  const { isAuthenticated, user } = useAuthStore();
+  const isLoggedIn = Boolean(isAuthenticated && user?.id);
   const [items, setItems] = React.useState<UnifiedHistoryItem[]>([]);
   const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>('loading');
   const [selectedSnapshot, setSelectedSnapshot] = React.useState<ExamSnapshot | null>(null);
   const [isSnapshotOpen, setIsSnapshotOpen] = React.useState(false);
 
-  // Filter & Search states
+  // Filter & Search states (Mặc định Môn = Tất cả các môn học, Khối = lớp người dùng đang học)
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedSubject, setSelectedSubject] = React.useState('ALL');
-  const [selectedGrade, setSelectedGrade] = React.useState('ALL');
+  const [hasManualGradeSelect, setHasManualGradeSelect] = React.useState(false);
+  const [selectedGrade, setSelectedGrade] = React.useState<string>(() => {
+    return extractUserGradeNumber(user?.student_profile?.grade_level) || 'ALL';
+  });
+
+  React.useEffect(() => {
+    if (!isLoggedIn) {
+      setSelectedGrade('ALL');
+      setHasManualGradeSelect(false);
+      return;
+    }
+    if (!hasManualGradeSelect) {
+      const userGrade = extractUserGradeNumber(user?.student_profile?.grade_level);
+      if (userGrade) {
+        setSelectedGrade(userGrade);
+      }
+    }
+  }, [isLoggedIn, user?.id, user?.student_profile?.grade_level, hasManualGradeSelect]);
   const [selectedScoreRange, setSelectedScoreRange] = React.useState('ALL');
   const [sortBy, setSortBy] = React.useState<'NEWEST' | 'OLDEST' | 'SCORE_DESC' | 'SCORE_ASC'>('NEWEST');
   const [currentPage, setCurrentPage] = React.useState(1);
 
   const load = React.useCallback(async () => {
+    if (!isLoggedIn) {
+      setItems([]);
+      setSelectedSnapshot(null);
+      setIsSnapshotOpen(false);
+      setStatus('ready');
+      return;
+    }
+    setStatus('loading');
     try {
       const [snaps, rawHistory] = await Promise.all([
         examSnapshotService.getExamSnapshots(),
@@ -155,13 +382,15 @@ export function PracticeHistoryList({ showHeader = true }: PracticeHistoryListPr
       // 1. Map Snapshots
       for (const snap of snaps) {
         const key = snap.attemptToken || snap.id;
+        const normSubj = normalizeSubjectMeta(snap.subjectSlug, snap.subjectName || snap.examTitle);
+        const normGrade = normalizeHighSchoolGrade(snap.grade, snap.examTitle);
         unifiedMap.set(key, {
           id: snap.id,
           attemptToken: snap.attemptToken,
           title: snap.examTitle || 'Đề thi trắc nghiệm',
-          subject: snap.subjectName || 'Toán Học',
-          subjectSlug: snap.subjectSlug || 'toan-hoc',
-          grade: Number(snap.grade || 12),
+          subject: normSubj.name,
+          subjectSlug: normSubj.slug,
+          grade: normGrade,
           level: 'Tiêu chuẩn',
           score: Number(snap.originalExam?.finalScore ?? 0),
           totalQuestions: snap.originalExam?.totalQuestions ?? 10,
@@ -181,13 +410,15 @@ export function PracticeHistoryList({ showHeader = true }: PracticeHistoryListPr
       for (const h of rawHistory) {
         const key = h.attemptToken || h.id;
         if (!unifiedMap.has(key)) {
+          const normSubj = normalizeSubjectMeta(h.subjectSlug, h.subject || h.title);
+          const normGrade = normalizeHighSchoolGrade(undefined, h.title);
           unifiedMap.set(key, {
             id: h.id,
             attemptToken: h.attemptToken,
             title: h.title,
-            subject: h.subject,
-            subjectSlug: h.subjectSlug,
-            grade: 12,
+            subject: normSubj.name,
+            subjectSlug: normSubj.slug,
+            grade: normGrade,
             level: h.level || 'Tiêu chuẩn',
             score: Number(h.score ?? 0),
             totalQuestions: h.totalQuestions ?? 10,
@@ -205,7 +436,7 @@ export function PracticeHistoryList({ showHeader = true }: PracticeHistoryListPr
       console.error('Failed to load practice history:', err);
       setStatus('error');
     }
-  }, []);
+  }, [isLoggedIn]);
 
   React.useEffect(() => {
     load();
@@ -213,13 +444,23 @@ export function PracticeHistoryList({ showHeader = true }: PracticeHistoryListPr
     return () => window.removeEventListener(EXAM_SNAPSHOTS_EVENT, load);
   }, [load]);
 
-  // Danh sách môn học động từ dữ liệu
-  const availableSubjects = React.useMemo(() => {
-    const set = new Set<string>();
+  // Danh sách đầy đủ các môn học K-12, luôn đưa Môn Toán Học và Môn Tin Học lên đầu tiên
+  const sortedSubjectFilters = React.useMemo(() => {
+    const countBySlug = new Map<string, number>();
     items.forEach((item) => {
-      if (item.subject) set.add(item.subject);
+      const slug = item.subjectSlug || 'toan-hoc';
+      countBySlug.set(slug, (countBySlug.get(slug) || 0) + 1);
     });
-    return Array.from(set).sort();
+
+    return PRIORITY_SUBJECT_ORDER.map((slug) => {
+      const subj = K12_SUBJECTS.find((s) => s.slug === slug);
+      return {
+        slug,
+        name: subj?.name || 'Toán Học',
+        isPriority: slug === 'toan-hoc' || slug === 'tin-hoc',
+        count: countBySlug.get(slug) || 0,
+      };
+    });
   }, [items]);
 
   // Lọc và tìm kiếm
@@ -236,12 +477,14 @@ export function PracticeHistoryList({ showHeader = true }: PracticeHistoryListPr
       );
     }
 
-    // Lọc theo Môn
+    // Lọc theo Môn (khớp chuẩn theo cả subjectSlug và tên môn)
     if (selectedSubject !== 'ALL') {
-      list = list.filter((it) => it.subject === selectedSubject);
+      list = list.filter(
+        (it) => it.subjectSlug === selectedSubject || it.subject === selectedSubject
+      );
     }
 
-    // Lọc theo Khối lớp
+    // Lọc theo Khối lớp (Chỉ Lớp 10, Lớp 11, Lớp 12)
     if (selectedGrade !== 'ALL') {
       list = list.filter((it) => String(it.grade) === selectedGrade);
     }
@@ -299,10 +542,25 @@ export function PracticeHistoryList({ showHeader = true }: PracticeHistoryListPr
     return filteredItems.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredItems, currentPage]);
 
+  const defaultUserGrade =
+    (isLoggedIn && extractUserGradeNumber(user?.student_profile?.grade_level)) || 'ALL';
+
+  const handleRefreshHistory = () => {
+    setSearchQuery('');
+    setSelectedSubject('ALL');
+    setSelectedGrade(defaultUserGrade);
+    setHasManualGradeSelect(false);
+    setSelectedScoreRange('ALL');
+    setSortBy('NEWEST');
+    setCurrentPage(1);
+    void load();
+  };
+
   const handleResetFilters = () => {
     setSearchQuery('');
     setSelectedSubject('ALL');
     setSelectedGrade('ALL');
+    setHasManualGradeSelect(true);
     setSelectedScoreRange('ALL');
     setSortBy('NEWEST');
     setCurrentPage(1);
@@ -311,7 +569,7 @@ export function PracticeHistoryList({ showHeader = true }: PracticeHistoryListPr
   const isFiltering =
     Boolean(searchQuery.trim()) ||
     selectedSubject !== 'ALL' ||
-    selectedGrade !== 'ALL' ||
+    selectedGrade !== defaultUserGrade ||
     selectedScoreRange !== 'ALL' ||
     sortBy !== 'NEWEST';
 
@@ -347,44 +605,201 @@ export function PracticeHistoryList({ showHeader = true }: PracticeHistoryListPr
 
   const isEmpty = status === 'ready' && items.length === 0;
 
-  return (
-    <div className="space-y-6">
-      {/* ── 1. Header (tuỳ chọn) ── */}
-      {showHeader && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Award className="w-5 h-5 text-[#00B8DD]" />
-              <span>Lịch Sử Luyện Đề & Bảng Điểm</span>
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Tra cứu toàn bộ các bài thi đã làm, chi tiết đúng/sai và phân tích 4 mức độ nhận thức Bloom.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <Link href="/student/practice">
-              <Button
-                variant="outline"
-                className="min-h-[44px] border-[#00B8DD]/50 text-[#00B8DD] hover:bg-[#00B8DD]/10 font-bold text-xs px-4 rounded-xl cursor-pointer"
-                leftIcon={<Sparkles className="w-3.5 h-3.5" />}
-              >
-                Lộ Trình Cá Nhân Hóa
-              </Button>
-            </Link>
-            <Link href="/luyen-thi">
-              <Button
-                className="min-h-[44px] bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold shadow-md shadow-[#00B8DD]/25 text-xs px-4 rounded-xl cursor-pointer"
-                rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
-              >
-                Luyện Đề Mới Ngay
-              </Button>
-            </Link>
-          </div>
+  const filterToolbarContent = (
+    <div className="bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200/70 dark:border-slate-800/80 rounded-xl p-2.5 sm:p-3 space-y-2.5">
+      <div className="flex flex-col xl:flex-row xl:items-center gap-2.5">
+        {/* Search Input */}
+        <div className="flex-1 relative min-w-[220px]">
+          <Input
+            placeholder="Tìm kiếm theo tên đề thi hoặc môn học..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            leftIcon={<Search className="w-4 h-4 text-slate-400" />}
+            className="w-full text-xs h-10 pr-8 bg-white dark:bg-slate-900 rounded-xl"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery('');
+                setCurrentPage(1);
+              }}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+              title="Xoá tìm kiếm"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
+
+        {/* Filter Dropdowns */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* 1. Lọc Môn Học */}
+          <HistorySelectDropdown
+            prefixLabel="Môn:"
+            value={selectedSubject}
+            onChange={(val) => {
+              setSelectedSubject(val);
+              setCurrentPage(1);
+            }}
+            menuClassName="min-w-[240px] max-h-80"
+            options={[
+              {
+                value: 'ALL',
+                label: 'Tất cả các môn học',
+                count: items.length,
+                icon: renderHistorySubjectLogo('ALL', 'w-4 h-4 shrink-0'),
+              },
+              ...sortedSubjectFilters.map((s) => ({
+                value: s.slug,
+                label: s.name,
+                count: s.count,
+                icon: renderHistorySubjectLogo(s.slug, 'w-4 h-4 shrink-0'),
+              })),
+            ]}
+          />
+
+          {/* 2. Lọc Khối Lớp (Từ Lớp 12 giảm xuống Lớp 1) */}
+          <HistorySelectDropdown
+            prefixLabel="Khối:"
+            value={selectedGrade}
+            onChange={(val) => {
+              setHasManualGradeSelect(true);
+              setSelectedGrade(val);
+              setCurrentPage(1);
+            }}
+            menuClassName="min-w-[170px]"
+            options={[
+              { value: 'ALL', label: 'Tất cả khối lớp' },
+              ...Array.from({ length: 12 }, (_, idx) => {
+                const g = 12 - idx;
+                return { value: String(g), label: `Lớp ${g}` };
+              }),
+            ]}
+          />
+
+          {/* 3. Lọc Khung Điểm */}
+          <HistorySelectDropdown
+            prefixLabel="Điểm:"
+            value={selectedScoreRange}
+            onChange={(val) => {
+              setSelectedScoreRange(val);
+              setCurrentPage(1);
+            }}
+            align="right"
+            menuClassName="min-w-[200px]"
+            options={[
+              { value: 'ALL', label: 'Tất cả khung điểm' },
+              { value: 'EXCELLENT', label: 'Giỏi / Xuất sắc (≥ 8.0đ)' },
+              { value: 'GOOD', label: 'Khá (6.5 - 7.9đ)' },
+              { value: 'AVERAGE', label: 'Trung bình (5.0 - 6.4đ)' },
+              { value: 'POOR', label: 'Chưa đạt (< 5.0đ)' },
+            ]}
+          />
+
+          {/* 4. Sắp xếp */}
+          <HistorySelectDropdown
+            prefixLabel="Xếp:"
+            value={sortBy}
+            onChange={(val) => {
+              setSortBy(val as any);
+              setCurrentPage(1);
+            }}
+            align="right"
+            menuClassName="min-w-[175px]"
+            options={[
+              { value: 'NEWEST', label: 'Mới nhất trước' },
+              { value: 'OLDEST', label: 'Cũ nhất trước' },
+              { value: 'SCORE_DESC', label: 'Điểm cao nhất' },
+              { value: 'SCORE_ASC', label: 'Điểm thấp nhất' },
+            ]}
+          />
+        </div>
+      </div>
+
+      {/* Active Filter summary */}
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-200/70 dark:border-slate-800/80">
+        <span>
+          Tìm thấy <strong className="text-slate-900 dark:text-white font-bold">{totalItems}</strong> bài thi phù hợp
+          {isFiltering ? ' (theo bộ lọc)' : ''}
+        </span>
+        <div className="flex items-center gap-3">
+          <span>
+            Trang {currentPage} / {totalPages || 1} • (10 bài/trang)
+          </span>
+          <button
+            type="button"
+            onClick={handleRefreshHistory}
+            disabled={status === 'loading'}
+            className="inline-flex items-center gap-1 text-xs font-semibold text-[#007D99] dark:text-[#00B8DD] hover:underline cursor-pointer"
+          >
+            <RefreshCw className={`w-3 h-3 ${status === 'loading' ? 'animate-spin' : ''}`} />
+            <span>Làm mới</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-5">
+      {/* ── 1. HEADER & FILTER CARD (Đồng bộ hoàn toàn với Cổng Luyện Thi K-12) ── */}
+      {showHeader && (
+        <section className="relative z-30 overflow-visible bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3.5 shadow-xs">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 pb-3.5 border-b border-slate-100 dark:border-slate-800">
+            <div className="space-y-1.5 min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-[#00B8DD]/10 text-[#00B8DD] text-xs font-semibold">
+                  <History className="w-3.5 h-3.5" />
+                  Khảo thí &amp; Lịch sử làm bài
+                </span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  {items.length} bài thi đã lưu
+                  {isLoggedIn && user?.fullname ? ` • ${user.fullname}` : ''}
+                </span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight flex flex-wrap items-center gap-2">
+                <span className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 inline-flex items-center justify-center shrink-0">
+                  {renderHistorySubjectLogo(selectedSubject === 'ALL' ? 'default' : selectedSubject, 'w-4.5 h-4.5')}
+                </span>
+                <span>Lịch Sử Luyện Đề &amp; Điểm Số</span>
+              </h2>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-slate-950 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0 self-start lg:self-auto">
+              <Link
+                href="/"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer min-h-[40px]"
+              >
+                <Home className="w-3.5 h-3.5" />
+                <span>Về Trang Chủ</span>
+              </Link>
+              <Link
+                href="/student/practice"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer min-h-[40px]"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Lộ Trình AI</span>
+              </Link>
+              <Link
+                href="/luyen-thi"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-[#00B8DD] hover:bg-[#009bbd] text-white shadow-xs transition-all cursor-pointer min-h-[40px]"
+              >
+                <span>Luyện Đề Mới</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+
+          {isLoggedIn && status === 'ready' && items.length > 0 && filterToolbarContent}
+        </section>
       )}
 
       {/* ── 2. KPI Metrics Bar ── */}
-      {status === 'ready' && items.length > 0 && (
+      {isLoggedIn && status === 'ready' && items.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Card className="p-3.5 rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
             <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block">Tổng đề đã làm</span>
@@ -420,127 +835,10 @@ export function PracticeHistoryList({ showHeader = true }: PracticeHistoryListPr
         </div>
       )}
 
-      {/* ── 3. Search & Filter Toolbar ── */}
-      {status === 'ready' && items.length > 0 && (
-        <Card className="p-4 rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3 shadow-xs">
-          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
-            {/* Search Input */}
-            <div className="flex-1 relative">
-              <Input
-                placeholder="Tìm kiếm theo tên đề thi hoặc môn học..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                leftIcon={<Search className="w-4 h-4 text-slate-400" />}
-                className="w-full text-xs h-10 pr-8"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setCurrentPage(1);
-                  }}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                  title="Xoá tìm kiếm"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-
-            {/* Filter Dropdowns */}
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Lọc Môn */}
-              <select
-                value={selectedSubject}
-                onChange={(e) => {
-                  setSelectedSubject(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white font-medium focus:outline-hidden focus:ring-2 focus:ring-[#00B8DD]"
-              >
-                <option value="ALL">Tất cả môn học</option>
-                {availableSubjects.map((s) => (
-                  <option key={s} value={s}>
-                    Môn {s}
-                  </option>
-                ))}
-              </select>
-
-              {/* Lọc Khối Lớp */}
-              <select
-                value={selectedGrade}
-                onChange={(e) => {
-                  setSelectedGrade(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white font-medium focus:outline-hidden focus:ring-2 focus:ring-[#00B8DD]"
-              >
-                <option value="ALL">Tất cả khối lớp</option>
-                <option value="12">Lớp 12</option>
-                <option value="11">Lớp 11</option>
-                <option value="10">Lớp 10</option>
-                <option value="9">Lớp 9</option>
-              </select>
-
-              {/* Lọc Khung Điểm */}
-              <select
-                value={selectedScoreRange}
-                onChange={(e) => {
-                  setSelectedScoreRange(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white font-medium focus:outline-hidden focus:ring-2 focus:ring-[#00B8DD]"
-              >
-                <option value="ALL">Tất cả khung điểm</option>
-                <option value="EXCELLENT">Giỏi / Xuất sắc (≥ 8.0đ)</option>
-                <option value="GOOD">Khá (6.5 - 7.9đ)</option>
-                <option value="AVERAGE">Trung bình (5.0 - 6.4đ)</option>
-                <option value="POOR">Chưa đạt (&lt; 5.0đ)</option>
-              </select>
-
-              {/* Sắp xếp */}
-              <select
-                value={sortBy}
-                onChange={(e) => {
-                  setSortBy(e.target.value as any);
-                  setCurrentPage(1);
-                }}
-                className="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white font-medium focus:outline-hidden focus:ring-2 focus:ring-[#00B8DD]"
-              >
-                <option value="NEWEST">Mới nhất trước</option>
-                <option value="OLDEST">Cũ nhất trước</option>
-                <option value="SCORE_DESC">Điểm cao nhất</option>
-                <option value="SCORE_ASC">Điểm thấp nhất</option>
-              </select>
-
-              {/* Reset filter */}
-              {isFiltering && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleResetFilters}
-                  className="h-10 px-3 text-xs text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 dark:hover:bg-rose-950/30"
-                  leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
-                >
-                  Đặt lại
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* Active Filter summary */}
-          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800">
-            <span>
-              Tìm thấy <strong className="text-slate-900 dark:text-white font-bold">{totalItems}</strong> bài thi phù hợp
-              {isFiltering ? ' (theo bộ lọc)' : ''}
-            </span>
-            <span>Trang {currentPage} / {totalPages || 1} • (10 bài/trang)</span>
-          </div>
+      {/* ── 3. Fallback Search & Filter Toolbar khi nhúng không có Header ── */}
+      {!showHeader && isLoggedIn && status === 'ready' && items.length > 0 && (
+        <Card className="relative z-30 overflow-visible p-3 sm:p-4 rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
+          {filterToolbarContent}
         </Card>
       )}
 
@@ -568,8 +866,27 @@ export function PracticeHistoryList({ showHeader = true }: PracticeHistoryListPr
         </Card>
       )}
 
-      {/* ── 6. Empty State (Khi chưa thi bài nào) ── */}
-      {isEmpty && (
+      {/* ── 6. Logged-out or Empty State ── */}
+      {status === 'ready' && !isLoggedIn && (
+        <Card className="p-8 rounded-3xl text-center space-y-3 border-dashed">
+          <div className="mx-auto w-12 h-12 rounded-2xl bg-cyan-50 dark:bg-cyan-950/50 flex items-center justify-center">
+            <History className="w-6 h-6 text-[#00B8DD]" />
+          </div>
+          <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+            Đăng nhập để xem Lịch sử Luyện đề &amp; Điểm số
+          </h4>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+            Kết quả bài thi và phân tích 4 mức độ nhận thức Bloom được lưu bảo mật theo từng tài khoản học sinh.
+          </p>
+          <Link href="/login/student?returnUrl=/student/exams" className="inline-block pt-2">
+            <Button className="min-h-[44px] bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold rounded-xl shadow-md cursor-pointer">
+              Đăng nhập tài khoản học sinh
+            </Button>
+          </Link>
+        </Card>
+      )}
+
+      {isLoggedIn && isEmpty && (
         <Card className="p-8 rounded-3xl text-center space-y-3 border-dashed">
           <div className="mx-auto w-12 h-12 rounded-2xl bg-cyan-50 dark:bg-cyan-950/50 flex items-center justify-center">
             <History className="w-6 h-6 text-[#00B8DD]" />
@@ -610,7 +927,7 @@ export function PracticeHistoryList({ showHeader = true }: PracticeHistoryListPr
 
       {/* ── 8. Paged List of Exams (10 items / page) ── */}
       {status === 'ready' && totalItems > 0 && (
-        <div className="space-y-4">
+        <div className="relative z-10 space-y-4">
           <ul className="space-y-3.5" aria-label="Lịch sử luyện đề">
             {pagedItems.map((item) => {
               const hasSnapshot = Boolean(item.snapshot);
@@ -630,16 +947,6 @@ export function PracticeHistoryList({ showHeader = true }: PracticeHistoryListPr
                       {/* Left: Info & Bloom Breakdown */}
                       <div className="space-y-2 flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          {hasSnapshot ? (
-                            <Badge className="bg-[#00B8DD]/15 text-[#007D99] dark:text-[#00B8DD] border-[#00B8DD]/30 text-[10px] font-bold">
-                              📋 Chi Tiết Bài Thi
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-[10px] text-slate-500 font-medium">
-                              Lượt thi tóm tắt
-                            </Badge>
-                          )}
-
                           <Badge className="bg-cyan-50 text-[#007D99] dark:bg-cyan-950/60 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800 text-[10px] font-bold">
                             {item.subject}
                           </Badge>

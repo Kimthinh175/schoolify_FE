@@ -1091,14 +1091,6 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
                                 <span>Quản Lý Tài Khoản Cá Nhân</span>
                               </Link>
                               <Link
-                                href="/student/my-courses"
-                                onClick={() => setUserMenuOpen(false)}
-                                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-primary transition-colors font-medium"
-                              >
-                                <BookOpen className="w-4 h-4 text-indigo-500" />
-                                <span>Khóa Học Đã Đăng Ký</span>
-                              </Link>
-                              <Link
                                 href="/student/exams"
                                 onClick={() => setUserMenuOpen(false)}
                                 className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-primary transition-colors font-medium"
