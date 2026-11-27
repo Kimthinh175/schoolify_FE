@@ -2613,99 +2613,99 @@
   function initChampionshipPodium() {
     const tabs = document.querySelectorAll('#champTabs .champ-tab[data-board]');
     const podium = document.getElementById('champPodium');
+    const tableBody = document.getElementById('champTableBody');
+    const toggleBtn = document.getElementById('toggleFullBoardBtn');
+    const toggleLabel = document.getElementById('toggleBoardLabel');
+    const boardExpand = document.getElementById('champBoardExpand');
+
     if (!tabs.length || !podium) return;
 
     const BOARDS = {
       all: [
-        {
-          avatar: 'MK',
-          name: 'Nguyễn Minh Khôi',
-          school: '12A1 • THPT Chuyên KHTN',
-          streak: '14 đề',
-          score: '9.85 / 10đ',
-          scale: 0.985,
-          gems: '+240 Ngọc'
-        },
-        {
-          avatar: 'KL',
-          name: 'Trần Khánh Linh',
-          school: '12T1 • THPT Lê Quý Đôn',
-          streak: '12 đề',
-          score: '9.60 / 10đ',
-          scale: 0.96,
-          gems: '+195 Ngọc'
-        },
-        {
-          avatar: 'HN',
-          name: 'Lê Hoàng Nam',
-          school: '11Tin • THPT Phan Châu Trinh',
-          streak: '11 đề',
-          score: '9.50 / 10đ',
-          scale: 0.95,
-          gems: '+170 Ngọc'
-        }
+        { avatar: 'MK', name: 'Nguyễn Minh Khôi', school: 'THPT Chuyên KHTN', streak: '14 đề tuần này', score: '9.85đ', scale: 0.985, gems: '+240 Ngọc' },
+        { avatar: 'KL', name: 'Trần Khánh Linh', school: 'THPT Lê Quý Đôn', streak: '12 đề tuần này', score: '9.60đ', scale: 0.96, gems: '+195 Ngọc' },
+        { avatar: 'HN', name: 'Lê Hoàng Nam', school: 'THPT Phan Châu Trinh', streak: '11 đề tuần này', score: '9.50đ', scale: 0.95, gems: '+170 Ngọc' }
       ],
       math: [
-        {
-          avatar: 'MK',
-          name: 'Nguyễn Minh Khôi',
-          school: '12A1 • Chuyên Toán KHTN',
-          streak: '10 đề VDC',
-          score: '9.90 / 10đ',
-          scale: 0.99,
-          gems: '+180 Ngọc'
-        },
-        {
-          avatar: 'BA',
-          name: 'Phạm Bảo Anh',
-          school: '12A2 • THPT Chu Văn An',
-          streak: '9 đề Toán',
-          score: '9.65 / 10đ',
-          scale: 0.965,
-          gems: '+155 Ngọc'
-        },
-        {
-          avatar: 'ĐP',
-          name: 'Vũ Đức Phúc',
-          school: '11T2 • THPT Kim Liên',
-          streak: '8 đề Toán',
-          score: '9.45 / 10đ',
-          scale: 0.945,
-          gems: '+130 Ngọc'
-        }
+        { avatar: 'MK', name: 'Nguyễn Minh Khôi', school: 'Chuyên Toán KHTN', streak: '10 đề Toán VDC', score: '9.90đ', scale: 0.99, gems: '+180 Ngọc' },
+        { avatar: 'BA', name: 'Phạm Bảo Anh', school: 'THPT Chu Văn An', streak: '9 đề Toán 2025', score: '9.65đ', scale: 0.965, gems: '+155 Ngọc' },
+        { avatar: 'ĐP', name: 'Vũ Đức Phúc', school: 'THPT Kim Liên', streak: '8 đề Toán 11–12', score: '9.45đ', scale: 0.945, gems: '+130 Ngọc' }
       ],
       cs: [
-        {
-          avatar: 'KL',
-          name: 'Trần Khánh Linh',
-          school: '12T1 • Đội tuyển Tin LQĐ',
-          streak: '11 đề Tin',
-          score: '9.80 / 10đ',
-          scale: 0.98,
-          gems: '+175 Ngọc'
-        },
-        {
-          avatar: 'HN',
-          name: 'Lê Hoàng Nam',
-          school: '11Tin • THPT Phan Châu Trinh',
-          streak: '10 đề Tin',
-          score: '9.60 / 10đ',
-          scale: 0.96,
-          gems: '+150 Ngọc'
-        },
-        {
-          avatar: 'QM',
-          name: 'Đặng Quang Minh',
-          school: '12CTin • THPT Gia Định',
-          streak: '9 đề Tin',
-          score: '9.40 / 10đ',
-          scale: 0.94,
-          gems: '+125 Ngọc'
-        }
+        { avatar: 'KL', name: 'Trần Khánh Linh', school: 'Đội tuyển Tin LQĐ', streak: '11 đề Python & SQL', score: '9.80đ', scale: 0.98, gems: '+175 Ngọc' },
+        { avatar: 'HN', name: 'Lê Hoàng Nam', school: 'THPT Phan Châu Trinh', streak: '10 đề Thuật toán', score: '9.60đ', scale: 0.96, gems: '+150 Ngọc' },
+        { avatar: 'QM', name: 'Đặng Quang Minh', school: 'THPT Gia Định', streak: '9 đề CS & ICT', score: '9.40đ', scale: 0.94, gems: '+125 Ngọc' }
+      ]
+    };
+
+    const IN_PAGE_TABLE_DATA = {
+      all: [
+        { rank: 4, name: 'Phạm Bảo Anh', school: 'Lớp 12A2 • THPT Chu Văn An', streak: 10, score: '9.40', gems: '+140 Ngọc' },
+        { rank: 5, name: 'Đặng Quang Minh', school: 'Lớp 12CTin • THPT Gia Định', streak: 9, score: '9.35', gems: '+125 Ngọc' },
+        { rank: 6, name: 'Vũ Đức Phúc', school: 'Lớp 11T2 • THPT Kim Liên', streak: 9, score: '9.25', gems: '+110 Ngọc' },
+        { rank: 7, name: 'Hoàng Thùy Dương', school: 'Lớp 12A • THPT Chuyên Sư Phạm', streak: 8, score: '9.15', gems: '+95 Ngọc' },
+        { rank: 8, name: 'Bùi Tuấn Kiệt', school: 'Lớp 12Tin • THPT Chuyên Lương Thế Vinh', streak: 8, score: '9.05', gems: '+85 Ngọc' },
+        { rank: 9, name: 'Nguyễn Phương Thảo', school: 'Lớp 11A1 • THPT Việt Đức', streak: 7, score: '8.95', gems: '+70 Ngọc' },
+        { rank: 10, name: 'Trần Quốc Đạt', school: 'Lớp 12A3 • THPT Thăng Long', streak: 7, score: '8.85', gems: '+60 Ngọc' }
+      ],
+      math: [
+        { rank: 4, name: 'Nguyễn Ngọc Anh', school: 'Lớp 12A • THPT Chuyên Hà Nội - Amsterdam', streak: 8, score: '9.30', gems: '+115 Ngọc' },
+        { rank: 5, name: 'Lê Gia Huy', school: 'Lớp 12T1 • THPT Chuyên Lê Hồng Phong', streak: 7, score: '9.20', gems: '+100 Ngọc' },
+        { rank: 6, name: 'Trần Tuấn Dũng', school: 'Lớp 12A1 • THPT Yên Hòa', streak: 7, score: '9.10', gems: '+90 Ngọc' },
+        { rank: 7, name: 'Hoàng Minh Châu', school: 'Lớp 11A1 • THPT Chuyên Lam Sơn', streak: 6, score: '9.00', gems: '+80 Ngọc' },
+        { rank: 8, name: 'Đỗ Tiến Đạt', school: 'Lớp 12A4 • THPT Cầu Giấy', streak: 6, score: '8.90', gems: '+70 Ngọc' },
+        { rank: 9, name: 'Vũ Thảo Vy', school: 'Lớp 12T2 • THPT Chuyên Bắc Ninh', streak: 6, score: '8.80', gems: '+60 Ngọc' },
+        { rank: 10, name: 'Phan Nhật Minh', school: 'Lớp 11A2 • THPT Chuyên Phan Bội Châu', streak: 5, score: '8.75', gems: '+50 Ngọc' }
+      ],
+      cs: [
+        { rank: 4, name: 'Bùi Tuấn Kiệt', school: 'Lớp 12Tin • THPT Chuyên LTV', streak: 8, score: '9.25', gems: '+110 Ngọc' },
+        { rank: 5, name: 'Nguyễn Quốc Việt', school: 'Lớp 11Tin • THPT Chuyên Thái Bình', streak: 8, score: '9.15', gems: '+95 Ngọc' },
+        { rank: 6, name: 'Lâm Hải Đăng', school: 'Lớp 12Tin • THPT Chuyên Nguyễn Du', streak: 7, score: '9.05', gems: '+85 Ngọc' },
+        { rank: 7, name: 'Trần Văn Hưng', school: 'Lớp 12A • THPT Chuyên KHTN', streak: 7, score: '8.95', gems: '+75 Ngọc' },
+        { rank: 8, name: 'Đinh Hồng Phúc', school: 'Lớp 11Tin • THPT Chuyên Hạ Long', streak: 6, score: '8.85', gems: '+65 Ngọc' },
+        { rank: 9, name: 'Lý Gia Bảo', school: 'Lớp 12Tin • THPT Năng Khiếu ĐHQG', streak: 6, score: '8.75', gems: '+55 Ngọc' },
+        { rank: 10, name: 'Vũ Đức Trọng', school: 'Lớp 11A • THPT Nguyễn Huệ', streak: 5, score: '8.70', gems: '+50 Ngọc' }
       ]
     };
 
     let timer = null;
+
+    const renderInPageTable = (key) => {
+      if (!tableBody) return;
+      const rows = IN_PAGE_TABLE_DATA[key] || IN_PAGE_TABLE_DATA.all;
+      tableBody.innerHTML = '';
+
+      rows.forEach(item => {
+        const tr = document.createElement('tr');
+        const initials = item.name.split(' ').map(w => w[0]).slice(-2).join('');
+
+        tr.innerHTML = `
+          <td>
+            <span class="champ-rank-badge">#${item.rank < 10 ? '0' + item.rank : item.rank}</span>
+          </td>
+          <td>
+            <div class="champ-user-cell">
+              <div class="champ-user-mini-av">${initials}</div>
+              <div>
+                <strong class="champ-user-name">${item.name}</strong>
+                <span class="champ-user-school">${item.school}</span>
+              </div>
+            </div>
+          </td>
+          <td style="text-align: center; color: var(--muted); font-weight: 600;">${item.streak} đề</td>
+          <td style="text-align: right;">
+            <strong class="champ-score-val">${item.score}</strong> <span style="font-size: 11px; color: var(--muted);">/ 10đ</span>
+          </td>
+          <td style="text-align: right;">
+            <span class="champ-gems-pill">
+              <svg class="ic-inline" style="width: 12px; height: 12px;"><use href="#iconGem" /></svg>
+              <span>${item.gems}</span>
+            </span>
+          </td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    };
 
     tabs.forEach((tab) => {
       tab.addEventListener('click', () => {
@@ -2748,8 +2748,26 @@
             });
           }
         });
+
+        // Also update the in-page table
+        renderInPageTable(key);
       });
     });
+
+    // Toggle In-Page Table Collapse/Expand
+    if (toggleBtn && boardExpand) {
+      toggleBtn.addEventListener('click', () => {
+        const isCollapsed = boardExpand.classList.toggle('is-collapsed');
+        if (toggleLabel) {
+          toggleLabel.textContent = isCollapsed
+            ? 'Xem đầy đủ Top 10 Cao Thủ Tuần ▼'
+            : 'Thu gọn Bảng xếp hạng ▲';
+        }
+      });
+    }
+
+    // Initial table render
+    renderInPageTable('all');
   }
 
   function initSubpageRoutePreview() {
