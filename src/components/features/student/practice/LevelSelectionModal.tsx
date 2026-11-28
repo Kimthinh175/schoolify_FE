@@ -17,7 +17,7 @@ import {
   RotateCcw,
   Target,
   Layers,
-  Zap,
+  Loader2,
   Sparkles,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -51,8 +51,21 @@ import {
 import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/lib/utils';
 import { NgocIcon } from '@/components/ui/point-icons';
-import { getGuestOnboarding, parseHighSchoolGrade } from '@/lib/semester-utils';
+import { getGuestOnboarding } from '@/lib/semester-utils';
 import { buildTopicRoadmapHref } from '@/lib/topic-route-utils';
+
+function parseUserGradeLevel(raw?: string | number | null): number | null {
+  if (raw === null || raw === undefined) return null;
+  if (typeof raw === 'number') {
+    return Number.isInteger(raw) && raw >= 1 && raw <= 12 ? raw : null;
+  }
+  const str = String(raw).trim();
+  if (!str) return null;
+  const match = str.match(/\d+/);
+  if (!match) return null;
+  const num = Number(match[0]);
+  return Number.isInteger(num) && num >= 1 && num <= 12 ? num : null;
+}
 
 interface LevelSelectionModalProps {
   isOpen: boolean;
@@ -71,8 +84,7 @@ type WizardStep =
   | 'FORMAT'
   | 'DURATION'
   | 'HSG_EXAMS'
-  | 'MOCK_MILESTONE'
-  | 'MOCK_READY';
+  | 'MOCK_MILESTONE';
 
 const TOPIC_WIZARD_STEPS: { step: WizardStep; number: number; label: string }[] = [
   { step: 'MODE', number: 1, label: 'Chế độ' },
@@ -82,8 +94,11 @@ const TOPIC_WIZARD_STEPS: { step: WizardStep; number: number; label: string }[] 
 const MOCK_WIZARD_STEPS: { step: WizardStep; number: number; label: string }[] = [
   { step: 'MODE', number: 1, label: 'Chế độ' },
   { step: 'MOCK_MILESTONE', number: 2, label: 'Mốc thi' },
-  { step: 'GRADE', number: 3, label: 'Khối lớp' },
-  { step: 'MOCK_READY', number: 4, label: 'Tạo đề' },
+];
+
+const ASSESSMENT_WIZARD_STEPS: { step: WizardStep; number: number; label: string }[] = [
+  { step: 'MODE', number: 1, label: 'Chế độ' },
+  { step: 'GRADE', number: 2, label: 'Khối lớp' },
 ];
 
 function OrigamiGlider({ className = "w-20 h-9" }: { className?: string }) {
@@ -564,16 +579,25 @@ export function LevelSelectionModal({
     }
   }, [user, subject, isOpen]);
 
+  // Tự động lấy khối lớp từ thông tin hồ sơ user (fallback sang khách / Lớp 12)
+  const resolvedUserGrade = React.useMemo(() => {
+    const profileRaw =
+      user?.student_profile?.grade_level ??
+      (user as any)?.gradeLevel ??
+      (user as any)?.grade_level;
+    const fromProfile = parseUserGradeLevel(profileRaw);
+    if (fromProfile !== null) return fromProfile;
+    const fromGuest = parseUserGradeLevel(getGuestOnboarding()?.grade);
+    if (fromGuest !== null) return fromGuest;
+    return 12;
+  }, [user, isOpen]);
+
   // Reset step on reopen
   React.useEffect(() => {
     if (isOpen) {
-      const detectedGrade =
-        parseHighSchoolGrade(user?.student_profile?.grade_level) ||
-        getGuestOnboarding()?.grade ||
-        12;
       if (initialMode === 'TOPIC' && subject) {
         onClose();
-        router.push(buildTopicRoadmapHref(subject.slug, { grade: detectedGrade }));
+        router.push(buildTopicRoadmapHref(subject.slug, { grade: resolvedUserGrade }));
         return;
       }
       if (initialMode === 'MOCK_EXAM') {
@@ -589,7 +613,7 @@ export function LevelSelectionModal({
       }
       setSelectedLevel(CORE_PRACTICE_LEVELS[0]);
       setSelectedMockMilestone(MOCK_MILESTONES[0]);
-      setSelectedGrade(detectedGrade);
+      setSelectedGrade(resolvedUserGrade);
       setSelectedChapterId(1);
       setSelectedFormat('QUIZ');
       setQuizCount(10);
@@ -597,12 +621,16 @@ export function LevelSelectionModal({
       setIsAssessmentMode(false);
       setSelectedDifficulty('ALL');
     }
-  }, [isOpen, initialMode, onClose, router, subject, user?.student_profile?.grade_level]);
+  }, [isOpen, initialMode, onClose, router, subject, resolvedUserGrade]);
 
   if (!subject) return null;
 
   // Step calculations & Navigation based on Mode
-  const activeWizardSteps = selectedPracticeMode === 'MOCK_EXAM' ? MOCK_WIZARD_STEPS : TOPIC_WIZARD_STEPS;
+  const activeWizardSteps = isAssessmentMode
+    ? ASSESSMENT_WIZARD_STEPS
+    : selectedPracticeMode === 'MOCK_EXAM'
+      ? MOCK_WIZARD_STEPS
+      : TOPIC_WIZARD_STEPS;
   const currentStepIndex = activeWizardSteps.findIndex((s) => s.step === currentStep) + 1;
   const canGoBack = currentStep === 'HSG_EXAMS' ? true : currentStepIndex > 1;
   const canGoForward = currentStep === 'HSG_EXAMS' ? false : currentStepIndex < maxStepReached;
@@ -627,7 +655,7 @@ export function LevelSelectionModal({
   const handleSelectMode = (mode: 'TOPIC' | 'MOCK_EXAM') => {
     if (mode === 'TOPIC') {
       onClose();
-      router.push(buildTopicRoadmapHref(subject.slug, { grade: selectedGrade }));
+      router.push(buildTopicRoadmapHref(subject.slug, { grade: resolvedUserGrade }));
       return;
     }
 
@@ -636,34 +664,30 @@ export function LevelSelectionModal({
     }
     setIsAssessmentMode(false);
     setSelectedPracticeMode('MOCK_EXAM');
+    setSelectedGrade(resolvedUserGrade);
     setSelectedDuration(selectedMockMilestone.duration);
     setQuizCount(selectedMockMilestone.questionCount);
     setSelectedDifficulty('ALL');
     setIsAllChaptersMock(true);
-    setMaxStepReached((prev) => Math.max(prev, 2));
+    setMaxStepReached(2);
     setCurrentStep('MOCK_MILESTONE');
   };
 
-  // Step 2 (MOCK_EXAM): Handle Milestone Click
+  // Step 2 (MOCK_EXAM): Handle Milestone Click -> lấy khối lớp từ hồ sơ user & vào phòng thi ngay
   const handleSelectMockMilestone = (milestone: MockMilestone) => {
-    if (!checkAndGatePoints('MEDIUM', milestone.name)) {
+    if (isVerifyingStart) return;
+    const targetGrade = milestone.requiresGrade12 ? 12 : resolvedUserGrade;
+    const examRoomUrl = `/student/practice/exam-room?subject=${subject.slug}&level=medium&grade=${targetGrade}&chapter=1&format=quiz&duration=${milestone.duration}&quizCount=${milestone.questionCount}&count=${milestone.questionCount}&practiceMode=MOCK_EXAM&difficulty=ALL&milestone=${milestone.id.toLowerCase()}`;
+
+    if (!checkAndGatePoints('MEDIUM', milestone.name, examRoomUrl)) {
       return;
     }
     setSelectedMockMilestone(milestone);
     setSelectedDuration(milestone.duration);
     setQuizCount(milestone.questionCount);
+    setSelectedGrade(targetGrade);
 
-    if (milestone.requiresGrade12) {
-      setSelectedGrade(12);
-    }
-    setMaxStepReached((prev) => Math.max(prev, 3));
-    setCurrentStep('GRADE');
-  };
-
-  // Step 4 (MOCK_EXAM): Start Mock Exam
-  const handleStartMockExam = () => {
-    const examRoomUrl = `/student/practice/exam-room?subject=${subject.slug}&level=medium&grade=${selectedGrade}&chapter=1&format=quiz&duration=${selectedMockMilestone.duration}&quizCount=${selectedMockMilestone.questionCount}&count=${selectedMockMilestone.questionCount}&practiceMode=MOCK_EXAM&difficulty=ALL&milestone=${selectedMockMilestone.id.toLowerCase()}`;
-    void verifyPointsAndStartExam(examRoomUrl, 'MEDIUM', selectedMockMilestone.name);
+    void verifyPointsAndStartExam(examRoomUrl, 'MEDIUM', milestone.name);
   };
 
   // Handle Assessment Click
@@ -684,7 +708,7 @@ export function LevelSelectionModal({
       pointsReward: 30,
       totalExams: 1,
     });
-    setMaxStepReached((prev) => Math.max(prev, 3));
+    setMaxStepReached(2);
     setCurrentStep('GRADE');
   };
 
@@ -716,18 +740,10 @@ export function LevelSelectionModal({
 
   // Step 3: Handle Grade Click
   const handleSelectGrade = (gradeId: number) => {
-    if (selectedPracticeMode === 'MOCK_EXAM' && selectedMockMilestone.requiresGrade12 && gradeId !== 12) {
-      return;
-    }
     setSelectedGrade(gradeId);
     if (isAssessmentMode) {
       const targetUrl = `/student/practice/exam-room?subject=${subject.slug}&level=assessment&grade=${gradeId}&chapter=1&format=quiz&duration=50&quizCount=30&count=30&practiceMode=MOCK_EXAM&difficulty=ALL`;
       void verifyPointsAndStartExam(targetUrl, 'BASIC', 'Kiểm Tra Năng Lực');
-      return;
-    }
-    if (selectedPracticeMode === 'MOCK_EXAM') {
-      setMaxStepReached((prev) => Math.max(prev, 4));
-      setCurrentStep('MOCK_READY');
       return;
     }
     setMaxStepReached((prev) => Math.max(prev, 4));
@@ -813,20 +829,16 @@ export function LevelSelectionModal({
                   {currentStep === 'CHAPTER_PATH' &&
                     'Không gian lộ trình chuyên đề GDPT 2018'}
                   {currentStep === 'MOCK_MILESTONE' &&
-                    'Bước 2/4: Chọn mốc thi thử định kỳ'}
+                    'Bước 2/2: Chọn mốc thi thử định kỳ'}
                   {currentStep === 'LEVEL' && 'Bước 2/6: Chọn cấp độ học tập'}
                   {currentStep === 'GRADE' &&
                     (isAssessmentMode
                       ? 'Bước 2/2: Chọn khối lớp'
-                      : selectedPracticeMode === 'MOCK_EXAM'
-                        ? 'Bước 3/4: Chọn khối lớp bạn đang học'
-                        : 'Bước 3/6: Chọn khối lớp bạn đang học')}
+                      : 'Bước 3/6: Chọn khối lớp bạn đang học')}
                   {currentStep === 'CHAPTER' &&
                     'Bước 4/6: Chọn chương / chuyên đề cần ôn'}
                   {currentStep === 'FORMAT' && 'Bước 5/6: Chọn hình thức làm bài'}
                   {currentStep === 'DURATION' && 'Bước 6/6: Chọn thời gian làm bài'}
-                  {currentStep === 'MOCK_READY' &&
-                    'Bước 4/4: Xác nhận & Bắt đầu làm đề'}
                   {currentStep === 'HSG_EXAMS' &&
                     `Đề thi học sinh giỏi ${selectedLevel.id === 'PROVINCIAL_EXCELLENT' ? 'cấp Tỉnh' : 'cấp Quốc Gia'} - Môn ${subject.name}`}
                 </div>
@@ -1278,17 +1290,20 @@ export function LevelSelectionModal({
 
 
           {/* ========================================================================= */}
-          {/* STEP 2 (MOCK_EXAM): CHỌN MỐC THI THỬ                                      */}
+          {/* STEP 2 (MOCK_EXAM): CHỌN MỐC THI THỬ -> VÀO PHÒNG THI NGAY                */}
           {/* ========================================================================= */}
           {currentStep === 'MOCK_MILESTONE' && (
             <div className="space-y-2.5">
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 flex items-center justify-between">
-                <span>Chọn mốc kiểm tra định kỳ hoặc kỳ thi thử chuẩn GDPT 2018:</span>
-                <span className="text-[11px] font-medium text-slate-500 hidden sm:inline">5 mốc luyện thi</span>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 flex flex-wrap items-center justify-between gap-2">
+                <span>Chọn mốc kiểm tra định kỳ hoặc kỳ thi thử chuẩn GDPT 2018 để bắt đầu làm bài ngay:</span>
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 shrink-0">
+                  Khối của bạn: Lớp {resolvedUserGrade}
+                </span>
               </div>
 
               {MOCK_MILESTONES.map((m) => {
                 const isSelected = selectedMockMilestone.id === m.id;
+                const isLoadingThis = isVerifyingStart && isSelected;
                 const isThpt = m.requiresGrade12;
 
                 const icon =
@@ -1320,6 +1335,7 @@ export function LevelSelectionModal({
                     key={m.id}
                     role="button"
                     tabIndex={0}
+                    aria-disabled={isVerifyingStart}
                     data-testid={`mock-milestone-${m.id.toLowerCase()}`}
                     onClick={() => handleSelectMockMilestone(m)}
                     onKeyDown={(e) => {
@@ -1329,7 +1345,8 @@ export function LevelSelectionModal({
                       }
                     }}
                     className={cn(
-                      'p-3.5 sm:p-4 rounded-xl border transition-all flex items-center justify-between gap-3 cursor-pointer group focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-amber-500',
+                      'p-3.5 sm:p-4 rounded-xl border transition-all flex items-center justify-between gap-3 group focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-amber-500',
+                      isVerifyingStart ? 'cursor-wait opacity-75' : 'cursor-pointer',
                       isSelected
                         ? 'bg-amber-50/40 dark:bg-amber-950/20 border-amber-500/80 dark:border-amber-500/70 shadow-xs'
                         : 'bg-white dark:bg-slate-900 border-slate-200/90 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-700 hover:shadow-xs hover:translate-x-0.5'
@@ -1354,22 +1371,28 @@ export function LevelSelectionModal({
                           {m.description}
                         </p>
 
-                        <div className="mt-1.5 flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+                        <div className="mt-1.5 flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 flex-wrap">
                           <span>{m.matrixDesc}</span>
-                          {isThpt && (
-                            <>
-                              <span>•</span>
-                              <span className="font-semibold text-rose-600 dark:text-rose-400">
-                                Dành riêng cho Lớp 12
-                              </span>
-                            </>
+                          <span>•</span>
+                          {isThpt ? (
+                            <span className="font-semibold text-rose-600 dark:text-rose-400">
+                              Dành riêng cho Lớp 12
+                            </span>
+                          ) : (
+                            <span className="font-semibold text-slate-700 dark:text-slate-300">
+                              Áp dụng Lớp {resolvedUserGrade}
+                            </span>
                           )}
                         </div>
                       </div>
                     </div>
 
                     <div className="flex items-center shrink-0">
-                      <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white group-hover:translate-x-1 transition-all" />
+                      {isLoadingThis ? (
+                        <Loader2 className="w-4 h-4 text-amber-600 dark:text-amber-400 animate-spin" />
+                      ) : (
+                        <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white group-hover:translate-x-1 transition-all" />
+                      )}
                     </div>
                   </div>
                 );
@@ -1585,29 +1608,6 @@ export function LevelSelectionModal({
                 </div>
               )}
 
-              {selectedPracticeMode === 'MOCK_EXAM' && (
-                <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="h-8 w-8 rounded-lg bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
-                      <Trophy className="w-4 h-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <span className="font-bold text-slate-900 dark:text-white">
-                        Mốc thi thử: {selectedMockMilestone.name}
-                      </span>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                        {selectedMockMilestone.requiresGrade12
-                          ? 'Kỳ thi Tốt nghiệp THPT chỉ dành riêng cho khối Lớp 12. Chọn Lớp 12 để tạo đề.'
-                          : 'Chọn khối lớp bạn đang học để hệ thống bốc đề chuẩn theo phân phối chương trình.'}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge className="bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800 text-[10px] shrink-0 font-semibold hidden sm:inline-flex">
-                    {selectedMockMilestone.badge}
-                  </Badge>
-                </div>
-              )}
-
               {/* Group THPT (10, 11, 12) */}
               <div className="space-y-2">
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block">
@@ -1616,34 +1616,21 @@ export function LevelSelectionModal({
                 <div className="grid grid-cols-3 gap-3">
                   {[10, 11, 12].map((g) => {
                     const isSelected = selectedGrade === g;
-                    const isThptLocked = selectedPracticeMode === 'MOCK_EXAM' && selectedMockMilestone.requiresGrade12 && g !== 12;
 
                     return (
                       <div
                         key={g}
-                        onClick={() => !isThptLocked && handleSelectGrade(g)}
+                        onClick={() => handleSelectGrade(g)}
                         className={cn(
-                          'p-3 rounded-xl border text-center transition-all relative group flex flex-col items-center justify-center gap-1',
-                          isThptLocked
-                            ? 'opacity-40 cursor-not-allowed bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800'
-                            : isSelected
-                            ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold border-slate-900 shadow-2xs cursor-pointer'
-                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-400 cursor-pointer'
+                          'p-3 rounded-xl border text-center transition-all relative group flex flex-col items-center justify-center gap-1 cursor-pointer',
+                          isSelected
+                            ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold border-slate-900 shadow-2xs'
+                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-400'
                         )}
                       >
                         <span className="text-sm font-semibold transition-colors">
                           Lớp {g}
                         </span>
-                        {isThptLocked && (
-                          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
-                            Chỉ dành cho Lớp 12
-                          </span>
-                        )}
-                        {!isThptLocked && selectedMockMilestone.requiresGrade12 && g === 12 && (
-                          <span className="text-[10px] text-amber-500 dark:text-amber-300 font-semibold">
-                            Chuẩn Bộ GD&ĐT
-                          </span>
-                        )}
                       </div>
                     );
                   })}
@@ -1658,19 +1645,16 @@ export function LevelSelectionModal({
                 <div className="grid grid-cols-4 gap-2.5">
                   {[6, 7, 8, 9].map((g) => {
                     const isSelected = selectedGrade === g;
-                    const isThptLocked = selectedPracticeMode === 'MOCK_EXAM' && selectedMockMilestone.requiresGrade12;
 
                     return (
                       <div
                         key={g}
-                        onClick={() => !isThptLocked && handleSelectGrade(g)}
+                        onClick={() => handleSelectGrade(g)}
                         className={cn(
-                          'p-3 rounded-xl border text-center transition-all flex items-center justify-center',
-                          isThptLocked
-                            ? 'opacity-40 cursor-not-allowed bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800'
-                            : isSelected
-                            ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold border-slate-900 shadow-2xs cursor-pointer'
-                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-400 cursor-pointer'
+                          'p-3 rounded-xl border text-center transition-all flex items-center justify-center cursor-pointer',
+                          isSelected
+                            ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold border-slate-900 shadow-2xs'
+                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-400'
                         )}
                       >
                         <span className="text-sm font-semibold transition-colors">
@@ -1690,19 +1674,16 @@ export function LevelSelectionModal({
                 <div className="grid grid-cols-5 gap-2">
                   {[1, 2, 3, 4, 5].map((g) => {
                     const isSelected = selectedGrade === g;
-                    const isThptLocked = selectedPracticeMode === 'MOCK_EXAM' && selectedMockMilestone.requiresGrade12;
 
                     return (
                       <div
                         key={g}
-                        onClick={() => !isThptLocked && handleSelectGrade(g)}
+                        onClick={() => handleSelectGrade(g)}
                         className={cn(
-                          'p-2.5 rounded-xl border text-center transition-all flex items-center justify-center',
-                          isThptLocked
-                            ? 'opacity-40 cursor-not-allowed bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800'
-                            : isSelected
-                            ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold border-slate-900 shadow-2xs cursor-pointer'
-                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-400 cursor-pointer'
+                          'p-2.5 rounded-xl border text-center transition-all flex items-center justify-center cursor-pointer',
+                          isSelected
+                            ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold border-slate-900 shadow-2xs'
+                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-400'
                         )}
                       >
                         <span className="text-xs font-semibold transition-colors">
@@ -1713,29 +1694,6 @@ export function LevelSelectionModal({
                   })}
                 </div>
               </div>
-
-              {/* Mock Exam Mode Bottom CTA */}
-              {selectedPracticeMode === 'MOCK_EXAM' && (
-                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                  <div className="text-xs text-slate-500">
-                    Đang chọn: <strong className="text-slate-900 dark:text-white font-semibold">Lớp {selectedGrade}</strong> • {selectedMockMilestone.name} ({selectedMockMilestone.badge})
-                  </div>
-                  <Button
-                    data-testid="btn-continue-to-mock-ready"
-                    onClick={() => {
-                      if (!checkAndGatePoints('MEDIUM', selectedMockMilestone.name)) {
-                        return;
-                      }
-                      setMaxStepReached((prev) => Math.max(prev, 4));
-                      setCurrentStep('MOCK_READY');
-                    }}
-                    className="bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white font-semibold gap-1.5 rounded-xl text-xs sm:text-sm px-5"
-                  >
-                    Tiếp tục tạo đề
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
-              )}
 
               {/* Assessment Mode Quick CTA */}
               {isAssessmentMode && (
@@ -2074,106 +2032,6 @@ export function LevelSelectionModal({
             </div>
           )}
 
-          {/* ========================================================================= */}
-          {/* STEP 4 (MOCK_EXAM): XÁC NHẬN & TẠO ĐỀ THI THỬ                             */}
-          {/* ========================================================================= */}
-          {currentStep === 'MOCK_READY' && (
-            <div className="space-y-4">
-              <div className="p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-linear-to-br from-slate-50 to-white dark:from-slate-900/80 dark:to-slate-900/40 shadow-xs">
-                <div className="flex items-start justify-between gap-3 mb-4 pb-3.5 border-b border-slate-200/80 dark:border-slate-800">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                      <Badge className="bg-sky-100 dark:bg-sky-950/70 text-sky-800 dark:text-sky-300 border-sky-200 dark:border-sky-800 text-[11px] font-semibold">
-                        Thi thử tổng hợp
-                      </Badge>
-                      <span className="text-slate-300 dark:text-slate-700">•</span>
-                      <Badge className="bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800 text-[11px] font-semibold">
-                        Khối Lớp {selectedGrade}
-                      </Badge>
-                      {selectedMockMilestone.requiresGrade12 && (
-                        <>
-                          <span className="text-slate-300 dark:text-slate-700">•</span>
-                          <Badge className="bg-purple-100 dark:bg-purple-950/70 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800 text-[11px] font-semibold">
-                            Chuẩn Bộ GD&ĐT
-                          </Badge>
-                        </>
-                      )}
-                    </div>
-                    <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-                      {selectedMockMilestone.name} - Môn {subject.name}
-                    </h3>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-                      {selectedMockMilestone.description}
-                    </p>
-                  </div>
-                </div>
-
-                {/* 4 thông số chính */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 text-xs">
-                  <div className="p-3 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex flex-col justify-between">
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Thời gian</span>
-                    <div className="flex items-center gap-1.5 mt-1 font-bold text-slate-900 dark:text-white text-sm sm:text-base">
-                      <Clock className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" />
-                      <span>{selectedMockMilestone.duration} phút</span>
-                    </div>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex flex-col justify-between">
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Số lượng câu</span>
-                    <div className="flex items-center gap-1.5 mt-1 font-bold text-slate-900 dark:text-white text-sm sm:text-base">
-                      <FileText className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" />
-                      <span>{selectedMockMilestone.questionCount} câu</span>
-                    </div>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex flex-col justify-between">
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Hình thức thi</span>
-                    <div className="flex items-center gap-1.5 mt-1 font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" />
-                      <span>Trắc nghiệm chuẩn</span>
-                    </div>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex flex-col justify-between">
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Cơ chế chấm</span>
-                    <div className="flex items-center gap-1.5 mt-1 font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
-                      <Zap className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" />
-                      <span>Tự động & Chi tiết</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-3.5 p-3 rounded-xl bg-slate-100/80 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 text-xs text-slate-600 dark:text-slate-300 flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0 mt-0.5" />
-                  <div className="space-y-0.5">
-                    <span className="font-semibold text-slate-900 dark:text-white">Ma trận cấu trúc: </span>
-                    <span>{selectedMockMilestone.matrixDesc}. Bấm giờ nghiêm ngặt và lưu bài làm liên tục.</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Ready summary bar & Start exam button */}
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setCurrentStep('GRADE')}
-                  className="text-xs sm:text-sm font-semibold rounded-xl"
-                  leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
-                >
-                  Đổi khối lớp
-                </Button>
-
-                <Button
-                  data-testid="btn-start-mock-exam"
-                  onClick={handleStartMockExam}
-                  className="bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white font-bold rounded-xl text-sm px-6 py-2.5 shrink-0 shadow-2xs gap-2"
-                  rightIcon={<ArrowRight className="w-4 h-4" />}
-                >
-                  Tạo đề thi &amp; Bắt đầu làm bài
-                </Button>
-              </div>
-            </div>
-          )}
             </motion.div>
           </AnimatePresence>
         </div>

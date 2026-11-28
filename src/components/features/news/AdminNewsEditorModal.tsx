@@ -384,6 +384,8 @@ export function AdminNewsEditorModal({
       toast.success(actionMsg);
       onSaved(saved);
       onClose();
+    } catch (err: any) {
+      toast.error(err?.message || 'Không thể lưu bài viết. Vui lòng thử lại!');
     } finally {
       setIsSubmitting(false);
     }

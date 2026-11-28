@@ -93,13 +93,30 @@ export function formatVietnameseDate(isoDate?: string | null): string {
   return `${day} Tháng ${month}, ${year}`;
 }
 
+function getAuthHeaders(includeJsonContentType = true): Record<string, string> {
+  const headers: Record<string, string> = includeJsonContentType
+    ? { 'Content-Type': 'application/json' }
+    : {};
+  if (typeof window === 'undefined') return headers;
+  try {
+    const raw = window.localStorage.getItem('schoolify-auth-storage');
+    if (!raw) return headers;
+    const parsed = JSON.parse(raw);
+    const token = parsed?.state?.token;
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  } catch {}
+  return headers;
+}
+
 async function fetchNewsJson<T>(url: string, init?: RequestInit): Promise<T | null> {
   try {
     const res = await fetch(url, {
       ...init,
       credentials: 'include',
       headers: {
-        'Content-Type': 'application/json',
+        ...getAuthHeaders(true),
         ...(init?.headers || {}),
       },
       cache: 'no-store',
@@ -110,6 +127,31 @@ async function fetchNewsJson<T>(url: string, init?: RequestInit): Promise<T | nu
   } catch {
     return null;
   }
+}
+
+async function mutateNewsJson<T>(url: string, init: RequestInit): Promise<T> {
+  const res = await fetch(url, {
+    ...init,
+    credentials: 'include',
+    headers: {
+      ...getAuthHeaders(true),
+      ...(init.headers || {}),
+    },
+    cache: 'no-store',
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const rawMsg = json?.message;
+    const msg = Array.isArray(rawMsg)
+      ? rawMsg.join(', ')
+      : typeof rawMsg === 'string' && rawMsg.trim()
+        ? rawMsg
+        : res.status === 401 || res.status === 403
+          ? 'Phiên đăng nhập quản trị đã hết hạn hoặc không có quyền thao tác.'
+          : `Lưu dữ liệu thất bại (HTTP ${res.status}).`;
+    throw new Error(msg);
+  }
+  return (json?.data ?? json) as T;
 }
 
 /** Kiểm tra bài viết SCHEDULED đã tới giờ xuất bản hay chưa */
@@ -149,8 +191,13 @@ export const newsService = {
       fetchNewsJson<NewsArticle[]>('/api/v1/news/articles?onlyPublic=false'),
     ]);
 
-    const baseCats = apiCats && apiCats.length > 0 ? apiCats : MOCK_NEWS_CATEGORIES;
-    const articles = apiArticles && apiArticles.length > 0 ? apiArticles : MOCK_NEWS_ARTICLES;
+    const baseCats = apiCats !== null ? apiCats : MOCK_NEWS_CATEGORIES;
+    const articles =
+      apiArticles !== null
+        ? onlyActive && apiArticles.length === 0
+          ? MOCK_NEWS_ARTICLES
+          : apiArticles
+        : MOCK_NEWS_ARTICLES;
     const nowMs = Date.now();
 
     return baseCats
@@ -182,7 +229,12 @@ export const newsService = {
     ]);
 
     const cats = apiCats && apiCats.length > 0 ? apiCats : MOCK_NEWS_CATEGORIES;
-    const rawArticles = apiArticles && apiArticles.length > 0 ? apiArticles : MOCK_NEWS_ARTICLES;
+    const rawArticles =
+      apiArticles !== null
+        ? onlyPublic && apiArticles.length === 0
+          ? MOCK_NEWS_ARTICLES
+          : apiArticles
+        : MOCK_NEWS_ARTICLES;
 
     const catMap = new Map(cats.map((c) => [c.id, c]));
     const nowMs = Date.now();
@@ -316,7 +368,7 @@ export const newsService = {
     if (patch.status === 'PUBLISHED' && !patch.published_at) {
       updatedPayload.published_at = new Date().toISOString();
     }
-    return fetchNewsJson<NewsArticle>(`/api/v1/news/articles/${encodeURIComponent(id)}`, {
+    return mutateNewsJson<NewsArticle>(`/api/v1/news/articles/${encodeURIComponent(id)}`, {
       method: 'PATCH',
       body: JSON.stringify(updatedPayload),
     });
@@ -400,19 +452,17 @@ export const newsService = {
     };
 
     const isUpdate = Boolean(payload.id);
-    const saved = await fetchNewsJson<NewsArticle>(
+    return mutateNewsJson<NewsArticle>(
       isUpdate ? `/api/v1/news/articles/${encodeURIComponent(payload.id!)}` : '/api/v1/news/articles',
       {
         method: isUpdate ? 'PATCH' : 'POST',
         body: JSON.stringify(record),
       }
     );
-
-    return saved || record;
   },
 
   async deleteArticle(id: string): Promise<void> {
-    await fetchNewsJson(`/api/v1/news/articles/${encodeURIComponent(id)}`, {
+    await mutateNewsJson(`/api/v1/news/articles/${encodeURIComponent(id)}`, {
       method: 'DELETE',
     });
   },
@@ -448,21 +498,20 @@ export const newsService = {
     };
 
     const isUpdate = Boolean(payload.id);
-    const saved = await fetchNewsJson<NewsCategory>(
+    return mutateNewsJson<NewsCategory>(
       isUpdate ? `/api/v1/news/categories/${encodeURIComponent(payload.id!)}` : '/api/v1/news/categories',
       {
         method: isUpdate ? 'PATCH' : 'POST',
         body: JSON.stringify(record),
       }
     );
-    return saved || record;
   },
 
   async toggleCategoryFlags(
     id: string,
     patch: Partial<Pick<NewsCategory, 'is_active' | 'is_featured' | 'order_index'>>
   ): Promise<NewsCategory | null> {
-    return fetchNewsJson<NewsCategory>(`/api/v1/news/categories/${encodeURIComponent(id)}`, {
+    return mutateNewsJson<NewsCategory>(`/api/v1/news/categories/${encodeURIComponent(id)}`, {
       method: 'PATCH',
       body: JSON.stringify(patch),
     });
@@ -472,6 +521,7 @@ export const newsService = {
     const res = await fetch(`/api/v1/news/categories/${encodeURIComponent(id)}`, {
       method: 'DELETE',
       credentials: 'include',
+      headers: getAuthHeaders(false),
     }).catch(() => null);
 
     if (!res) return { ok: false, message: 'Không thể kết nối máy chủ để xoá chuyên mục.' };

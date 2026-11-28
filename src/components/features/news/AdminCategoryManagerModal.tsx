@@ -124,19 +124,25 @@ export function AdminCategoryManagerModal({
       );
       resetForm();
       onUpdated();
+    } catch (err: any) {
+      toast.error(err?.message || 'Không thể lưu chuyên mục. Vui lòng thử lại!');
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleToggleActive = async (cat: NewsCategory, nextActive: boolean) => {
-    await newsService.toggleCategoryFlags(cat.id, { is_active: nextActive });
-    toast.success(
-      nextActive
-        ? `Đã bật hiển thị chuyên mục "${cat.name}" trên trang công khai.`
-        : `Đã tạm ẩn chuyên mục "${cat.name}".`
-    );
-    onUpdated();
+    try {
+      await newsService.toggleCategoryFlags(cat.id, { is_active: nextActive });
+      toast.success(
+        nextActive
+          ? `Đã bật hiển thị chuyên mục "${cat.name}" trên trang công khai.`
+          : `Đã tạm ẩn chuyên mục "${cat.name}".`
+      );
+      onUpdated();
+    } catch (err: any) {
+      toast.error(err?.message || 'Không thể cập nhật trạng thái chuyên mục.');
+    }
   };
 
   const handleDelete = async (cat: NewsCategory) => {
