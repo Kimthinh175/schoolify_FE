@@ -462,3 +462,60 @@ html.compact-subtab footer {
 }
 
 
+
+/* ============================================================
+   CHATBOX AI: bot nhảy xuống từ icon Header / nhảy ngược lên Header
+   (biến --sf-jx, --sf-jy = độ lệch từ vị trí đứng tới icon Header)
+   ============================================================ */
+@keyframes sf-bot-drop-x {
+  0% { transform: translate3d(var(--sf-jx, 0px), 0, 0); animation-timing-function: cubic-bezier(0.3, 0.1, 0.5, 1); }
+  58%, 100% { transform: translate3d(0, 0, 0); }
+}
+
+@keyframes sf-bot-drop-y {
+  0% {
+    transform: translate3d(0, var(--sf-jy, 0px), 0) scale(0.25) rotate(-14deg);
+    opacity: 0;
+    animation-timing-function: cubic-bezier(0.32, 0, 0.78, 0.55);
+  }
+  8% { opacity: 1; }
+  58% {
+    transform: translate3d(0, 0, 0) scale(1.14, 0.84) rotate(3deg);
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  72% {
+    transform: translate3d(0, -22px, 0) scale(0.97, 1.07) rotate(-2deg);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.6);
+  }
+  84% {
+    transform: translate3d(0, 0, 0) scale(1.05, 0.95) rotate(0deg);
+    animation-timing-function: ease-out;
+  }
+  92% { transform: translate3d(0, -6px, 0) scale(1); animation-timing-function: ease-in; }
+  100% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes sf-bot-lift-x {
+  0%, 24% { transform: translate3d(0, 0, 0); animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1); }
+  100% { transform: translate3d(var(--sf-jx, 0px), 0, 0); }
+}
+
+@keyframes sf-bot-lift-y {
+  0% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; animation-timing-function: ease-out; }
+  24% {
+    transform: translate3d(0, 9px, 0) scale(1.12, 0.84);
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.3, 0, 0.2, 1);
+  }
+  100% { transform: translate3d(0, var(--sf-jy, 0px), 0) scale(0.25) rotate(12deg); opacity: 0; }
+}
+
+.sf-bot-drop-x { animation: sf-bot-drop-x 1000ms linear both; }
+.sf-bot-drop-y { animation: sf-bot-drop-y 1000ms linear both; will-change: transform, opacity; }
+.sf-bot-lift-x { animation: sf-bot-lift-x 780ms linear both; }
+.sf-bot-lift-y { animation: sf-bot-lift-y 780ms linear both; will-change: transform, opacity; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-bot-drop-x, .sf-bot-drop-y, .sf-bot-lift-x, .sf-bot-lift-y { animation: none; }
+}

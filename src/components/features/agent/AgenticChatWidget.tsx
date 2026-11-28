@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { SchoolifyRobot, type RobotEmotion } from './SchoolifyRobot';
+import { useChatDockStore } from '@/store/chat-dock.store';
 import { clampEmotionDuration, isRobotEmotion } from '@/lib/robot-emotions';
 import { NgocIcon } from '@/components/ui/point-icons';
 import { AgentChatMessageContent } from './AgentChatMessageContent';
@@ -1065,6 +1066,104 @@ export function AgenticChatWidget() {
     );
   };
 
+  // ───────── Dock vào icon trên Header: bấm icon -> bot nhảy xuống; 5 phút không dùng -> nhảy lên lại ─────────
+  const CHAT_IDLE_MS = 5 * 60 * 1000;
+  const dock = useChatDockStore((s) => s.dock);
+  const setDock = useChatDockStore((s) => s.setDock);
+  const hasHeaderIcon = useChatDockStore((s) => s.headerIconCount > 0);
+  const openNonce = useChatDockStore((s) => s.openNonce);
+
+  const botRef = React.useRef<HTMLButtonElement>(null);
+  const lastActivityRef = React.useRef<number>(Date.now());
+  const lastOpenNonceRef = React.useRef<number>(openNonce);
+  const [jump, setJump] = React.useState<{ dx: number; dy: number } | null>(null);
+
+  const touchActivity = React.useCallback(() => {
+    lastActivityRef.current = Date.now();
+  }, []);
+
+  const dockAnimating = dock === 'dropping' || dock === 'lifting';
+  // Không có icon trên Header (admin, phòng thi...) -> giữ hành vi cũ: bot luôn đứng ở góc màn hình
+  const showBot = !isOpen && (!hasHeaderIcon || dock !== 'docked');
+
+  // Khung chat mở từ bất kỳ nguồn nào (vd "Hỏi Gia Sư AI") => bot coi như đã ra ngoài
+  React.useEffect(() => {
+    if (isOpen && dock === 'docked') setDock('out');
+  }, [isOpen, dock, setDock]);
+
+  // Mọi tương tác với chatbox đều reset bộ đếm 5 phút
+  React.useEffect(() => {
+    touchActivity();
+  }, [isOpen, dock, messages.length, isSending, input, touchActivity]);
+
+  // Bấm icon Header khi bot đã ở ngoài => mở khung chat
+  React.useEffect(() => {
+    if (openNonce === lastOpenNonceRef.current) return;
+    lastOpenNonceRef.current = openNonce;
+    touchActivity();
+    setIsOpen(true);
+    setIsBubbleDismissed(true);
+    fetchSessionList();
+  }, [openNonce, touchActivity, fetchSessionList]);
+
+  // Đo khoảng cách từ chỗ bot đứng tới icon trên Header (trước khi vẽ để không bị nháy)
+  React.useLayoutEffect(() => {
+    if (!dockAnimating) return;
+    const bot = botRef.current;
+    if (!bot) return;
+    const botRect = bot.getBoundingClientRect();
+    const icons = Array.from(document.querySelectorAll<HTMLElement>('[data-chat-header-icon]'));
+    const iconEl = icons.find((el) => {
+      const r = el.getBoundingClientRect();
+      return r.width > 0 && r.height > 0;
+    });
+    const iconRect = iconEl?.getBoundingClientRect();
+    const targetX = iconRect ? iconRect.left + iconRect.width / 2 : window.innerWidth - 120;
+    const targetY = iconRect ? iconRect.top + iconRect.height / 2 : 40;
+    setJump({
+      dx: targetX - (botRect.left + botRect.width / 2),
+      dy: targetY - (botRect.top + botRect.height / 2),
+    });
+  }, [dockAnimating, dock]);
+
+  // Kết thúc animation nhảy xuống / nhảy lên
+  React.useEffect(() => {
+    if (!dockAnimating) return;
+    const duration = dock === 'dropping' ? 1000 : 780;
+    const timer = setTimeout(() => {
+      setJump(null);
+      if (dock === 'dropping') {
+        setDock('out');
+        triggerTemporaryEmotion('happy', 1800);
+      } else {
+        setDock('docked');
+      }
+      touchActivity();
+    }, duration);
+    return () => clearTimeout(timer);
+  }, [dockAnimating, dock, setDock, touchActivity, triggerTemporaryEmotion]);
+
+  // 5 phút không dùng chatbox => đóng khung chat và nhảy ngược lên icon Header
+  React.useEffect(() => {
+    if (!hasHeaderIcon || dock !== 'out') return;
+    const interval = setInterval(() => {
+      if (isSending) return;
+      if (Date.now() - lastActivityRef.current < CHAT_IDLE_MS) return;
+      setIsOpen(false);
+      setIsSidebarOpen(false);
+      setDock('lifting');
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [hasHeaderIcon, dock, isSending, setDock, CHAT_IDLE_MS]);
+
+  const botAnimClassX =
+    dockAnimating && jump ? (dock === 'dropping' ? 'sf-bot-drop-x' : 'sf-bot-lift-x') : '';
+  const botAnimClassY =
+    dockAnimating && jump ? (dock === 'dropping' ? 'sf-bot-drop-y' : 'sf-bot-lift-y') : '';
+  const botJumpVars = jump
+    ? ({ '--sf-jx': `${jump.dx}px`, '--sf-jy': `${jump.dy}px` } as React.CSSProperties)
+    : undefined;
+
   const showSidebarPanel = isSidebarOpen || isExpanded;
 
   const isExamRoomRoute = Boolean(pathname?.startsWith('/student/practice/exam-room'));
@@ -1073,11 +1172,17 @@ export function AgenticChatWidget() {
     ? outOfPointsModal.isOpen
       ? 'z-40'
       : 'z-[70]'
-    : 'z-40';
+    : dockAnimating
+      ? 'z-[60]'
+      : 'z-40';
 
   return (
     <>
       <div
+        data-chat-root
+        onPointerDownCapture={touchActivity}
+        onKeyDownCapture={touchActivity}
+        onWheelCapture={touchActivity}
         className={`fixed ${widgetLayerZ} flex flex-col items-end ${
           isOpen
             ? 'inset-0 sm:inset-auto sm:right-5 sm:bottom-5 justify-end'
@@ -1100,7 +1205,7 @@ export function AgenticChatWidget() {
         )}
 
         {/* 1. Nút Floating Launcher Chatbox nổi bật (Nhìn vào biết ngay Chat AI, không bị chìm) */}
-      {!isOpen && (
+      {showBot && (
         <div
           ref={launcherRef}
           data-chat-launcher
@@ -1134,59 +1239,51 @@ export function AgenticChatWidget() {
             </div>
           )}
 
-          <button
-            type="button"
-            data-chat-robot
-            onPointerDown={handleDragStart}
-            onPointerMove={handleDragMove}
-            onPointerUp={handleDragEnd}
-            onPointerCancel={handleDragEnd}
-            onPointerEnter={() => {
-              if (!isDragging && emotion === 'default') setEmotion('wink');
-            }}
-            onPointerLeave={() => {
-              if (!isDragging && emotion === 'wink') setEmotion('default');
-            }}
-            onClick={() => {
-              if (suppressClickRef.current) {
-                suppressClickRef.current = false;
-                return;
-              }
-              setIsOpen(true);
-              setIsBubbleDismissed(true);
-              fetchSessionList();
-              triggerTemporaryEmotion('excited', 2000);
-            }}
-            aria-label="Mở Chatbox Trợ lý AI Schoolify"
-            title="Bấm để mở Chatbox AI · Kéo để di chuyển"
-            style={{ touchAction: 'none' }}
-            className={`relative group flex items-center gap-2 sm:gap-2.5 pl-2 pr-3.5 sm:pl-2.5 sm:pr-4.5 py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-[#0F172A] via-[#0E2A3F] to-[#0891B2] text-white border-2 border-[#38BDF8]/80 shadow-[0_12px_32px_-4px_rgba(0,184,221,0.58),0_6px_18px_rgba(2,6,23,0.45)] ring-4 ring-[#00B8DD]/25 hover:ring-[#00B8DD]/45 select-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#5CE1FF] transition-all ${
-              isDragging
-                ? 'cursor-grabbing scale-105'
-                : 'cursor-grab hover:scale-[1.03] active:scale-95'
-            }`}
-          >
-            {/* Vòng tròn Avatar Robot + Chấm xanh Online */}
-            <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-slate-950/95 border border-[#5CE1FF]/60 flex items-center justify-center shadow-inner shrink-0">
-              <SchoolifyRobot size="md" emotion={emotion} isFloating={false} />
-              <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400 ring-2 ring-[#0F172A]" />
-              </span>
+          {/* Con bot cũ: nhảy xuống từ icon Header, đứng yên (không nhún) cho tới khi hết 5 phút không dùng */}
+          <div className={botAnimClassX} style={botJumpVars}>
+            <div
+              className={botAnimClassY}
+              style={dockAnimating && !jump ? { visibility: 'hidden' } : undefined}
+            >
+              <button
+                ref={botRef}
+                type="button"
+                data-chat-robot
+                onPointerDown={handleDragStart}
+                onPointerMove={handleDragMove}
+                onPointerUp={handleDragEnd}
+                onPointerCancel={handleDragEnd}
+                onPointerEnter={() => {
+                  if (!isDragging && emotion === 'default') setEmotion('wink');
+                }}
+                onPointerLeave={() => {
+                  if (!isDragging && emotion === 'wink') setEmotion('default');
+                }}
+                onClick={() => {
+                  if (suppressClickRef.current) {
+                    suppressClickRef.current = false;
+                    return;
+                  }
+                  setIsOpen(true);
+                  setIsBubbleDismissed(true);
+                  fetchSessionList();
+                  triggerTemporaryEmotion('excited', 2000);
+                }}
+                aria-label="Mở Trợ lý AI Schoolify"
+                title="Bấm để mở Schoolify AI · Kéo để di chuyển"
+                style={{ touchAction: 'none' }}
+                className={`relative flex flex-col items-center group select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00B8DD] rounded-2xl shrink-0 ${
+                  dockAnimating ? 'pointer-events-none' : ''
+                } ${
+                  isDragging
+                    ? 'cursor-grabbing scale-105'
+                    : 'cursor-grab transition-transform hover:scale-105 active:scale-95'
+                }`}
+              >
+                <SchoolifyRobot size="md" emotion={emotion} isFloating={false} />
+              </button>
             </div>
-
-            {/* Nhãn nhận diện Chatbox tức thì trên cả Mobile & Desktop */}
-            <div className="flex flex-col items-start text-left pr-0.5">
-              <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-[#67E8F9] leading-none">
-                <MessageSquare className="w-3 h-3 shrink-0" />
-                <span>Chat AI</span>
-              </span>
-              <span className="text-xs sm:text-[13px] font-bold text-white leading-tight mt-0.5 whitespace-nowrap">
-                <span className="sm:hidden">Hỏi bài ngay</span>
-                <span className="hidden sm:inline">Hỏi bài &amp; Tạo đề</span>
-              </span>
-            </div>
-          </button>
+          </div>
         </div>
       )}
 
