@@ -53,15 +53,21 @@ export function DropdownMenu({ trigger, children, align = 'right', className }: 
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
+    if (!isOpen) return;
     const handleOutsideClick = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
       }
     };
-    if (isOpen) {
-      document.addEventListener('mousedown', handleOutsideClick);
-    }
-    return () => document.removeEventListener('mousedown', handleOutsideClick);
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    window.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      window.removeEventListener('keydown', handleEsc);
+    };
   }, [isOpen]);
 
   return (
@@ -79,8 +85,8 @@ export function DropdownMenu({ trigger, children, align = 'right', className }: 
             transition={{ duration: 0.15 }}
             onClick={() => setIsOpen(false)}
             className={cn(
-              'absolute z-50 mt-2 min-w-[200px] rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900',
-              align === 'right' ? 'right-0' : 'left-0',
+              'absolute z-50 mt-2 min-w-[200px] overscroll-contain rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900',
+              align === 'right' ? 'left-0 sm:left-auto sm:right-0' : 'left-0',
               className
             )}
           >

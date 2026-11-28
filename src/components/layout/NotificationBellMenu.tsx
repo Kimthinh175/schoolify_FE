@@ -71,18 +71,29 @@ function formatRelativeTime(iso: string): string {
  * để tránh làm rác hoặc trùng lặp trong Trung tâm Thông báo hệ thống.
  */
 function isTransientValidationToast(title: string): boolean {
-  const lower = title.toLowerCase();
+  const lower = title.trim().toLowerCase();
   return (
-    lower.startsWith('vui lòng nhập') ||
-    lower.startsWith('mật khẩu xác nhận không khớp') ||
+    lower.startsWith('vui lòng ') ||
+    lower.startsWith('số điện thoại không hợp lệ') ||
+    lower.startsWith('email không hợp lệ') ||
+    lower.startsWith('mật khẩu ') ||
+    lower.startsWith('chưa có thay đổi') ||
+    lower.startsWith('bắt buộc nhập') ||
+    lower.startsWith('chỉ quản trị viên') ||
+    lower.startsWith('không đủ quyền') ||
     lower.startsWith('không tìm thấy tài khoản') ||
     lower.startsWith('đã chọn ảnh') ||
+    lower.startsWith('đã sao chép') ||
     lower.startsWith('đã gửi thông báo') ||
     lower.startsWith('đã phát thông báo') ||
     lower.startsWith('đã cập nhật điểm thành công') ||
     lower.startsWith('đã mở khóa tài khoản') ||
     lower.startsWith('đã khóa tài khoản') ||
-    lower.startsWith('không thể ')
+    lower.startsWith('hôm nay bạn đã điểm danh') ||
+    lower.startsWith('bạn cần ') ||
+    lower.startsWith('không thể ') ||
+    lower.startsWith('lỗi kết nối') ||
+    lower.startsWith('có lỗi xảy ra')
   );
 }
 
@@ -198,7 +209,9 @@ const CATEGORY_LABEL_MAP: Record<NotificationCategory, { label: string; badgeCla
   },
 };
 
-type FilterTabId = 'ALL' | 'UNREAD' | 'LEARNING' | 'REWARD' | 'COMMUNITY';
+type FilterTabId = 'ALL' | 'UNREAD' | 'LEARNING' | 'REWARD' | 'COMMUNITY' | 'SYSTEM';
+
+const emptySubscribe = () => () => {};
 
 export function NotificationBellMenu() {
   const router = useRouter();
@@ -206,7 +219,11 @@ export function NotificationBellMenu() {
   const [isCenterModalOpen, setIsCenterModalOpen] = React.useState(false);
   const [centerSearchQuery, setCenterSearchQuery] = React.useState('');
   const [centerCategoryFilter, setCenterCategoryFilter] = React.useState<FilterTabId>('ALL');
-  const [isMounted, setIsMounted] = React.useState(false);
+  const isMounted = React.useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
   const [activeTab, setActiveTab] = React.useState<FilterTabId>('ALL');
   const containerRef = React.useRef<HTMLDivElement>(null);
 
@@ -221,7 +238,6 @@ export function NotificationBellMenu() {
   const clearAll = useNotificationsStore((s) => s.clearAll);
 
   React.useEffect(() => {
-    setIsMounted(true);
     hydrate();
   }, [hydrate]);
 
@@ -260,7 +276,7 @@ export function NotificationBellMenu() {
       document.removeEventListener('mousedown', handleOutside);
       window.removeEventListener('keydown', handleEsc);
     };
-  }, [isOpen, syncFromBackend]);
+  }, [isOpen, isAuthenticated, syncFromBackend]);
 
   const unreadCount = isMounted ? items.filter((it) => !it.read).length : 0;
 
@@ -398,7 +414,7 @@ export function NotificationBellMenu() {
           </div>
 
           {/* Notification Items List */}
-          <div className="max-h-[380px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/80">
+          <div className="max-h-[min(380px,62dvh)] overflow-y-auto overscroll-contain divide-y divide-slate-100 dark:divide-slate-800/80">
             {filteredItems.length === 0 ? (
               <div className="py-10 px-4 text-center space-y-2">
                 <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 mx-auto flex items-center justify-center">
@@ -506,6 +522,9 @@ export function NotificationBellMenu() {
               onClick={() => {
                 setIsOpen(false);
                 setIsCenterModalOpen(true);
+                if (isAuthenticated) {
+                  syncFromBackend();
+                }
               }}
               className="inline-flex items-center gap-1.5 text-xs font-bold text-[#00B8DD] hover:text-[#009BBD] transition-colors cursor-pointer"
             >
@@ -516,216 +535,304 @@ export function NotificationBellMenu() {
         </div>
       )}
 
-      {/* ── MODAL TRUNG TÂM THÔNG BÁO (XEM TOÀN BỘ & TÌM KIẾM) ── */}
+      {/* ── MODAL TRUNG TÂM THÔNG BÁO (PORTAL RA BODY, CUỘN MƯỢT & KHÔNG LỖI CẮT KHUNG) ── */}
       <Dialog
         isOpen={isCenterModalOpen}
         onClose={() => setIsCenterModalOpen(false)}
         maxWidth="2xl"
-        title="Trung Tâm Thông Báo Hệ Thống"
+        className="h-[85dvh] sm:h-[82dvh] max-h-[760px]"
+        bodyClassName="flex flex-col overflow-hidden pr-0 pt-3.5 pb-0"
+        title={
+          <div className="flex items-center gap-2.5">
+            <span className="w-8 h-8 rounded-xl bg-[#00B8DD]/10 text-[#00B8DD] border border-[#00B8DD]/25 inline-flex items-center justify-center shrink-0">
+              <Bell className="w-4 h-4" />
+            </span>
+            <div className="flex flex-wrap items-center gap-2 min-w-0">
+              <span>Trung Tâm Thông Báo</span>
+              {unreadCount > 0 && (
+                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#00B8DD]/12 text-[#007D99] dark:text-[#5CE1FF] tabular-nums">
+                  {unreadCount} chưa đọc
+                </span>
+              )}
+            </div>
+          </div>
+        }
         description="Tra cứu, lọc theo chuyên mục và quản lý toàn bộ thông báo tài khoản của bạn."
       >
-        <div className="space-y-4 pt-1">
-          {/* Thanh tìm kiếm & nút thao tác nhanh */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-            <div className="relative flex-1">
-              <Input
-                placeholder="Tìm kiếm thông báo theo tiêu đề hoặc nội dung..."
-                value={centerSearchQuery}
-                onChange={(e) => setCenterSearchQuery(e.target.value)}
-                leftIcon={<Search className="w-4 h-4 text-slate-400" />}
-                className="h-9 text-xs"
-              />
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              {unreadCount > 0 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={markAllAsRead}
-                  className="h-9 text-xs font-semibold gap-1.5 text-[#007D99] dark:text-[#00B8DD]"
-                >
-                  <CheckCheck className="w-3.5 h-3.5" />
-                  Đánh dấu đã đọc ({unreadCount})
-                </Button>
-              )}
-              {items.length > 0 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearAll}
-                  className="h-9 text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 gap-1"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  Xóa tất cả
-                </Button>
-              )}
-            </div>
-          </div>
+        {(() => {
+          const q = centerSearchQuery.trim().toLowerCase();
+          const filteredCenterList = items.filter((it) => {
+            if (centerCategoryFilter === 'UNREAD' && it.read) return false;
+            if (
+              centerCategoryFilter !== 'ALL' &&
+              centerCategoryFilter !== 'UNREAD' &&
+              (it.category || 'SYSTEM') !== centerCategoryFilter
+            ) {
+              return false;
+            }
+            if (q) {
+              const matchTitle = it.title.toLowerCase().includes(q);
+              const matchBody = (it.message || it.description || '')
+                .toLowerCase()
+                .includes(q);
+              if (!matchTitle && !matchBody) return false;
+            }
+            return true;
+          });
 
-          {/* Bộ lọc Category trong Modal */}
-          <div className="flex flex-wrap items-center gap-1.5 pb-2 border-b border-slate-100 dark:border-slate-800">
-            {(
-              [
-                { id: 'ALL', label: `Tất cả (${items.length})` },
-                { id: 'UNREAD', label: `Chưa đọc (${unreadCount})` },
-                { id: 'LEARNING', label: 'Học tập & Lộ trình' },
-                { id: 'REWARD', label: 'Điểm & Đổi thưởng' },
-                { id: 'COMMUNITY', label: 'Diễn đàn & Cộng đồng' },
-              ] as Array<{ id: FilterTabId; label: string }>
-            ).map((tab) => {
-              const active = centerCategoryFilter === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setCenterCategoryFilter(tab.id)}
-                  className={cn(
-                    'px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer',
-                    active
-                      ? 'bg-[#00B8DD] text-white shadow-2xs'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                  )}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
+          const hasCenterFilter = centerSearchQuery.trim() !== '' || centerCategoryFilter !== 'ALL';
 
-          {/* Danh sách thông báo đầy đủ */}
-          <div className="max-h-[420px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-800">
-            {(() => {
-              const q = centerSearchQuery.trim().toLowerCase();
-              const list = items.filter((it) => {
-                if (centerCategoryFilter === 'UNREAD' && it.read) return false;
-                if (
-                  centerCategoryFilter !== 'ALL' &&
-                  centerCategoryFilter !== 'UNREAD' &&
-                  it.category !== centerCategoryFilter
-                ) {
-                  return false;
-                }
-                if (q) {
-                  const matchTitle = it.title.toLowerCase().includes(q);
-                  const matchBody = (it.message || it.description || '')
-                    .toLowerCase()
-                    .includes(q);
-                  if (!matchTitle && !matchBody) return false;
-                }
-                return true;
-              });
+          const centerTabs: Array<{ id: FilterTabId; label: string; count?: number }> = [
+            { id: 'ALL', label: 'Tất cả', count: items.length },
+            { id: 'UNREAD', label: 'Chưa đọc', count: unreadCount },
+            { id: 'LEARNING', label: 'Học tập' },
+            { id: 'REWARD', label: 'Điểm & Quà' },
+            { id: 'COMMUNITY', label: 'Diễn đàn' },
+            { id: 'SYSTEM', label: 'Hệ thống' },
+          ];
 
-              if (list.length === 0) {
-                return (
-                  <div className="py-12 px-4 text-center space-y-2">
-                    <Bell className="w-7 h-7 text-slate-400 mx-auto" />
-                    <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">
-                      Không tìm thấy thông báo nào phù hợp
-                    </p>
+          return (
+            <div className="flex flex-col flex-1 min-h-0 gap-3">
+              {/* Khu vực ghim cố định phía trên: Tìm kiếm + Hành động + Tabs */}
+              <div className="shrink-0 space-y-2.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="relative flex-1 min-w-0">
+                    <Input
+                      placeholder="Tìm kiếm thông báo theo tiêu đề hoặc nội dung..."
+                      value={centerSearchQuery}
+                      onChange={(e) => setCenterSearchQuery(e.target.value)}
+                      leftIcon={<Search className="w-4 h-4 text-[#00B8DD]" />}
+                      className="h-9 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-slate-950 focus:border-[#00B8DD]"
+                    />
                   </div>
-                );
-              }
-
-              return list.map((item) => {
-                const bodyText = item.message || item.description;
-                const catMeta =
-                  CATEGORY_LABEL_MAP[item.category || 'SYSTEM'] || CATEGORY_LABEL_MAP.SYSTEM;
-
-                return (
-                  <div
-                    key={item.id}
-                    className={cn(
-                      'p-4 flex items-start justify-between gap-3 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50',
-                      !item.read && 'bg-[#00B8DD]/[0.04] dark:bg-[#00B8DD]/[0.07]'
+                  <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => syncFromBackend()}
+                      disabled={isSyncing}
+                      title="Đồng bộ thông báo mới"
+                      className="h-9 px-2.5 rounded-xl text-xs border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-[#00B8DD]/60 hover:text-[#00B8DD] cursor-pointer"
+                    >
+                      <RefreshCw className={cn('w-3.5 h-3.5', isSyncing && 'animate-spin text-[#00B8DD]')} />
+                    </Button>
+                    {unreadCount > 0 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={markAllAsRead}
+                        className="h-9 px-3 rounded-xl text-xs font-semibold gap-1.5 border-[#00B8DD]/35 text-[#007D99] dark:text-[#00B8DD] hover:bg-[#00B8DD]/10 cursor-pointer"
+                      >
+                        <CheckCheck className="w-3.5 h-3.5" />
+                        <span>Đọc tất cả</span>
+                      </Button>
                     )}
-                  >
-                    <div className="flex items-start gap-3 min-w-0 flex-1">
-                      <NotificationTypeBadge type={item.type} category={item.category} />
-                      <div className="min-w-0 flex-1 space-y-1">
-                        <div className="flex flex-wrap items-center gap-2">
+                    {items.length > 0 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearAll}
+                        className="h-9 px-2.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 gap-1 cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Xóa hết</span>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Thanh lọc chuyên mục (cuộn ngang mượt trên mobile) */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                  {centerTabs.map((tab) => {
+                    const active = centerCategoryFilter === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setCenterCategoryFilter(tab.id)}
+                        className={cn(
+                          'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0',
+                          active
+                            ? 'bg-[#00B8DD] text-white shadow-xs'
+                            : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200/70 dark:border-slate-800 hover:border-[#00B8DD]/50 hover:text-slate-900 dark:hover:text-white'
+                        )}
+                      >
+                        <span>{tab.label}</span>
+                        {typeof tab.count === 'number' && tab.count > 0 && (
                           <span
                             className={cn(
-                              'px-2 py-0.5 rounded-md text-[10px] font-bold',
-                              catMeta.badgeClass
+                              'px-1.5 py-0.2 rounded-full text-[10px] font-bold tabular-nums',
+                              active
+                                ? 'bg-white/20 text-white'
+                                : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400'
                             )}
                           >
-                            {catMeta.label}
+                            {tab.count}
                           </span>
-                          <span className="text-[11px] text-slate-400">
-                            {formatRelativeTime(item.createdAt || item.created_at || '')}
-                          </span>
-                          {!item.read && (
-                            <span className="px-1.5 py-0.2 rounded-full bg-[#00B8DD] text-white text-[9px] font-bold">
-                              MỚI
-                            </span>
-                          )}
-                        </div>
-                        <h4
-                          className={cn(
-                            'text-xs sm:text-sm break-words',
-                            !item.read
-                              ? 'font-bold text-slate-900 dark:text-white'
-                              : 'font-semibold text-slate-700 dark:text-slate-300'
-                          )}
-                        >
-                          {item.title}
-                        </h4>
-                        {bodyText && (
-                          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed break-words">
-                            {bodyText}
-                          </p>
                         )}
-                      </div>
-                    </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {item.link && (
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            markAsRead(item.id);
-                            setIsCenterModalOpen(false);
-                            router.push(item.link!);
-                          }}
-                          className="h-8 px-2.5 text-[11px] font-semibold gap-1"
-                        >
-                          <span>Xem</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </Button>
-                      )}
-                      {!item.read && (
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => markAsRead(item.id)}
-                          className="h-8 px-2 text-[11px] font-semibold text-[#00B8DD]"
-                          title="Đánh dấu đã đọc"
-                        >
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                        </Button>
-                      )}
+              {/* Vùng danh sách cuộn độc lập duy nhất (overscroll-contain, flex-1 min-h-0) */}
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain divide-y divide-slate-100 dark:divide-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950">
+                {filteredCenterList.length === 0 ? (
+                  <div className="py-14 px-4 text-center space-y-2.5">
+                    <div className="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-slate-900 text-slate-400 mx-auto flex items-center justify-center">
+                      <Bell className="w-5 h-5" />
+                    </div>
+                    <p className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      {centerCategoryFilter === 'UNREAD'
+                        ? 'Bạn đã đọc hết mọi thông báo'
+                        : 'Không tìm thấy thông báo nào phù hợp'}
+                    </p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">
+                      {hasCenterFilter
+                        ? 'Thử xóa từ khóa tìm kiếm hoặc chuyển về mục Tất cả.'
+                        : 'Các thông báo về kết quả làm bài, Tia Sáng và lộ trình sẽ xuất hiện tại đây.'}
+                    </p>
+                    {hasCenterFilter && (
                       <Button
                         type="button"
                         size="sm"
-                        variant="ghost"
-                        onClick={() => removeNotification(item.id)}
-                        className="h-8 px-2 text-slate-400 hover:text-rose-500"
-                        title="Xóa thông báo"
+                        variant="outline"
+                        onClick={() => {
+                          setCenterSearchQuery('');
+                          setCenterCategoryFilter('ALL');
+                        }}
+                        className="h-8 px-3 rounded-xl text-xs font-semibold text-[#007D99] dark:text-[#00B8DD] border-[#00B8DD]/40 hover:bg-[#00B8DD]/10 cursor-pointer"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        Xem tất cả thông báo
                       </Button>
-                    </div>
+                    )}
                   </div>
-                );
-              });
-            })()}
-          </div>
-        </div>
+                ) : (
+                  filteredCenterList.map((item) => {
+                    const bodyText = item.message || item.description;
+                    const catMeta =
+                      CATEGORY_LABEL_MAP[item.category || 'SYSTEM'] || CATEGORY_LABEL_MAP.SYSTEM;
+
+                    return (
+                      <div
+                        key={item.id}
+                        className={cn(
+                          'p-3.5 sm:p-4 flex items-start justify-between gap-3 transition-colors hover:bg-slate-50/90 dark:hover:bg-slate-900/70',
+                          !item.read && 'bg-[#00B8DD]/[0.04] dark:bg-[#00B8DD]/[0.07]'
+                        )}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!item.read) markAsRead(item.id);
+                            if (item.link) {
+                              setIsCenterModalOpen(false);
+                              router.push(item.link);
+                            }
+                          }}
+                          className="flex items-start gap-3 min-w-0 flex-1 text-left cursor-pointer"
+                        >
+                          <NotificationTypeBadge type={item.type} category={item.category} />
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                              <span
+                                className={cn(
+                                  'px-2 py-0.5 rounded-md text-[10px] font-semibold',
+                                  catMeta.badgeClass
+                                )}
+                              >
+                                {catMeta.label}
+                              </span>
+                              <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                                {formatRelativeTime(item.createdAt || item.created_at || '')}
+                              </span>
+                              {!item.read && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-[#00B8DD] text-white text-[9px] font-bold leading-none">
+                                  MỚI
+                                </span>
+                              )}
+                            </div>
+                            <h4
+                              className={cn(
+                                'text-xs sm:text-sm leading-snug break-words',
+                                !item.read
+                                  ? 'font-bold text-slate-900 dark:text-white'
+                                  : 'font-semibold text-slate-700 dark:text-slate-300'
+                              )}
+                            >
+                              {item.title}
+                            </h4>
+                            {bodyText && (
+                              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed break-words">
+                                {bodyText}
+                              </p>
+                            )}
+                          </div>
+                        </button>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          {item.link && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                markAsRead(item.id);
+                                setIsCenterModalOpen(false);
+                                router.push(item.link!);
+                              }}
+                              className="h-8 px-2.5 rounded-xl text-[11px] font-semibold border-slate-200 dark:border-slate-700 hover:border-[#00B8DD] hover:text-[#00B8DD] gap-1 cursor-pointer"
+                            >
+                              <span className="hidden sm:inline">Xem</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </Button>
+                          )}
+                          {!item.read && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => markAsRead(item.id)}
+                              className="h-8 w-8 p-0 rounded-xl text-[#00B8DD] hover:bg-[#00B8DD]/10 cursor-pointer"
+                              title="Đánh dấu đã đọc"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => removeNotification(item.id)}
+                            className="h-8 w-8 p-0 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer"
+                            title="Xóa thông báo"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Thanh trạng thái gọn ở chân modal */}
+              <div className="shrink-0 pt-2 pb-1 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                <span>
+                  Hiển thị <strong className="text-slate-800 dark:text-slate-200">{filteredCenterList.length}</strong> /{' '}
+                  {items.length} thông báo
+                </span>
+                <span className="hidden sm:inline text-slate-400">
+                  Nhấn vào thông báo để xem chi tiết hoặc đánh dấu đã đọc
+                </span>
+              </div>
+            </div>
+          );
+        })()}
       </Dialog>
     </div>
   );
