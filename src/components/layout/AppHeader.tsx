@@ -12,6 +12,7 @@ import { AvatarFrame, useActiveAvatarFrame } from '@/components/ui/avatar-frame'
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { NotificationBellMenu } from '@/components/layout/NotificationBellMenu';
+import { ChatHeaderButton } from '@/components/layout/ChatHeaderButton';
 import { useAuthStore } from '@/store/auth.store';
 
 export function AppHeader({ onOpenMobileSidebar }: { onOpenMobileSidebar: () => void }) {
@@ -49,6 +50,8 @@ export function AppHeader({ onOpenMobileSidebar }: { onOpenMobileSidebar: () => 
 
       {/* Right Controls: Theme Toggle + Notifications + Profile */}
       <div className="flex items-center gap-3">
+        <ChatHeaderButton />
+
         <ThemeToggle />
 
         <NotificationBellMenu />
