@@ -511,11 +511,35 @@ html.compact-subtab footer {
   100% { transform: translate3d(0, var(--sf-jy, 0px), 0) scale(0.25) rotate(12deg); opacity: 0; }
 }
 
+@keyframes sf-bot-lift-fast-x {
+  0%, 12% { transform: translate3d(0, 0, 0); animation-timing-function: cubic-bezier(0.32, 0, 0.25, 1); }
+  100% { transform: translate3d(var(--sf-jx, 0px), 0, 0); }
+}
+
+@keyframes sf-bot-lift-fast-y {
+  0% { transform: translate3d(0, 0, 0) scale(0.95); opacity: 1; animation-timing-function: ease-out; }
+  12% {
+    transform: translate3d(0, 6px, 0) scale(1.06, 0.88);
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.22, 0, 0.2, 1);
+  }
+  100% { transform: translate3d(0, var(--sf-jy, 0px), 0) scale(0.24) rotate(10deg); opacity: 0; }
+}
+
 .sf-bot-drop-x { animation: sf-bot-drop-x 1000ms linear both; }
 .sf-bot-drop-y { animation: sf-bot-drop-y 1000ms linear both; will-change: transform, opacity; }
 .sf-bot-lift-x { animation: sf-bot-lift-x 780ms linear both; }
 .sf-bot-lift-y { animation: sf-bot-lift-y 780ms linear both; will-change: transform, opacity; }
+.sf-bot-lift-fast-x { animation: sf-bot-lift-fast-x 520ms linear both; }
+.sf-bot-lift-fast-y { animation: sf-bot-lift-fast-y 520ms linear both; will-change: transform, opacity; }
 
 @media (prefers-reduced-motion: reduce) {
-  .sf-bot-drop-x, .sf-bot-drop-y, .sf-bot-lift-x, .sf-bot-lift-y { animation: none; }
+  .sf-bot-drop-x,
+  .sf-bot-drop-y,
+  .sf-bot-lift-x,
+  .sf-bot-lift-y,
+  .sf-bot-lift-fast-x,
+  .sf-bot-lift-fast-y {
+    animation: none;
+  }
 }

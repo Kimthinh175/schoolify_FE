@@ -222,17 +222,40 @@ export function AgenticChatWidget() {
     };
   }, []);
 
-  React.useEffect(() => {
-    try {
-      const raw = localStorage.getItem(POS_KEY);
-      if (!raw) return;
-      const saved = JSON.parse(raw);
-      if (typeof saved?.x === 'number' && typeof saved?.y === 'number') {
-        setOffset({ x: saved.x, y: saved.y });
-        setIsBubbleDismissed(true);
-      }
-    } catch {}
+  const getHeaderBottom = React.useCallback((): number => {
+    const headers = Array.from(document.querySelectorAll<HTMLElement>('header'));
+    const topHeader = headers.find((el) => {
+      const r = el.getBoundingClientRect();
+      return r.height > 0 && r.width > 0 && r.top <= 24 && r.bottom > 0;
+    });
+    if (topHeader) return topHeader.getBoundingClientRect().bottom;
+    return window.innerWidth >= 768 ? 80 : 64;
   }, []);
+
+  const readLiveHeaderSlotCenter = React.useCallback((): { x: number; y: number } | null => {
+    const icons = Array.from(document.querySelectorAll<HTMLElement>('[data-chat-header-icon]'));
+    const iconEl = icons.find((el) => {
+      const r = el.getBoundingClientRect();
+      return r.width > 0 && r.height > 0;
+    });
+    if (!iconEl) return null;
+    const r = iconEl.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  }, []);
+
+  const triggerDockToHeader = React.useCallback(
+    (e?: React.PointerEvent<HTMLButtonElement>) => {
+      dragRef.current = null;
+      if (e && e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+      suppressClickRef.current = true;
+      setIsDragging(false);
+      const liveAnchor = readLiveHeaderSlotCenter();
+      useChatDockStore.getState().dockBack(true, liveAnchor);
+    },
+    [readLiveHeaderSlotCenter]
+  );
 
   React.useEffect(() => {
     const handleResize = () => {
@@ -275,6 +298,23 @@ export function AgenticChatWidget() {
     drag.lastX = e.clientX;
     drag.lastY = e.clientY;
     setOffset((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+
+    const store = useChatDockStore.getState();
+    if (store.headerIconCount > 0 && store.dock === 'out') {
+      const headerBottom = getHeaderBottom();
+      const botTop = (launcherRef.current?.getBoundingClientRect().top ?? e.clientY) + dy;
+      const reachedHeader = e.clientY <= headerBottom;
+      if (reachedHeader) {
+        // Vừa kéo con bot chạm vào thanh Header -> tự động nhảy lên lại Header
+        triggerDockToHeader(e);
+        return;
+      }
+      const nearHeader = e.clientY <= headerBottom + 48 || botTop <= headerBottom + 10;
+      if (store.isDraggingOverHeader !== nearHeader) {
+        store.setDraggingOverHeader(nearHeader);
+        setEmotion(nearHeader ? 'excited' : 'surprised');
+      }
+    }
   };
 
   const handleDragEnd = (e: React.PointerEvent<HTMLButtonElement>) => {
@@ -283,7 +323,25 @@ export function AgenticChatWidget() {
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
     }
+    const store = useChatDockStore.getState();
     if (drag?.moved) {
+      const headerBottom = getHeaderBottom();
+      const botTop = launcherRef.current?.getBoundingClientRect().top ?? e.clientY;
+      const shouldDock =
+        store.headerIconCount > 0 &&
+        store.dock === 'out' &&
+        (store.isDraggingOverHeader ||
+          e.clientY <= headerBottom + 48 ||
+          botTop <= headerBottom + 10);
+
+      if (shouldDock) {
+        triggerDockToHeader(e);
+        return;
+      }
+
+      if (store.isDraggingOverHeader) {
+        store.setDraggingOverHeader(false);
+      }
       suppressClickRef.current = true;
       setIsDragging(false);
       triggerTemporaryEmotion('happy', 2000);
@@ -293,6 +351,8 @@ export function AgenticChatWidget() {
         } catch {}
         return current;
       });
+    } else if (store.isDraggingOverHeader) {
+      store.setDraggingOverHeader(false);
     }
   };
 
@@ -1066,12 +1126,14 @@ export function AgenticChatWidget() {
     );
   };
 
-  // ───────── Dock vào icon trên Header: bấm icon -> bot nhảy xuống; 5 phút không dùng -> nhảy lên lại ─────────
+  // ───────── Dock vào icon trên Header: bấm icon -> bot to nhảy xuống; kéo lên Header hoặc 5 phút không dùng -> nhảy lên lại ─────────
   const CHAT_IDLE_MS = 5 * 60 * 1000;
   const dock = useChatDockStore((s) => s.dock);
   const setDock = useChatDockStore((s) => s.setDock);
   const hasHeaderIcon = useChatDockStore((s) => s.headerIconCount > 0);
   const openNonce = useChatDockStore((s) => s.openNonce);
+  const isDraggingOverHeader = useChatDockStore((s) => s.isDraggingOverHeader);
+  const liftFast = useChatDockStore((s) => s.liftFast);
 
   const botRef = React.useRef<HTMLButtonElement>(null);
   const lastActivityRef = React.useRef<number>(Date.now());
@@ -1106,42 +1168,44 @@ export function AgenticChatWidget() {
     fetchSessionList();
   }, [openNonce, touchActivity, fetchSessionList]);
 
-  // Đo khoảng cách từ chỗ bot đứng tới icon trên Header (trước khi vẽ để không bị nháy)
+  // Đo khoảng cách từ chỗ bot đứng tới vị trí icon trên Header (trước khi vẽ để không bị nháy)
   React.useLayoutEffect(() => {
     if (!dockAnimating) return;
     const bot = botRef.current;
     if (!bot) return;
     const botRect = bot.getBoundingClientRect();
-    const icons = Array.from(document.querySelectorAll<HTMLElement>('[data-chat-header-icon]'));
-    const iconEl = icons.find((el) => {
-      const r = el.getBoundingClientRect();
-      return r.width > 0 && r.height > 0;
-    });
-    const iconRect = iconEl?.getBoundingClientRect();
-    const targetX = iconRect ? iconRect.left + iconRect.width / 2 : window.innerWidth - 120;
-    const targetY = iconRect ? iconRect.top + iconRect.height / 2 : 40;
+    const liveCenter = readLiveHeaderSlotCenter();
+    const savedAnchor = useChatDockStore.getState().anchor;
+    const fallbackY = Math.max(24, getHeaderBottom() / 2);
+    const targetX = liveCenter?.x ?? savedAnchor?.x ?? window.innerWidth - 120;
+    const targetY = liveCenter?.y ?? savedAnchor?.y ?? fallbackY;
     setJump({
       dx: targetX - (botRect.left + botRect.width / 2),
       dy: targetY - (botRect.top + botRect.height / 2),
     });
-  }, [dockAnimating, dock]);
+  }, [dockAnimating, dock, readLiveHeaderSlotCenter, getHeaderBottom]);
 
   // Kết thúc animation nhảy xuống / nhảy lên
   React.useEffect(() => {
     if (!dockAnimating) return;
-    const duration = dock === 'dropping' ? 1000 : 780;
+    const duration = dock === 'dropping' ? 1000 : liftFast ? 520 : 780;
     const timer = setTimeout(() => {
       setJump(null);
       if (dock === 'dropping') {
         setDock('out');
         triggerTemporaryEmotion('happy', 1800);
       } else {
+        // Reset vị trí về góc mặc định để lần sau bấm icon Header bot lại nhảy xuống đúng góc màn hình
+        setOffset({ x: 0, y: 0 });
+        try {
+          localStorage.removeItem(POS_KEY);
+        } catch {}
         setDock('docked');
       }
       touchActivity();
     }, duration);
     return () => clearTimeout(timer);
-  }, [dockAnimating, dock, setDock, touchActivity, triggerTemporaryEmotion]);
+  }, [dockAnimating, dock, liftFast, setDock, touchActivity, triggerTemporaryEmotion]);
 
   // 5 phút không dùng chatbox => đóng khung chat và nhảy ngược lên icon Header
   React.useEffect(() => {
@@ -1151,15 +1215,27 @@ export function AgenticChatWidget() {
       if (Date.now() - lastActivityRef.current < CHAT_IDLE_MS) return;
       setIsOpen(false);
       setIsSidebarOpen(false);
-      setDock('lifting');
+      useChatDockStore.getState().dockBack(false);
     }, 5000);
     return () => clearInterval(interval);
-  }, [hasHeaderIcon, dock, isSending, setDock, CHAT_IDLE_MS]);
+  }, [hasHeaderIcon, dock, isSending, CHAT_IDLE_MS]);
 
   const botAnimClassX =
-    dockAnimating && jump ? (dock === 'dropping' ? 'sf-bot-drop-x' : 'sf-bot-lift-x') : '';
+    dockAnimating && jump
+      ? dock === 'dropping'
+        ? 'sf-bot-drop-x'
+        : liftFast
+          ? 'sf-bot-lift-fast-x'
+          : 'sf-bot-lift-x'
+      : '';
   const botAnimClassY =
-    dockAnimating && jump ? (dock === 'dropping' ? 'sf-bot-drop-y' : 'sf-bot-lift-y') : '';
+    dockAnimating && jump
+      ? dock === 'dropping'
+        ? 'sf-bot-drop-y'
+        : liftFast
+          ? 'sf-bot-lift-fast-y'
+          : 'sf-bot-lift-y'
+      : '';
   const botJumpVars = jump
     ? ({ '--sf-jx': `${jump.dx}px`, '--sf-jy': `${jump.dy}px` } as React.CSSProperties)
     : undefined;
@@ -1172,7 +1248,7 @@ export function AgenticChatWidget() {
     ? outOfPointsModal.isOpen
       ? 'z-40'
       : 'z-[70]'
-    : dockAnimating
+    : dockAnimating || isDragging
       ? 'z-[60]'
       : 'z-40';
 
@@ -1239,7 +1315,7 @@ export function AgenticChatWidget() {
             </div>
           )}
 
-          {/* Con bot cũ: nhảy xuống từ icon Header, đứng yên (không nhún) cho tới khi hết 5 phút không dùng */}
+          {/* Con bot to nguyên bản (size="lg"): nhảy xuống từ icon Header, kéo lên Header để nhảy lên lại */}
           <div className={botAnimClassX} style={botJumpVars}>
             <div
               className={botAnimClassY}
@@ -1270,17 +1346,28 @@ export function AgenticChatWidget() {
                   triggerTemporaryEmotion('excited', 2000);
                 }}
                 aria-label="Mở Trợ lý AI Schoolify"
-                title="Bấm để mở Schoolify AI · Kéo để di chuyển"
+                title={
+                  hasHeaderIcon
+                    ? 'Bấm để mở Schoolify AI · Kéo lên thanh menu để thu gọn'
+                    : 'Bấm để mở Schoolify AI · Kéo để di chuyển'
+                }
                 style={{ touchAction: 'none' }}
                 className={`relative flex flex-col items-center group select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00B8DD] rounded-2xl shrink-0 ${
                   dockAnimating ? 'pointer-events-none' : ''
                 } ${
                   isDragging
-                    ? 'cursor-grabbing scale-105'
+                    ? isDraggingOverHeader
+                      ? 'cursor-grabbing scale-95 drop-shadow-[0_0_24px_rgba(0,184,221,0.65)] transition-transform'
+                      : 'cursor-grabbing scale-105'
                     : 'cursor-grab transition-transform hover:scale-105 active:scale-95'
                 }`}
               >
-                <SchoolifyRobot size="md" emotion={emotion} isFloating={false} />
+                <SchoolifyRobot size="lg" emotion={emotion} isFloating={false} />
+                {isDragging && isDraggingOverHeader && (
+                  <span className="pointer-events-none absolute -bottom-3 whitespace-nowrap rounded-full bg-slate-900/95 px-2.5 py-0.5 text-[11px] font-bold text-[#67E8F9] ring-1 ring-[#00B8DD]/60 shadow-lg">
+                    Thả để thu lên thanh menu
+                  </span>
+                )}
               </button>
             </div>
           </div>
