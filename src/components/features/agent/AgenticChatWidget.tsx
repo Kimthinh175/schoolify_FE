@@ -162,7 +162,9 @@ export function AgenticChatWidget() {
   const pathname = usePathname();
 
   const [isOpen, setIsOpen] = React.useState(false);
-  const [isExpanded, setIsExpanded] = React.useState(true);
+  const [isExpanded, setIsExpanded] = React.useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth >= 768 : true
+  );
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
 
   const isManagementRoute = Boolean(
@@ -170,7 +172,7 @@ export function AgenticChatWidget() {
       pathname?.startsWith('/school') ||
       pathname?.startsWith('/teacher')
   );
-  const [isBubbleDismissed, setIsBubbleDismissed] = React.useState(isManagementRoute);
+  const [isBubbleDismissed, setIsBubbleDismissed] = React.useState(true);
   const [emotion, setEmotion] = React.useState<RobotEmotion>('default');
   const emotionTimerRef = React.useRef<NodeJS.Timeout | null>(null);
 
@@ -185,30 +187,9 @@ export function AgenticChatWidget() {
     []
   );
 
-  // Vừa vào trang hiện bóng thoại (chỉ trên desktop, tự tắt sau 4s hoặc khi cuộn trang)
+  // Mặc định thu gọn bóng thoại để không che nút/thẻ thao tác phía dưới-phải; chỉ hiện khi hover hoặc bấm
   React.useEffect(() => {
-    if (isManagementRoute) {
-      setIsBubbleDismissed(true);
-      return;
-    }
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    if (isMobile) {
-      setIsBubbleDismissed(true);
-      return;
-    }
-
-    setIsBubbleDismissed(false);
-    const timer = setTimeout(() => {
-      setIsBubbleDismissed(true);
-    }, 4000);
-
-    const handleScroll = () => setIsBubbleDismissed(true);
-    window.addEventListener('scroll', handleScroll, { passive: true, once: true });
-
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('scroll', handleScroll);
-    };
+    setIsBubbleDismissed(true);
   }, [pathname, isManagementRoute]);
 
   // Kéo thả vị trí nút robot
@@ -623,6 +604,16 @@ export function AgenticChatWidget() {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isOpen, isSending]);
+
+  // Khóa cuộn nền trên mobile (< 640px) khi mở bottom-sheet chat AI
+  React.useEffect(() => {
+    if (!isOpen || typeof window === 'undefined' || window.innerWidth >= 640) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isOpen]);
 
   const sendMessage = React.useCallback(
     async (textToSend?: string, customQuestionContext?: Record<string, any>) => {
@@ -1076,18 +1067,48 @@ export function AgenticChatWidget() {
 
   const showSidebarPanel = isSidebarOpen || isExpanded;
 
+  const isExamRoomRoute = Boolean(pathname?.startsWith('/student/practice/exam-room'));
+
+  const widgetLayerZ = isOpen
+    ? outOfPointsModal.isOpen
+      ? 'z-40'
+      : 'z-[70]'
+    : 'z-40';
+
   return (
-    <div className="fixed bottom-3 right-3 sm:bottom-5 sm:right-5 z-40 flex flex-col items-end">
-      {/* 1. Nút Floating mở Chatbox khi đang đóng */}
+    <>
+      <div
+        className={`fixed ${widgetLayerZ} flex flex-col items-end ${
+          isOpen
+            ? 'inset-0 sm:inset-auto sm:right-5 sm:bottom-5 justify-end'
+            : `right-3 sm:right-5 ${
+                isExamRoomRoute ? 'bottom-20 sm:bottom-20' : 'bottom-3 sm:bottom-5'
+              }`
+        }`}
+      >
+        {/* Backdrop mờ tách biệt khung chat khỏi header & nền trang (Mobile luôn bật; Desktop bật khi mở rộng) */}
+        {isOpen && (
+          <div
+            onClick={() => setIsOpen(false)}
+            aria-hidden="true"
+            className={`fixed inset-0 animate-in fade-in duration-150 ${
+              isExpanded
+                ? 'bg-slate-950/60 dark:bg-black/65 sm:bg-slate-950/25 sm:dark:bg-black/45 backdrop-blur-[2px] sm:backdrop-blur-[1.5px]'
+                : 'sm:hidden bg-slate-950/60 backdrop-blur-[2px]'
+            }`}
+          />
+        )}
+
+        {/* 1. Nút Floating Launcher Chatbox nổi bật (Nhìn vào biết ngay Chat AI, không bị chìm) */}
       {!isOpen && (
         <div
           ref={launcherRef}
           data-chat-launcher
           style={{ transform: `translate3d(${offset.x}px, ${offset.y}px, 0)` }}
-          className="relative flex flex-col sm:flex-row items-end sm:items-center gap-2.5"
+          className="relative flex flex-col items-end gap-2.5"
         >
           {!isBubbleDismissed && (
-            <div className="relative animate-in fade-in slide-in-from-bottom-2 duration-200 max-w-[240px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 rounded-2xl px-3.5 py-2.5 shadow-xl text-slate-800 dark:text-slate-100">
+            <div className="relative animate-in fade-in slide-in-from-bottom-2 duration-200 max-w-[235px] sm:max-w-[260px] bg-white dark:bg-slate-900 border-2 border-[#00B8DD]/45 rounded-2xl px-3.5 py-2.5 shadow-xl text-slate-800 dark:text-slate-100">
               <button
                 type="button"
                 onClick={(e) => {
@@ -1095,15 +1116,20 @@ export function AgenticChatWidget() {
                   setIsBubbleDismissed(true);
                 }}
                 aria-label="Đóng bóng thoại"
-                className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:text-slate-400 flex items-center justify-center text-[10px] cursor-pointer"
+                className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-slate-800 text-white hover:bg-rose-500 flex items-center justify-center shadow-sm cursor-pointer transition-colors"
               >
-                <X className="w-2.5 h-2.5" />
+                <X className="w-3 h-3" />
               </button>
               <div
-                onClick={() => setIsOpen(true)}
+                onClick={() => {
+                  setIsOpen(true);
+                  setIsBubbleDismissed(true);
+                  fetchSessionList();
+                }}
                 className="cursor-pointer select-none text-xs leading-snug"
               >
-                <span className="font-bold text-[#007D99] dark:text-[#00B8DD]">Schoolify AI</span> sẵn sàng hỗ trợ giải bài &amp; tạo đề! ✨
+                <span className="font-bold text-[#007D99] dark:text-[#5CE1FF]">Schoolify AI</span>{' '}
+                sẵn sàng hỗ trợ giải bài &amp; tạo đề! ✨
               </div>
             </div>
           )}
@@ -1131,32 +1157,58 @@ export function AgenticChatWidget() {
               fetchSessionList();
               triggerTemporaryEmotion('excited', 2000);
             }}
-            aria-label="Mở Trợ lý AI Schoolify"
-            title="Bấm để mở Schoolify AI · Kéo để di chuyển"
+            aria-label="Mở Chatbox Trợ lý AI Schoolify"
+            title="Bấm để mở Chatbox AI · Kéo để di chuyển"
             style={{ touchAction: 'none' }}
-            className={`relative flex flex-col items-center group select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00B8DD] rounded-2xl shrink-0 ${
+            className={`relative group flex items-center gap-2 sm:gap-2.5 pl-2 pr-3.5 sm:pl-2.5 sm:pr-4.5 py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-[#0F172A] via-[#0E2A3F] to-[#0891B2] text-white border-2 border-[#38BDF8]/80 shadow-[0_12px_32px_-4px_rgba(0,184,221,0.58),0_6px_18px_rgba(2,6,23,0.45)] ring-4 ring-[#00B8DD]/25 hover:ring-[#00B8DD]/45 select-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#5CE1FF] transition-all ${
               isDragging
                 ? 'cursor-grabbing scale-105'
-                : 'cursor-grab animate-sf-robot-drift hover:[animation-play-state:paused] transition-transform hover:scale-105'
+                : 'cursor-grab animate-sf-robot-drift hover:[animation-play-state:paused] hover:scale-[1.04] active:scale-95'
             }`}
           >
-            <SchoolifyRobot size="lg" emotion={emotion} isFloating={!isDragging} />
+            {/* Vòng tròn Avatar Robot + Chấm xanh Online */}
+            <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-slate-950/95 border border-[#5CE1FF]/60 flex items-center justify-center shadow-inner shrink-0">
+              <SchoolifyRobot size="md" emotion={emotion} isFloating={false} />
+              <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400 ring-2 ring-[#0F172A]" />
+              </span>
+            </div>
+
+            {/* Nhãn nhận diện Chatbox tức thì trên cả Mobile & Desktop */}
+            <div className="flex flex-col items-start text-left pr-0.5">
+              <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-[#67E8F9] leading-none">
+                <MessageSquare className="w-3 h-3 shrink-0" />
+                <span>Chat AI</span>
+              </span>
+              <span className="text-xs sm:text-[13px] font-bold text-white leading-tight mt-0.5 whitespace-nowrap">
+                <span className="sm:hidden">Hỏi bài ngay</span>
+                <span className="hidden sm:inline">Hỏi bài &amp; Tạo đề</span>
+              </span>
+            </div>
           </button>
         </div>
       )}
 
-      {/* 2. Khung Chatbox Chuẩn Gemini (Clean UI + Quản lý đa Session + Vector Memory) */}
+      {/* 2. Khung Chatbox Chuẩn Gemini (Tỉ lệ co giãn theo thiết bị + Viền/Shadow nổi bật không bị chìm) */}
       {isOpen && (
         <div
           data-chat-open
-          className={`relative flex flex-col bg-white dark:bg-[#0B111E] border border-slate-200/90 dark:border-slate-800/90 rounded-3xl shadow-2xl overflow-hidden transition-all duration-200 animate-in fade-in zoom-in-95 ${
+          className={`relative z-10 flex flex-col bg-white dark:bg-[#0B111E] border-2 border-[#00B8DD]/45 dark:border-[#00B8DD]/45 shadow-[0_24px_75px_-12px_rgba(0,184,221,0.32),0_20px_50px_-10px_rgba(2,6,23,0.52)] ring-1 ring-slate-900/5 dark:ring-white/10 overflow-hidden transition-all duration-200 animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 ${
             isExpanded
-              ? 'w-[calc(100vw-1.5rem)] sm:w-[820px] lg:w-[920px] h-[85vh] max-h-[760px]'
-              : 'w-[calc(100vw-1.5rem)] sm:w-[430px] h-[75vh] max-h-[650px]'
+              ? 'w-full h-[100dvh] rounded-none border-0 sm:border-2 sm:rounded-3xl sm:w-[min(94vw,760px)] lg:w-[min(90vw,920px)] xl:w-[min(88vw,1060px)] 2xl:w-[min(84vw,1160px)] sm:h-[min(86dvh,740px)] lg:h-[min(86dvh,780px)] xl:h-[min(88dvh,820px)]'
+              : 'w-full h-[min(92dvh,calc(100dvh-12px))] rounded-t-3xl rounded-b-none border-x-0 border-b-0 sm:border-2 sm:rounded-3xl sm:w-[440px] lg:w-[480px] xl:w-[520px] sm:h-[min(80dvh,640px)] lg:h-[min(82dvh,700px)] xl:h-[min(82dvh,740px)]'
           }`}
         >
-          {/* Top Bar tinh gọn chuẩn Gemini */}
-          <div className="h-13 px-3.5 bg-white/95 dark:bg-[#090D16] text-slate-900 dark:text-white flex items-center justify-between gap-2 border-b border-slate-200/80 dark:border-slate-800/80 shrink-0">
+          {/* Thanh kéo trực quan cho Mobile Bottom Sheet */}
+          {!isExpanded && (
+            <div className="sm:hidden flex justify-center pt-2 pb-1 bg-gradient-to-r from-cyan-50/95 via-white to-sky-50/95 dark:from-[#0E1E33] dark:via-[#0A1322] dark:to-[#0E1E33] shrink-0">
+              <span className="w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+            </div>
+          )}
+
+          {/* Top Bar nổi bật tách biệt khỏi nền */}
+          <div className="min-h-[54px] sm:h-14 px-3.5 py-1.5 bg-gradient-to-r from-cyan-50/95 via-white to-sky-50/95 dark:from-[#0E1E33] dark:via-[#0A1322] dark:to-[#0E1E33] text-slate-900 dark:text-white flex items-center justify-between gap-2 border-b border-[#00B8DD]/25 shrink-0">
             <div className="flex items-center gap-2 min-w-0">
               <button
                 type="button"
@@ -1183,11 +1235,15 @@ export function AgenticChatWidget() {
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-extrabold tracking-tight text-slate-900 dark:text-white shrink-0">
+                    <span className="text-xs sm:text-[13px] font-extrabold tracking-tight text-slate-900 dark:text-white shrink-0">
                       Schoolify AI
                     </span>
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[9px] font-bold text-emerald-700 dark:text-emerald-300 leading-none">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      Online
+                    </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[175px] sm:max-w-[260px]">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[140px] xs:max-w-[175px] sm:max-w-[260px]">
                     {currentSessionTitle}
                   </p>
                 </div>
@@ -1198,18 +1254,19 @@ export function AgenticChatWidget() {
               <button
                 type="button"
                 onClick={handleStartNewChat}
-                className="px-2.5 py-1.5 rounded-xl bg-[#00B8DD]/10 hover:bg-[#00B8DD]/20 text-[#007D99] dark:text-[#5CE1FF] border border-[#00B8DD]/25 text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer"
+                className="min-h-[38px] sm:min-h-0 px-2.5 py-1.5 rounded-xl bg-[#00B8DD]/10 hover:bg-[#00B8DD]/20 text-[#007D99] dark:text-[#5CE1FF] border border-[#00B8DD]/25 text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer"
                 title="Cuộc trò chuyện mới"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                 <span className="hidden sm:inline">Mới</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setIsExpanded((prev) => !prev)}
-                className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors cursor-pointer"
+                className="min-w-[38px] min-h-[38px] sm:min-w-0 sm:min-h-0 p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 flex items-center justify-center transition-colors cursor-pointer"
                 title={isExpanded ? 'Thu gọn cửa sổ' : 'Mở rộng chế độ Gemini Workspace'}
+                aria-label={isExpanded ? 'Thu gọn cửa sổ' : 'Mở rộng toàn màn hình'}
               >
                 {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
               </button>
@@ -1217,10 +1274,11 @@ export function AgenticChatWidget() {
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                className="min-w-[38px] min-h-[38px] sm:min-w-0 sm:min-h-0 p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 flex items-center justify-center transition-colors cursor-pointer"
                 title="Đóng"
+                aria-label="Đóng khung chat"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4.5 h-4.5 sm:w-4 sm:h-4" />
               </button>
             </div>
           </div>
@@ -1313,14 +1371,14 @@ export function AgenticChatWidget() {
             {/* Main Chat Canvas chuẩn Gemini */}
             <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-[#0B111E]">
               {/* Khu vực hiển thị hội thoại hoặc Màn hình chào mừng Gemini */}
-              <div className="flex-1 overflow-y-auto px-3.5 sm:px-5 py-4 space-y-4">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3.5 sm:px-5 py-3.5 sm:py-4 space-y-4">
                 {messages.length === 0 ? (
                   /* Màn hình Chào mừng kiểu Gemini khi mở Phiên mới */
-                  <div className="h-full min-h-[320px] flex flex-col items-center justify-center max-w-xl mx-auto py-4 text-center">
-                    <div className="mb-3">
-                      <SchoolifyRobot size="md" emotion={emotion} isFloating />
+                  <div className="min-h-full flex flex-col items-center justify-start sm:justify-center max-w-xl mx-auto py-2 sm:py-4 text-center">
+                    <div className="-my-3 sm:my-0 scale-75 sm:scale-95 origin-center">
+                      <SchoolifyRobot size="lg" emotion={emotion} isFloating />
                     </div>
-                    <h2 className="text-lg sm:text-xl font-black tracking-tight bg-gradient-to-r from-[#00B8DD] via-sky-400 to-amber-400 bg-clip-text text-transparent">
+                    <h2 className="text-base sm:text-xl font-black tracking-tight bg-gradient-to-r from-[#00B8DD] via-sky-400 to-amber-400 bg-clip-text text-transparent">
                       Xin chào, hôm nay mình cùng học gì nào?
                     </h2>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md leading-relaxed">
@@ -1328,7 +1386,7 @@ export function AgenticChatWidget() {
                     </p>
 
                     {/* Lưới 4 Thẻ Gợi ý khởi đầu kiểu Gemini (flex-wrap / grid sạch sẽ) */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full mt-5 text-left">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 w-full mt-4 sm:mt-5 text-left">
                       {GEMINI_STARTER_CARDS.map((card) => (
                         <button
                           key={card.title}
@@ -1639,7 +1697,7 @@ export function AgenticChatWidget() {
                 )}
 
               {/* Khung nhập câu hỏi kiểu Gemini Pill Composer */}
-              <div className="p-3 bg-white dark:bg-[#0B111E] border-t border-slate-200/70 dark:border-slate-800/80 shrink-0">
+              <div className="px-3 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-3 bg-white dark:bg-[#0B111E] border-t border-slate-200/70 dark:border-slate-800/80 shrink-0">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -1652,12 +1710,12 @@ export function AgenticChatWidget() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Hỏi Schoolify AI bất kỳ điều gì..."
-                    className="flex-1 min-w-0 py-1.5 bg-transparent text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none"
+                    className="flex-1 min-w-0 py-1.5 bg-transparent text-[15px] sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none"
                   />
                   <button
                     type="submit"
                     disabled={!input.trim() || isSending}
-                    className="p-2 rounded-xl bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold disabled:opacity-35 transition-all cursor-pointer shrink-0"
+                    className="min-w-[38px] min-h-[38px] sm:min-w-0 sm:min-h-0 p-2 rounded-xl bg-[#00B8DD] hover:bg-[#009bbd] text-white font-bold disabled:opacity-35 flex items-center justify-center transition-all cursor-pointer shrink-0"
                     title="Gửi tin nhắn"
                   >
                     {isSending ? (
@@ -1672,6 +1730,7 @@ export function AgenticChatWidget() {
           </div>
         </div>
       )}
+      </div>
 
       <OutOfPointsModal
         isOpen={outOfPointsModal.isOpen}
@@ -1685,6 +1744,6 @@ export function AgenticChatWidget() {
           router.push('/pricing');
         }}
       />
-    </div>
+    </>
   );
 }

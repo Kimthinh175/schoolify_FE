@@ -35,14 +35,14 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth.store';
-import { SchoolRole, SystemRole } from '@/types';
+import { SystemRole } from '@/types';
 
 interface NavItem {
   label: string;
   href: string;
   icon: React.ReactNode;
   badge?: string | number;
-  roles: (SchoolRole | SystemRole)[];
+  roles: (SystemRole | 'STUDENT')[];
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -80,7 +80,7 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['SUPER_ADMIN'],
   },
   {
-    label: 'Bảng Xếp Hạng & Mùa Giải',
+    label: 'Bảng Xếp Hạng',
     href: '/admin/leaderboard',
     icon: <Trophy className="w-5 h-5 text-amber-500" />,
     badge: 'Mùa 1',
@@ -112,62 +112,11 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['SUPER_ADMIN'],
   },
 
-  // TEACHER & CREATOR
-  {
-    label: 'Bàn Làm Việc Giáo Viên',
-    href: '/teacher/dashboard',
-    icon: <LayoutDashboard className="w-5 h-5" />,
-    roles: ['TEACHER'],
-  },
-  {
-    label: 'Hồ Sơ & Tài Khoản',
-    href: '/profile',
-    icon: <User className="w-5 h-5" />,
-    roles: ['TEACHER'],
-  },
-  {
-    label: 'Soạn Khóa Học (Builder)',
-    href: '/teacher/courses',
-    icon: <BookOpen className="w-5 h-5" />,
-    roles: ['TEACHER'],
-  },
-  {
-    label: 'Lớp Học & Lịch Dạy',
-    href: '/teacher/classes',
-    icon: <Calendar className="w-5 h-5" />,
-    roles: ['TEACHER'],
-  },
-  {
-    label: 'Chấm Bài & Lời Phê',
-    href: '/teacher/grading',
-    icon: <FileCheck2 className="w-5 h-5" />,
-    badge: '5 bài',
-    roles: ['TEACHER'],
-  },
-  {
-    label: 'Ngân Hàng Đề (Studio)',
-    href: '/teacher/questions',
-    icon: <HelpCircle className="w-5 h-5" />,
-    roles: ['TEACHER'],
-  },
-  {
-    label: 'Doanh Thu Khóa Học',
-    href: '/teacher/revenue',
-    icon: <DollarSign className="w-5 h-5" />,
-    roles: ['TEACHER'],
-  },
-  {
-    label: 'Kho Quà Tặng Đổi Thưởng',
-    href: '/teacher/rewards',
-    icon: <Gift className="w-5 h-5" />,
-    roles: ['TEACHER'],
-  },
-
   // STUDENT (Người Luyện Thi & Quản Lý Cá Nhân)
   {
     label: 'Cổng Luyện Thi K-12',
     href: '/student/practice',
-    icon: <Sparkles className="w-5 h-5 text-[#00B8DD]" />,
+    icon: <Sparkles className="w-5 h-5" />,
     roles: ['STUDENT'],
   },
   {
@@ -195,12 +144,6 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['STUDENT'],
   },
   {
-    label: 'Khóa Học Của Tôi',
-    href: '/student/my-courses',
-    icon: <BookOpen className="w-5 h-5" />,
-    roles: ['STUDENT'],
-  },
-  {
     label: 'Cửa Hàng Đổi Quà',
     href: '/student/rewards',
     icon: <ShoppingBag className="w-5 h-5" />,
@@ -225,13 +168,11 @@ export function AppSidebar({
 }) {
   const [collapsed, setCollapsed] = React.useState(false);
   const pathname = usePathname();
-  const { currentRole, currentSchool } = useAuthStore();
+  const { currentRole } = useAuthStore();
 
-  const effectiveRole = pathname?.startsWith('/admin')
+  const effectiveRole: SystemRole | 'STUDENT' = pathname?.startsWith('/admin')
     ? 'SUPER_ADMIN'
-    : pathname?.startsWith('/teacher')
-      ? 'TEACHER'
-      : currentRole;
+    : currentRole || 'STUDENT';
 
   const filteredNavItems = NAV_ITEMS.filter((item) => item.roles.includes(effectiveRole));
 
@@ -244,7 +185,7 @@ export function AppSidebar({
           : cn(
               'fixed bottom-0 left-0 z-30',
               withNavbar ? 'top-20 h-[calc(100vh-5rem)]' : 'top-0 h-screen',
-              collapsed ? 'w-20' : 'w-64'
+              collapsed ? 'w-20' : 'w-[276px]'
             )
       )}
     >
@@ -307,7 +248,7 @@ export function AppSidebar({
               onClick={onMobileClose}
               title={!isMobile && collapsed ? item.label : undefined}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group',
+                'flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl text-[13.5px] font-medium transition-all group',
                 isActive
                   ? 'bg-[#00B8DD] text-white shadow-sm shadow-[#00B8DD]/25 font-semibold'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/70 dark:hover:text-white',
@@ -323,7 +264,7 @@ export function AppSidebar({
                   {item.badge && (
                     <span
                       className={cn(
-                        'rounded-full px-2 py-0.5 text-xs font-bold shrink-0',
+                        'rounded-full px-1.5 py-0.5 text-[10.5px] font-bold shrink-0',
                         isActive ? 'bg-white/20 text-white' : 'bg-[#00B8DD]/10 text-[#009BBF] dark:bg-[#00B8DD]/20 dark:text-[#00B8DD]'
                       )}
                     >
@@ -369,7 +310,7 @@ export function AppSidebar({
       <div
         className={cn(
           'hidden md:block shrink-0 transition-all duration-300',
-          collapsed ? 'w-20' : 'w-64'
+          collapsed ? 'w-20' : 'w-[276px]'
         )}
       >
         {renderSidebar(false)}

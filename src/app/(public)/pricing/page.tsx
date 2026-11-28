@@ -41,10 +41,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog } from '@/components/ui/dialog';
-import { MOCK_PACKAGES } from '@/services/mock/data';
 import { catalogService, PayOSLinkData } from '@/services/catalog.service';
 import { useAuthStore } from '@/store/auth.store';
-import { SubscriptionPackage } from '@/types';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { NgocIcon } from '@/components/ui/point-icons';
@@ -186,10 +184,6 @@ const FAQS = [
     q: 'Mô hình AI Deep-Reasoning trên gói Thủ Khoa VIP có gì đặc biệt?',
     a: 'Mô hình AI Deep-Reasoning được tinh chỉnh riêng để giải quyết các câu hỏi Vận Dụng Cao (mục tiêu 9 - 10 điểm), các đề thi Đánh Giá Năng Lực (ĐHQG HN, ĐHQG HCM) và Đánh Giá Tư Duy Bách Khoa. AI chỉ rõ 4 bước tư duy bản chất, mẹo bấm máy tính Casio fx-880 và các cạm bẫy tâm lý thường gặp trong đề thi.',
   },
-  {
-    q: 'Trường học hoặc Trung tâm gia sư muốn mua tài khoản số lượng lớn thì thế nào?',
-    a: 'Bạn chỉ cần chuyển sang tab "Dành Cho Trường Học" để xem các gói SaaS chuyên dụng cho trường học với quản lý giáo viên, học sinh, điểm danh và thư viện bài giảng riêng.',
-  },
 ];
 
 // SVG VietQR Matrix Generator Component
@@ -274,16 +268,12 @@ function VietQRVector({ code }: { code: string }) {
 }
 
 export default function PricingPage() {
-  // Tab chính: 'STUDENT' (Học sinh) hoặc 'SCHOOL' (Trường học)
-  const [audienceTab, setAudienceTab] = React.useState<'STUDENT' | 'SCHOOL'>('STUDENT');
   const [isYearly, setIsYearly] = React.useState(false);
 
   // State Modal thanh toán & Cổng PayOS
   const { user } = useAuthStore();
-  const [schoolPackages, setSchoolPackages] = React.useState<SubscriptionPackage[]>(MOCK_PACKAGES);
   const [activeOrderId, setActiveOrderId] = React.useState<string | null>(null);
   const [selectedStudentPkg, setSelectedStudentPkg] = React.useState<StudentPackage | null>(null);
-  const [selectedSchoolPkg, setSelectedSchoolPkg] = React.useState<SubscriptionPackage | null>(null);
   const [payosData, setPayosData] = React.useState<PayOSLinkData | null>(null);
   const [isCreatingPayment, setIsCreatingPayment] = React.useState(false);
   const [isPollingStatus, setIsPollingStatus] = React.useState(false);
@@ -307,16 +297,6 @@ export default function PricingPage() {
     toast.success(`Đã sao chép ${label}!`);
   };
 
-
-  React.useEffect(() => {
-    catalogService
-      .getPackages()
-      .then((pkgs) => {
-        if (pkgs.length > 0) setSchoolPackages(pkgs);
-      })
-      .catch(() => {});
-  }, []);
-
   const stopPolling = () => {
     if (pollingRef.current) {
       clearInterval(pollingRef.current);
@@ -333,7 +313,6 @@ export default function PricingPage() {
 
   const onPaymentSuccess = (
     studentPkg: StudentPackage | null,
-    schoolPkg: SubscriptionPackage | null,
     pointsAwarded?: number
   ) => {
     setIsPaidSuccess(true);
@@ -362,15 +341,12 @@ export default function PricingPage() {
         `Chúc mừng! Bạn đã nâng cấp thành công gói ${studentPkg.name}. Đã cộng +${bonusGems} 💎 vào ví!`,
         { duration: 5000 }
       );
-    } else if (schoolPkg) {
-      toast.success(`Kích hoạt thành công gói bản quyền trường học ${schoolPkg.name}!`, { duration: 5000 });
     }
   };
 
   const startPolling = (
     orderCode: number,
-    studentPkg: StudentPackage | null,
-    schoolPkg: SubscriptionPackage | null
+    studentPkg: StudentPackage | null
   ) => {
     stopPolling();
     setIsPollingStatus(true);
@@ -380,7 +356,7 @@ export default function PricingPage() {
         const result = await catalogService.getPayosOrderStatus(orderCode);
         if (result?.status === 'PAID') {
           stopPolling();
-          onPaymentSuccess(studentPkg, schoolPkg, result.bonusPointsAwarded);
+          onPaymentSuccess(studentPkg, result.bonusPointsAwarded);
         }
       } catch (err) {
         console.warn('[PayOS Polling] Error checking status:', err);
@@ -394,7 +370,6 @@ export default function PricingPage() {
       return;
     }
     setSelectedStudentPkg(pkg);
-    setSelectedSchoolPkg(null);
     setIsPaidSuccess(false);
     setAwardedBonus(0);
     setIsCreatingPayment(true);
@@ -419,45 +394,7 @@ export default function PricingPage() {
       }
       if (res?.payos) {
         setPayosData(res.payos);
-        startPolling(res.payos.orderCode, pkg, null);
-      }
-    } catch (err) {
-      console.error('Failed to create PayOS link:', err);
-      toast.error('Không thể tạo link thanh toán PayOS. Vui lòng thử lại sau.');
-    } finally {
-      setIsCreatingPayment(false);
-    }
-  };
-
-  const handleSelectSchoolPlan = async (pkg: SubscriptionPackage) => {
-    setSelectedSchoolPkg(pkg);
-    setSelectedStudentPkg(null);
-    setIsPaidSuccess(false);
-    setAwardedBonus(0);
-    setIsCreatingPayment(true);
-    setPayosData(null);
-
-    const amount = isYearly ? Math.round(pkg.price * 12 * 0.8) : pkg.price;
-    const packageName = `${pkg.name} (${isYearly ? '1 Năm' : '1 Tháng'})`;
-
-    try {
-      const res = await catalogService.createPayosPaymentLink({
-        userId: user?.id,
-        email: user?.email,
-        packageId: pkg.id,
-        packageName,
-        amount,
-        billingCycle: isYearly ? 'YEARLY' : 'MONTHLY',
-        cancelUrl: typeof window !== 'undefined' ? `${window.location.origin}/pricing` : undefined,
-        returnUrl: typeof window !== 'undefined' ? `${window.location.origin}/pricing` : undefined,
-      });
-
-      if (res?.order?.id) {
-        setActiveOrderId(res.order.id);
-      }
-      if (res?.payos) {
-        setPayosData(res.payos);
-        startPolling(res.payos.orderCode, null, pkg);
+        startPolling(res.payos.orderCode, pkg);
       }
     } catch (err) {
       console.error('Failed to create PayOS link:', err);
@@ -472,16 +409,15 @@ export default function PricingPage() {
     stopPolling();
     if (activeOrderId) {
       const confirmed = await catalogService.confirmOrderPayment(activeOrderId).catch(() => null);
-      onPaymentSuccess(selectedStudentPkg, selectedSchoolPkg, confirmed?.bonusPointsAwarded);
+      onPaymentSuccess(selectedStudentPkg, confirmed?.bonusPointsAwarded);
     } else {
-      onPaymentSuccess(selectedStudentPkg, selectedSchoolPkg);
+      onPaymentSuccess(selectedStudentPkg);
     }
   };
 
   const handleCloseModal = () => {
     stopPolling();
     setSelectedStudentPkg(null);
-    setSelectedSchoolPkg(null);
     setPayosData(null);
     setIsPaidSuccess(false);
     setAwardedBonus(0);
@@ -495,43 +431,7 @@ export default function PricingPage() {
 
       {/* Header Selector */}
       <div className="text-center max-w-3xl mx-auto space-y-4">
-        {/* 1. Phân Loại Đối Tượng: Học Sinh vs Trường Học */}
-        <div className="flex justify-center">
-          <div className="p-1.5 bg-slate-100 dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 flex flex-wrap items-center justify-center gap-1.5 shadow-inner">
-            <button
-              type="button"
-              onClick={() => setAudienceTab('STUDENT')}
-              className={cn(
-                'flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer select-none',
-                audienceTab === 'STUDENT'
-                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-md shadow-slate-900/5'
-                  : 'text-slate-500 hover:text-slate-900 dark:text-slate-400'
-              )}
-            >
-              <GraduationCap className={cn('w-4 h-4', audienceTab === 'STUDENT' ? 'text-[#00B8DD]' : 'text-slate-400')} />
-              <span>Dành Cho Học Sinh Luyện Thi</span>
-              <span className="px-1.5 py-0.5 rounded-md text-[10px] bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 font-extrabold uppercase">
-                Ưu Đãi Hot
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setAudienceTab('SCHOOL')}
-              className={cn(
-                'flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer select-none',
-                audienceTab === 'SCHOOL'
-                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-md shadow-slate-900/5'
-                  : 'text-slate-500 hover:text-slate-900 dark:text-slate-400'
-              )}
-            >
-              <Building2 className={cn('w-4 h-4', audienceTab === 'SCHOOL' ? 'text-indigo-500' : 'text-slate-400')} />
-              <span>Dành Cho Trường Học & Trung Tâm</span>
-            </button>
-          </div>
-        </div>
-
-        {/* 2. Monthly / Yearly Billing Toggle */}
+        {/* Monthly / Yearly Billing Toggle */}
         <div className="pt-2 flex items-center justify-center gap-3">
           <div className="inline-flex flex-wrap items-center justify-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-900/90 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold">
             <button
@@ -568,8 +468,7 @@ export default function PricingPage() {
       {/* ========================================================
           A. GRID CÁC GÓI HỌC SINH (STUDENT PLANS)
       ======================================================== */}
-      {audienceTab === 'STUDENT' && (
-        <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch">
+      <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch">
           {STUDENT_PACKAGES.map((pkg) => {
             const isPopular = pkg.isPopular;
             const isVip = pkg.isVip;
@@ -714,12 +613,10 @@ export default function PricingPage() {
             );
           })}
         </div>
-      )}
 
       {/* ========================================================
           B. MÁY TÍNH TÍCH LŨY ĐIỂM & GIÁ TRỊ AI (INTERACTIVE CALCULATOR)
       ======================================================== */}
-      {audienceTab === 'STUDENT' && (
         <div className="mt-16 rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-6 sm:p-10 border border-indigo-800/40 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -828,12 +725,10 @@ export default function PricingPage() {
             </div>
           </div>
         </div>
-      )}
 
       {/* ========================================================
           C. AI 2026 INTERACTIVE SHOWCASE ("SỨC MẠNH GIA SƯ AI 2026")
       ======================================================== */}
-      {audienceTab === 'STUDENT' && (
         <div className="mt-20">
           <div className="text-center max-w-2xl mx-auto mb-10">
             <span className="inline-flex items-center gap-1.5 py-1 px-3 text-xs font-bold rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 mb-2">
@@ -1084,97 +979,11 @@ export default function PricingPage() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* ========================================================
-          D. GRID CÁC GÓI TRƯỜNG HỌC & TỔ CHỨC (B2B SAAS)
-      ======================================================== */}
-      {audienceTab === 'SCHOOL' && (
-        <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch">
-          {schoolPackages.map((pkg) => {
-            const isPopular = pkg.id === 'pkg-growth';
-            const calculatedPrice = isYearly ? pkg.price * 12 * 0.8 : pkg.price;
-
-            return (
-              <Card
-                key={pkg.id}
-                className={cn(
-                  'relative flex flex-col justify-between p-6 sm:p-8 rounded-3xl transition-all',
-                  isPopular
-                    ? 'border-2 border-indigo-600 shadow-xl scale-100 lg:scale-102 z-10 bg-white dark:bg-slate-900'
-                    : 'hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900'
-                )}
-              >
-                {isPopular && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap z-10">
-                    <span className="inline-flex items-center py-1 px-3.5 text-xs uppercase tracking-wider font-black shadow-md bg-indigo-600 text-white rounded-full">
-                      Phổ Biến Cho Trung Tâm
-                    </span>
-                  </div>
-                )}
-
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">{pkg.name}</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 min-h-[32px]">{pkg.description}</p>
-
-                  <div className="mt-6 mb-6 pb-6 border-b border-slate-100 dark:border-slate-800">
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">
-                        {formatMoney(calculatedPrice)}
-                      </span>
-                      <span className="text-xs text-slate-500 font-medium">/{isYearly ? 'năm' : 'tháng'}</span>
-                    </div>
-                  </div>
-
-                  {/* Quotas Box */}
-                  <div className="mb-6 rounded-2xl bg-slate-50 dark:bg-slate-800/60 p-4 space-y-2 text-xs border border-slate-100 dark:border-slate-750">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Giới hạn học sinh:</span>
-                      <span className="font-bold text-slate-900 dark:text-white">{pkg.max_students_total.toLocaleString()} em</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Số lượng giáo viên:</span>
-                      <span className="font-bold text-slate-900 dark:text-white">{pkg.max_teachers} thầy cô</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Dung lượng video:</span>
-                      <span className="font-bold text-slate-900 dark:text-white">{pkg.storage_limit_gb} GB Cloud</span>
-                    </div>
-                  </div>
-
-                  {/* Features list */}
-                  <div className="space-y-3 mb-8">
-                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tính Năng Bao Gồm:</p>
-                    {pkg.features?.map((feat, fIdx) => (
-                      <div key={fIdx} className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300">
-                        <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                        <span>{feat}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <Button
-                  onClick={() => handleSelectSchoolPlan(pkg)}
-                  variant={isPopular ? 'primary' : 'outline'}
-                  className={cn(
-                    'w-full justify-center h-12 text-sm font-bold rounded-xl cursor-pointer',
-                    isPopular ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : ''
-                  )}
-                >
-                  Đăng Ký Bản Quyền Trường
-                </Button>
-              </Card>
-            );
-          })}
-        </div>
-      )}
 
       {/* ========================================================
           E. BẢNG SO SÁNH CHI TIẾT TÍNH NĂNG (FEATURE COMPARISON)
           Responsive for both Mobile (card stacked) & Desktop (table)
       ======================================================== */}
-      {audienceTab === 'STUDENT' && (
         <div className="mt-20">
           <div className="text-center max-w-2xl mx-auto mb-10">
             <span className="inline-flex items-center gap-1.5 py-1 px-3 text-xs font-bold rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 mb-2">
@@ -1265,7 +1074,6 @@ export default function PricingPage() {
             ))}
           </div>
         </div>
-      )}
 
       {/* ========================================================
           F. FAQ (CÂU HỎI THƯỜNG GẶP)
@@ -1322,18 +1130,14 @@ export default function PricingPage() {
           G. CHECKOUT MODAL (VIETQR CHUẨN & KÍCH HOẠT TỨC THÌ)
       ======================================================== */}
       <Dialog
-        isOpen={!!selectedStudentPkg || !!selectedSchoolPkg}
+        isOpen={!!selectedStudentPkg}
         onClose={handleCloseModal}
         title={
           selectedStudentPkg
             ? `Nâng Cấp Gói Luyện Thi: ${selectedStudentPkg.name}`
-            : `Đăng Ký Bản Quyền Trường Học: ${selectedSchoolPkg?.name}`
+            : 'Nâng Cấp Gói Luyện Thi'
         }
-        description={
-          selectedStudentPkg
-            ? 'Quét mã VietQR chuyển khoản để kích hoạt tức thì quyền lợi AI và điểm thưởng.'
-            : 'Quét mã QR VietQR để kích hoạt ngay lập tức gói cước của trường.'
-        }
+        description="Quét mã VietQR chuyển khoản để kích hoạt tức thì quyền lợi AI và điểm thưởng."
       >
         <div className="py-2 flex flex-col items-center text-center space-y-4">
           {isCreatingPayment ? (
@@ -1367,7 +1171,7 @@ export default function PricingPage() {
                     src={
                       payosData?.qrCode?.startsWith('http')
                         ? payosData.qrCode
-                        : `https://img.vietqr.io/image/${payosData?.bin || '970422'}-${payosData?.accountNumber || '0903888899'}-compact2.png?amount=${payosData?.amount || (selectedStudentPkg ? (isYearly ? selectedStudentPkg.priceYearly * 12 : selectedStudentPkg.priceMonthly) : selectedSchoolPkg ? (isYearly ? Math.round(selectedSchoolPkg.price * 12 * 0.8) : selectedSchoolPkg.price) : 0)}&addInfo=${encodeURIComponent(payosData?.description || `SCH ${payosData?.orderCode || 'PRO'}`)}&accountName=${encodeURIComponent(payosData?.accountName || 'CONG TY CO PHAN SCHOOLIFY')}`
+                        : `https://img.vietqr.io/image/${payosData?.bin || '970422'}-${payosData?.accountNumber || '0903888899'}-compact2.png?amount=${payosData?.amount || (selectedStudentPkg ? (isYearly ? selectedStudentPkg.priceYearly * 12 : selectedStudentPkg.priceMonthly) : 0)}&addInfo=${encodeURIComponent(payosData?.description || `SCH ${payosData?.orderCode || 'PRO'}`)}&accountName=${encodeURIComponent(payosData?.accountName || 'CONG TY CO PHAN SCHOOLIFY')}`
                     }
                     alt="VietQR PayOS"
                     className="w-full h-full object-contain"
@@ -1388,7 +1192,7 @@ export default function PricingPage() {
                 <div className="flex justify-between items-center">
                   <span className="text-slate-500">Gói cước:</span>
                   <span className="font-extrabold text-slate-900 dark:text-white">
-                    {selectedStudentPkg?.name || selectedSchoolPkg?.name} ({isYearly ? 'Gói 1 Năm' : 'Gói 1 Tháng'})
+                    {selectedStudentPkg?.name} ({isYearly ? 'Gói 1 Năm' : 'Gói 1 Tháng'})
                   </span>
                 </div>
 
@@ -1401,10 +1205,6 @@ export default function PricingPage() {
                           ? isYearly
                             ? selectedStudentPkg.priceYearly * 12
                             : selectedStudentPkg.priceMonthly
-                          : selectedSchoolPkg
-                          ? isYearly
-                            ? Math.round(selectedSchoolPkg.price * 12 * 0.8)
-                            : selectedSchoolPkg.price
                           : 0)
                     )}
                   </span>
@@ -1521,7 +1321,7 @@ export default function PricingPage() {
                 Kích Hoạt Thành Công!
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
-                Tài khoản của bạn đã được nâng cấp lên <strong>{selectedStudentPkg?.name || selectedSchoolPkg?.name}</strong>.
+                Tài khoản của bạn đã được nâng cấp lên <strong>{selectedStudentPkg?.name}</strong>.
                 {awardedBonus > 0 && (
                   <span className="block mt-1 text-emerald-600 dark:text-emerald-400 font-bold">
                     Đã cộng trực tiếp +{awardedBonus} <NgocIcon className="inline-block w-[1.1em] h-[1.1em] align-[-0.18em]" flat /> vào Ví Điểm của bạn!

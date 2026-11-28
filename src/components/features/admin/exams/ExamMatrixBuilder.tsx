@@ -38,8 +38,8 @@ import {
   buildExamMatrixApiPayload,
   sendExamMatrixToBackend,
 } from '@/services/exam-generator.service';
+import { isSubjectMatch } from '@/services/mock/question-matrix-engine';
 import { toast } from 'sonner';
-import { MOCK_COURSES } from '@/services/mock/data';
 import {
   ADMIN_SUBJECTS,
   GRADE_LEVELS,
@@ -60,9 +60,8 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
   const [durationMinutes, setDurationMinutes] = React.useState<number>(45);
   const [passScore, setPassScore] = React.useState<number>(5.0);
 
-  // Phân hạng tiếp cận & Khóa học gợi ý
+  // Phân hạng tiếp cận
   const [accessTier, setAccessTier] = React.useState<'FREE_TRIAL' | 'PRO'>('FREE_TRIAL');
-  const [upsellCourseId, setUpsellCourseId] = React.useState<string>('NONE');
 
   // 2. Phạm vi kiến thức & Tỉ lệ Chương
   const [scopeMode, setScopeMode] = React.useState<ExamScopeMode>('CHAPTER_FOCUSED');
@@ -170,9 +169,7 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
 
   // Lọc số câu hỏi khả dụng theo môn học trong questionPool
   const availableCountForSubject = React.useMemo(() => {
-    return questionPool.filter(
-      (q) => !subject || q.subject?.toLowerCase().trim() === subject.toLowerCase().trim()
-    ).length;
+    return questionPool.filter((q) => !subject || isSubjectMatch(q.subject, subject)).length;
   }, [questionPool, subject]);
 
   const handleTogglePrevChapter = (ch: string) => {
@@ -217,14 +214,14 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
     variant_count: variantCount,
     variant_prefix: variantPrefix,
     access_tier: accessTier,
-    upsell_course_id: upsellCourseId,
+    upsell_course_id: 'NONE',
   }), [
     title, subject, gradeLevel, totalQuestions, durationMinutes, passScore,
     scopeMode, currentChapter, includePreviousChapters, previousChapters,
     selectedSemesterChapters, currentChapterRatio, prevChapterRatio,
     recRatio, undRatio, appRatio, advRatio,
     mcqCount, tfCount, saCount,
-    variantCount, variantPrefix, accessTier, upsellCourseId
+    variantCount, variantPrefix, accessTier
   ]);
 
   const apiPayload = React.useMemo<ExamMatrixApiPayload>(() => {
@@ -437,28 +434,6 @@ export function ExamMatrixBuilder({ questionPool, onSaveExams }: ExamMatrixBuild
               <option value="FREE_TRIAL">🎁 Khách thi thử (Free 3 lần/ngày)</option>
               <option value="PRO">⭐ Gói Rèn Luyện (Pro Member)</option>
             </select>
-          </div>
-
-          {/* Gợi ý khóa học liên quan */}
-          <div className="sm:col-span-2">
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-              Khóa học gợi ý liên quan cho học sinh sau khi làm bài:
-            </label>
-            <select
-              value={upsellCourseId}
-              onChange={(e) => setUpsellCourseId(e.target.value)}
-              className="w-full h-9 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-2.5 py-1.5 text-slate-800 dark:text-white font-medium focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:border-primary"
-            >
-              <option value="NONE">-- Không gắn khóa học gợi ý --</option>
-              {MOCK_COURSES.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title} • GV: {c.teacher_name} ({c.price.toLocaleString('vi-VN')} đ)
-                </option>
-              ))}
-            </select>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-              Khóa học này sẽ hiển thị ở trang kết quả thi để học sinh tham khảo củng cố các lỗ hổng kiến thức.
-            </p>
           </div>
         </div>
       </Card>

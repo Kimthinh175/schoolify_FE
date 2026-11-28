@@ -4,7 +4,6 @@ import * as React from 'react';
 import Link from 'next/link';
 import {
   GraduationCap,
-  BookOpen,
   ArrowRight,
 } from 'lucide-react';
 import { AuthCardSkeleton } from '@/components/skeletons/page-skeletons';
@@ -18,14 +17,6 @@ const LOGIN_PORTALS = [
     href: '/login/student',
     badge: 'Học tập & Luyện thi',
   },
-  {
-    id: 'teacher',
-    icon: BookOpen,
-    title: 'Người Bán Khóa Học',
-    desc: 'Tạo khóa học số, xuất bản đề thi ma trận, bán tài liệu học tập & quản lý doanh thu.',
-    href: '/login/teacher',
-    badge: 'Giáo viên & Giảng viên',
-  },
 ];
 
 import { useSearchParams } from 'next/navigation';
@@ -35,22 +26,22 @@ function CentralLoginForm() {
   const returnUrl = searchParams.get('returnUrl');
 
   return (
-    <div className="max-w-2xl w-full my-auto space-y-6">
+    <div className="max-w-md w-full my-auto space-y-6">
       {/* Header */}
       <div className="text-center space-y-2">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-          <span>Cổng Đăng Nhập Phân Hệ Chuyên Biệt</span>
+          <span>Cổng Đăng Nhập Luyện Thi K-12</span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-          Chọn Vai Trò Để Đăng Nhập
+          Đăng Nhập Schoolify
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-          Mỗi vai trò sở hữu giao diện làm việc và công cụ tác nghiệp riêng biệt.
+          Luyện đề thông minh theo ma trận chuẩn GDPT 2018-2025 cùng Gia sư AI.
         </p>
       </div>
 
-      {/* 2 Role Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Portal Card */}
+      <div className="grid grid-cols-1 gap-4">
         {LOGIN_PORTALS.map((portal) => {
           const Icon = portal.icon;
           const finalHref = returnUrl
@@ -93,9 +84,9 @@ function CentralLoginForm() {
       {/* Footer Info */}
       <div className="text-center pt-2">
         <p className="text-xs text-slate-500">
-          Chưa có tài khoản trường?{' '}
+          Chưa có tài khoản luyện thi?{' '}
           <Link href="/register" className="text-[#00B8DD] font-bold hover:underline">
-            Đăng ký dùng thử 14 ngày
+            Đăng ký miễn phí ngay
           </Link>
         </p>
       </div>

@@ -952,22 +952,22 @@ export default function AdminExamsMatrixPage() {
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-600 dark:text-slate-300">
-                  <th className="py-2.5 px-4 font-semibold">Cấp Độ Luyện Thi (Level)</th>
-                  <th className="py-2.5 px-3 font-semibold text-center text-sky-600 dark:text-sky-400">
+                  <th className="py-2.5 px-3 font-semibold whitespace-nowrap">Cấp Độ Luyện Thi (Level)</th>
+                  <th className="py-2.5 px-2.5 font-semibold text-center text-sky-600 dark:text-sky-400 whitespace-nowrap">
                     Nhận biết (EASY)
                   </th>
-                  <th className="py-2.5 px-3 font-semibold text-center text-emerald-600 dark:text-emerald-400">
+                  <th className="py-2.5 px-2.5 font-semibold text-center text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                     Thông hiểu (MEDIUM)
                   </th>
-                  <th className="py-2.5 px-3 font-semibold text-center text-amber-600 dark:text-amber-400">
+                  <th className="py-2.5 px-2.5 font-semibold text-center text-amber-600 dark:text-amber-400 whitespace-nowrap">
                     Vận dụng (HARD)
                   </th>
-                  <th className="py-2.5 px-3 font-semibold text-center text-rose-600 dark:text-rose-400">
+                  <th className="py-2.5 px-2.5 font-semibold text-center text-rose-600 dark:text-rose-400 whitespace-nowrap">
                     V.Dụng cao (VERY_HARD)
                   </th>
-                  <th className="py-2.5 px-4 font-semibold">Thước Phân Bổ Trực Quan</th>
-                  <th className="py-2.5 px-3 font-semibold text-center">Tổng %</th>
-                  <th className="py-2.5 px-4 font-semibold text-right">Thao Tác</th>
+                  <th className="py-2.5 px-3 font-semibold whitespace-nowrap">Thước Phân Bổ Trực Quan</th>
+                  <th className="py-2.5 px-2.5 font-semibold text-center whitespace-nowrap">Tổng %</th>
+                  <th className="py-2.5 px-3 font-semibold text-right whitespace-nowrap">Thao Tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -987,19 +987,19 @@ export default function AdminExamsMatrixPage() {
                           : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/50'
                       )}
                     >
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-3 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <span
                             className={cn(
-                              'w-2 h-2 rounded-full',
+                              'w-2 h-2 rounded-full shrink-0',
                               isCurrent ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-700'
                             )}
                           />
-                          <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white">
+                          <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white whitespace-nowrap">
                             {lvl.icon}
                             <span>{lvl.name}</span>
                           </div>
-                          <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-normal">
+                          <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-normal whitespace-nowrap shrink-0">
                             {lvl.badge}
                           </Badge>
                         </div>

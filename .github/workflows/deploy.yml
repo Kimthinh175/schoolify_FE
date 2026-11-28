@@ -1,4 +1,4 @@
-name: Deploy Schoolify FE to s68
+name: Deploy Schoolify FE to EC2
 
 on:
   push:
@@ -13,10 +13,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 24
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies & Build Next.js standalone
@@ -42,6 +42,8 @@ jobs:
         run: |
           rsync -az --delete \
             --filter='P data/' \
+            --filter='P .env' \
+            --filter='P .env.*' \
             --exclude='*.md' \
             --exclude='.env*' \
             -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes" \
@@ -52,8 +54,7 @@ jobs:
         run: |
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" '
             set -e
-            export PATH="/opt/plesk/node/24/bin:$PATH"
-            pm2 reload schoolify-fe --update-env || pm2 start /opt/apps/schoolify/ecosystem.config.cjs --only schoolify-fe
+            pm2 startOrReload /opt/apps/schoolify/ecosystem.config.cjs --only schoolify-fe --update-env
             pm2 save
             sleep 3
             curl -sfI http://127.0.0.1:3050/ >/dev/null

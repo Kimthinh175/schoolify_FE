@@ -5,6 +5,7 @@ import { Compass, Sparkles, ArrowRight, Clock, HelpCircle, CheckCircle2 } from '
 import { Dialog } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { TiaSangIcon } from '@/components/ui/point-icons';
 
 export interface DiagnosticPromptModalProps {
   isOpen: boolean;
@@ -112,8 +113,10 @@ export function DiagnosticPromptModal({
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>Chi phí</span>
             </div>
-            <div className="mt-1 text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400">
-              Miễn phí (0 ⚡)
+            <div className="mt-1 text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400 flex items-center justify-center gap-1">
+              <span>Miễn phí (0</span>
+              <TiaSangIcon className="w-4 h-4" flat />
+              <span>)</span>
             </div>
           </div>
         </div>
