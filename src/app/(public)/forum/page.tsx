@@ -22,10 +22,16 @@ import {
   ExternalLink,
   Lock,
   Bookmark,
-  GraduationCap,
   ChevronLeft,
   ChevronRight,
-  RotateCcw,
+  RefreshCw,
+  Check,
+  Calculator,
+  Cpu,
+  Atom,
+  FlaskConical,
+  Dna,
+  Languages,
   Image as ImageIcon,
   X,
   SlidersHorizontal,
@@ -33,6 +39,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Avatar } from '@/components/ui/avatar';
 import { MathRenderer } from '@/components/ui/math-renderer';
 import { cn } from '@/lib/utils';
@@ -51,23 +59,62 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.35, delay, ease: 'easeOut' as const },
 });
 
-const SUBJECT_FILTERS = [
-  'Tất cả',
-  'Toán Học',
-  'Vật Lý',
-  'Hóa Học',
-  'Tin Học',
-  'Tiếng Anh',
-  'Sinh Học',
-  'Ngữ Văn',
+const SUBJECT_FILTERS: Array<{
+  value: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  colorClass: string;
+}> = [
+  { value: 'Tất cả', label: 'Tất cả các môn học', icon: BookOpen, colorClass: 'text-[#00B8DD]' },
+  { value: 'Toán Học', label: 'Toán Học', icon: Calculator, colorClass: 'text-sky-600 dark:text-sky-400' },
+  { value: 'Tin Học', label: 'Tin Học', icon: Cpu, colorClass: 'text-cyan-600 dark:text-cyan-400' },
+  { value: 'Vật Lý', label: 'Vật Lý', icon: Atom, colorClass: 'text-indigo-500 dark:text-indigo-400' },
+  { value: 'Hóa Học', label: 'Hóa Học', icon: FlaskConical, colorClass: 'text-emerald-500 dark:text-emerald-400' },
+  { value: 'Sinh Học', label: 'Sinh Học', icon: Dna, colorClass: 'text-teal-500 dark:text-teal-400' },
+  { value: 'Tiếng Anh', label: 'Tiếng Anh', icon: Languages, colorClass: 'text-amber-500 dark:text-amber-400' },
+  { value: 'Ngữ Văn', label: 'Ngữ Văn', icon: BookOpen, colorClass: 'text-rose-500 dark:text-rose-400' },
 ];
 
-const GRADE_FILTERS: Array<{ value: 'ALL' | 10 | 11 | 12; label: string; short: string }> = [
-  { value: 'ALL', label: 'Tất cả khối', short: 'Tất cả' },
-  { value: 12, label: 'Khối 12', short: 'Khối 12' },
-  { value: 11, label: 'Khối 11', short: 'Khối 11' },
-  { value: 10, label: 'Khối 10', short: 'Khối 10' },
+type ForumGradeFilter = 'ALL' | 12 | 11 | 10 | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1;
+
+const GRADE_FILTERS: Array<{ value: ForumGradeFilter; label: string; short: string }> = [
+  { value: 'ALL', label: 'Tất cả khối', short: 'Tất cả khối' },
+  { value: 12, label: 'Lớp 12', short: 'Khối 12' },
+  { value: 11, label: 'Lớp 11', short: 'Khối 11' },
+  { value: 10, label: 'Lớp 10', short: 'Khối 10' },
+  { value: 9, label: 'Lớp 9', short: 'Khối 9' },
+  { value: 8, label: 'Lớp 8', short: 'Khối 8' },
+  { value: 7, label: 'Lớp 7', short: 'Khối 7' },
+  { value: 6, label: 'Lớp 6', short: 'Khối 6' },
+  { value: 5, label: 'Lớp 5', short: 'Khối 5' },
+  { value: 4, label: 'Lớp 4', short: 'Khối 4' },
+  { value: 3, label: 'Lớp 3', short: 'Khối 3' },
+  { value: 2, label: 'Lớp 2', short: 'Khối 2' },
+  { value: 1, label: 'Lớp 1', short: 'Khối 1' },
 ];
+
+function stripVietnameseDiacritics(input: string): string {
+  return String(input || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase()
+    .trim();
+}
+
+function normalizeForumSubject(raw?: string | null): string {
+  const norm = stripVietnameseDiacritics(raw || '').replace(/[\s-]+/g, '_');
+  if (!norm || norm === 'all' || norm === 'tat_ca') return 'Tất cả';
+  if (norm.includes('toan') || norm.includes('math')) return 'Toán Học';
+  if (norm.includes('tin') || norm.includes('info') || norm === 'cs') return 'Tin Học';
+  if (norm.includes('ly') || norm.includes('phys')) return 'Vật Lý';
+  if (norm.includes('hoa') || norm.includes('chem')) return 'Hóa Học';
+  if (norm.includes('sinh') || norm.includes('bio')) return 'Sinh Học';
+  if (norm.includes('anh') || norm.includes('eng')) return 'Tiếng Anh';
+  if (norm.includes('van') || norm.includes('lit')) return 'Ngữ Văn';
+  return String(raw || '').trim();
+}
 
 const POSTS_PER_PAGE = 6;
 const SAVED_POSTS_STORAGE_KEY = 'schoolify-forum-saved-post-ids';
@@ -92,7 +139,7 @@ function readInitialSavedPosts(): Record<string, boolean> {
 export default function ForumPage() {
   // ── BỘ LỌC & PHÂN TRANG (Task #13) ──
   const [selectedSubject, setSelectedSubject] = React.useState('Tất cả');
-  const [selectedGrade, setSelectedGrade] = React.useState<'ALL' | 10 | 11 | 12>('ALL');
+  const [selectedGrade, setSelectedGrade] = React.useState<ForumGradeFilter>('ALL');
   const [activeTab, setActiveTab] = React.useState<ForumTabStatus>('ALL');
   const [searchQuery, setSearchQuery] = React.useState('');
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -100,6 +147,7 @@ export default function ForumPage() {
   // ── DỮ LIỆU TỪ FORUM.SERVICE.TS (Task #14) ──
   const [posts, setPosts] = React.useState<ForumPost[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [isNewPostModalOpen, setIsNewPostModalOpen] = React.useState(false);
 
   // ── TƯƠNG TÁC TRÊN THẺ BÀI VIẾT ──
@@ -109,16 +157,43 @@ export default function ForumPage() {
     readInitialSavedPosts
   );
 
-  // Tải danh sách câu hỏi qua forumService.getPosts (tuân thủ chuẩn React 19 không gọi setState đồng bộ đầu effect)
   React.useEffect(() => {
     let isMounted = true;
+    async function fetchInitialPosts() {
+      try {
+        const res = await forumService.getPosts({
+          page: 1,
+          limit: 100,
+        });
+        if (!isMounted) return;
+        setPosts(res.items);
+        setSavedPostIds((prev) => {
+          const next = { ...prev };
+          for (const item of res.items) {
+            if (item.isBookmarked) {
+              next[item.id] = true;
+            }
+          }
+          return next;
+        });
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+    void fetchInitialPosts();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
-    async function fetchForumList() {
+  const handleRefreshForum = async () => {
+    handleResetFilters();
+    setIsRefreshing(true);
+    try {
       const res = await forumService.getPosts({
         page: 1,
         limit: 100,
       });
-      if (!isMounted) return;
       setPosts(res.items);
       setSavedPostIds((prev) => {
         const next = { ...prev };
@@ -129,14 +204,10 @@ export default function ForumPage() {
         }
         return next;
       });
-      setIsLoading(false);
+    } finally {
+      setIsRefreshing(false);
     }
-
-    void fetchForumList();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  };
 
   // Reset về trang 1 khi người dùng đổi bộ lọc
   const handleSelectSubject = (subj: string) => {
@@ -144,7 +215,7 @@ export default function ForumPage() {
     setCurrentPage(1);
   };
 
-  const handleSelectGrade = (gradeVal: 'ALL' | 10 | 11 | 12) => {
+  const handleSelectGrade = (gradeVal: ForumGradeFilter) => {
     setSelectedGrade(gradeVal);
     setCurrentPage(1);
   };
@@ -216,19 +287,19 @@ export default function ForumPage() {
     setCurrentPage(1);
   };
 
-  // Đếm nhanh số lượng câu hỏi theo từng trạng thái (sau khi đã áp dụng lọc Môn + Khối + Từ khóa)
+  // Đếm nhanh số lượng câu hỏi theo từng trạng thái (sau khi đã áp dụng lọc Môn + Khối + Từ khóa không dấu)
   const baseMatchedPosts = React.useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
+    const qRaw = searchQuery.trim().toLowerCase();
+    const qFold = stripVietnameseDiacritics(searchQuery);
     return posts.filter((post) => {
       const matchesSubject =
-        selectedSubject === 'Tất cả' || post.subject === selectedSubject;
+        selectedSubject === 'Tất cả' || normalizeForumSubject(post.subject) === selectedSubject;
       const matchesGrade =
         selectedGrade === 'ALL' || Number(post.grade) === Number(selectedGrade);
-      const matchesSearch =
-        !q ||
-        post.title.toLowerCase().includes(q) ||
-        post.content.toLowerCase().includes(q) ||
-        post.tags.some((t) => t.toLowerCase().includes(q));
+      if (!qRaw) return matchesSubject && matchesGrade;
+      const haystackRaw = `${post.title} ${post.content} ${post.subject} ${post.tags.join(' ')}`.toLowerCase();
+      const haystackFold = stripVietnameseDiacritics(haystackRaw);
+      const matchesSearch = haystackRaw.includes(qRaw) || haystackFold.includes(qFold);
       return matchesSubject && matchesGrade && matchesSearch;
     });
   }, [posts, selectedSubject, selectedGrade, searchQuery]);
@@ -263,12 +334,6 @@ export default function ForumPage() {
     return filteredPosts.slice(startIdx, startIdx + POSTS_PER_PAGE);
   }, [filteredPosts, safePage]);
 
-  const hasActiveFilter =
-    selectedSubject !== 'Tất cả' ||
-    selectedGrade !== 'ALL' ||
-    activeTab !== 'ALL' ||
-    searchQuery.trim() !== '';
-
   return (
     <div className="py-10 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-10">
       {/* ── HEADER ── */}
@@ -292,259 +357,255 @@ export default function ForumPage() {
         </Button>
       </div>
 
-      {/* ── TASK #13: COMMAND FILTER BAR CHUYÊN NGHIỆP, ĐỒNG NHẤT NỀN & MÀU SẮC ── */}
-      <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
-        {/* Tầng 1: Khối Lớp 10-11-12 (Trái) + Thanh Tìm Kiếm Rộng (Phải) — Nền trắng đồng nhất */}
-        <div className="px-4 py-3.5 sm:px-5 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800/80 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          {/* Cụm chọn Khối Lớp 10 - 11 - 12 đồng bộ kiểu dáng với Môn học */}
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mr-1">
-              <GraduationCap className="w-3.5 h-3.5 text-[#00B8DD]" />
-              <span>Khối lớp:</span>
-            </span>
-            <div className="flex flex-wrap items-center gap-1.5">
-              {GRADE_FILTERS.map((g) => {
-                const isActive = selectedGrade === g.value;
-                return (
-                  <button
-                    key={String(g.value)}
-                    type="button"
-                    onClick={() => handleSelectGrade(g.value)}
-                    className={cn(
-                      'inline-flex items-center px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border whitespace-nowrap',
-                      isActive
-                        ? 'bg-[#00B8DD]/12 border-[#00B8DD] text-[#007D99] dark:text-[#00B8DD] shadow-2xs'
-                        : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                    )}
-                  >
-                    {g.label}
-                  </button>
-                );
-              })}
+      {/* ── BỘ LỌC DIỄN ĐÀN ĐỒNG BỘ MẪU CỔNG LUYỆN THI K-12 & BẢNG XẾP HẠNG ── */}
+      {(() => {
+        const currentSubjectMeta =
+          SUBJECT_FILTERS.find((s) => s.value === selectedSubject) || SUBJECT_FILTERS[0];
+        const currentGradeMeta =
+          GRADE_FILTERS.find((g) => g.value === selectedGrade) || GRADE_FILTERS[0];
+        const CurrentSubjectIcon = currentSubjectMeta.icon;
+
+        const statusTabs: Array<{
+          id: ForumTabStatus;
+          label: string;
+          count: number;
+          icon: React.ComponentType<{ className?: string }>;
+        }> = [
+          { id: 'ALL', label: 'Tất cả', count: tabCounts.ALL, icon: SlidersHorizontal },
+          { id: 'HOT', label: 'Sôi nổi', count: tabCounts.HOT, icon: Flame },
+          { id: 'UNSOLVED', label: 'Chưa giải', count: tabCounts.UNSOLVED, icon: Clock },
+          { id: 'SOLVED', label: 'Đã giải', count: tabCounts.SOLVED, icon: CheckCircle2 },
+          { id: 'SAVED', label: 'Đã lưu', count: tabCounts.SAVED, icon: Bookmark },
+        ];
+
+        return (
+          <section className="relative z-20 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 sm:p-4 shadow-xs space-y-3">
+            {/* Hàng trên: Tabs trạng thái câu hỏi gọn gàng theo màu chủ đạo #00B8DD */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200/80 dark:border-slate-800 overflow-x-auto max-w-full no-scrollbar">
+                {statusTabs.map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => handleSelectTab(tab.id)}
+                      className={cn(
+                        'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer',
+                        isActive
+                          ? 'bg-[#00B8DD] text-white shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      )}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      <span>{tab.label}</span>
+                      <span
+                        className={cn(
+                          'px-1.5 py-0.2 rounded-full text-[10px] font-bold tabular-nums',
+                          isActive
+                            ? 'bg-white/20 text-white'
+                            : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                        )}
+                      >
+                        {tab.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
+                Hỏi đáp chuyên đề &amp; bài tập K-12
+              </span>
             </div>
-          </div>
 
-          {/* Ô tìm kiếm mở rộng tối đa phần không gian còn lại (flex-1) */}
-          <div className="relative flex-1 min-w-[260px] lg:max-w-xl xl:max-w-2xl">
-            <Search className="w-4 h-4 text-[#00B8DD] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Tìm nhanh theo tiêu đề bài toán, công thức LaTeX ($...$), chuyên đề..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full pl-10 pr-9 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/90 dark:border-slate-700/80 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-[#00B8DD] focus:border-transparent transition-all"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery('');
-                  setCurrentPage(1);
-                }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700 cursor-pointer"
-                title="Xóa từ khóa"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Tầng 2: Danh mục Môn Học (Pills tự động bẻ dòng flex-wrap trên màn hình nhỏ) */}
-        <div className="px-4 py-3.5 sm:px-5 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mr-1">
-            <BookOpen className="w-3.5 h-3.5 text-[#00B8DD]" />
-            <span>Môn học:</span>
-          </span>
-          <div className="flex flex-wrap items-center gap-1.5">
-            {SUBJECT_FILTERS.map((s) => {
-              const isSelected = selectedSubject === s;
-              const subjectCount =
-                s === 'Tất cả'
-                  ? posts.length
-                  : posts.filter((p) => p.subject === s).length;
-              return (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => handleSelectSubject(s)}
-                  className={cn(
-                    'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border',
-                    isSelected
-                      ? 'bg-[#00B8DD]/12 border-[#00B8DD] text-[#007D99] dark:text-[#00B8DD] shadow-2xs'
-                      : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+            {/* Hàng bộ lọc chính: Ô tìm kiếm (kính lúp xanh #00B8DD) + Dropdown Môn + Dropdown Khối */}
+            <div className="bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200/70 dark:border-slate-800/80 rounded-xl p-2.5 sm:p-3 space-y-2.5">
+              <div className="flex flex-col lg:flex-row lg:items-center gap-2.5">
+                {/* 1. Ô tìm kiếm với icon kính lúp màu xanh thương hiệu #00B8DD + hiệu ứng focus/hover */}
+                <div className="flex-1 relative min-w-[220px] group">
+                  <Input
+                    placeholder="Tìm nhanh theo tiêu đề bài toán, công thức LaTeX ($...$), chuyên đề..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    leftIcon={
+                      <Search className="w-4 h-4 text-[#00B8DD] transition-transform duration-200 group-focus-within:scale-110" />
+                    }
+                    className="w-full text-xs h-10 pr-8 bg-white dark:bg-slate-900 rounded-xl border-slate-200 dark:border-slate-800 hover:border-[#00B8DD]/60 focus:border-[#00B8DD] focus:ring-2 focus:ring-[#00B8DD]/20 transition-all shadow-2xs"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery('');
+                        setCurrentPage(1);
+                      }}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full text-slate-400 hover:text-[#00B8DD] hover:bg-[#00B8DD]/10 transition-colors cursor-pointer"
+                      title="Xóa từ khóa"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
                   )}
-                >
-                  <span>{s}</span>
-                  <span
-                    className={cn(
-                      'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
-                      isSelected
-                        ? 'bg-[#00B8DD] text-white'
-                        : 'bg-slate-200/80 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
-                    )}
+                </div>
+
+                {/* 2. Cụm 2 Dropdown: Môn + Khối */}
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  {/* Dropdown Môn học (đầy đủ màu icon + hiệu ứng mượt) */}
+                  <DropdownMenu
+                    align="left"
+                    className="min-w-[235px] max-h-80 overflow-y-auto rounded-2xl p-1.5 shadow-xl border-slate-200 dark:border-slate-800 z-[70]"
+                    trigger={
+                      <div className="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-[#00B8DD]/70 hover:bg-[#00B8DD]/[0.03] hover:shadow-xs active:scale-[0.98] text-xs text-slate-900 dark:text-white font-semibold inline-flex items-center justify-between gap-2 transition-all select-none cursor-pointer shadow-2xs">
+                        <span className="inline-flex items-center gap-1.5 truncate">
+                          <CurrentSubjectIcon
+                            className={cn('w-4 h-4 shrink-0', currentSubjectMeta.colorClass)}
+                          />
+                          <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
+                            Môn:
+                          </span>
+                          <span className="truncate">{currentSubjectMeta.label}</span>
+                        </span>
+                        <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      </div>
+                    }
                   >
-                    {subjectCount}
+                    {SUBJECT_FILTERS.map((subj) => {
+                      const Icon = subj.icon;
+                      const isSelected = subj.value === selectedSubject;
+                      const subjectCount =
+                        subj.value === 'Tất cả'
+                          ? posts.length
+                          : posts.filter((p) => normalizeForumSubject(p.subject) === subj.value).length;
+                      return (
+                        <DropdownMenuItem
+                          key={subj.value}
+                          onClick={() => handleSelectSubject(subj.value)}
+                          className={cn(
+                            'group py-2 px-2.5 rounded-xl text-xs transition-all',
+                            isSelected
+                              ? 'bg-[#00B8DD]/12 text-[#007D99] dark:text-[#00B8DD] font-bold'
+                              : 'hover:bg-[#00B8DD]/[0.07] hover:text-[#007D99] dark:hover:text-[#00B8DD]'
+                          )}
+                          icon={
+                            <Icon
+                              className={cn(
+                                'w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110',
+                                subj.colorClass
+                              )}
+                            />
+                          }
+                        >
+                          <div className="flex items-center justify-between gap-2 w-full">
+                            <span>{subj.label}</span>
+                            <span
+                              className={cn(
+                                'text-[10px] font-bold px-1.5 py-0.5 rounded-md tabular-nums transition-colors',
+                                isSelected
+                                  ? 'bg-[#00B8DD]/15 text-[#007D99] dark:text-[#00B8DD]'
+                                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:bg-[#00B8DD]/10 group-hover:text-[#007D99]'
+                              )}
+                            >
+                              {subjectCount}
+                            </span>
+                          </div>
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenu>
+
+                  {/* Dropdown Khối lớp (Tất cả khối + Lớp 12 → Lớp 1) */}
+                  <DropdownMenu
+                    align="right"
+                    className="min-w-[175px] max-h-72 overflow-y-auto rounded-2xl p-1.5 shadow-xl border-slate-200 dark:border-slate-800 z-[70]"
+                    trigger={
+                      <div className="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-[#00B8DD]/70 hover:bg-[#00B8DD]/[0.03] hover:shadow-xs active:scale-[0.98] text-xs text-slate-900 dark:text-white font-semibold inline-flex items-center justify-between gap-2 transition-all select-none cursor-pointer shadow-2xs">
+                        <span className="inline-flex items-center gap-1.5 truncate">
+                          <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
+                            Khối:
+                          </span>
+                          <span className="truncate">{currentGradeMeta.label}</span>
+                        </span>
+                        <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      </div>
+                    }
+                  >
+                    {GRADE_FILTERS.map((g) => {
+                      const isSelected = g.value === selectedGrade;
+                      return (
+                        <DropdownMenuItem
+                          key={String(g.value)}
+                          onClick={() => handleSelectGrade(g.value)}
+                          className={cn(
+                            'py-2 px-2.5 rounded-xl text-xs transition-all',
+                            isSelected
+                              ? 'bg-[#00B8DD]/12 text-[#007D99] dark:text-[#00B8DD] font-bold'
+                              : 'hover:bg-[#00B8DD]/[0.07] hover:text-[#007D99] dark:hover:text-[#00B8DD]'
+                          )}
+                          icon={
+                            isSelected ? (
+                              <Check className="w-3.5 h-3.5 text-[#00B8DD]" />
+                            ) : (
+                              <span className="w-3.5 h-3.5 block" />
+                            )
+                          }
+                        >
+                          {g.label}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenu>
+                </div>
+              </div>
+
+              {/* Thanh tóm tắt & nút Làm mới */}
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-200/70 dark:border-slate-800/80">
+                <span>
+                  Đang hiển thị:{' '}
+                  <strong className="text-slate-800 dark:text-slate-200">
+                    {currentSubjectMeta.label}
+                  </strong>{' '}
+                  •{' '}
+                  <strong className="text-slate-800 dark:text-slate-200">
+                    {currentGradeMeta.short}
+                  </strong>
+                  {searchQuery.trim() ? (
+                    <>
+                      {' '}
+                      • Từ khóa{' '}
+                      <strong className="text-slate-800 dark:text-slate-200">
+                        &ldquo;{searchQuery.trim()}&rdquo;
+                      </strong>
+                    </>
+                  ) : null}
+                </span>
+
+                <div className="flex items-center gap-3">
+                  <span>
+                    Hiển thị{' '}
+                    <strong className="text-slate-800 dark:text-slate-200">
+                      {paginatedPosts.length}
+                    </strong>{' '}
+                    / {totalFilteredCount} câu hỏi
                   </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Tầng 3: Navigation Tabs Trạng thái (Tất cả / Sôi nổi / Chưa giải / Đã giải / Đã lưu) + Bộ đếm kết quả */}
-        <div className="px-4 sm:px-5 pt-2.5 pb-0 bg-white dark:bg-slate-900 flex flex-wrap items-center justify-between gap-3">
-          {/* Underline Tabs theo đúng thứ tự: Tất cả -> Sôi nổi -> Chưa giải -> Đã giải -> Đã lưu */}
-          <div className="flex flex-wrap items-center gap-1 sm:gap-2 -mb-px">
-            <button
-              type="button"
-              onClick={() => handleSelectTab('ALL')}
-              className={cn(
-                'inline-flex items-center gap-1.5 px-3.5 py-2.5 border-b-2 text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
-                activeTab === 'ALL'
-                  ? 'border-[#00B8DD] text-[#007D99] dark:text-[#00B8DD]'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              )}
-            >
-              <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span>Tất cả</span>
-              <span
-                className={cn(
-                  'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
-                  activeTab === 'ALL'
-                    ? 'bg-[#00B8DD]/15 text-[#007D99] dark:text-[#00B8DD]'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
-                )}
-              >
-                {tabCounts.ALL}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSelectTab('HOT')}
-              className={cn(
-                'inline-flex items-center gap-1.5 px-3.5 py-2.5 border-b-2 text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
-                activeTab === 'HOT'
-                  ? 'border-orange-500 text-orange-600 dark:text-orange-400'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              )}
-            >
-              <Flame className="w-3.5 h-3.5 text-orange-500" />
-              <span>Sôi nổi</span>
-              <span
-                className={cn(
-                  'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
-                  activeTab === 'HOT'
-                    ? 'bg-orange-500/15 text-orange-700 dark:text-orange-300'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
-                )}
-              >
-                {tabCounts.HOT}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSelectTab('UNSOLVED')}
-              className={cn(
-                'inline-flex items-center gap-1.5 px-3.5 py-2.5 border-b-2 text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
-                activeTab === 'UNSOLVED'
-                  ? 'border-amber-500 text-amber-600 dark:text-amber-400'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              )}
-            >
-              <Clock className="w-3.5 h-3.5 text-amber-500" />
-              <span>Chưa giải</span>
-              <span
-                className={cn(
-                  'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
-                  activeTab === 'UNSOLVED'
-                    ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
-                )}
-              >
-                {tabCounts.UNSOLVED}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSelectTab('SOLVED')}
-              className={cn(
-                'inline-flex items-center gap-1.5 px-3.5 py-2.5 border-b-2 text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
-                activeTab === 'SOLVED'
-                  ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              )}
-            >
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-              <span>Đã giải</span>
-              <span
-                className={cn(
-                  'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
-                  activeTab === 'SOLVED'
-                    ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
-                )}
-              >
-                {tabCounts.SOLVED}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSelectTab('SAVED')}
-              className={cn(
-                'inline-flex items-center gap-1.5 px-3.5 py-2.5 border-b-2 text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
-                activeTab === 'SAVED'
-                  ? 'border-[#00B8DD] text-[#007D99] dark:text-[#00B8DD]'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              )}
-            >
-              <Bookmark className="w-3.5 h-3.5 text-[#00B8DD]" />
-              <span>Đã lưu</span>
-              <span
-                className={cn(
-                  'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
-                  activeTab === 'SAVED'
-                    ? 'bg-[#00B8DD]/15 text-[#007D99] dark:text-[#00B8DD]'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
-                )}
-              >
-                {tabCounts.SAVED}
-              </span>
-            </button>
-          </div>
-
-          {/* Bộ đếm hiển thị & nút đặt lại lọc */}
-          <div className="flex items-center gap-3 pb-2 text-xs text-slate-500">
-            <span>
-              Hiển thị{' '}
-              <strong className="text-slate-900 dark:text-white">
-                {paginatedPosts.length}
-              </strong>{' '}
-              /{' '}
-              <strong className="text-slate-900 dark:text-white">
-                {totalFilteredCount}
-              </strong>{' '}
-              câu hỏi
-            </span>
-            {hasActiveFilter && (
-              <button
-                type="button"
-                onClick={handleResetFilters}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-bold text-[#007D99] dark:text-[#00B8DD] hover:bg-[#00B8DD]/15 transition-colors cursor-pointer"
-              >
-                <RotateCcw className="w-3 h-3" /> Đặt lại lọc
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+                  <button
+                    type="button"
+                    onClick={handleRefreshForum}
+                    disabled={isRefreshing}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-[#007D99] dark:text-[#00B8DD] hover:underline cursor-pointer disabled:opacity-60"
+                  >
+                    <RefreshCw className={cn('w-3 h-3', isRefreshing && 'animate-spin')} />
+                    <span>Làm mới</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      })()}
 
       {/* ── FORUM POSTS & SIDEBAR GRID ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

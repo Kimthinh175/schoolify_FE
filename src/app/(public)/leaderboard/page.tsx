@@ -16,13 +16,15 @@ import {
 } from 'lucide-react';
 import {
   LeaderboardTimeframe,
-  LeaderboardScope,
   GradeLevel,
   SubjectFilter,
   LeaderboardUser,
   Season,
 } from '@/types/leaderboard';
-import { leaderboardService } from '@/services/leaderboard.service';
+import {
+  leaderboardService,
+  normalizeLeaderboardSubject,
+} from '@/services/leaderboard.service';
 import { catalogService } from '@/services/catalog.service';
 import { useAuthStore } from '@/store/auth.store';
 import { PodiumTopThree } from '@/components/features/leaderboard/PodiumTopThree';
@@ -34,14 +36,80 @@ import { UserRankDetailModal } from '@/components/features/leaderboard/UserRankD
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
+function computeRemainingTime(endDateIso?: string, seasonStatus?: string) {
+  const defaultRemaining = { days: 14, hours: 8, minutes: 24, seconds: 50 };
+  if (!endDateIso) return defaultRemaining;
+  const diffMs = new Date(endDateIso).getTime() - Date.now();
+  if (!Number.isFinite(diffMs)) return defaultRemaining;
+  if (diffMs <= 0) {
+    // Mùa giải đang ACTIVE ở chế độ dữ liệu mẫu có mốc ngày cũ -> hiển thị chu kỳ 14 ngày hoạt động thay vì 00:00:00:00
+    if (seasonStatus === 'ACTIVE' || seasonStatus === 'FREEZING') {
+      return defaultRemaining;
+    }
+    return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+  }
+  const totalSec = Math.floor(diffMs / 1000);
+  const days = Math.floor(totalSec / 86400);
+  const hours = Math.floor((totalSec % 86400) / 3600);
+  const minutes = Math.floor((totalSec % 3600) / 60);
+  const seconds = totalSec % 60;
+  return { days, hours, minutes, seconds };
+}
+
+function mapLeaderboardEntries(entries: Record<string, unknown>[]): LeaderboardUser[] {
+  return entries.map((entry, idx) => {
+    const rawGrade = entry.grade ?? entry.gradeLevel ?? entry.grade_level ?? 12;
+    const gradeNum = Number(String(rawGrade).match(/\d+/)?.[0] || 12);
+    const safeGrade = `GRADE_${Math.min(12, Math.max(1, gradeNum))}` as GradeLevel;
+    const pts = Number(entry.points || 0);
+    const tier =
+      idx === 0
+        ? 'DIAMOND'
+        : idx < 3
+          ? 'PLATINUM'
+          : idx < 10
+            ? 'GOLD'
+            : idx < 20
+              ? 'SILVER'
+              : 'BRONZE';
+    const mappedSubject = normalizeLeaderboardSubject(
+      String(entry.primarySubject || entry.primary_subject || entry.subject || '')
+    );
+    return {
+      id: String(entry.userId || entry.studentId || `lb-${idx + 1}`),
+      rank: Number(entry.rank || idx + 1),
+      previousRank: Number(entry.previousRank || entry.rank || idx + 1),
+      rankChange: (entry.rankChange as LeaderboardUser['rankChange']) || 'SAME',
+      rankChangeAmount: Number(entry.rankChangeAmount || 0),
+      name: String(entry.fullname || 'Học sinh Schoolify'),
+      avatar: String(
+        entry.avatarUrl ||
+          entry.avatar_url ||
+          'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80'
+      ),
+      schoolName: String(entry.schoolName || entry.school_name || 'Schoolify Toàn Quốc'),
+      className: String(entry.className || `Lớp ${gradeNum}`),
+      grade: safeGrade,
+      primarySubject: mappedSubject === 'ALL' ? 'MATH' : mappedSubject,
+      points: pts,
+      correctRate: Math.min(100, Math.round(Number(entry.avgScore || 8.5) * 10)),
+      quizzesCompleted: Number(entry.totalExams || 0),
+      streakDays: Number(entry.streakDays || 1),
+      gems: Number(entry.gems ?? pts),
+      badgeTitle: idx < 3 ? 'Chiến Thần Tri Thức' : 'Học Viên Nỗ Lực',
+      badgeTier: tier,
+    };
+  });
+}
+
 export default function LeaderboardPage() {
   const { user: authUser, isAuthenticated } = useAuthStore();
   const [timeframe, setTimeframe] = React.useState<LeaderboardTimeframe>('WEEKLY');
-  const [scope, setScope] = React.useState<LeaderboardScope>('NATIONAL');
   const [grade, setGrade] = React.useState<GradeLevel>('ALL');
   const [subject, setSubject] = React.useState<SubjectFilter>('ALL');
   const [search, setSearch] = React.useState('');
   const [liveUsers, setLiveUsers] = React.useState<LeaderboardUser[] | undefined>(undefined);
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
 
   const [activeSeason, setActiveSeason] = React.useState<Season>(() =>
     leaderboardService.getActiveSeason()
@@ -51,62 +119,61 @@ export default function LeaderboardPage() {
   const [isRewardsModalOpen, setIsRewardsModalOpen] = React.useState(false);
   const [highlightUserId, setHighlightUserId] = React.useState<string | undefined>(undefined);
 
+  const [timeLeft, setTimeLeft] = React.useState(() =>
+    computeRemainingTime(activeSeason?.endDate, activeSeason?.status)
+  );
+
+  // Tải dữ liệu ban đầu (tránh gọi setState đồng bộ đầu effect theo chuẩn React 19)
   React.useEffect(() => {
     let mounted = true;
-    catalogService.getLeaderboard().then((entries) => {
-      if (!mounted || !Array.isArray(entries) || entries.length === 0) return;
-      const mapped: LeaderboardUser[] = entries.map((entry, idx) => {
-        const gradeNum = Number(entry.grade || String(entry.gradeLevel || '12').match(/\d+/)?.[0] || 12);
-        const safeGrade = (`GRADE_${Math.min(12, Math.max(6, gradeNum))}`) as GradeLevel;
-        const pts = Number(entry.points || 0);
-        const tier =
-          idx === 0
-            ? 'DIAMOND'
-            : idx < 3
-              ? 'PLATINUM'
-              : idx < 10
-                ? 'GOLD'
-                : idx < 20
-                  ? 'SILVER'
-                  : 'BRONZE';
-        return {
-          id: entry.userId || entry.studentId || `lb-${idx + 1}`,
-          rank: Number(entry.rank || idx + 1),
-          previousRank: Number(entry.rank || idx + 1),
-          rankChange: 'SAME',
-          rankChangeAmount: 0,
-          name: entry.fullname || 'Học sinh Schoolify',
-          avatar:
-            entry.avatarUrl ||
-            'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-          schoolName: entry.schoolName || 'THPT Chuyên Schoolify',
-          className: `Lớp ${gradeNum}`,
-          grade: safeGrade,
-          primarySubject: 'MATH',
-          points: pts,
-          correctRate: Math.min(100, Math.round(Number(entry.avgScore || 8.5) * 10)),
-          quizzesCompleted: Number(entry.totalExams || 0),
-          streakDays: Number(entry.streakDays || 1),
-          gems: pts,
-          badgeTitle: idx < 3 ? 'Chiến Thần Tri Thức' : 'Học Viên Nỗ Lực',
-          badgeTier: tier,
-        };
-      });
-      setLiveUsers(mapped);
-    });
-
-    catalogService.getSeasons().then((seasons) => {
-      if (!mounted || !Array.isArray(seasons) || seasons.length === 0) return;
-      const active = seasons.find((s) => s.status === 'ACTIVE') || seasons[0];
-      if (active) setActiveSeason(active as Season);
-    });
+    async function loadInitial() {
+      const [entries, seasons] = await Promise.all([
+        catalogService.getLeaderboard(),
+        catalogService.getSeasons(),
+      ]);
+      if (!mounted) return;
+      if (Array.isArray(entries) && entries.length > 0) {
+        setLiveUsers(mapLeaderboardEntries(entries as unknown as Record<string, unknown>[]));
+      }
+      if (Array.isArray(seasons) && seasons.length > 0) {
+        const active = seasons.find((s) => s.status === 'ACTIVE') || seasons[0];
+        if (active) {
+          setActiveSeason(active as Season);
+          setTimeLeft(computeRemainingTime(active.endDate, active.status));
+        }
+      }
+    }
+    void loadInitial();
     return () => {
       mounted = false;
     };
   }, []);
 
-  // Countdown timer for active season
-  const [timeLeft, setTimeLeft] = React.useState({ days: 14, hours: 8, minutes: 24, seconds: 50 });
+  const handleRefreshFiltersAndData = async () => {
+    setSubject('ALL');
+    setGrade('ALL');
+    setSearch('');
+    setHighlightUserId(undefined);
+    setIsRefreshing(true);
+    try {
+      const [entries, seasons] = await Promise.all([
+        catalogService.getLeaderboard(),
+        catalogService.getSeasons(),
+      ]);
+      if (Array.isArray(entries) && entries.length > 0) {
+        setLiveUsers(mapLeaderboardEntries(entries as unknown as Record<string, unknown>[]));
+      }
+      if (Array.isArray(seasons) && seasons.length > 0) {
+        const active = seasons.find((s) => s.status === 'ACTIVE') || seasons[0];
+        if (active) {
+          setActiveSeason(active as Season);
+          setTimeLeft(computeRemainingTime(active.endDate, active.status));
+        }
+      }
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   React.useEffect(() => {
     const timer = setInterval(() => {
@@ -121,32 +188,41 @@ export default function LeaderboardPage() {
     return () => clearInterval(timer);
   }, []);
 
-  // Filtered leaderboard data
-  const { topThree, restOfUsers, currentUser, totalCount } = React.useMemo(() => {
+  // Filtered leaderboard data (chỉ lọc theo Môn, Khối, Tìm kiếm và Chu kỳ)
+  const { topThree, restOfUsers, currentUser, nextRankUser, totalCount } = React.useMemo(() => {
     return leaderboardService.getFilteredLeaderboard({
       timeframe,
-      scope,
+      scope: 'NATIONAL',
       grade,
       subject,
       search,
       sourceUsers: liveUsers,
       currentAuthUser:
         isAuthenticated && authUser?.id
-          ? {
-              id: authUser.id,
-              fullname: authUser.fullname || 'Bạn',
-              avatar_url: authUser.avatar_url || (authUser as any).avatarUrl,
-              grade_level: (authUser as any)?.student_profile?.grade_level || (authUser as any)?.gradeLevel,
-              points: (authUser as any)?.student_profile?.points ?? (authUser as any)?.points ?? 0,
-            }
+          ? (() => {
+              const authExtra = authUser as unknown as {
+                avatarUrl?: string | null;
+                gradeLevel?: string | null;
+                points?: number;
+                student_profile?: { grade_level?: string | null; points?: number };
+              };
+              return {
+                id: authUser.id,
+                fullname: authUser.fullname || 'Bạn',
+                avatar_url: authUser.avatar_url || authExtra.avatarUrl,
+                grade_level: authExtra.student_profile?.grade_level || authExtra.gradeLevel,
+                points: authExtra.student_profile?.points ?? authExtra.points ?? 0,
+              };
+            })()
           : null,
     });
-  }, [timeframe, scope, grade, subject, search, liveUsers, isAuthenticated, authUser]);
+  }, [timeframe, grade, subject, search, liveUsers, isAuthenticated, authUser]);
 
   const handleScrollToMe = () => {
     if (!currentUser) return;
     setHighlightUserId(currentUser.id);
-    const element = document.getElementById(`user-rank-${currentUser.rank}`);
+    const targetId = currentUser.rank <= 3 ? 'leaderboard-podium' : `user-rank-${currentUser.rank}`;
+    const element = document.getElementById(targetId) || document.getElementById('leaderboard-podium');
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -236,7 +312,10 @@ export default function LeaderboardPage() {
       {/* ── MAIN CONTENT ── */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20 space-y-8">
         {/* PODIUM TOP 3 */}
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-3xl p-4 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-md">
+        <div
+          id="leaderboard-podium"
+          className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-3xl p-4 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-md"
+        >
           <div className="text-center mb-2">
             <span className="text-xs font-extrabold uppercase tracking-widest text-[#00B8DD]">
               Vinh Danh Anh Tài
@@ -256,25 +335,26 @@ export default function LeaderboardPage() {
         <LeaderboardFilters
           timeframe={timeframe}
           onTimeframeChange={setTimeframe}
-          scope={scope}
-          onScopeChange={setScope}
           grade={grade}
           onGradeChange={setGrade}
           subject={subject}
           onSubjectChange={setSubject}
           search={search}
           onSearchChange={setSearch}
+          totalCount={totalCount}
+          isRefreshing={isRefreshing}
+          onRefresh={handleRefreshFiltersAndData}
           isFrozen={activeSeason.isFrozen}
         />
 
         {/* RANKINGS TABLE */}
-        <div className="space-y-3">
+        <div className="relative z-10 space-y-3">
           <div className="flex items-center justify-between px-2">
             <div>
               <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <span>Bảng Đua Top</span>
                 <span className="text-xs font-normal text-slate-500">
-                  (Hiển thị {restOfUsers.length} thí sinh)
+                  (Tổng {totalCount} thí sinh • Hạng #4 trở đi: {restOfUsers.length})
                 </span>
               </h3>
             </div>
@@ -285,6 +365,7 @@ export default function LeaderboardPage() {
 
           <LeaderboardTable
             users={restOfUsers}
+            totalCount={totalCount}
             onSelectUser={(user) => setSelectedUser(user)}
             highlightUserId={highlightUserId}
           />
@@ -295,6 +376,8 @@ export default function LeaderboardPage() {
       {currentUser && (
         <StickyUserRank
           currentUser={currentUser}
+          nextRankUser={nextRankUser}
+          totalCount={totalCount}
           onScrollToMe={handleScrollToMe}
           onOpenRewardsModal={() => setIsRewardsModalOpen(true)}
         />

@@ -14,7 +14,10 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { Season, SeasonDistributionLog, LeaderboardUser, GradeLevel } from '@/types/leaderboard';
-import { leaderboardService } from '@/services/leaderboard.service';
+import {
+  leaderboardService,
+  normalizeLeaderboardSubject,
+} from '@/services/leaderboard.service';
 import { catalogService } from '@/services/catalog.service';
 import { AdminSeasonStats } from '@/components/features/admin/leaderboard/AdminSeasonStats';
 import { AdminSeasonManager } from '@/components/features/admin/leaderboard/AdminSeasonManager';
@@ -61,8 +64,12 @@ export default function AdminLeaderboardPage() {
       setLiveUsers(
         apiLb.map((entry, idx) => {
           const gradeNum = Number(entry.grade || 12);
-          const safeGrade = (`GRADE_${Math.min(12, Math.max(6, gradeNum))}`) as GradeLevel;
+          const safeGrade = (`GRADE_${Math.min(12, Math.max(1, gradeNum))}`) as GradeLevel;
           const pts = Number(entry.points || 0);
+          const mappedSubj = normalizeLeaderboardSubject(
+            (entry as unknown as Record<string, string>).primarySubject ||
+              (entry as unknown as Record<string, string>).subject
+          );
           return {
             id: entry.userId || entry.studentId || `lb-${idx + 1}`,
             rank: Number(entry.rank || idx + 1),
@@ -73,10 +80,10 @@ export default function AdminLeaderboardPage() {
             avatar:
               entry.avatarUrl ||
               'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-            schoolName: entry.schoolName || 'THPT Chuyên Schoolify',
+            schoolName: entry.schoolName || 'Schoolify Toàn Quốc',
             className: `Lớp ${gradeNum}`,
             grade: safeGrade,
-            primarySubject: 'MATH',
+            primarySubject: mappedSubj === 'ALL' ? 'MATH' : mappedSubj,
             points: pts,
             correctRate: Math.min(100, Math.round(Number(entry.avgScore || 8.5) * 10)),
             quizzesCompleted: Number(entry.totalExams || 0),

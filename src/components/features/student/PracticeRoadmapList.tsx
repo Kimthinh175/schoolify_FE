@@ -663,7 +663,7 @@ export function PracticeRoadmapList({
                 placeholder="Tìm chuyên đề, chương học hoặc bẫy sai lầm..."
                 value={roadmapSearch}
                 onChange={(e) => setRoadmapSearch(e.target.value)}
-                leftIcon={<Search className="w-4 h-4 text-slate-400" />}
+                leftIcon={<Search className="w-4 h-4 text-[#00B8DD]" />}
                 className="w-full text-xs h-10 pr-8 bg-white dark:bg-slate-900 rounded-xl"
               />
               {roadmapSearch && (
