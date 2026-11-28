@@ -118,9 +118,14 @@ const LEADERBOARD_PREVIEW = [
 ];
 
 export default function LuyenThiPage() {
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, currentRole } = useAuthStore();
   const router = useRouter();
   const isLoggedIn = Boolean(isAuthenticated && user?.id);
+  const isAdmin =
+    (currentRole as string) === 'ADMIN' ||
+    currentRole === 'SUPER_ADMIN' ||
+    (user?.role as string) === 'ADMIN' ||
+    user?.role === 'SUPER_ADMIN';
   const [contactSubmitted, setContactSubmitted] = React.useState(false);
 
   // Practice Subjects State
@@ -166,12 +171,19 @@ export default function LuyenThiPage() {
     }
   }, []);
 
-  const activeUserGrade = React.useMemo(() => {
+  const activeUserGrade = React.useMemo<10 | 11 | 12 | null>(() => {
     if (isLoggedIn) {
-      return parseHighSchoolGrade(user?.student_profile?.grade_level);
+      const profileGrade = parseHighSchoolGrade(
+        user?.student_profile?.grade_level ??
+          (user as any)?.gradeLevel ??
+          (user as any)?.grade_level
+      );
+      if (profileGrade) return profileGrade;
+      if (isAdmin) return 12;
+      return null;
     }
     return guestState?.grade ?? null;
-  }, [isLoggedIn, user?.student_profile?.grade_level, guestState?.grade]);
+  }, [isLoggedIn, isAdmin, user, guestState?.grade]);
 
   const handleCategoryChange = (catId: string) => {
     if (catId === activeCategory) return;
@@ -239,7 +251,9 @@ export default function LuyenThiPage() {
 
       const status = forceGate
         ? { diagnosticRequired: true, isPrivileged: false }
-        : await chapterRoadmapService.getDiagnosticStatus(subject.slug, resolvedGrade);
+        : isAdmin
+          ? { diagnosticRequired: false, isPrivileged: true }
+          : await chapterRoadmapService.getDiagnosticStatus(subject.slug, resolvedGrade);
 
       if (status && status.diagnosticRequired && !status.isPrivileged) {
         setDiagnosticGate({
@@ -272,6 +286,10 @@ export default function LuyenThiPage() {
     }
 
     if (!activeUserGrade) {
+      if (isAdmin) {
+        await openSubjectAfterGradeResolved(subject, 12, preferredMode);
+        return;
+      }
       setPendingSubjectAfterOnboarding(subject);
       setGuestOnboardingOpen(true);
       return;
@@ -764,8 +782,8 @@ export default function LuyenThiPage() {
       />
 
       <GradeOnboardingModal
-        isOpen={guestOnboardingOpen}
-        mode="GUEST_TRIAL"
+        isOpen={guestOnboardingOpen && !isAdmin}
+        mode={isLoggedIn ? 'FIRST_LOGIN' : 'GUEST_TRIAL'}
         subjectName={pendingSubjectAfterOnboarding?.name}
         onClose={() => {
           setGuestOnboardingOpen(false);

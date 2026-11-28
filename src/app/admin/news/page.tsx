@@ -180,12 +180,19 @@ export default function AdminNewsPage() {
     setArticles((prev) =>
       prev.map((a) => (a.id === article.id ? { ...a, is_featured: nextVal } : a))
     );
-    await newsService.updateArticleFlags(article.id, { is_featured: nextVal });
-    toast.success(
-      nextVal
-        ? `⭐ Đã đặt "${article.title}" làm Tin Tiêu Điểm Nổi Bật!`
-        : `Đã gỡ trạng thái Tiêu Điểm của bài viết.`
-    );
+    try {
+      await newsService.updateArticleFlags(article.id, { is_featured: nextVal });
+      toast.success(
+        nextVal
+          ? `⭐ Đã đặt "${article.title}" làm Tin Tiêu Điểm Nổi Bật!`
+          : `Đã gỡ trạng thái Tiêu Điểm của bài viết.`
+      );
+    } catch (err: any) {
+      setArticles((prev) =>
+        prev.map((a) => (a.id === article.id ? { ...a, is_featured: !nextVal } : a))
+      );
+      toast.error(err?.message || 'Không thể cập nhật trạng thái Tiêu Điểm.');
+    }
   };
 
   const handleTogglePinned = async (article: NewsArticle) => {
@@ -193,12 +200,19 @@ export default function AdminNewsPage() {
     setArticles((prev) =>
       prev.map((a) => (a.id === article.id ? { ...a, is_pinned: nextPinned } : a))
     );
-    await newsService.updateArticleFlags(article.id, { is_pinned: nextPinned });
-    toast.success(
-      nextPinned
-        ? `📌 Đã ghim bài viết lên đầu trang Tin Tức!`
-        : `Đã bỏ ghim bài viết.`
-    );
+    try {
+      await newsService.updateArticleFlags(article.id, { is_pinned: nextPinned });
+      toast.success(
+        nextPinned
+          ? `📌 Đã ghim bài viết lên đầu trang Tin Tức!`
+          : `Đã bỏ ghim bài viết.`
+      );
+    } catch (err: any) {
+      setArticles((prev) =>
+        prev.map((a) => (a.id === article.id ? { ...a, is_pinned: !nextPinned } : a))
+      );
+      toast.error(err?.message || 'Không thể cập nhật trạng thái Ghim.');
+    }
   };
 
   const handleToggleBreaking = async (article: NewsArticle) => {
@@ -206,18 +220,27 @@ export default function AdminNewsPage() {
     setArticles((prev) =>
       prev.map((a) => (a.id === article.id ? { ...a, is_breaking: nextBreaking } : a))
     );
-    await newsService.updateArticleFlags(article.id, { is_breaking: nextBreaking });
-    toast.success(
-      nextBreaking
-        ? `🔥 Đã gắn nhãn Tin Nóng Mùa Thi!`
-        : `Đã gỡ nhãn Tin Nóng.`
-    );
+    try {
+      await newsService.updateArticleFlags(article.id, { is_breaking: nextBreaking });
+      toast.success(
+        nextBreaking
+          ? `🔥 Đã gắn nhãn Tin Nóng Mùa Thi!`
+          : `Đã gỡ nhãn Tin Nóng.`
+      );
+    } catch (err: any) {
+      setArticles((prev) =>
+        prev.map((a) => (a.id === article.id ? { ...a, is_breaking: !nextBreaking } : a))
+      );
+      toast.error(err?.message || 'Không thể cập nhật nhãn Tin Nóng.');
+    }
   };
 
   const handleQuickChangeStatus = async (
     article: NewsArticle,
     nextStatus: NewsStatus
   ) => {
+    const prevStatus = article.status;
+    const prevPublishedAt = article.published_at;
     const nowIso = new Date().toISOString();
     setArticles((prev) =>
       prev.map((a) =>
@@ -231,23 +254,38 @@ export default function AdminNewsPage() {
           : a
       )
     );
-    await newsService.updateArticleFlags(article.id, {
-      status: nextStatus,
-      published_at: nextStatus === 'PUBLISHED' ? article.published_at || nowIso : article.published_at,
-    });
+    try {
+      await newsService.updateArticleFlags(article.id, {
+        status: nextStatus,
+        published_at: nextStatus === 'PUBLISHED' ? article.published_at || nowIso : article.published_at,
+      });
 
-    const statusLabel = STATUS_META[nextStatus]?.label || nextStatus;
-    toast.success(`Đã chuyển trạng thái bài viết sang "${statusLabel}"!`);
+      const statusLabel = STATUS_META[nextStatus]?.label || nextStatus;
+      toast.success(`Đã chuyển trạng thái bài viết sang "${statusLabel}"!`);
+    } catch (err: any) {
+      setArticles((prev) =>
+        prev.map((a) =>
+          a.id === article.id
+            ? { ...a, status: prevStatus, published_at: prevPublishedAt }
+            : a
+        )
+      );
+      toast.error(err?.message || 'Không thể đổi trạng thái bài viết.');
+    }
   };
 
   const handleConfirmDelete = async () => {
     if (!deletingArticle) return;
     const target = deletingArticle;
     setDeletingArticle(null);
-    setArticles((prev) => prev.filter((a) => a.id !== target.id));
-    await newsService.deleteArticle(target.id);
-    toast.success(`Đã xoá bài viết "${target.title}".`);
-    loadData();
+    try {
+      await newsService.deleteArticle(target.id);
+      setArticles((prev) => prev.filter((a) => a.id !== target.id));
+      toast.success(`Đã xoá bài viết "${target.title}".`);
+      loadData();
+    } catch (err: any) {
+      toast.error(err?.message || 'Không thể xoá bài viết.');
+    }
   };
 
   return (
@@ -558,25 +596,45 @@ export default function AdminNewsPage() {
             <Newspaper className="w-6 h-6" />
           </div>
           <h3 className="text-base font-bold text-slate-900 dark:text-white">
-            Không có bài viết nào khớp với bộ lọc hiện tại
+            {articles.length === 0
+              ? 'Chưa có bài viết tin tức nào trong hệ thống'
+              : 'Không có bài viết nào khớp với bộ lọc hiện tại'}
           </h3>
           <p className="text-xs text-slate-500 max-w-md mx-auto">
-            Bạn có thể xoá bộ lọc tìm kiếm hoặc tạo bài viết mới để xuất bản lên chuyên trang Tin Tức.
+            {articles.length === 0
+              ? 'Bắt đầu tạo bài viết đầu tiên để xuất bản lên chuyên trang Tin Tức Schoolify.'
+              : 'Bạn có thể xoá bộ lọc tìm kiếm hoặc tạo bài viết mới để xuất bản lên chuyên trang Tin Tức.'}
           </p>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setStatusFilter('ALL');
-              setCategoryFilter('ALL');
-              setOnlyFeatured(false);
-              setSearchQuery('');
-            }}
-            className="rounded-xl text-xs font-bold cursor-pointer"
-          >
-            Đặt lại bộ lọc
-          </Button>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {articles.length > 0 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setStatusFilter('ALL');
+                  setCategoryFilter('ALL');
+                  setOnlyFeatured(false);
+                  setSearchQuery('');
+                }}
+                className="rounded-xl text-xs font-bold cursor-pointer"
+              >
+                Đặt lại bộ lọc
+              </Button>
+            )}
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => {
+                setEditingArticle(null);
+                setIsEditorModalOpen(true);
+              }}
+              className="rounded-xl text-xs font-bold gap-1.5 bg-[#00B8DD] hover:bg-[#007D99] text-white shadow-sm cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Soạn Bài Viết Mới</span>
+            </Button>
+          </div>
         </Card>
       ) : (
         <Table>

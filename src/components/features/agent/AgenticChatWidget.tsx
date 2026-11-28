@@ -1163,7 +1163,7 @@ export function AgenticChatWidget() {
             className={`relative group flex items-center gap-2 sm:gap-2.5 pl-2 pr-3.5 sm:pl-2.5 sm:pr-4.5 py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-[#0F172A] via-[#0E2A3F] to-[#0891B2] text-white border-2 border-[#38BDF8]/80 shadow-[0_12px_32px_-4px_rgba(0,184,221,0.58),0_6px_18px_rgba(2,6,23,0.45)] ring-4 ring-[#00B8DD]/25 hover:ring-[#00B8DD]/45 select-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#5CE1FF] transition-all ${
               isDragging
                 ? 'cursor-grabbing scale-105'
-                : 'cursor-grab animate-sf-robot-drift hover:[animation-play-state:paused] hover:scale-[1.04] active:scale-95'
+                : 'cursor-grab hover:scale-[1.03] active:scale-95'
             }`}
           >
             {/* Vòng tròn Avatar Robot + Chấm xanh Online */}
@@ -1376,7 +1376,7 @@ export function AgenticChatWidget() {
                   /* Màn hình Chào mừng kiểu Gemini khi mở Phiên mới */
                   <div className="min-h-full flex flex-col items-center justify-start sm:justify-center max-w-xl mx-auto py-2 sm:py-4 text-center">
                     <div className="-my-3 sm:my-0 scale-75 sm:scale-95 origin-center">
-                      <SchoolifyRobot size="lg" emotion={emotion} isFloating />
+                      <SchoolifyRobot size="lg" emotion={emotion} isFloating={false} />
                     </div>
                     <h2 className="text-base sm:text-xl font-black tracking-tight bg-gradient-to-r from-[#00B8DD] via-sky-400 to-amber-400 bg-clip-text text-transparent">
                       Xin chào, hôm nay mình cùng học gì nào?
@@ -1643,7 +1643,7 @@ export function AgenticChatWidget() {
                     {isSending && (
                       <div className="flex items-center gap-2.5 px-1 min-h-[44px] animate-in fade-in duration-150">
                         <div className="shrink-0">
-                          <SchoolifyRobot size="sm" emotion="thinking" />
+                          <SchoolifyRobot size="sm" emotion="thinking" isFloating={false} />
                         </div>
                         <AgentReasoningProcess
                           isLive={true}
