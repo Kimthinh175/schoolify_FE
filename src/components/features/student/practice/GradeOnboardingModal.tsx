@@ -68,7 +68,12 @@ export function GradeOnboardingModal({
   onCompleted,
   subjectName,
 }: GradeOnboardingModalProps) {
-  const { user, token, updateUser, fetchMe } = useAuthStore();
+  const { user, token, currentRole, updateUser, fetchMe } = useAuthStore();
+  const isAdmin =
+    (currentRole as string) === 'ADMIN' ||
+    currentRole === 'SUPER_ADMIN' ||
+    (user?.role as string) === 'ADMIN' ||
+    user?.role === 'SUPER_ADMIN';
   const semesterInfo = React.useMemo(() => getCurrentSchoolSemester(), []);
 
   const [fullname, setFullname] = React.useState<string>('');
@@ -158,16 +163,17 @@ export function GradeOnboardingModal({
     }
   };
 
+  if (isAdmin) return null;
+
   return (
     <Dialog
       open={isOpen}
       onClose={() => {
-        // Khi FIRST_LOGIN hoặc preventClose bắt buộc chọn lớp để mở lộ trình đúng lớp
-        if (!preventClose && mode === 'GUEST_TRIAL' && onClose) {
+        if (!preventClose && onClose) {
           onClose();
         }
       }}
-      showCloseButton={!preventClose && mode === 'GUEST_TRIAL'}
+      showCloseButton={!preventClose && Boolean(onClose)}
       className="max-w-lg p-0 overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-2xl"
     >
       {/* Header thương hiệu Schoolify Cyan -> Deep Navy */}

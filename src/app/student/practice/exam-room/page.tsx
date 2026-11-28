@@ -6574,6 +6574,22 @@ function ExamRoomContent() {
     (user?.role as string) === 'ADMIN' ||
     user?.role === 'SUPER_ADMIN';
   const [isMounted, setIsMounted] = React.useState(false);
+  const [authHydrated, setAuthHydrated] = React.useState(false);
+
+  React.useEffect(() => {
+    if (useAuthStore.persist?.hasHydrated?.()) {
+      setAuthHydrated(true);
+    } else {
+      const unsub = useAuthStore.persist?.onFinishHydration?.(() => {
+        setAuthHydrated(true);
+      });
+      const timer = setTimeout(() => setAuthHydrated(true), 250);
+      return () => {
+        unsub?.();
+        clearTimeout(timer);
+      };
+    }
+  }, []);
 
   const olympiadId = searchParams.get('olympiadId');
   const subjectSlug = searchParams.get('subject') || 'toan-hoc';
@@ -6610,13 +6626,16 @@ function ExamRoomContent() {
 
   const needsInlineGuestOnboarding =
     isMounted &&
+    authHydrated &&
     !isLoggedIn &&
+    !isAdmin &&
     !attemptTokenParam &&
     isGuestEligibleBasicExam &&
     !guestOnboardingSnapshot;
 
   const isAllowedGuestSession =
     !isLoggedIn &&
+    !isAdmin &&
     isGuestEligibleBasicExam &&
     Boolean(
       guestTrialSessionActive ||
@@ -6627,7 +6646,7 @@ function ExamRoomContent() {
     !attemptTokenParam && !needsInlineGuestOnboarding && !isAllowedGuestSession;
 
   React.useEffect(() => {
-    if (!isMounted) return;
+    if (!isMounted || !authHydrated) return;
     if (requiresLogin && !isLoggedIn) {
       examOfflineStorage.clearActiveExamSession().catch(() => {});
       const currentUrl =
@@ -6641,7 +6660,7 @@ function ExamRoomContent() {
       });
       router.replace(`/login/student?returnUrl=${encodeURIComponent(currentUrl)}`);
     }
-  }, [isMounted, requiresLogin, isLoggedIn, guestOnboardingSnapshot, router]);
+  }, [isMounted, authHydrated, requiresLogin, isLoggedIn, guestOnboardingSnapshot, router]);
 
   const olympiadExam = React.useMemo(() => {
     if (!isOlympiad) return null;
@@ -6654,7 +6673,7 @@ function ExamRoomContent() {
     return null;
   }, [isOlympiad, olympiadId, subjectSlug, levelParam]);
 
-  if (!isMounted) {
+  if (!isMounted || !authHydrated) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white text-sm">
         Đang khởi tạo phòng thi trực tuyến...
