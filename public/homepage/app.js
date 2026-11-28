@@ -792,6 +792,20 @@
     let gems = 20;
     let claimedToday = true;
 
+    try {
+      const stored = localStorage.getItem('schoolify-auth-storage');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed?.state?.isAuthenticated && parsed?.state?.user) {
+          isLoggedIn = true;
+          const u = parsed.state.user;
+          memberTitle = u.fullname || u.email?.split('@')[0] || 'Học viên Schoolify';
+          rays = u.exam_points ?? 9;
+          gems = u.points ?? 20;
+        }
+      }
+    } catch (_) {}
+
     const syncMemberUI = () => {
       if (headerLoginBtn) headerLoginBtn.hidden = isLoggedIn;
       if (hudWallet) hudWallet.hidden = !isLoggedIn;
@@ -2613,106 +2627,295 @@
   function initChampionshipPodium() {
     const tabs = document.querySelectorAll('#champTabs .champ-tab[data-board]');
     const podium = document.getElementById('champPodium');
+    const tableBody = document.getElementById('champTableBody');
+    const toggleBtn = document.getElementById('toggleFullBoardBtn');
+    const toggleLabel = document.getElementById('toggleBoardLabel');
+    const boardExpand = document.getElementById('champBoardExpand');
+
     if (!tabs.length || !podium) return;
 
+    // Baseline offline/instant data (zero CLS)
     const BOARDS = {
       all: [
-        {
-          avatar: 'MK',
-          name: 'Nguyễn Minh Khôi',
-          school: '12A1 • THPT Chuyên KHTN',
-          streak: '14 đề',
-          score: '9.85 / 10đ',
-          scale: 0.985,
-          gems: '+240 Ngọc'
-        },
-        {
-          avatar: 'KL',
-          name: 'Trần Khánh Linh',
-          school: '12T1 • THPT Lê Quý Đôn',
-          streak: '12 đề',
-          score: '9.60 / 10đ',
-          scale: 0.96,
-          gems: '+195 Ngọc'
-        },
-        {
-          avatar: 'HN',
-          name: 'Lê Hoàng Nam',
-          school: '11Tin • THPT Phan Châu Trinh',
-          streak: '11 đề',
-          score: '9.50 / 10đ',
-          scale: 0.95,
-          gems: '+170 Ngọc'
-        }
+        { avatar: 'MK', name: 'Nguyễn Minh Khôi', school: 'THPT Chuyên KHTN', streak: '14 đề tuần này', score: '9.85đ', scale: 0.985, gems: '+240 Ngọc' },
+        { avatar: 'KL', name: 'Trần Khánh Linh', school: 'THPT Lê Quý Đôn', streak: '12 đề tuần này', score: '9.60đ', scale: 0.96, gems: '+195 Ngọc' },
+        { avatar: 'HN', name: 'Lê Hoàng Nam', school: 'THPT Phan Châu Trinh', streak: '11 đề tuần này', score: '9.50đ', scale: 0.95, gems: '+170 Ngọc' }
       ],
       math: [
-        {
-          avatar: 'MK',
-          name: 'Nguyễn Minh Khôi',
-          school: '12A1 • Chuyên Toán KHTN',
-          streak: '10 đề VDC',
-          score: '9.90 / 10đ',
-          scale: 0.99,
-          gems: '+180 Ngọc'
-        },
-        {
-          avatar: 'BA',
-          name: 'Phạm Bảo Anh',
-          school: '12A2 • THPT Chu Văn An',
-          streak: '9 đề Toán',
-          score: '9.65 / 10đ',
-          scale: 0.965,
-          gems: '+155 Ngọc'
-        },
-        {
-          avatar: 'ĐP',
-          name: 'Vũ Đức Phúc',
-          school: '11T2 • THPT Kim Liên',
-          streak: '8 đề Toán',
-          score: '9.45 / 10đ',
-          scale: 0.945,
-          gems: '+130 Ngọc'
-        }
+        { avatar: 'MK', name: 'Nguyễn Minh Khôi', school: 'Chuyên Toán KHTN', streak: '10 đề Toán VDC', score: '9.90đ', scale: 0.99, gems: '+180 Ngọc' },
+        { avatar: 'BA', name: 'Phạm Bảo Anh', school: 'THPT Chu Văn An', streak: '9 đề Toán 2025', score: '9.65đ', scale: 0.965, gems: '+155 Ngọc' },
+        { avatar: 'ĐP', name: 'Vũ Đức Phúc', school: 'THPT Kim Liên', streak: '8 đề Toán 11–12', score: '9.45đ', scale: 0.945, gems: '+130 Ngọc' }
       ],
       cs: [
-        {
-          avatar: 'KL',
-          name: 'Trần Khánh Linh',
-          school: '12T1 • Đội tuyển Tin LQĐ',
-          streak: '11 đề Tin',
-          score: '9.80 / 10đ',
-          scale: 0.98,
-          gems: '+175 Ngọc'
-        },
-        {
-          avatar: 'HN',
-          name: 'Lê Hoàng Nam',
-          school: '11Tin • THPT Phan Châu Trinh',
-          streak: '10 đề Tin',
-          score: '9.60 / 10đ',
-          scale: 0.96,
-          gems: '+150 Ngọc'
-        },
-        {
-          avatar: 'QM',
-          name: 'Đặng Quang Minh',
-          school: '12CTin • THPT Gia Định',
-          streak: '9 đề Tin',
-          score: '9.40 / 10đ',
-          scale: 0.94,
-          gems: '+125 Ngọc'
-        }
+        { avatar: 'KL', name: 'Trần Khánh Linh', school: 'Đội tuyển Tin LQĐ', streak: '11 đề Python & SQL', score: '9.80đ', scale: 0.98, gems: '+175 Ngọc' },
+        { avatar: 'HN', name: 'Lê Hoàng Nam', school: 'THPT Phan Châu Trinh', streak: '10 đề Thuật toán', score: '9.60đ', scale: 0.96, gems: '+150 Ngọc' },
+        { avatar: 'QM', name: 'Đặng Quang Minh', school: 'THPT Gia Định', streak: '9 đề CS & ICT', score: '9.40đ', scale: 0.94, gems: '+125 Ngọc' }
+      ]
+    };
+
+    const IN_PAGE_TABLE_DATA = {
+      all: [
+        { rank: 4, name: 'Phạm Bảo Anh', school: 'Lớp 12A2 • THPT Chu Văn An', streak: 10, score: '9.40', gems: '+140 Ngọc' },
+        { rank: 5, name: 'Đặng Quang Minh', school: 'Lớp 12CTin • THPT Gia Định', streak: 9, score: '9.35', gems: '+125 Ngọc' },
+        { rank: 6, name: 'Vũ Đức Phúc', school: 'Lớp 11T2 • THPT Kim Liên', streak: 9, score: '9.25', gems: '+110 Ngọc' },
+        { rank: 7, name: 'Hoàng Thùy Dương', school: 'Lớp 12A • THPT Chuyên Sư Phạm', streak: 8, score: '9.15', gems: '+95 Ngọc' },
+        { rank: 8, name: 'Bùi Tuấn Kiệt', school: 'Lớp 12Tin • THPT Chuyên Lương Thế Vinh', streak: 8, score: '9.05', gems: '+85 Ngọc' },
+        { rank: 9, name: 'Nguyễn Phương Thảo', school: 'Lớp 11A1 • THPT Việt Đức', streak: 7, score: '8.95', gems: '+70 Ngọc' },
+        { rank: 10, name: 'Trần Quốc Đạt', school: 'Lớp 12A3 • THPT Thăng Long', streak: 7, score: '8.85', gems: '+60 Ngọc' }
+      ],
+      math: [
+        { rank: 4, name: 'Nguyễn Ngọc Anh', school: 'Lớp 12A • THPT Chuyên Hà Nội - Amsterdam', streak: 8, score: '9.30', gems: '+115 Ngọc' },
+        { rank: 5, name: 'Lê Gia Huy', school: 'Lớp 12T1 • THPT Chuyên Lê Hồng Phong', streak: 7, score: '9.20', gems: '+100 Ngọc' },
+        { rank: 6, name: 'Trần Tuấn Dũng', school: 'Lớp 12A1 • THPT Yên Hòa', streak: 7, score: '9.10', gems: '+90 Ngọc' },
+        { rank: 7, name: 'Hoàng Minh Châu', school: 'Lớp 11A1 • THPT Chuyên Lam Sơn', streak: 6, score: '9.00', gems: '+80 Ngọc' },
+        { rank: 8, name: 'Đỗ Tiến Đạt', school: 'Lớp 12A4 • THPT Cầu Giấy', streak: 6, score: '8.90', gems: '+70 Ngọc' },
+        { rank: 9, name: 'Vũ Thảo Vy', school: 'Lớp 12T2 • THPT Chuyên Bắc Ninh', streak: 6, score: '8.80', gems: '+60 Ngọc' },
+        { rank: 10, name: 'Phan Nhật Minh', school: 'Lớp 11A2 • THPT Chuyên Phan Bội Châu', streak: 5, score: '8.75', gems: '+50 Ngọc' }
+      ],
+      cs: [
+        { rank: 4, name: 'Bùi Tuấn Kiệt', school: 'Lớp 12Tin • THPT Chuyên LTV', streak: 8, score: '9.25', gems: '+110 Ngọc' },
+        { rank: 5, name: 'Nguyễn Quốc Việt', school: 'Lớp 11Tin • THPT Chuyên Thái Bình', streak: 8, score: '9.15', gems: '+95 Ngọc' },
+        { rank: 6, name: 'Lâm Hải Đăng', school: 'Lớp 12Tin • THPT Chuyên Nguyễn Du', streak: 7, score: '9.05', gems: '+85 Ngọc' },
+        { rank: 7, name: 'Trần Văn Hưng', school: 'Lớp 12A • THPT Chuyên KHTN', streak: 7, score: '8.95', gems: '+75 Ngọc' },
+        { rank: 8, name: 'Đinh Hồng Phúc', school: 'Lớp 11Tin • THPT Chuyên Hạ Long', streak: 6, score: '8.85', gems: '+65 Ngọc' },
+        { rank: 9, name: 'Lý Gia Bảo', school: 'Lớp 12Tin • THPT Năng Khiếu ĐHQG', streak: 6, score: '8.75', gems: '+55 Ngọc' },
+        { rank: 10, name: 'Vũ Đức Trọng', school: 'Lớp 11A • THPT Nguyễn Huệ', streak: 5, score: '8.70', gems: '+50 Ngọc' }
       ]
     };
 
     let timer = null;
+    let currentActiveKey = 'all';
+    const LIVE_DATA_CACHE = {};
+
+    const getInitials = (fullname) => {
+      if (!fullname) return 'HV';
+      const parts = fullname.trim().split(/\s+/);
+      if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    };
+
+    const renderPodiumStage = (rows) => {
+      [1, 2, 3].forEach((rankIdx) => {
+        const d = rows[rankIdx - 1];
+        if (!d) return;
+        const av = document.getElementById('chAvatar' + rankIdx);
+        const nm = document.getElementById('chName' + rankIdx);
+        const sc = document.getElementById('chSchool' + rankIdx);
+        const st = document.getElementById('chStreak' + rankIdx);
+        const val = document.getElementById('chScore' + rankIdx);
+        const bar = document.getElementById('chBar' + rankIdx);
+        const gm = document.getElementById('chGems' + rankIdx);
+
+        if (av) av.textContent = d.avatar;
+        if (nm) nm.textContent = d.name;
+        if (sc) sc.textContent = d.school;
+        if (st) st.textContent = d.streak;
+        if (val) val.textContent = d.score;
+        if (gm) gm.textContent = d.gems;
+        if (bar) {
+          bar.style.setProperty('--p-scale', '0.25');
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              bar.style.setProperty('--p-scale', String(d.scale));
+            });
+          });
+        }
+      });
+    };
+
+    const renderInPageTable = (key) => {
+      if (!tableBody) return;
+      const rows = IN_PAGE_TABLE_DATA[key] || IN_PAGE_TABLE_DATA.all;
+      tableBody.innerHTML = '';
+
+      rows.forEach(item => {
+        const tr = document.createElement('tr');
+        const initials = getInitials(item.name);
+
+        tr.innerHTML = `
+          <td>
+            <span class="champ-rank-badge">#${item.rank < 10 ? '0' + item.rank : item.rank}</span>
+          </td>
+          <td>
+            <div class="champ-user-cell">
+              <div class="champ-user-mini-av">${initials}</div>
+              <div>
+                <strong class="champ-user-name">${item.name}</strong>
+                <span class="champ-user-school">${item.school}</span>
+              </div>
+            </div>
+          </td>
+          <td style="text-align: center; color: var(--muted); font-weight: 600;">${item.streak} đề</td>
+          <td style="text-align: right;">
+            <strong class="champ-score-val">${item.score}</strong> <span style="font-size: 11px; color: var(--muted);">/ 10đ</span>
+          </td>
+          <td style="text-align: right;">
+            <span class="champ-gems-pill">
+              <svg class="ic-inline" style="width: 12px; height: 12px;"><use href="#iconGem" /></svg>
+              <span>${item.gems}</span>
+            </span>
+          </td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    };
+
+    // Cập nhật Banner vị trí cá nhân theo trạng thái đăng nhập thực tế
+    const updatePersonalBanner = (liveList) => {
+      try {
+        const authDataStr = localStorage.getItem('schoolify-auth-storage');
+        let authUser = null;
+        if (authDataStr) {
+          const parsed = JSON.parse(authDataStr);
+          if (parsed?.state?.isAuthenticated && parsed?.state?.user) {
+            authUser = parsed.state.user;
+          }
+        }
+
+        const bannerAvatar = document.querySelector('.champ-user-avatar');
+        const bannerRankTag = document.querySelector('.champ-user-rank-tag');
+        const bannerSub = document.querySelector('.champ-user-sub');
+        const bannerTarget = document.querySelector('.champ-user-target');
+        const bannerCta = document.querySelector('.champ-user-cta');
+
+        if (authUser) {
+          const initials = getInitials(authUser.fullname || authUser.name || 'Học Viên');
+          if (bannerAvatar) bannerAvatar.textContent = initials;
+
+          let myRank = null;
+          if (Array.isArray(liveList)) {
+            const idx = liveList.findIndex(
+              (u) => u.userId === authUser.id || (authUser.email && u.email === authUser.email)
+            );
+            if (idx !== -1) myRank = idx + 1;
+          }
+
+          if (bannerRankTag) {
+            bannerRankTag.textContent = myRank
+              ? `HẠNG #${myRank < 10 ? '0' + myRank : myRank} TOÀN QUỐC`
+              : 'ĐÃ THAM GIA BẢNG VÀNG';
+          }
+
+          if (bannerSub) {
+            const exams = authUser.quizzesCompleted || authUser.totalExams || 6;
+            const points = authUser.exam_points ?? authUser.points ?? 135;
+            bannerSub.innerHTML = `Hoàn thành <strong>${exams} đề tuần này</strong> • Điểm tích lũy: <strong>${points} Tia Sáng</strong>`;
+          }
+
+          if (bannerTarget) {
+            bannerTarget.innerHTML = `Mục tiêu: <strong>Lọt Top 20 tuần</strong> bứt phá điểm số`;
+          }
+
+          if (bannerCta) {
+            bannerCta.textContent = 'Vào phòng thi ngay →';
+            bannerCta.setAttribute('href', '/exam-room');
+            bannerCta.removeAttribute('data-open-login');
+          }
+        } else {
+          // Chưa đăng nhập (hiển thị chế độ khách)
+          if (bannerAvatar) bannerAvatar.textContent = 'HV';
+          if (bannerRankTag) bannerRankTag.textContent = 'HẠNG #42 TOÀN QUỐC (MẪU)';
+          if (bannerSub) {
+            bannerSub.innerHTML = 'Đăng nhập để ghi danh vào <strong>Bảng Vàng Toàn Quốc</strong>';
+          }
+          if (bannerTarget) {
+            bannerTarget.innerHTML = 'Nhận ngay <strong>9 Tia Sáng / ngày</strong> trải nghiệm';
+          }
+          if (bannerCta) {
+            bannerCta.textContent = 'Đăng nhập ghi danh →';
+            bannerCta.setAttribute('href', '#');
+            bannerCta.setAttribute('data-open-login', 'true');
+          }
+        }
+      } catch (err) {
+        // Safe fallback
+      }
+    };
+
+    // Gọi API Backend thật để nạp dữ liệu Bảng Xếp Hạng
+    const fetchLiveLeaderboard = async (key) => {
+      if (LIVE_DATA_CACHE[key]) {
+        applyLiveData(key, LIVE_DATA_CACHE[key]);
+        return;
+      }
+
+      try {
+        const subjectParam = key === 'math' ? 'math' : key === 'cs' ? 'cs' : '';
+        const url = `/api/v1/catalog/leaderboard${subjectParam ? '?subject=' + subjectParam : ''}`;
+        const res = await fetch(url);
+        if (!res.ok) return;
+
+        const json = await res.json();
+        if (json?.success && Array.isArray(json?.data) && json.data.length >= 3) {
+          LIVE_DATA_CACHE[key] = json.data;
+          applyLiveData(key, json.data);
+        }
+      } catch (err) {
+        // Nếu fetch lỗi, dữ liệu mặc định đã sẵn sàng
+      }
+    };
+
+    const applyLiveData = (key, list) => {
+      if (!Array.isArray(list) || list.length < 3) return;
+
+      // Map 3 quán quân hàng đầu
+      BOARDS[key] = [
+        {
+          avatar: getInitials(list[0].fullname),
+          name: list[0].fullname,
+          school: list[0].schoolName || 'THPT Chuyên',
+          streak: `${list[0].totalExams || 14} đề tuần này`,
+          score: `${Number(list[0].avgScore || 9.85).toFixed(2)}đ`,
+          scale: Number(list[0].scale || 0.985),
+          gems: `+${list[0].gems || 240} Ngọc`
+        },
+        {
+          avatar: getInitials(list[1].fullname),
+          name: list[1].fullname,
+          school: list[1].schoolName || 'THPT Chuyên',
+          streak: `${list[1].totalExams || 12} đề tuần này`,
+          score: `${Number(list[1].avgScore || 9.60).toFixed(2)}đ`,
+          scale: Number(list[1].scale || 0.96),
+          gems: `+${list[1].gems || 195} Ngọc`
+        },
+        {
+          avatar: getInitials(list[2].fullname),
+          name: list[2].fullname,
+          school: list[2].schoolName || 'THPT Chuyên',
+          streak: `${list[2].totalExams || 11} đề tuần này`,
+          score: `${Number(list[2].avgScore || 9.50).toFixed(2)}đ`,
+          scale: Number(list[2].scale || 0.95),
+          gems: `+${list[2].gems || 170} Ngọc`
+        }
+      ];
+
+      // Map top 4 đến top 10
+      if (list.length >= 4) {
+        IN_PAGE_TABLE_DATA[key] = list.slice(3, 10).map((u, i) => ({
+          rank: i + 4,
+          name: u.fullname,
+          school: u.schoolName || 'THPT Chuẩn Bộ',
+          streak: u.totalExams || 8,
+          score: Number(u.avgScore || 9.0).toFixed(2),
+          gems: `+${u.gems || 100} Ngọc`
+        }));
+      }
+
+      // Nếu tab hiện tại khớp với key vừa tải xong, cập nhật giao diện ngay
+      if (currentActiveKey === key) {
+        renderPodiumStage(BOARDS[key]);
+        renderInPageTable(key);
+      }
+
+      updatePersonalBanner(list);
+    };
 
     tabs.forEach((tab) => {
       tab.addEventListener('click', () => {
         const key = tab.getAttribute('data-board');
-        const rows = BOARDS[key];
-        if (!rows || tab.classList.contains('is-active')) return;
+        if (!key || tab.classList.contains('is-active')) return;
 
+        currentActiveKey = key;
         tabs.forEach((t) => t.classList.toggle('is-active', t === tab));
 
         if (!prefersReducedMotion) {
@@ -2723,33 +2926,36 @@
           timer = setTimeout(() => podium.classList.remove('is-switching'), 520);
         }
 
-        [1, 2, 3].forEach((rankIdx) => {
-          const d = rows[rankIdx - 1];
-          const av = document.getElementById(`chAvatar${rankIdx}`);
-          const nm = document.getElementById(`chName${rankIdx}`);
-          const sc = document.getElementById(`chSchool${rankIdx}`);
-          const st = document.getElementById(`chStreak${rankIdx}`);
-          const val = document.getElementById(`chScore${rankIdx}`);
-          const bar = document.getElementById(`chBar${rankIdx}`);
-          const gm = document.getElementById(`chGems${rankIdx}`);
+        const rows = BOARDS[key];
+        if (rows) {
+          renderPodiumStage(rows);
+          renderInPageTable(key);
+        }
 
-          if (av) av.textContent = d.avatar;
-          if (nm) nm.textContent = d.name;
-          if (sc) sc.textContent = d.school;
-          if (st) st.textContent = d.streak;
-          if (val) val.textContent = d.score;
-          if (gm) gm.textContent = d.gems;
-          if (bar) {
-            bar.style.setProperty('--p-scale', '0.25');
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                bar.style.setProperty('--p-scale', String(d.scale));
-              });
-            });
-          }
-        });
+        // Tải dữ liệu thật cho tab vừa chọn
+        fetchLiveLeaderboard(key);
       });
     });
+
+    // Toggle In-Page Table Collapse/Expand
+    if (toggleBtn && boardExpand) {
+      toggleBtn.addEventListener('click', () => {
+        const isCollapsed = boardExpand.classList.toggle('is-collapsed');
+        if (toggleLabel) {
+          toggleLabel.textContent = isCollapsed
+            ? 'Xem đầy đủ Top 10 Cao Thủ Tuần ▼'
+            : 'Thu gọn Bảng xếp hạng ▲';
+        }
+      });
+    }
+
+    // Khởi tạo ban đầu
+    renderPodiumStage(BOARDS.all);
+    renderInPageTable('all');
+    updatePersonalBanner();
+
+    // Tự động nạp dữ liệu thật từ Backend API
+    fetchLiveLeaderboard('all');
   }
 
   function initSubpageRoutePreview() {
@@ -4054,10 +4260,47 @@
     });
   }
 
+  function initNewsFiltersAndSpotlight() {
+    // CargoKite Cursor Spotlight Glow Tracking on Cards
+    document.querySelectorAll('.news-card.ck-spotlight').forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        card.style.setProperty('--mouse-x', `${x}px`);
+        card.style.setProperty('--mouse-y', `${y}px`);
+      });
+    });
+
+    // CargoKite News Category Filter Pills
+    const filterBtns = document.querySelectorAll('.news-filter-btn[data-filter]');
+    const newsCards = document.querySelectorAll('.news-card[data-cat]');
+
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+        const f = btn.getAttribute('data-filter');
+
+        newsCards.forEach(card => {
+          const cat = card.getAttribute('data-cat');
+          if (f === 'all' || cat === f) {
+            card.style.display = 'flex';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0) scale(1)';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    });
+  }
+
   // =========================================================================
   // BOOTSTRAP ALL MODULES
   // =========================================================================
   let bootstrapRetryCount = 0;
+
   function bootstrap() {
     if (typeof window !== 'undefined' && window.__schoolifyHomepageRunning) {
       return;
@@ -4090,6 +4333,7 @@
     initInteractiveMiniDemo();
     initGradeCatalogTabs();
     initChampionshipPodium();
+    initNewsFiltersAndSpotlight();
     initFaqAccordion();
     initContactSection();
     initBackToTop();

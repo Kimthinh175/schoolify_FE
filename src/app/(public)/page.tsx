@@ -108,7 +108,7 @@ export default function HomePage() {
 
   return (
     <>
-      <link rel="stylesheet" href="/homepage/styles.css?v=20261117_plane_autoscroll" />
+      <link rel="stylesheet" href="/homepage/styles.css?v=20261127_live_data_v6" />
       <StaticHomepageRoot />
       {skeletonPhase !== 'gone' && (
         <HomePageSkeletonOverlay leaving={skeletonPhase === 'leaving'} />
@@ -127,7 +127,7 @@ export default function HomePage() {
         strategy="afterInteractive"
       />
       <Script
-        src="/homepage/app.js?v=20261117_plane_autoscroll"
+        src="/homepage/app.js?v=20261127_live_data_v6"
         strategy="afterInteractive"
         onLoad={() => {
           if (typeof window !== 'undefined' && (window as any).__initSchoolifyHomepage) {

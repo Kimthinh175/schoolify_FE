@@ -7534,3 +7534,1877 @@ html.is-low-end .sky-canvas {
 
 
 
+
+
+/* ==========================================================================
+   ACT VI: KHO TRI THỨC, BÍ KÍP & TIN TỨC KHẢO THÍ (#tin-tuc) — CARGOKITE BENTO
+   ========================================================================== */
+
+.news-section {
+  padding: 80px 0;
+  position: relative;
+  background: var(--bg);
+}
+
+.news-head {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 36px;
+}
+
+@media (min-width: 768px) {
+  .news-head {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+}
+
+.news-head h2 {
+  font-size: clamp(24px, 3.2vw, 36px);
+  font-weight: 800;
+  color: var(--fg);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+/* Secondary action link (Same as .pricing-head__link & .champ-all-link) */
+.news-head__link,
+.news-foot__link {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  color: var(--brand);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.news-head__link:hover,
+.news-foot__link:hover {
+  color: var(--brand-deep);
+  transform: translateX(4px);
+}
+
+html[data-theme="dark"] .news-head__link,
+html[data-theme="dark"] .news-foot__link {
+  color: var(--brand-bright);
+}
+
+html[data-theme="dark"] .news-head__link:hover,
+html[data-theme="dark"] .news-foot__link:hover {
+  color: #FFFFFF;
+}
+
+/* Bottom Action Footer for News Section (Right-aligned below cards) */
+.news-foot {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 26px;
+}
+
+@media (max-width: 640px) {
+  .news-foot {
+    justify-content: center;
+  }
+}
+
+/* 3-Column CargoKite Bento News Grid */
+.news-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 768px) {
+  .news-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .news-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+}
+
+.news-card {
+  position: relative;
+  padding: 28px 26px;
+  border-radius: 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.03);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: default;
+  transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  outline: none;
+}
+
+.news-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0, 184, 221, 0.45);
+  box-shadow: 0 12px 30px rgba(0, 184, 221, 0.08);
+}
+
+/* Signature CargoKite Featured News Tile */
+.news-card--featured {
+  background: var(--surface);
+  border-color: rgba(0, 184, 221, 0.3);
+  box-shadow: 0 6px 22px rgba(0, 184, 221, 0.06);
+}
+
+.news-card--featured:hover {
+  border-color: var(--brand);
+  box-shadow: 0 14px 34px rgba(0, 184, 221, 0.14);
+}
+
+.news-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.news-tag {
+  font-family: 'Consolas', 'SFMono-Regular', Menlo, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.news-tag--cyan {
+  color: var(--brand);
+}
+
+/* CargoKite Diagonal Micro-Arrow */
+.news-arrow {
+  width: 20px;
+  height: 20px;
+  color: var(--muted);
+  opacity: 0.7;
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), color 0.24s ease, opacity 0.24s ease;
+  flex-shrink: 0;
+}
+
+.news-card:hover .news-arrow {
+  transform: translate(3px, -3px);
+  color: var(--brand);
+  opacity: 1;
+}
+
+.news-card__body {
+  margin-bottom: 22px;
+}
+
+.news-card__title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--fg);
+  line-height: 1.35;
+  margin: 0 0 10px;
+  letter-spacing: -0.01em;
+  transition: color 0.2s ease;
+}
+
+.news-card:hover .news-card__title {
+  color: var(--brand);
+}
+
+.news-card__desc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.55;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.news-card__foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--line);
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.news-meta-item {
+  font-weight: 500;
+}
+
+.news-meta-sep {
+  opacity: 0.5;
+}
+
+.news-badge {
+  margin-left: auto;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--brand-deep);
+  background: rgba(0, 184, 221, 0.1);
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+
+
+
+/* 3D Olympic Podium Grid (#1 First on Mobile, #2 - #1 Elevated - #3 on Desktop!) */
+.champ-podium {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  align-items: end;
+}
+
+@media (min-width: 960px) {
+  .champ-podium {
+    grid-template-columns: 0.96fr 1.12fr 0.96fr;
+    gap: 20px;
+  }
+}
+
+.champ-podium.is-switching .podium-card {
+  animation: gradeCardCascade 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.podium-card {
+  --mx: 50%;
+  --my: 25%;
+  position: relative;
+  padding: 22px 22px 20px;
+  border-radius: 18px;
+  background: #FFFFFF;
+  border: 1.5px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  will-change: transform;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.04);
+  transition:
+    transform 0.36s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    background-color 0.3s ease;
+}
+
+.podium-card.is-tilting {
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.podium-card > *:not(.c-card__glow) {
+  position: relative;
+  z-index: 2;
+}
+
+.podium-card:hover {
+  border-color: var(--brand);
+  box-shadow: 0 20px 44px rgba(0, 184, 221, 0.12);
+}
+
+/* #1 Quán Quân: Signature Primary Brand Cyan Gradient (#00B8DD -> #007999!) */
+.podium-card--1 {
+  order: -1;
+  padding: 26px 24px 24px;
+  background:
+    radial-gradient(circle at 88% 10%, rgba(255, 255, 255, 0.24) 0%, transparent 54%),
+    linear-gradient(155deg, #00B8DD 0%, #0092B3 58%, #007391 100%);
+  border-color: rgba(255, 255, 255, 0.42);
+  color: #FFFFFF;
+  box-shadow: 0 24px 56px rgba(0, 184, 221, 0.28);
+}
+
+.podium-card--1:hover {
+  border-color: #FFFFFF;
+  box-shadow: 0 28px 64px rgba(0, 184, 221, 0.36);
+}
+
+@media (min-width: 960px) {
+  .podium-card--1 {
+    order: 0;
+    transform: translateY(-12px);
+  }
+}
+
+.podium-card__top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.podium-medal {
+  padding: 4px 11px;
+  border-radius: 99px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.podium-medal--lead {
+  background: rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  color: #FFFFFF;
+}
+
+.podium-medal--sub {
+  background: rgba(0, 184, 221, 0.11);
+  border: 1px solid rgba(0, 184, 221, 0.3);
+  color: var(--brand-deep);
+}
+
+.podium-medal--muted {
+  background: var(--bg-subtle);
+  border: 1px solid var(--line);
+  color: #475569;
+}
+
+.podium-streak {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.podium-streak--lead {
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 700;
+}
+
+.podium-profile {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.podium-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.podium-avatar--lead {
+  width: 52px;
+  height: 52px;
+  background: #FFFFFF;
+  color: #007999;
+  box-shadow: 0 8px 20px rgba(4, 34, 46, 0.16);
+}
+
+.podium-avatar--sub {
+  background: rgba(0, 184, 221, 0.14);
+  color: var(--brand-deep);
+  border: 1px solid rgba(0, 184, 221, 0.28);
+}
+
+.podium-avatar--muted {
+  background: var(--bg-subtle);
+  color: #334155;
+  border: 1px solid var(--line);
+}
+
+.podium-profile strong {
+  display: block;
+  font-size: 16.5px;
+  font-weight: 700;
+  color: var(--fg);
+  margin-bottom: 2px;
+}
+
+.podium-card--1 .podium-profile strong {
+  font-size: 18px;
+  color: #FFFFFF;
+}
+
+.podium-profile span {
+  display: block;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.podium-card--1 .podium-profile span {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.podium-score-wrap {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.podium-score-wrap--lead {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
+.podium-score-label {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.podium-score-wrap--lead .podium-score-label {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.podium-score-num {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--brand-deep);
+  letter-spacing: -0.02em;
+}
+
+.podium-score-wrap--lead .podium-score-num {
+  color: #FFFFFF;
+}
+
+.podium-reward {
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.podium-reward--lead {
+  border-top-color: rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.podium-gems {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--brand-deep);
+}
+
+.podium-gems.is-lead {
+  color: #FFFFFF;
+}
+
+.podium-gems.is-lead .ic-inline {
+  color: #FFFFFF;
+}
+
+/* Bottom Action: Xem BXH Đầy Đủ (Text link góc dưới bên phải giống "So sánh chi tiết các gói →") */
+.champ-foot {
+  position: relative;
+  z-index: 2;
+  margin-top: 26px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.champ-foot-sep {
+  color: var(--line);
+  opacity: 0.6;
+  font-size: 13px;
+  user-select: none;
+}
+
+.champ-all-link {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  color: var(--brand);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.champ-all-link:hover {
+  color: var(--brand-deep);
+  transform: translateX(4px);
+}
+
+html[data-theme="dark"] .champ-all-link {
+  color: var(--brand-bright);
+}
+
+html[data-theme="dark"] .champ-all-link:hover {
+  color: #FFFFFF;
+}
+
+
+/* ==========================================================================
+   IMPRESSIVE 3D DIHEDRAL ORIGAMI GLIDERS (MÁY BAY GIẤY 3D KHÍ ĐỘNG HỌC ẤN TƯỢNG)
+   ========================================================================== */
+.champ-podium--impressive {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 36px;
+  align-items: end;
+  padding: 30px 10px 10px;
+}
+
+@media (min-width: 960px) {
+  .champ-podium--impressive {
+    grid-template-columns: 1fr 1.15fr 1fr;
+    gap: 24px;
+    padding-top: 55px;
+    padding-bottom: 25px;
+  }
+}
+
+/* Individual Flight Podium */
+.glider-flight-podium {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: visible !important;
+  transform-origin: center bottom;
+  cursor: pointer;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (min-width: 960px) {
+  .glider-flight-podium--1 {
+    order: 0;
+    margin-top: -48px !important;
+  }
+  .glider-flight-podium--2 {
+    order: -1;
+  }
+  .glider-flight-podium--3 {
+    order: 1;
+  }
+}
+
+/* Organic Aerodynamic Hovering Physics */
+.glider-flight-podium--1 {
+  animation: aeroGliderDrift1 4.6s ease-in-out infinite alternate;
+}
+
+.glider-flight-podium--2 {
+  animation: aeroGliderDrift2 5.2s ease-in-out infinite alternate;
+  animation-delay: -1.6s;
+}
+
+.glider-flight-podium--3 {
+  animation: aeroGliderDrift3 4.8s ease-in-out infinite alternate;
+  animation-delay: -2.8s;
+}
+
+@keyframes aeroGliderDrift1 {
+  0% { transform: translateY(0px); }
+  100% { transform: translateY(-14px); }
+}
+
+@keyframes aeroGliderDrift2 {
+  0% { transform: translateY(0px); }
+  100% { transform: translateY(-10px); }
+}
+
+@keyframes aeroGliderDrift3 {
+  0% { transform: translateY(0px); }
+  100% { transform: translateY(-10px); }
+}
+
+/* --------------------------------------------------------------------------
+   AVATAR STAGE (VƯƠNG MIỆN & HUY HIỆU THỨ HẠNG 1, 2, 3 ĐẶT TRÊN AVATAR)
+   -------------------------------------------------------------------------- */
+.aero-avatar-stage {
+  position: relative;
+  width: 86px;
+  height: 86px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  z-index: 5;
+}
+
+.glider-flight-podium--1 .aero-avatar-stage {
+  width: 104px;
+  height: 104px;
+}
+
+.aero-rank-crown {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 38px;
+  height: 28px;
+  z-index: 6;
+  filter: drop-shadow(0 2px 8px rgba(245, 158, 11, 0.45));
+}
+
+.aero-avatar {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  font-size: 19px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 3;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.glider-flight-podium--1 .aero-avatar {
+  width: 76px;
+  height: 76px;
+  font-size: 23px;
+  background: #FFFFFF;
+  color: #007999;
+  border: 3.5px solid #F59E0B;
+  box-shadow: 0 10px 28px rgba(245, 158, 11, 0.35);
+}
+
+.glider-flight-podium--2 .aero-avatar {
+  border: 3px solid #00B8DD;
+  box-shadow: 0 6px 18px rgba(0, 184, 221, 0.22);
+}
+
+.glider-flight-podium--3 .aero-avatar {
+  border: 3px solid #94A3B8;
+  box-shadow: 0 6px 16px rgba(148, 163, 184, 0.2);
+}
+
+/* Clean Rank Medal Badge Under Avatar (Gối nhẹ dưới Avatar, KHÔNG dán lên máy bay!) */
+.aero-rank-badge {
+  position: absolute;
+  bottom: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22);
+}
+
+.aero-rank-badge--1 {
+  width: 30px;
+  height: 30px;
+  font-size: 14.5px;
+  background: linear-gradient(135deg, #FEF3C7 0%, #F59E0B 100%);
+  color: #78350F;
+  border: 2px solid #FFFFFF;
+}
+
+.aero-rank-badge--2 {
+  background: linear-gradient(135deg, #E0F7FA 0%, #00B8DD 100%);
+  color: #004D61;
+  border: 2px solid #FFFFFF;
+}
+
+.aero-rank-badge--3 {
+  background: linear-gradient(135deg, #F8FAFC 0%, #94A3B8 100%);
+  color: #1E293B;
+  border: 2px solid #FFFFFF;
+}
+
+/* --------------------------------------------------------------------------
+   MINIMAL STUDENT DETAILS (CHỈ 2 DÒNG TINH TẾ)
+   -------------------------------------------------------------------------- */
+.glider-pilot-info {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  width: 100%;
+  margin-bottom: -6px;
+}
+
+.pilot-name {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--fg);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  text-align: center;
+  width: 100%;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.pilot-name--lead {
+  font-size: 21px;
+  font-weight: 900;
+  color: #007999;
+}
+
+html[data-theme="dark"] .pilot-name {
+  color: #FFFFFF;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+
+html[data-theme="dark"] .pilot-name--lead {
+  color: var(--brand-bright);
+}
+
+/* Dedicated Subtitle Line: School Name (Clean, Centered, No Cramming) */
+.pilot-school {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 1.35;
+  text-align: center;
+  display: block;
+  max-width: 90%;
+  margin: 0 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pilot-school--lead {
+  font-weight: 600;
+  color: #007999;
+}
+
+html[data-theme="dark"] .pilot-school {
+  color: #94A3B8;
+}
+
+html[data-theme="dark"] .pilot-school--lead {
+  color: #38BDF8;
+}
+
+/* Minimalist Glassmorphic Capsule for Score & Gems */
+.pilot-capsule {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 3px 13px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(0, 184, 221, 0.24);
+  box-shadow: 0 4px 16px rgba(0, 184, 221, 0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: 12px;
+  white-space: nowrap;
+  max-width: 95%;
+  margin: 2px auto 0;
+}
+
+.pilot-capsule--lead {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.15);
+}
+
+html[data-theme="dark"] .pilot-capsule {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: rgba(0, 184, 221, 0.35);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+html[data-theme="dark"] .pilot-capsule--lead {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: rgba(245, 158, 11, 0.5);
+}
+
+.pilot-score {
+  font-weight: 800;
+  color: var(--brand-deep);
+}
+
+.pilot-capsule--lead .pilot-score {
+  color: #D97706;
+}
+
+html[data-theme="dark"] .pilot-score {
+  color: var(--brand-bright);
+}
+
+html[data-theme="dark"] .pilot-capsule--lead .pilot-score {
+  color: #FBBF24;
+}
+
+.pilot-gems {
+  font-weight: 700;
+  color: #059669;
+  font-size: 12px;
+}
+
+.pilot-capsule--lead .pilot-gems {
+  color: #B45309;
+}
+
+html[data-theme="dark"] .pilot-gems {
+  color: #34D399;
+}
+
+html[data-theme="dark"] .pilot-capsule--lead .pilot-gems {
+  color: #FDE68A;
+}
+
+.pilot-dot {
+  opacity: 0.45;
+  font-size: 9px;
+}
+
+/* --------------------------------------------------------------------------
+   3D DIHEDRAL IMPRESSIVE GLIDER SVG CONTAINER
+   -------------------------------------------------------------------------- */
+.aero-3d-glider-wrap {
+  width: 100%;
+  max-width: 285px;
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+}
+
+.glider-flight-podium--1 .aero-3d-glider-wrap {
+  max-width: 320px;
+}
+
+.aero-3d-glider-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+  transition: transform 0.35s ease, filter 0.35s ease;
+}
+
+/* Hover Reactions: Soaring High into Air Currents */
+.glider-flight-podium:hover .aero-3d-glider-svg {
+  transform: translateY(-8px) scale(1.04);
+  filter: drop-shadow(0 20px 44px rgba(0, 184, 221, 0.35));
+}
+
+.glider-flight-podium--1:hover .aero-3d-glider-svg {
+  filter: drop-shadow(0 24px 50px rgba(245, 158, 11, 0.45));
+}
+
+
+/* ==========================================================================
+   FAST CONTACT & ACADEMIC FEEDBACK SECTION (#lien-he)
+   ========================================================================== */
+.contact-section {
+  padding: 112px 0;
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+}
+
+.contact-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 36px;
+  align-items: start;
+}
+
+@media (min-width: 960px) {
+  .contact-layout {
+    grid-template-columns: 0.92fr 1.08fr;
+    gap: 54px;
+  }
+}
+
+.contact-info h2 {
+  font-size: clamp(26px, 3.2vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin-bottom: 12px;
+}
+
+.contact-info__desc {
+  font-size: 14.5px;
+  color: var(--muted);
+  line-height: 1.62;
+  margin-bottom: 24px;
+}
+
+.contact-channels {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.channel-card {
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.channel-card:hover {
+  border-color: var(--brand);
+  transform: translateX(4px);
+}
+
+.channel-card strong {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.channel-card span {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.contact-card {
+  padding: 28px 24px;
+  border-radius: 18px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+}
+
+@media (min-width: 640px) {
+  .contact-card {
+    padding: 34px 32px;
+  }
+}
+
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.contact-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.topic-chip {
+  padding: 7px 12px;
+  border-radius: 99px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.18s ease;
+}
+
+.topic-chip:hover {
+  border-color: var(--brand);
+  color: var(--brand-deep);
+}
+
+.topic-chip.is-active {
+  background: rgba(0, 184, 221, 0.12);
+  border-color: var(--brand);
+  color: var(--brand-deep);
+}
+
+.c-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.c-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.c-field input,
+.c-field textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1.5px solid var(--line);
+  color: var(--fg);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.c-field input:focus,
+.c-field textarea:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(0, 184, 221, 0.14);
+}
+
+.contact-submit-btn {
+  margin-top: 4px;
+  height: 48px;
+  border-radius: 10px;
+  background: var(--brand);
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(0, 184, 221, 0.26);
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.contact-submit-btn:hover {
+  background: var(--brand-deep);
+}
+
+/* Dark Mode Overrides for Champions & Contact Section */
+html[data-theme="dark"] .champ-arena,
+html[data-theme="dark"] .contact-card,
+html[data-theme="dark"] .channel-card {
+  background: #111827;
+}
+
+html[data-theme="dark"] .podium-card:not(.podium-card--1),
+html[data-theme="dark"] .grade-tabs,
+html[data-theme="dark"] .demo-tabs,
+html[data-theme="dark"] .champ-tabs,
+html[data-theme="dark"] .c-field input,
+html[data-theme="dark"] .c-field textarea,
+html[data-theme="dark"] .topic-chip {
+  background: #0F172A;
+}
+
+html[data-theme="dark"] .podium-medal--muted,
+html[data-theme="dark"] .podium-avatar--muted,
+html[data-theme="dark"] .podium-card:not(.podium-card--1) .podium-streak {
+  background: #1E293B;
+  color: #CBD5E1;
+  border-color: rgba(148, 163, 184, 0.24);
+}
+
+html[data-theme="dark"] .podium-medal--sub,
+html[data-theme="dark"] .podium-avatar--sub {
+  background: rgba(0, 212, 255, 0.14);
+  color: var(--brand-bright);
+  border-color: rgba(0, 212, 255, 0.32);
+}
+
+html[data-theme="dark"] .topic-chip.is-active {
+  background: rgba(0, 212, 255, 0.15);
+  border-color: var(--brand-bright);
+  color: var(--brand-bright);
+}
+
+html[data-theme="dark"] .podium-gems:not(.is-lead) {
+  color: var(--brand-bright);
+}
+
+/* Scroll Reveal */
+html.js-ready .reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1), transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html.js-ready .reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+
+/* Failsafe dimensions to prevent SVG layout blowout */
+.aero-rank-crown {
+  width: 38px !important;
+  height: 28px !important;
+  max-width: 38px !important;
+  max-height: 28px !important;
+  overflow: hidden;
+}
+.aero-rank-crown svg {
+  width: 38px !important;
+  height: 28px !important;
+  display: block !important;
+}
+.aero-avatar-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.aero-3d-glider-wrap {
+  width: 100%;
+  max-width: 260px;
+  margin: 0 auto;
+}
+.aero-3d-glider-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+
+
+/* ==========================================================================
+   V7 HOMEPAGE: IN-PAGE LIVE LEADERBOARD (BẢNG XẾP HẠNG TRỰC TIẾP TRÊN TRANG CHỦ)
+   ========================================================================== */
+
+.champ-board-expand {
+  margin-top: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.champ-board-expand.is-collapsed {
+  display: none;
+}
+
+/* User's Personal Standing Banner */
+.champ-user-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 22px;
+  border-radius: 14px;
+  background: rgba(0, 184, 221, 0.08);
+  border: 1.5px dashed rgba(0, 184, 221, 0.4);
+  box-shadow: 0 4px 18px rgba(0, 184, 221, 0.06);
+}
+
+@media (min-width: 768px) {
+  .champ-user-banner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.champ-user-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.champ-user-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #FFFFFF;
+  font-weight: 800;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 12px rgba(0, 184, 221, 0.45);
+}
+
+.champ-user-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.champ-user-title strong {
+  font-size: 15px;
+  color: var(--fg);
+}
+
+.champ-user-rank-tag {
+  font-family: 'Consolas', 'SFMono-Regular', Menlo, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--brand);
+  color: #FFFFFF;
+  letter-spacing: 0.05em;
+}
+
+.champ-user-sub {
+  display: block;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.champ-user-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.champ-user-target {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.champ-user-target strong {
+  color: var(--brand-deep);
+}
+
+.champ-user-cta {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: var(--brand);
+  color: #FFFFFF;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 184, 221, 0.3);
+  transition: all 0.2s ease;
+}
+
+.champ-user-cta:hover {
+  background: var(--brand-deep);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 184, 221, 0.45);
+}
+
+/* In-Page Ranking Table */
+.champ-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+}
+
+.champ-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  text-align: left;
+}
+
+.champ-table th {
+  background: var(--bg-subtle);
+  padding: 12px 18px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--line);
+}
+
+.champ-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  color: var(--fg);
+  vertical-align: middle;
+  transition: background 0.15s ease;
+}
+
+.champ-table tr:last-child td {
+  border-bottom: none;
+}
+
+.champ-table tr:hover td {
+  background: rgba(0, 184, 221, 0.04);
+}
+
+.champ-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 12.5px;
+  font-family: 'Consolas', 'SFMono-Regular', Menlo, monospace;
+  background: var(--bg-subtle);
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+
+.champ-user-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.champ-user-mini-av {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--bg-subtle);
+  border: 1px solid var(--line);
+  font-size: 11.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg);
+  flex-shrink: 0;
+}
+
+.champ-user-name {
+  font-weight: 700;
+  color: var(--fg);
+  line-height: 1.25;
+}
+
+.champ-user-school {
+  font-size: 12px;
+  color: var(--muted);
+  display: block;
+}
+
+.champ-score-val {
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--fg);
+}
+
+.champ-gems-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: rgba(0, 184, 221, 0.1);
+  color: var(--brand-deep);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   CARGOKITE NEWS ENHANCEMENTS: CURSOR SPOTLIGHT, CAD CROSSHAIRS & VISUALS
+   ========================================================================== */
+
+.news-head-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+@media (min-width: 768px) {
+  .news-head-right {
+    align-items: flex-end;
+  }
+}
+
+/* News Category Filters */
+.news-filters {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.news-filter-btn {
+  padding: 7px 15px;
+  border-radius: 8px;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.news-filter-btn:hover {
+  color: var(--fg);
+}
+
+.news-filter-btn.is-active {
+  background: var(--brand);
+  color: #FFFFFF;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0, 184, 221, 0.35);
+}
+
+/* CargoKite CAD Blueprint Corner Crosshairs (+) */
+.ck-cross {
+  position: absolute;
+  font-family: 'Consolas', 'SFMono-Regular', Menlo, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--line);
+  line-height: 1;
+  pointer-events: none;
+  transition: color 0.24s ease, transform 0.24s ease;
+  z-index: 2;
+}
+
+.ck-cross--tl { top: 8px; left: 8px; }
+.ck-cross--tr { top: 8px; right: 8px; }
+.ck-cross--bl { bottom: 8px; left: 8px; }
+.ck-cross--br { bottom: 8px; right: 8px; }
+
+.news-card:hover .ck-cross {
+  color: var(--brand);
+  transform: scale(1.2);
+}
+
+/* CargoKite Interactive Cursor Spotlight Glow */
+.ck-spotlight {
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+  background: radial-gradient(
+    450px circle at var(--mouse-x) var(--mouse-y),
+    rgba(0, 184, 221, 0.08),
+    transparent 60%
+  ), var(--surface);
+}
+
+/* Architectural Blueprint Visual Preview in Cards */
+.news-visual {
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.24s ease;
+}
+
+.news-card:hover .news-visual {
+  border-color: rgba(0, 184, 221, 0.4);
+}
+
+.news-visual-bar {
+  display: flex;
+  height: 24px;
+  border-radius: 6px;
+  overflow: hidden;
+  gap: 2px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #FFFFFF;
+  text-align: center;
+  line-height: 24px;
+}
+
+.news-visual-caption {
+  font-family: 'Consolas', 'SFMono-Regular', Menlo, monospace;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.03em;
+}
+
+.news-casio-screen {
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #0B1120;
+  color: #00E5FF;
+  font-family: 'Consolas', 'SFMono-Regular', Menlo, monospace;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid rgba(0, 229, 255, 0.2);
+}
+
+.news-casio-fn {
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.news-casio-step {
+  font-size: 10px;
+  color: #94A3B8;
+}
+
+.news-code-snippet {
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #0B1120;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow-x: auto;
+}
+
+.news-code-snippet code {
+  font-family: 'Consolas', 'SFMono-Regular', Menlo, monospace;
+  font-size: 11.5px;
+  color: #38BDF8;
+}
+
+/* Dark Theme Overrides */
+html[data-theme="dark"] .champ-user-banner {
+  background: rgba(0, 212, 255, 0.08);
+  border-color: rgba(0, 212, 255, 0.3);
+}
+
+html[data-theme="dark"] .champ-user-target strong {
+  color: var(--brand-bright);
+}
+
+html[data-theme="dark"] .champ-table-wrap {
+  background: #0F172A;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="dark"] .champ-table th {
+  background: #111A2E;
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="dark"] .champ-table td {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+html[data-theme="dark"] .champ-rank-badge {
+  background: #0B1120;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="dark"] .champ-user-mini-av {
+  background: #0B1120;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="dark"] .champ-gems-pill {
+  background: rgba(0, 212, 255, 0.12);
+  color: var(--brand-bright);
+}
+
+html[data-theme="dark"] .news-filters {
+  background: #0B1120;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="dark"] .news-visual {
+  background: #0B1120;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+
+
+
+/* ==========================================================================
+   COHESIVE HARMONIOUS NEWS SECTION (#tin-tuc) — SCHOOLIFY BRAND CYAN/SLATE
+   ========================================================================== */
+.news-section {
+  padding: 80px 0;
+  position: relative;
+  background: var(--bg);
+}
+
+.news-head {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+@media (min-width: 768px) {
+  .news-head {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+}
+
+.news-head h2 {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  margin-top: 6px;
+}
+
+@media (min-width: 768px) {
+  .news-head h2 {
+    font-size: 34px;
+  }
+}
+
+/* Modern Segmented Filter Pills */
+.news-filters {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid var(--line);
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+html[data-theme="dark"] .news-filters {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.news-filter-btn {
+  padding: 6px 14px;
+  border-radius: 9px;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.news-filter-btn:hover {
+  color: var(--fg);
+  background: rgba(0, 184, 221, 0.06);
+}
+
+.news-filter-btn.is-active {
+  background: #00B8DD !important;
+  color: #FFFFFF !important;
+  font-weight: 700;
+  box-shadow: 0 2px 10px rgba(0, 184, 221, 0.35);
+}
+
+/* Bento Grid */
+.news-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 22px;
+}
+
+@media (min-width: 768px) {
+  .news-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* News Cards */
+.news-card {
+  position: relative;
+  padding: 24px;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.03);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.news-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0, 184, 221, 0.5);
+  box-shadow: 0 14px 34px rgba(0, 184, 221, 0.1);
+}
+
+.news-card--featured {
+  border-color: rgba(0, 184, 221, 0.35);
+}
+
+.news-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.news-tag {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.news-tag--cyan {
+  color: #00B8DD;
+}
+
+.news-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #007D99;
+  background: rgba(0, 184, 221, 0.1);
+  padding: 2px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.01em;
+}
+
+html[data-theme="dark"] .news-badge {
+  color: #00D4FF;
+  background: rgba(0, 212, 255, 0.15);
+}
+
+/* Card Visual Containers */
+.news-visual {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.02);
+  border: 1px solid var(--line);
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+html[data-theme="dark"] .news-visual {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.07);
+}
+
+.news-visual-bar {
+  display: flex;
+  height: 24px;
+  border-radius: 6px;
+  overflow: hidden;
+  gap: 2px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #FFFFFF;
+  text-align: center;
+  line-height: 24px;
+}
+
+.bar-seg--1 { background: #00B8DD; }
+.bar-seg--2 { background: #0284C7; }
+.bar-seg--3 { background: #059669; }
+
+.news-visual-caption {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.news-casio-screen {
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: #0B1120;
+  color: #00E5FF;
+  font-family: inherit;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border: 1px solid rgba(0, 229, 255, 0.2);
+}
+
+.news-casio-fn {
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.news-casio-step {
+  font-size: 10px;
+  color: #00B8DD;
+}
+
+.news-code-snippet {
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: #0B1120;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.news-code-snippet code {
+  color: #38BDF8;
+  font-family: 'Consolas', 'Fira Code', monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  word-break: break-all;
+}
+
+/* Card Typography */
+.news-card__title {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--fg);
+  margin-bottom: 8px;
+  transition: color 0.2s ease;
+}
+
+.news-card:hover .news-card__title {
+  color: #00B8DD;
+}
+
+.news-card__desc {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted);
+  margin-bottom: 16px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.news-card__foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: auto;
+}
+
+.news-meta-sep {
+  opacity: 0.5;
+}
+
