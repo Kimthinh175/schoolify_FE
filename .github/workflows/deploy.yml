@@ -42,6 +42,10 @@ jobs:
 
       - name: Rsync standalone bundle to server
         run: |
+          DEPLOY_USER="${{ secrets.SSH_USER }}"
+          if [ -z "$DEPLOY_USER" ] || [ "$DEPLOY_USER" = "root" ]; then
+            DEPLOY_USER="ubuntu"
+          fi
           rsync -az --delete \
             --filter='P data/' \
             --filter='P .env' \
@@ -50,11 +54,15 @@ jobs:
             --exclude='.env*' \
             -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes" \
             .next/standalone/ \
-            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/apps/schoolify/fe/"
+            "${DEPLOY_USER}@${{ secrets.SSH_HOST }}:/opt/apps/schoolify/fe/"
 
       - name: Reload PM2 & healthcheck
         run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" '
+          DEPLOY_USER="${{ secrets.SSH_USER }}"
+          if [ -z "$DEPLOY_USER" ] || [ "$DEPLOY_USER" = "root" ]; then
+            DEPLOY_USER="ubuntu"
+          fi
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${{ secrets.SSH_HOST }}" '
             set -e
             pm2 startOrReload /opt/apps/schoolify/ecosystem.config.cjs --only schoolify-fe --update-env
             pm2 save
