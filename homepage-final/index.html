@@ -1,0 +1,2496 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Schoolify — Luyện Thi Ma Trận Toán & Tin Học THPT Thế Hệ Mới</title>
+  <meta name="description"
+    content="Nền tảng khảo thí & luyện thi Toán, Tin học THPT chuẩn ma trận 2025. Trọn bộ 3 dạng trắc nghiệm mới, cấp 9 Tia sáng mỗi ngày, Gia Sư AI 24/7 và tích lũy Ngọc Tri Thức." />
+  <link rel="icon" href="./images/logo-icon.svg" type="image/svg+xml" />
+  <link rel="alternate icon" href="./images/favicon.ico" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body class="is-loading">
+
+  <!-- ===================================================================== -->
+  <!-- 0. TOP SCROLL PROGRESS BAR WITH MICRO ORIGAMI PLANE                   -->
+  <!-- ===================================================================== -->
+  <div class="scroll-progress" id="scrollProgressWrap" aria-hidden="true">
+    <div class="scroll-progress__fill" id="scrollProgressFill">
+      <svg class="scroll-progress__plane" viewBox="0 0 24 14" fill="none">
+        <path d="M23 7L1 1L5.8 7L1 13L23 7Z" fill="#00D4FF" />
+      </svg>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 1. CAD BLUEPRINT ORIGAMI PRELOADER & RUNWAY TAKEOFF (#00B8DD)         -->
+  <!-- ===================================================================== -->
+  <div id="preloader" class="ck-loader" aria-hidden="true">
+    <div class="ck-loader__grid"></div>
+    <div class="ck-loader__glow"></div>
+
+    <div class="ck-loader__shell">
+      <!-- Top Telemetry Bar -->
+      <div class="ck-loader__topbar">
+        <div class="ck-loader__brand">
+          <img src="./images/am-ban.png" onerror="this.onerror=null;this.src='am-ban.png';" alt="Schoolify"
+            class="ck-loader__logo" />
+        </div>
+        <div class="ck-loader__telemetry">
+          <span class="ck-loader__pulse"></span>
+          <span id="loaderStatus">Đang khởi tạo ma trận Toán &amp; Tin 2025...</span>
+        </div>
+      </div>
+
+      <!-- Main Split Stage: Counter + Self-Folding CAD Origami Glider -->
+      <div class="ck-loader__main">
+        <div class="ck-loader__box">
+          <div class="ck-loader__eyebrow">HỆ THỐNG KHẢO THÍ THPT • CHUẨN BỘ GD&amp;ĐT 2025</div>
+          <div class="ck-loader__percent">
+            <span id="loaderNum">0</span><sup>%</sup>
+          </div>
+          <div class="ck-loader__line">
+            <div class="ck-loader__line-fill" id="loaderBar">
+              <svg class="ck-loader__plane" viewBox="0 0 28 16" fill="none">
+                <path d="M27 8L1 1L6.5 8L1 15L27 8Z" fill="#FFFFFF" />
+              </svg>
+            </div>
+          </div>
+          <div class="ck-loader__title">
+            Vững Vàng Tri Thức,<br />
+            Dẫn Lối Thành Công
+          </div>
+          <div class="ck-loader__specs">
+            <span>Toán &amp; Tin 10–12</span>
+            <span>•</span>
+            <span>3 Dạng Trắc Nghiệm Mới</span>
+            <span>•</span>
+            <span>9 Tia Sáng / Ngày</span>
+          </div>
+        </div>
+
+        <!-- Live Self-Drawing & Folding Origami Exam Glider -->
+        <div class="ck-loader__blueprint">
+          <div class="ck-loader__orbit"></div>
+          <div class="ck-loader__glider-wrap" id="loaderGliderWrap">
+            <svg id="loaderBlueprintSvg" class="ck-loader__svg" viewBox="0 0 360 260" fill="none">
+              <!-- Blueprint Axis Crosshairs -->
+              <g stroke="rgba(255,255,255,0.2)" stroke-dasharray="4 5" stroke-width="1">
+                <line x1="20" y1="130" x2="340" y2="130" />
+                <line x1="185" y1="18" x2="185" y2="242" />
+              </g>
+
+              <!-- Paper Solid Fill Facets (Fade in smoothly as folding nears 100%) -->
+              <g class="ck-loader__facets" id="loaderFacets">
+                <polygon points="326,64 38,136 168,148" fill="rgba(255,255,255,0.96)" />
+                <polygon points="326,64 168,148 214,218" fill="rgba(241,245,249,0.92)" />
+                <polygon points="326,64 168,148 184,178" fill="rgba(203,213,225,0.88)" />
+                <polygon points="326,64 184,178 202,164" fill="rgba(226,232,240,0.9)" />
+              </g>
+
+              <!-- Self-Drawing CAD Crease Strokes (pathLength="100" driven by 0->100%) -->
+              <g class="ck-loader__strokes" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path class="loader-draw-path" pathLength="100" d="M326 64 L38 136 L168 148 Z" />
+                <path class="loader-draw-path" pathLength="100" d="M326 64 L214 218 L168 148" />
+                <path class="loader-draw-path" pathLength="100" d="M326 64 L184 178 L168 148" />
+                <path class="loader-draw-path" pathLength="100" d="M126 114 L256 82 M194 172 L282 96"
+                  stroke-width="1.25" stroke-opacity="0.75" />
+              </g>
+
+              <!-- Glowing Nose Beacon -->
+              <circle cx="326" cy="64" r="4.5" fill="#FFFFFF" />
+              <circle cx="326" cy="64" r="10" stroke="rgba(255,255,255,0.45)" stroke-width="1.2" />
+            </svg>
+          </div>
+          <div class="ck-loader__coord">CAD ORIGAMI SPEC // V2025.10</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- REUSABLE CAD ORIGAMI GLIDER & CLEAN VECTOR ICONS                      -->
+  <!-- ===================================================================== -->
+  <svg width="0" height="0" style="position:absolute; visibility:hidden;" aria-hidden="true">
+    <defs>
+      <symbol id="origamiGliderUnit" viewBox="0 0 340 124">
+        <polygon points="14,62 320,10 278,54" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.5"
+          stroke-linejoin="round" />
+        <polygon points="14,62 278,70 320,114" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.5"
+          stroke-linejoin="round" />
+        <polygon points="14,62 278,54 256,62" fill="#F1F5F9" stroke="#0F172A" stroke-width="1.3"
+          stroke-linejoin="round" />
+        <polygon points="14,62 256,62 278,70" fill="#E2E8F0" stroke="#0F172A" stroke-width="1.3"
+          stroke-linejoin="round" />
+
+        <g stroke="#CBD5E1" stroke-width="0.95">
+          <line x1="126" y1="45" x2="286" y2="19" />
+          <line x1="168" y1="48" x2="294" y2="29" />
+          <line x1="210" y1="51" x2="302" y2="39" />
+
+          <line x1="126" y1="79" x2="286" y2="105" />
+          <line x1="168" y1="76" x2="294" y2="95" />
+          <line x1="210" y1="73" x2="302" y2="85" />
+        </g>
+
+        <line x1="62" y1="54" x2="76" y2="59" stroke="#00B8DD" stroke-width="2.2" />
+        <line x1="62" y1="70" x2="76" y2="65" stroke="#F59E0B" stroke-width="2.2" />
+        <circle cx="232" cy="37" r="5.5" fill="none" stroke="#00B8DD" stroke-width="1.1" />
+        <line x1="256" y1="62" x2="334" y2="62" stroke="#94A3B8" stroke-width="1" stroke-dasharray="3 3" />
+      </symbol>
+
+      <!-- Tia Sáng Icon -->
+      <symbol id="iconRay" viewBox="0 0 24 24">
+        <path d="M13 2L4 14h7l-1 8 10-12h-7l0-8z" fill="currentColor" />
+      </symbol>
+      <!-- Ngọc Tri Thức Icon -->
+      <symbol id="iconGem" viewBox="0 0 24 24">
+        <path d="M6 3h12l4 6-10 12L2 9l4-6z" fill="none" stroke="currentColor" stroke-width="1.9"
+          stroke-linejoin="round" />
+        <path d="M2 9h20M12 21L8 9l4-6 4 6-4 12z" fill="none" stroke="currentColor" stroke-width="1.6"
+          stroke-linejoin="round" />
+      </symbol>
+      <!-- Check Icon -->
+      <symbol id="iconCheck" viewBox="0 0 20 20">
+        <path d="M16.6 5.4L8.2 13.8L3.8 9.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round" />
+      </symbol>
+      <!-- Sun Icon (Light Mode) -->
+      <symbol id="iconSun" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.9" />
+        <path
+          d="M12 2.5v2.3M12 19.2v2.3M4.22 4.22l1.62 1.62M18.16 18.16l1.62 1.62M2.5 12h2.3M19.2 12h2.3M4.22 19.78l1.62-1.62M18.16 5.84l1.62-1.62"
+          fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" />
+      </symbol>
+      <!-- Moon Icon (Dark Mode) -->
+      <symbol id="iconMoon" viewBox="0 0 24 24">
+        <path d="M20.4 14.6A8.5 8.5 0 0 1 9.4 3.6a8.5 8.5 0 1 0 11 11z" fill="none" stroke="currentColor"
+          stroke-width="1.9" stroke-linejoin="round" />
+      </symbol>
+      <!-- Origami Paper Plane Up (Back to Top) -->
+      <symbol id="iconPlaneUp" viewBox="0 0 24 24">
+        <path d="M12 3L4 20l8-3.6L20 20 12 3z" fill="none" stroke="currentColor" stroke-width="1.9"
+          stroke-linejoin="round" />
+        <path d="M12 3v13.4" fill="none" stroke="currentColor" stroke-width="1.6" />
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- ===================================================================== -->
+  <!-- 2. MORPHING HEADER (OFFICIAL LOGO + 4 ACTION LINKS + THEME + LOGIN)   -->
+  <!-- ===================================================================== -->
+  <header class="site-header" id="siteHeader">
+    <a href="#hero" class="brand" aria-label="Schoolify Trang chủ">
+      <!-- Full Official White Logo on Dark Hero -->
+      <img src="./images/am-ban.png" onerror="this.onerror=null;this.src='am-ban.png';" alt="Schoolify"
+        class="brand__logo-full" />
+      <!-- Compact Official Icon Emblem when Scrolled onto Content Stage -->
+      <img src="./images/logo-icon.svg" onerror="this.onerror=null;this.src='logo-icon.svg';" alt="Schoolify"
+        class="brand__logo-compact" />
+    </a>
+
+    <!-- Finalized 4 Core Navigation Items -->
+    <nav class="hero-nav" aria-label="Điều hướng chính">
+      <a href="#kho-de">Luyện thi.</a>
+      <a href="/leaderboard" data-route-preview="Bảng xếp hạng">Bảng xếp hạng.</a>
+      <a href="/forum" data-route-preview="Diễn đàn">Diễn đàn.</a>
+      <a href="#goi-dang-ky">Gói đăng ký.</a>
+      <a href="#tin-tuc">Tin tức.</a>
+    </nav>
+
+    <div class="header-right">
+      <!-- Light / Dark Theme Toggle (Persisted for Late-Night Study!) -->
+      <button type="button" class="theme-toggle-btn" id="themeToggleBtn" data-toggle-theme
+        aria-label="Chuyển đổi giao diện Sáng / Tối" title="Đổi chế độ Sáng / Tối">
+        <svg class="ic-moon">
+          <use href="#iconMoon" />
+        </svg>
+        <svg class="ic-sun">
+          <use href="#iconSun" />
+        </svg>
+      </button>
+
+      <!-- Guest State: Clean "Đăng nhập" Button (No Sign-up!) -->
+      <button type="button" class="login-ghost-btn" id="headerLoginBtn" data-open-login>
+        Đăng nhập
+      </button>
+
+      <!-- Member State: Wallet Pill (Appears once logged in via Google / OTP!) -->
+      <div class="wallet" id="hudWallet" hidden>
+        <button type="button" class="wallet__btn" id="hudTrigger" aria-expanded="false">
+          <span class="wallet__item">
+            <svg class="ic-inline">
+              <use href="#iconRay" />
+            </svg>
+            <strong id="headerRayCount">9</strong>
+          </span>
+          <i class="wallet__div"></i>
+          <span class="wallet__item">
+            <svg class="ic-inline">
+              <use href="#iconGem" />
+            </svg>
+            <strong id="headerGemCount">20</strong>
+          </span>
+        </button>
+
+        <div class="wallet__pop" id="hudPopover">
+          <div class="wallet__pop-head">
+            <strong id="memberNameLabel">Học viên Schoolify</strong>
+            <button type="button" class="role-pill" id="logoutSimBtn">Đăng xuất</button>
+          </div>
+          <div class="wallet__balances">
+            <div>
+              <span>Tia sáng hôm nay</span>
+              <strong><span id="popRayCount">9</span> Tia sáng</strong>
+            </div>
+            <div>
+              <span>Ngọc Tri Thức</span>
+              <strong class="c-cyan"><span id="popGemCount">20</span> Ngọc</strong>
+            </div>
+          </div>
+          <div class="wallet__checkin">
+            <p id="checkinSubtext">Mỗi ngày đăng nhập nhận cố định 9 Tia sáng (reset 00:00).</p>
+            <button type="button" class="checkin-btn" id="dailyCheckinBtn">Điểm danh +9</button>
+          </div>
+          <div class="wallet__notice" id="checkinNotice" hidden></div>
+        </div>
+      </div>
+
+      <!-- CargoKite Square Burger (Appears on scroll & mobile; houses Tin tức & Về chúng tôi) -->
+      <button type="button" class="burger-square" id="menuOpenBtn" aria-label="Mở menu">
+        <span></span>
+        <span></span>
+      </button>
+
+      <!-- Primary Action CTA -->
+      <a href="#kho-de" class="cta-solid magnetic" id="headerAuthCta">Vào luyện thi</a>
+    </div>
+  </header>
+
+  <!-- Full-Height Slide-Over Navigation Drawer (Includes Tin tức & Về chúng tôi!) -->
+  <aside class="drawer" id="menuDrawer" aria-hidden="true">
+    <div class="drawer__backdrop" id="menuBackdrop"></div>
+    <div class="drawer__panel">
+      <div class="drawer__top">
+        <div class="logo-pair">
+          <img src="./images/schoolify-logo.png" onerror="this.onerror=null;this.src='schoolify-logo.png';"
+            alt="Schoolify" class="drawer__logo logo-light-only" />
+          <img src="./images/am-ban.png" onerror="this.onerror=null;this.src='am-ban.png';" alt="Schoolify"
+            class="drawer__logo logo-dark-only" />
+        </div>
+        <button type="button" id="menuCloseBtn" aria-label="Đóng">✕</button>
+      </div>
+
+      <div class="drawer__body">
+        <!-- Group 1: Không gian học tập (Core Learning Apps) -->
+        <div class="drawer__group drawer__group--primary">
+          <div class="drawer__label-row">
+            <span class="drawer__label-dot" aria-hidden="true"></span>
+            <span class="drawer__label">Không gian học tập</span>
+          </div>
+
+          <nav class="drawer__nav">
+            <a href="#dung-thu" class="drawer__item">
+              <span class="drawer__item-icon" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <path d="M9 15l2 2 4-4"></path>
+                </svg>
+              </span>
+              <div class="drawer__item-info">
+                <span class="drawer__item-title">Phòng thi thử Đúng / Sai</span>
+                <span class="drawer__item-desc">Mô phỏng đề thi 2025 + AI chấm</span>
+              </div>
+              <span class="drawer__badge drawer__badge--cyan">Mới 2025</span>
+            </a>
+
+            <a href="#kho-de" class="drawer__item">
+              <span class="drawer__item-icon" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="8" y1="21" x2="16" y2="21"></line>
+                  <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+              </span>
+              <div class="drawer__item-info">
+                <span class="drawer__item-title">Kho đề thi Toán &amp; Tin THPT</span>
+                <span class="drawer__item-desc">3 mức độ: Cơ bản đến 9+</span>
+              </div>
+              <span class="drawer__badge">Lớp 10-12</span>
+            </a>
+
+            <a href="/leaderboard" data-route-preview="Bảng xếp hạng" class="drawer__item">
+              <span class="drawer__item-icon" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                  <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                  <path d="M4 22h16"></path>
+                  <path
+                    d="M10 14.66V17c0 .55-.45 1-1 1H7v4h10v-4h-2c-.55 0-1-.45-1-1v-2.34c3.48-.7 6-3.78 6-7.66V4H4v5c0 3.88 2.52 6.96 6 7.66z">
+                  </path>
+                </svg>
+              </span>
+              <div class="drawer__item-info">
+                <span class="drawer__item-title">Đấu trường &amp; BXH tuần</span>
+                <span class="drawer__item-desc">Đua top &amp; nhận thưởng nóng</span>
+              </div>
+              <span class="drawer__badge drawer__badge--live"><span class="badge-dot"
+                  aria-hidden="true"></span>Live</span>
+            </a>
+
+            <a href="/forum" data-route-preview="Diễn đàn" class="drawer__item">
+              <span class="drawer__item-icon" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path
+                    d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+                  </path>
+                </svg>
+              </span>
+              <div class="drawer__item-info">
+                <span class="drawer__item-title">Cộng đồng học sinh &amp; Trao đổi</span>
+                <span class="drawer__item-desc">Gia sư AI &amp; bạn học hỗ trợ</span>
+              </div>
+            </a>
+
+            <a href="#goi-dang-ky" class="drawer__item">
+              <span class="drawer__item-icon" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <polygon
+                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                  </polygon>
+                </svg>
+              </span>
+              <div class="drawer__item-info">
+                <span class="drawer__item-title">Bảng giá &amp; Gói học viên</span>
+                <span class="drawer__item-desc">Cấp Tia Sáng &amp; Ngọc Tri Thức</span>
+              </div>
+              <span class="drawer__badge drawer__badge--cyan">VIP</span>
+            </a>
+          </nav>
+        </div>
+
+        <!-- Architectural Divider -->
+        <div class="drawer__divider" aria-hidden="true"></div>
+
+        <!-- Group 2: Thông tin & Hỗ trợ (Secondary Support) -->
+        <div class="drawer__group drawer__group--secondary">
+          <div class="drawer__label-row">
+            <span class="drawer__label drawer__label--muted">Thông tin &amp; Hỗ trợ</span>
+          </div>
+
+          <nav class="drawer__subnav">
+            <a href="#hoi-dap" class="drawer__sublink">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              <span>Câu hỏi thường gặp (FAQ)</span>
+            </a>
+            <a href="/news" data-route-preview="Tin tức" class="drawer__sublink">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+              </svg>
+              <span>Bí kíp phòng thi &amp; Tin tức</span>
+            </a>
+            <a href="/about" data-route-preview="Về chúng tôi" class="drawer__sublink">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              <span>Về Schoolify Team</span>
+            </a>
+            <a href="#lien-he" class="drawer__sublink">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path
+                  d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                </path>
+              </svg>
+              <span>Liên hệ &amp; Báo lỗi đề thi</span>
+            </a>
+          </nav>
+        </div>
+      </div>
+
+      <div class="drawer__foot">
+        <button type="button" class="drawer__theme-btn" data-toggle-theme>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <span id="drawerThemeLabel">Chuyển sang Chế độ Tối ban đêm</span>
+        </button>
+
+        <button type="button" class="drawer__cta-btn" data-open-login>
+          <span>Đăng nhập học viên</span>
+          <svg viewBox="0 0 20 20" fill="none" class="drawer__cta-arrow" aria-hidden="true">
+            <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===================================================================== -->
+  <!-- LUXURY LOGIN MODAL (GOOGLE + PHONE OTP ONLY — NO SIGN-UP FORM!)       -->
+  <!-- ===================================================================== -->
+  <div class="auth-modal" id="authModal" aria-hidden="true" role="dialog" aria-modal="true"
+    aria-labelledby="authModalTitle">
+    <div class="auth-modal__backdrop" id="authModalBackdrop"></div>
+    <div class="auth-modal__card">
+      <button type="button" class="auth-modal__close" id="authModalClose" aria-label="Đóng">✕</button>
+
+      <div class="logo-pair auth-modal__logo-wrap">
+        <img src="./images/schoolify-logo.png" onerror="this.onerror=null;this.src='schoolify-logo.png';"
+          alt="Schoolify" class="auth-modal__logo logo-light-only" />
+        <img src="./images/am-ban.png" onerror="this.onerror=null;this.src='am-ban.png';" alt="Schoolify"
+          class="auth-modal__logo logo-dark-only" />
+      </div>
+
+      <div id="authStepInit">
+        <h3 id="authModalTitle">Trở thành Học viên Schoolify</h3>
+        <p class="auth-modal__desc">
+          Không cần đăng ký tài khoản mật khẩu. Đăng nhập 1 chạm để nhận ngay <strong>9 Tia sáng</strong> luyện đề Toán
+          &amp; Tin THPT mỗi ngày.
+        </p>
+
+        <!-- Option 1: Continue with Google -->
+        <button type="button" class="google-btn" id="googleLoginBtn">
+          <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#EA4335"
+              d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+            <path fill="#4285F4"
+              d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+            <path fill="#FBBC05"
+              d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+            <path fill="#34A853"
+              d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+          </svg>
+          <span>Tiếp tục bằng tài khoản Google</span>
+        </button>
+
+        <div class="auth-divider"><span>hoặc dùng Số điện thoại</span></div>
+
+        <!-- Option 2: Phone OTP -->
+        <form id="phoneLoginForm" class="phone-form">
+          <label for="phoneInput">Số điện thoại nhận mã OTP</label>
+          <div class="phone-input-group">
+            <span class="phone-prefix">+84</span>
+            <input type="tel" id="phoneInput" placeholder="0912 345 678" maxlength="12" autocomplete="tel" required />
+          </div>
+          <p class="auth-error" id="phoneError" hidden></p>
+          <button type="submit" class="otp-submit-btn">Gửi mã xác thực OTP →</button>
+        </form>
+      </div>
+
+      <!-- Step 2: 6-Digit OTP Verification -->
+      <div id="authStepOtp" hidden>
+        <button type="button" class="auth-back-btn" id="otpBackBtn">← Đổi số điện thoại</button>
+        <h3>Nhập mã OTP 6 chữ số</h3>
+        <p class="auth-modal__desc">
+          Mã xác thực vừa được gửi tới số <strong id="otpPhoneDisplay">0912 345 678</strong>.
+        </p>
+
+        <div class="otp-boxes" id="otpBoxes">
+          <input type="text" inputmode="numeric" maxlength="1" aria-label="Số 1" />
+          <input type="text" inputmode="numeric" maxlength="1" aria-label="Số 2" />
+          <input type="text" inputmode="numeric" maxlength="1" aria-label="Số 3" />
+          <input type="text" inputmode="numeric" maxlength="1" aria-label="Số 4" />
+          <input type="text" inputmode="numeric" maxlength="1" aria-label="Số 5" />
+          <input type="text" inputmode="numeric" maxlength="1" aria-label="Số 6" />
+        </div>
+        <span class="otp-hint">Mẹo thử nhanh: nhập 6 số bất kỳ (VD: 123456)</span>
+
+        <button type="button" class="otp-submit-btn" id="verifyOtpBtn">Xác nhận &amp; Vào luyện thi →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Subtle Toast Notification for Login & Subpage Preview -->
+  <div class="app-toast" id="appToast" hidden></div>
+
+  <!-- ===================================================================== -->
+  <!-- MAIN SCROLL JOURNEY                                                   -->
+  <!-- ===================================================================== -->
+  <main>
+
+    <!-- ------------------------------------------------------------------- -->
+    <!-- ACT I: MIDNIGHT OBSIDIAN SKY + ORIGAMI TOÁN-TIN EXAM GLIDER         -->
+    <!-- ------------------------------------------------------------------- -->
+    <section id="hero" class="sky-hero">
+      <canvas id="skyCanvas" class="sky-canvas" aria-hidden="true"></canvas>
+      <div class="sky-vignette" aria-hidden="true"></div>
+
+      <!-- Centerpiece: Pure 3D Origami Exam Glider (Toán & Tin THPT!) -->
+      <div class="hero-glider-stage" aria-hidden="true">
+        <div class="hero-glider-rig" id="heroShipRig">
+          <svg viewBox="0 0 420 520" fill="none" xmlns="http://www.w3.org/2000/svg" class="hero-glider-svg">
+            <ellipse cx="210" cy="355" rx="70" ry="150" fill="url(#stardustGlow)" />
+
+            <g id="heroVesselBody" class="glider-body-float">
+              <polygon points="210,48 56,422 180,374 210,430 240,374 364,422" fill="rgba(2, 10, 20, 0.55)"
+                transform="translate(0, 18)" />
+
+              <polygon points="210,38 52,416 178,368" fill="url(#paperWingLeft)" stroke="#0F172A" stroke-width="1.8"
+                stroke-linejoin="round" />
+
+              <polygon points="210,38 242,368 368,416" fill="url(#paperWingRight)" stroke="#0F172A" stroke-width="1.8"
+                stroke-linejoin="round" />
+
+              <polygon points="210,38 178,368 210,408" fill="#CBD5E1" stroke="#0F172A" stroke-width="1.5"
+                stroke-linejoin="round" />
+
+              <polygon points="210,38 210,408 242,368" fill="#E2E8F0" stroke="#0F172A" stroke-width="1.5"
+                stroke-linejoin="round" />
+
+              <!-- Left Wing: Toán THPT Formulas & Exam Lines -->
+              <g opacity="0.68">
+                <line x1="186" y1="132" x2="104" y2="378" stroke="#F43F5E" stroke-width="1.15" />
+                <line x1="173" y1="180" x2="194" y2="186" stroke="#94A3B8" stroke-width="1" />
+                <line x1="156" y1="220" x2="190" y2="230" stroke="#94A3B8" stroke-width="1" />
+                <line x1="138" y1="260" x2="186" y2="274" stroke="#94A3B8" stroke-width="1" />
+                <line x1="118" y1="302" x2="182" y2="320" stroke="#94A3B8" stroke-width="1" />
+                <line x1="96" y1="344" x2="178" y2="362" stroke="#94A3B8" stroke-width="1" />
+              </g>
+
+              <!-- Right Wing: Tin Học & 3 Question Types (1 Đáp án / Đúng-Sai) -->
+              <g opacity="0.76">
+                <line x1="232" y1="186" x2="264" y2="178" stroke="#94A3B8" stroke-width="1" />
+                <line x1="234" y1="228" x2="286" y2="215" stroke="#94A3B8" stroke-width="1" />
+                <line x1="236" y1="270" x2="308" y2="252" stroke="#94A3B8" stroke-width="1" />
+                <line x1="238" y1="312" x2="330" y2="290" stroke="#94A3B8" stroke-width="1" />
+                <circle cx="258" cy="332" r="3.4" fill="#00B8DD" />
+                <circle cx="271" cy="329" r="3.4" stroke="#64748B" stroke-width="1" />
+                <circle cx="284" cy="326" r="3.4" fill="#00B8DD" />
+                <circle cx="297" cy="323" r="3.4" stroke="#64748B" stroke-width="1" />
+              </g>
+
+              <!-- Toán + Tin Signatures on Paper Wings -->
+              <text x="116" y="288" transform="rotate(-18 116 288)" fill="#334155" font-size="11.5" font-weight="600"
+                font-family="Inter, sans-serif">∫ f(x)dx</text>
+              <text x="92" y="336" transform="rotate(-18 92 336)" fill="#0095B6" font-size="10.5" font-weight="700"
+                font-family="Inter, sans-serif">O(n log n)</text>
+
+              <!-- Score 10 Stamp -->
+              <g transform="translate(292, 274) rotate(14)">
+                <circle cx="0" cy="0" r="17" fill="rgba(244, 63, 94, 0.08)" stroke="#E11D48" stroke-width="1.7" />
+                <text x="0" y="5" text-anchor="middle" fill="#E11D48" font-size="14.5" font-weight="800"
+                  font-family="Inter, sans-serif">10</text>
+              </g>
+
+              <polygon points="210,38 193,86 210,76 227,86" fill="#00B8DD" />
+              <line x1="187" y1="106" x2="205" y2="97" stroke="#00B8DD" stroke-width="3.2" />
+              <line x1="233" y1="106" x2="215" y2="97" stroke="#F59E0B" stroke-width="3.2" />
+
+              <circle cx="210" cy="38" r="4" fill="#FFFFFF" />
+              <circle cx="52" cy="416" r="3.5" fill="#00D4FF" />
+              <circle cx="368" cy="416" r="3.5" fill="#00D4FF" />
+            </g>
+
+            <defs>
+              <linearGradient id="paperWingLeft" x1="210" y1="38" x2="65" y2="416" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#FFFFFF" />
+                <stop offset="100%" stop-color="#E2E8F0" />
+              </linearGradient>
+              <linearGradient id="paperWingRight" x1="210" y1="38" x2="360" y2="416" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#FFFFFF" />
+                <stop offset="100%" stop-color="#F1F5F9" />
+              </linearGradient>
+              <radialGradient id="stardustGlow" cx="0.5" cy="0.4" r="0.55">
+                <stop offset="0%" stop-color="rgba(0, 212, 255, 0.38)" />
+                <stop offset="55%" stop-color="rgba(0, 184, 221, 0.12)" />
+                <stop offset="100%" stop-color="rgba(9, 13, 22, 0)" />
+              </radialGradient>
+            </defs>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Hero Foreground Grid -->
+      <div class="sky-hero__ui">
+        <div class="sky-hero__headline">
+          <span class="sky-hero__eyebrow"><i></i> Luyện thi Toán &amp; Tin học THPT chuẩn mới</span>
+          <h1 class="sky-hero__title">
+            Vững Vàng Tri Thức<span class="t-dot">,</span><br />
+            <span class="t-accent">Dẫn Lối Thành Công.</span>
+          </h1>
+          <a href="#kho-de" class="sky-hero__cta">
+            <span>Khám phá phòng luyện thi ngay</span>
+            <span class="cta-arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
+
+        <div class="sky-hero__bottom">
+          <div class="sky-hero__trust">
+            <span class="trust-caption">Tối ưu chuyên sâu cho kỳ thi THPT &amp; ĐGNL cấu trúc mới:</span>
+            <div class="trust-logos">
+              <span>TOÁN &amp; TIN 10–12</span>
+              <span>MA TRẬN 2025</span>
+              <span>3 DẠNG TRẮC NGHIỆM</span>
+              <span>GIA SƯ AI 24/7</span>
+              <span>NGỌC TRI THỨC</span>
+            </div>
+          </div>
+
+          <div class="sky-hero__pitch">
+            <p>
+              Chuẩn hóa ôn luyện Toán &amp; Tin cấp 3 với <em>9 Tia sáng mỗi ngày</em>,
+              <em>Gia Sư AI giải chi tiết 24/7</em> và tích lũy <em>Ngọc Tri Thức</em> sau mỗi đề điểm cao.
+            </p>
+            <div class="scroll-marquee" aria-hidden="true">
+              <div class="scroll-marquee__track">
+                <span>Cuộn xuống để khám phá cơ chế hoạt động</span><i>•</i>
+                <span>Cuộn xuống để khám phá cơ chế hoạt động</span><i>•</i>
+                <span>Cuộn xuống để khám phá cơ chế hoạt động</span><i>•</i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------------- -->
+    <!-- ACT II & III (V6): CONTINUOUS AERODYNAMIC VOYAGE (CARGOKITE STYLE)  -->
+    <!-- Máy bay TO kéo từ phải sang trái -> Liền mạch kéo 9 máy bay NHỎ     -->
+    <!-- ------------------------------------------------------------------- -->
+    <section id="chuyen-dich" class="wipe-section flight-journey-section">
+      <!-- Target anchor for Act III links so navigation still works -->
+      <div id="doi-hinh" class="flight-journey-anchor" aria-hidden="true"></div>
+
+      <div class="wipe-pin flight-journey-pin" id="paradigmPin">
+        <!-- 1. Old Paradigm Text (Trước khi máy bay quét qua) -->
+        <div class="wipe-layer wipe-layer--before" id="textBeforeLayer">
+          <div class="wipe-text">
+            <span class="wipe-eyebrow">Gấp lại hoàn toàn cách ôn luyện cũ từ</span>
+            <h2>tài liệu Toán – Tin rời rạc,<br />lệch cấu trúc đề thi mới</h2>
+          </div>
+        </div>
+
+        <!-- 2. New Paradigm Text (Được máy bay TO gạt mở) -->
+        <div class="wipe-layer wipe-layer--after" id="textAfterLayer">
+          <div class="wipe-text">
+            <span class="wipe-eyebrow">Cất cánh cùng hệ thống sinh đề tự động</span>
+            <h2 class="c-cyan">chuẩn ma trận 2025,<br />phân hóa Cơ bản đến Nâng cao.</h2>
+          </div>
+        </div>
+
+        <!-- 3. Máy Bay TO Dẫn Đầu (Heroic Lead CAD Glider) -->
+        <div class="wipe-vessel-wrap" aria-hidden="true">
+          <div class="wipe-vessel" id="horizShip">
+            <svg viewBox="0 0 1560 540" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <polygon points="48,270 1445,28 1265,244" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"
+                stroke-linejoin="round" />
+              <polygon points="48,270 1265,296 1445,512" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"
+                stroke-linejoin="round" />
+              <polygon points="48,270 1265,244 1190,270" fill="#F1F5F9" stroke="#0F172A" stroke-width="1.7"
+                stroke-linejoin="round" />
+              <polygon points="48,270 1190,270 1265,296" fill="#E2E8F0" stroke="#0F172A" stroke-width="1.7"
+                stroke-linejoin="round" />
+
+              <g stroke="#CBD5E1" stroke-width="1.1">
+                <line x1="420" y1="215" x2="1325" y2="66" />
+                <line x1="560" y1="222" x2="1355" y2="96" />
+                <line x1="700" y1="229" x2="1385" y2="128" />
+                <line x1="840" y1="235" x2="1410" y2="162" />
+                <line x1="980" y1="240" x2="1430" y2="198" />
+
+                <line x1="420" y1="325" x2="1325" y2="474" />
+                <line x1="560" y1="318" x2="1355" y2="444" />
+                <line x1="700" y1="311" x2="1385" y2="412" />
+                <line x1="840" y1="305" x2="1410" y2="378" />
+                <line x1="980" y1="300" x2="1430" y2="342" />
+              </g>
+
+              <g font-family="Inter, sans-serif">
+                <g transform="translate(860, 154) rotate(-8.5)">
+                  <rect x="0" y="0" width="128" height="34" rx="4" fill="#F8FAFC" stroke="#0F172A" stroke-width="1.3" />
+                  <text x="64" y="21" text-anchor="middle" fill="#0F172A" font-size="12.5" font-weight="700">1 ĐÁP
+                    ÁN</text>
+
+                  <rect x="138" y="0" width="142" height="34" rx="4" fill="#F8FAFC" stroke="#0F172A"
+                    stroke-width="1.3" />
+                  <text x="209" y="21" text-anchor="middle" fill="#0095B6" font-size="12.5" font-weight="700">NHIỀU ĐÁP
+                    ÁN</text>
+
+                  <rect x="290" y="0" width="136" height="34" rx="4" fill="#ECFEFF" stroke="#00B8DD"
+                    stroke-width="1.5" />
+                  <text x="358" y="21" text-anchor="middle" fill="#0095B6" font-size="12.5" font-weight="800">ĐÚNG /
+                    SAI</text>
+                </g>
+
+                <g transform="translate(890, 342) rotate(8.5)">
+                  <text x="0" y="22" fill="#64748B" font-size="17.5" font-weight="500">Toán &amp; Tin THPT (10–12) • Gia
+                    Sư AI 24/7 • Ma trận 2025</text>
+                </g>
+
+                <g transform="translate(680, 192) rotate(-8)">
+                  <circle cx="0" cy="0" r="26" fill="#FFFFFF" stroke="#00B8DD" stroke-width="1.6" />
+                  <circle cx="0" cy="0" r="21" fill="none" stroke="#00B8DD" stroke-width="0.8" stroke-dasharray="3 3" />
+                  <text x="0" y="6" text-anchor="middle" fill="#0095B6" font-size="18" font-weight="800">9+</text>
+                </g>
+              </g>
+
+              <polygon points="48,270 155,250 142,270 155,290" fill="#00B8DD" />
+              <!-- Aerodynamic Tow Line Streamer Linking Big Glider's Tail to Trailing Fleet -->
+              <line x1="1190" y1="270" x2="1550" y2="270" stroke="#00B8DD" stroke-width="2.5" stroke-dasharray="10 6" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- 4. Đội Hình 9 Máy Bay NHỎ Kéo Tiếp Liền Mạch (1-3-5 Escort Squadron + Kinetic Text) -->
+        <div class="swarm-stage flight-swarm-stage" id="swarmStageWrap">
+          <div class="swarm-convoy" id="swarmConvoy">
+            <div class="swarm-grid" id="swarmFormation">
+              <div class="swarm-col">
+                <div class="swarm-unit" data-slot="0"><svg>
+                    <use href="#origamiGliderUnit" />
+                  </svg></div>
+              </div>
+              <div class="swarm-col">
+                <div class="swarm-unit" data-slot="-1"><svg>
+                    <use href="#origamiGliderUnit" />
+                  </svg></div>
+                <div class="swarm-unit" data-slot="0"><svg>
+                    <use href="#origamiGliderUnit" />
+                  </svg></div>
+                <div class="swarm-unit" data-slot="1"><svg>
+                    <use href="#origamiGliderUnit" />
+                  </svg></div>
+              </div>
+              <div class="swarm-col">
+                <div class="swarm-unit" data-slot="-2"><svg>
+                    <use href="#origamiGliderUnit" />
+                  </svg></div>
+                <div class="swarm-unit" data-slot="-1"><svg>
+                    <use href="#origamiGliderUnit" />
+                  </svg></div>
+                <div class="swarm-unit" data-slot="0"><svg>
+                    <use href="#origamiGliderUnit" />
+                  </svg></div>
+                <div class="swarm-unit" data-slot="1"><svg>
+                    <use href="#origamiGliderUnit" />
+                  </svg></div>
+                <div class="swarm-unit" data-slot="2"><svg>
+                    <use href="#origamiGliderUnit" />
+                  </svg></div>
+              </div>
+            </div>
+
+            <h2 class="swarm-headline">
+              duy trì kỷ luật luyện đề — với <strong class="c-cyan">9 Tia sáng mỗi ngày</strong> &amp; <strong>Gia Sư AI
+                đồng hành 24/7.</strong>
+            </h2>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------------- -->
+    <!-- ACT IV: VERTICAL TOP-TO-BOTTOM FLIGHT PATH (4 REAL PRODUCT PILLARS) -->
+    <!-- ------------------------------------------------------------------- -->
+    <section id="cong-nghe" class="voyage-section">
+      <div class="container">
+        <div class="editorial-head reveal">
+          <span class="kicker">Hệ sinh thái khảo thí Toán &amp; Tin THPT</span>
+          <h2>4 tính năng nổi bật giúp bạn tăng&nbsp;điểm.</h2>
+        </div>
+
+        <div class="voyage-arena" id="voyageArena">
+          <div class="voyage-guide" aria-hidden="true">
+            <div class="voyage-guide__line"></div>
+            <div class="voyage-guide__wake" id="voyageWake"></div>
+
+            <div class="voyage-craft" id="verticalCraft">
+              <svg viewBox="0 0 124 340" fill="none">
+                <g transform="translate(0, 340) rotate(-90)">
+                  <use href="#origamiGliderUnit" width="340" height="124" />
+                </g>
+              </svg>
+            </div>
+          </div>
+
+          <div class="voyage-list">
+            <!-- Stage 01 -->
+            <article class="v-item v-item--left">
+              <div class="v-waypoint" aria-hidden="true">
+                <span class="v-waypoint__ring"></span>
+                <span class="v-waypoint__core">01</span>
+              </div>
+              <div class="v-beam" aria-hidden="true"></div>
+
+              <div class="v-card">
+                <div class="v-card__glow" aria-hidden="true"></div>
+                <div class="v-stage v-stage--matrix" aria-hidden="true">
+                  <div class="v-stage__top">
+                    <span class="v-chip v-chip--cyan">MA TRẬN BỘ 2025</span>
+                    <span class="v-stage__meta">Toán 12 • Tin 12</span>
+                  </div>
+                  <div class="v-matrix-bars">
+                    <div class="v-mbar">
+                      <div class="v-mbar__label"><span>Nhận biết</span><strong>40%</strong></div>
+                      <div class="v-mbar__track"><i style="--target-scale: 0.88;"></i></div>
+                    </div>
+                    <div class="v-mbar">
+                      <div class="v-mbar__label"><span>Thông hiểu</span><strong>30%</strong></div>
+                      <div class="v-mbar__track"><i style="--target-scale: 0.68;"></i></div>
+                    </div>
+                    <div class="v-mbar">
+                      <div class="v-mbar__label"><span>Vận dụng</span><strong>20%</strong></div>
+                      <div class="v-mbar__track"><i style="--target-scale: 0.48;"></i></div>
+                    </div>
+                    <div class="v-mbar">
+                      <div class="v-mbar__label"><span>Vận dụng cao</span><strong>10%</strong></div>
+                      <div class="v-mbar__track"><i class="is-gold" style="--target-scale: 0.28;"></i></div>
+                    </div>
+                  </div>
+                  <div class="v-stage__levels">
+                    <span class="is-on">Cơ bản</span>
+                    <span class="is-on">Trung bình</span>
+                    <span class="is-accent">Nâng cao ★</span>
+                  </div>
+                </div>
+
+                <div class="v-card__body">
+                  <span class="v-num">01 / Chuẩn cấu trúc Bộ GD&amp;ĐT</span>
+                  <h3>Sinh đề Ma trận 2025 tự động cho Toán &amp; Tin</h3>
+                  <p>
+                    Tự động khởi tạo đề thi sát từng chương học <strong>Lớp 10, 11, 12</strong> theo 4 mức nhận thức
+                    Bloom, phân tầng rõ rệt từ <strong>Cơ bản</strong>, <strong>Trung bình</strong> đến <strong>Nâng
+                      cao</strong>.
+                  </p>
+                </div>
+              </div>
+            </article>
+
+            <!-- Stage 02 -->
+            <article class="v-item v-item--right">
+              <div class="v-waypoint" aria-hidden="true">
+                <span class="v-waypoint__ring"></span>
+                <span class="v-waypoint__core">02</span>
+              </div>
+              <div class="v-beam" aria-hidden="true"></div>
+
+              <div class="v-card">
+                <div class="v-card__glow" aria-hidden="true"></div>
+                <div class="v-stage v-stage--formats" aria-hidden="true">
+                  <div class="v-stage__top">
+                    <span class="v-chip v-chip--cyan">KATEX &amp; PYTHON</span>
+                    <span class="v-stage__meta">3 Dạng Chuẩn Thi Thật</span>
+                  </div>
+                  <div class="v-code-split">
+                    <div class="v-snippet">
+                      <small>TOÁN 12 • TÍCH PHÂN</small>
+                      <code>∫₀¹ (3x² − 3)dx = −2</code>
+                    </div>
+                    <div class="v-snippet">
+                      <small>TIN 12 • THUẬT TOÁN</small>
+                      <code>dp[i] = max(dp[i-1], a[i])</code>
+                    </div>
+                  </div>
+                  <div class="v-format-pills">
+                    <div class="v-fpill v-fpill--1">
+                      <span>1 Đáp án</span>
+                      <b>C ✓</b>
+                    </div>
+                    <div class="v-fpill v-fpill--2">
+                      <span>Nhiều đáp án</span>
+                      <b>A, D ✓</b>
+                    </div>
+                    <div class="v-fpill v-fpill--3">
+                      <span>Đúng / Sai</span>
+                      <div class="v-tf-dots"><i>Đ</i><i class="is-f">S</i><i>Đ</i><i class="is-f">S</i></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="v-card__body">
+                  <span class="v-num">02 / Định dạng thi thực chiến</span>
+                  <h3>Trọn bộ 3 dạng Trắc nghiệm cấu trúc mới</h3>
+                  <p>
+                    Rèn phản xạ phòng thi với <strong>Trắc nghiệm 1 đáp án</strong>, <strong>Nhiều đáp án</strong> và
+                    <strong>Đúng / Sai</strong> — hiển thị mượt mà công thức <strong>KaTeX</strong> và đoạn mã thuật
+                    toán <strong>Python / C++</strong>.
+                  </p>
+                </div>
+              </div>
+            </article>
+
+            <!-- Stage 03 -->
+            <article class="v-item v-item--left">
+              <div class="v-waypoint" aria-hidden="true">
+                <span class="v-waypoint__ring"></span>
+                <span class="v-waypoint__core">03</span>
+              </div>
+              <div class="v-beam" aria-hidden="true"></div>
+
+              <div class="v-card">
+                <div class="v-card__glow" aria-hidden="true"></div>
+                <div class="v-stage v-stage--ai" aria-hidden="true">
+                  <div class="v-stage__top">
+                    <span class="v-chip v-chip--emerald">● GIA SƯ AI 24/7</span>
+                    <span class="v-stage__meta">Giải thích trong 1.2s</span>
+                  </div>
+                  <div class="v-casio-row">
+                    <span class="v-casio-tag">Mẹo Casio FX-880:</span>
+                    <kbd>MENU</kbd>
+                    <span>→</span>
+                    <kbd>9</kbd>
+                    <span>→</span>
+                    <kbd>2</kbd>
+                    <span>→</span>
+                    <kbd class="is-accent">=</kbd>
+                  </div>
+                  <div class="v-ai-steps">
+                    <div class="v-aistep">
+                      <span class="v-check">✓</span>
+                      <p>Đạo hàm <b>f'(x) = 3x² − 3 = 0</b> ⇒ nghiệm x = ±1</p>
+                    </div>
+                    <div class="v-aistep">
+                      <span class="v-check">✓</span>
+                      <p>Tối ưu vòng lặp Python từ <b>O(n²) → O(n)</b></p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="v-card__body">
+                  <span class="v-num">03 / Hỏi đáp tức thì sau nộp bài</span>
+                  <h3>Gia Sư AI 24/7 giải chi tiết &amp; mẹo Casio</h3>
+                  <p>
+                    Giải thích cặn kẽ từng bước biến đổi Toán học, gợi ý kỹ thuật bấm <strong>Casio</strong> tốc độ cao
+                    và phân tích luồng chạy code / độ phức tạp cho từng câu Tin học khó.
+                  </p>
+                </div>
+              </div>
+            </article>
+
+            <!-- Stage 04 (Connects naturally to Leaderboard & Forum!) -->
+            <article class="v-item v-item--right">
+              <div class="v-waypoint" aria-hidden="true">
+                <span class="v-waypoint__ring"></span>
+                <span class="v-waypoint__core">04</span>
+              </div>
+              <div class="v-beam" aria-hidden="true"></div>
+
+              <div class="v-card">
+                <div class="v-card__glow" aria-hidden="true"></div>
+                <div class="v-stage v-stage--rewards" aria-hidden="true">
+                  <div class="v-stage__top">
+                    <span class="v-chip v-chip--gold">ĐẠT 9.6 / 10 ĐIỂM</span>
+                    <span class="v-gem-pill">◆ +15 Ngọc Tri Thức</span>
+                  </div>
+                  <div class="v-podium">
+                    <div class="v-podium__col">
+                      <span class="v-podium__val">9.4đ</span>
+                      <div class="v-podium__bar" style="--bar-h: 58px;"><span>#2</span></div>
+                    </div>
+                    <div class="v-podium__col is-first">
+                      <span class="v-podium__val">9.8đ ★</span>
+                      <div class="v-podium__bar" style="--bar-h: 82px;"><span>#1 TOP TUẦN</span></div>
+                    </div>
+                    <div class="v-podium__col">
+                      <span class="v-podium__val">9.2đ</span>
+                      <div class="v-podium__bar" style="--bar-h: 46px;"><span>#3</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="v-card__body">
+                  <span class="v-num">04 / Cộng đồng &amp; Động lực học tập</span>
+                  <h3>Cày Ngọc Tri Thức &amp; Đua Top Bảng Xếp Hạng</h3>
+                  <p>
+                    Đạt từ <strong>8.5+ điểm</strong> nhận thưởng ngay <strong>+2 đến +20 Ngọc Tri Thức</strong> để đổi
+                    quà trong Schoolify Store, so tài trên Bảng xếp hạng tuần và thảo luận đề khó cùng cộng đồng.
+                  </p>
+                  <div class="v-card__links">
+                    <a href="/leaderboard" data-route-preview="Bảng xếp hạng">Xem Bảng xếp hạng →</a>
+                    <a href="/forum" data-route-preview="Diễn đàn">Vào Diễn đàn →</a>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------------- -->
+    <!-- ACT V: CHECKERBOARD BENTO STATS + #00B8DD SQUARE + 3D ISO GLIDER    -->
+    <!-- ------------------------------------------------------------------- -->
+    <section id="tac-dong" class="impact-sky">
+      <div class="impact-sky__bg">
+        <img src="https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=2000&q=85"
+          alt="Hiệu suất luyện thi Toán và Tin THPT cùng Schoolify" id="impactParallaxImg" loading="lazy" />
+        <div class="impact-sky__mask"></div>
+      </div>
+
+      <div class="container impact-sky__inner">
+        <div class="impact-head reveal">
+          <span class="kicker kicker--light">Hiệu suất luyện thi thực tế</span>
+          <h2>Học đúng trọng tâm<br />Nâng điểm vững vàng.</h2>
+        </div>
+
+        <!-- Corner-Kissing Architectural Bento Grid (3 Stats + Center #00B8DD Square!) -->
+        <div class="impact-bento reveal">
+          <div class="impact-stat impact-stat--tile">
+            <div class="impact-stat__val"><span class="count-up" data-target="9">0</span><sup>Tia sáng</sup></div>
+            <div class="impact-stat__line"></div>
+            <p>Cấp mới tự động lúc 00:00 mỗi ngày cho mọi học viên để duy trì thói quen giải đề Toán – Tin đều đặn.</p>
+          </div>
+
+          <div class="impact-stat impact-stat--center">
+            <div class="impact-stat__val"><span class="count-up" data-target="3">0</span><sup>Dạng đề</sup></div>
+            <div class="impact-stat__line"></div>
+            <p>Tích hợp trọn vẹn 1 đáp án, Nhiều đáp án và Đúng / Sai bám sát đề minh họa mới nhất.</p>
+          </div>
+
+          <div class="impact-stat impact-stat--tile">
+            <div class="impact-stat__val"><span class="count-up" data-target="24">0</span><sup>/ 7 AI</sup></div>
+            <div class="impact-stat__line"></div>
+            <p>Gia Sư AI luôn sẵn sàng phân tích lỗi sai, hướng dẫn Casio và gỡ rối thuật toán ngay lập tức.</p>
+          </div>
+
+          <!-- Row 2: Exact Corner-to-Corner Checkerboard Brand Cyan Square Tile -->
+          <div class="impact-bento__spacer" aria-hidden="true"></div>
+
+          <a href="#dung-thu" class="bento-cta-square">
+            <span class="bento-cta-square__title">
+              Khám phá<br />
+              Phòng Luyện Thi<br />
+              Chuẩn 2025
+            </span>
+            <svg class="bento-cta-square__arrow" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+              <path d="M8 28L28 8M28 8H11M28 8V25" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" />
+            </svg>
+          </a>
+
+          <div class="impact-bento__spacer" aria-hidden="true"></div>
+        </div>
+
+        <!-- Dynamic Horizon Origami Glider Flyby Stage (Clean Cinema: Obsidian + White + #00B8DD) -->
+        <div class="iso-flyby-stage" id="isoStage" aria-hidden="true">
+          <!-- High-Altitude Diagonal Slipstream Wind Lines -->
+          <div class="iso-wind-lines">
+            <span class="iso-wind-line iso-wind-line--1"></span>
+            <span class="iso-wind-line iso-wind-line--2"></span>
+            <span class="iso-wind-line iso-wind-line--3"></span>
+          </div>
+
+          <!-- Autonomous Express Origami Glider (Continuously Sweeps Across the Horizon!) -->
+          <div class="iso-express-track">
+            <div class="iso-express-runner" id="isoExpressRunner">
+              <svg viewBox="0 0 340 124" fill="none">
+                <use href="#origamiGliderUnit" />
+              </svg>
+              <span class="iso-express-runner__wake"></span>
+            </div>
+          </div>
+
+          <!-- Distant Parallax Wingman #1 (Upper Echelon) -->
+          <div class="iso-wingman iso-wingman--high" id="isoWingmanHigh">
+            <div class="iso-wingman__trail"></div>
+            <svg viewBox="0 0 340 124" fill="none">
+              <use href="#origamiGliderUnit" />
+            </svg>
+          </div>
+
+          <!-- Distant Parallax Wingman #2 (Lower Trail) -->
+          <div class="iso-wingman iso-wingman--low" id="isoWingmanLow">
+            <div class="iso-wingman__trail"></div>
+            <svg viewBox="0 0 340 124" fill="none">
+              <use href="#origamiGliderUnit" />
+            </svg>
+          </div>
+
+          <!-- Heroic Lead 3D Sculpted Origami Plane Sweeping Across the Horizon (FOREGROUND: z-index 10, KHÔNG BỊ ĐÈ!) -->
+          <div class="iso-glider-rig" id="isoGliderRig">
+            <svg viewBox="0 0 980 340" fill="none" xmlns="http://www.w3.org/2000/svg" class="iso-glider-svg">
+              <defs>
+                <linearGradient id="flybyUpperWing" x1="80" y1="225" x2="640" y2="55" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#FFFFFF" />
+                  <stop offset="72%" stop-color="#F1F5F9" />
+                  <stop offset="100%" stop-color="#CBD5E1" />
+                </linearGradient>
+                <linearGradient id="flybyLowerWing" x1="80" y1="235" x2="690" y2="185" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#FFFFFF" />
+                  <stop offset="65%" stop-color="#E2E8F0" />
+                  <stop offset="100%" stop-color="#94A3B8" />
+                </linearGradient>
+                <linearGradient id="flybyFoldCrease" x1="80" y1="230" x2="580" y2="145" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#CBD5E1" />
+                  <stop offset="100%" stop-color="#64748B" />
+                </linearGradient>
+                <linearGradient id="flybyContrailMain" x1="560" y1="145" x2="975" y2="22"
+                  gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#00E5FF" stop-opacity="0.95" />
+                  <stop offset="45%" stop-color="#00B8DD" stop-opacity="0.6" />
+                  <stop offset="100%" stop-color="#00B8DD" stop-opacity="0" />
+                </linearGradient>
+                <linearGradient id="flybyContrailSoft" x1="600" y1="185" x2="975" y2="78"
+                  gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.75" />
+                  <stop offset="50%" stop-color="#00B8DD" stop-opacity="0.3" />
+                  <stop offset="100%" stop-color="#00B8DD" stop-opacity="0" />
+                </linearGradient>
+              </defs>
+
+              <!-- Luminous Twin Wingtip Contrails Streaming Behind the Glider -->
+              <g class="iso-contrails">
+                <path d="M585 72 Q775 24 972 -6" stroke="url(#flybyContrailMain)" stroke-width="5"
+                  stroke-linecap="round" />
+                <path d="M652 196 Q820 150 976 102" stroke="url(#flybyContrailMain)" stroke-width="6"
+                  stroke-linecap="round" />
+                <path d="M542 146 L960 32" stroke="url(#flybyContrailSoft)" stroke-width="2.5" stroke-dasharray="14 18"
+                  stroke-linecap="round" />
+              </g>
+
+              <!-- Sonic Pulse Ring at Nose (Expands on Hover / Click!) -->
+              <ellipse class="iso-sonic-ring" cx="86" cy="232" rx="18" ry="32" transform="rotate(-16 86 232)"
+                stroke="#00E5FF" stroke-width="2.2" opacity="0" />
+
+              <!-- Crisp 3D Origami Paper Glider Pointing Down-Left Along the Horizon Slope -->
+              <g class="iso-plane-body">
+                <!-- Deep V-Fold Center Belly Shadow -->
+                <polygon points="82,232 546,144 584,178" fill="#475569" stroke="#0F172A" stroke-width="1.4"
+                  stroke-linejoin="round" />
+                <!-- Inner Folded Spine Facet -->
+                <polygon points="82,232 590,118 546,144" fill="url(#flybyFoldCrease)" stroke="#0F172A"
+                  stroke-width="1.4" stroke-linejoin="round" />
+                <!-- Far Port Swept Wing -->
+                <polygon points="82,232 602,56 590,118" fill="url(#flybyUpperWing)" stroke="#0F172A" stroke-width="1.6"
+                  stroke-linejoin="round" />
+                <!-- Foreground Wide Starboard Wing -->
+                <polygon points="82,232 546,144 672,196" fill="url(#flybyLowerWing)" stroke="#0F172A" stroke-width="1.7"
+                  stroke-linejoin="round" />
+
+                <!-- Subtle CAD Aerodynamic Crease Lines & Brand Cyan Wing Trim -->
+                <line x1="210" y1="206" x2="628" y2="178" stroke="#94A3B8" stroke-width="1.1" />
+                <line x1="235" y1="180" x2="588" y2="74" stroke="#CBD5E1" stroke-width="1.1" />
+                <line x1="82" y1="232" x2="672" y2="196" stroke="#00B8DD" stroke-width="2.8" stroke-linecap="round" />
+                <circle cx="82" cy="232" r="4.5" fill="#00E5FF" />
+              </g>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Clean Architectural Diagonal Horizon Slicing Dark -> Next Section (CargoKite Horizon Transition) -->
+      <svg class="impact-horizon-cut" viewBox="0 0 1440 240" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,240 L1440,46 L1440,240 Z" />
+      </svg>
+    </section>
+
+    <!-- ------------------------------------------------------------------- -->
+    <!-- INTERACTIVE MINI DEMO: TRẮC NGHIỆM ĐÚNG/SAI 2025 + GIA SƯ AI 24/7    -->
+    <!-- ------------------------------------------------------------------- -->
+    <section id="dung-thu" class="demo-section">
+      <div class="container">
+        <div class="demo-top reveal">
+          <div>
+            <span class="kicker">Trải nghiệm trực tiếp</span>
+            <h2>Thi thử Đúng / Sai &amp; AI chấm tức&nbsp;thì</h2>
+            <p class="demo-top__sub">
+              Chọn <strong>Đúng</strong> hoặc <strong>Sai</strong> cho 4 ý bên dưới để xem cách tính điểm bậc thang và
+              nhận lời giải từ AI.
+            </p>
+          </div>
+
+          <div class="demo-tabs" role="tablist" aria-label="Chọn môn làm thử">
+            <button type="button" class="demo-tab is-active" data-demo-subj="math">
+              Toán 12
+            </button>
+            <button type="button" class="demo-tab" data-demo-subj="cs">
+              Tin học 12
+            </button>
+          </div>
+        </div>
+
+        <div class="demo-workspace reveal">
+          <!-- Left: Question Stem + 4 True/False Sub-statements -->
+          <div class="demo-card" id="demoCardMain">
+            <!-- Cybernetic Laser Scanline (Sweeps across question on grading) -->
+            <div class="demo-scanline" id="demoScanline" aria-hidden="true"></div>
+            <div class="demo-card__meta">
+              <span class="t-pill t-pill--mid" id="demoFormatBadge">Dạng thức II • Đúng / Sai</span>
+              <span class="demo-scale-hint">1 ý: 0.1đ • 2 ý: 0.25đ • 3 ý: 0.5đ • 4 ý: 1.0đ</span>
+            </div>
+
+            <div class="demo-stem" id="demoStem">
+              Cho hàm số <strong>f(x) = x³ − 3x + 2</strong> xác định và có đạo hàm trên ℝ. Xét tính
+              <strong>Đúng</strong> hoặc <strong>Sai</strong> của các mệnh đề sau:
+            </div>
+
+            <pre class="demo-code" id="demoCodeBlock" hidden><code>def tinh_tong(arr):
+    s = 0
+    for x in arr:
+        if x % 2 == 0:
+            s += x
+    return s
+
+print(tinh_tong([2, 5, 8, 3, 6]))</code></pre>
+
+            <div class="demo-rows" id="demoRows">
+              <!-- Populated & wired cleanly by app.js with accessible HTML fallback -->
+            </div>
+
+            <div class="demo-actions">
+              <button type="button" class="demo-submit-btn" id="demoSubmitBtn">
+                Chấm điểm &amp; Hỏi Gia Sư AI →
+              </button>
+              <button type="button" class="demo-ghost-btn" id="demoQuickFillBtn">
+                Điền nhanh thử nghiệm
+              </button>
+              <button type="button" class="demo-ghost-btn" id="demoResetBtn" hidden>
+                ↺ Làm lại câu này
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Live Grading Result + Gia Sư AI 24/7 Step-by-Step Tutor -->
+          <aside class="demo-ai" id="demoAiPanel">
+            <div class="demo-ai__head">
+              <div class="demo-ai__badge">
+                <span class="ai-pulse-dot"></span>
+                <strong>Gia Sư AI 24/7</strong>
+              </div>
+              <span class="demo-ai__status" id="demoScorePill">Chờ nộp bài</span>
+            </div>
+
+            <div id="demoAiIdle" class="demo-ai__idle">
+              <h3>Sẵn sàng phân tích bài làm của bạn</h3>
+              <p>
+                Sau khi bạn chọn <strong>Đúng / Sai</strong> cho 4 ý <em>a, b, c, d</em> (hoặc bấm <strong>Điền nhanh
+                  thử nghiệm</strong>), Gia Sư AI sẽ:
+              </p>
+              <ul>
+                <li>Tính điểm chính xác theo thang bậc thang mới nhất của Bộ GD&amp;ĐT.</li>
+                <li>Chỉ rõ từng mệnh đề bạn làm đúng hoặc mắc bẫy thường gặp.</li>
+                <li>Gợi ý kỹ thuật bấm nhanh <strong>Casio fx-580VN X</strong> hoặc phân tích độ phức tạp thuật toán
+                  <strong>O(n)</strong>.
+                </li>
+              </ul>
+            </div>
+
+            <!-- Active AI Neural Scanning Telemetry HUD -->
+            <div id="demoAiScanning" class="demo-ai__scanning" hidden aria-live="polite">
+              <div class="ai-scan-hud">
+                <div class="ai-scan-radar">
+                  <div class="ai-scan-radar__ring"></div>
+                  <div class="ai-scan-radar__core">
+                    <svg viewBox="0 0 24 24" fill="none" class="ai-scan-icon" aria-hidden="true">
+                      <path
+                        d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+                        fill="url(#aiPulseGrad)" />
+                      <defs>
+                        <linearGradient id="aiPulseGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                          <stop stop-color="#00E5FF" />
+                          <stop offset="1" stop-color="#00B8DD" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
+                </div>
+                <div class="ai-scan-info">
+                  <span class="ai-scan-status-kicker">Gia Sư AI Neural Core</span>
+                  <h4 class="ai-scan-title">Đang quét &amp; đối soát ma trận đề...</h4>
+                </div>
+              </div>
+
+              <div class="ai-scan-pipeline">
+                <div class="ai-scan-step is-active" id="scanStep1">
+                  <span class="ai-step-dot"></span>
+                  <span class="ai-step-txt">Đối chiếu đáp án 4 mệnh đề a, b, c, d</span>
+                </div>
+                <div class="ai-scan-step" id="scanStep2">
+                  <span class="ai-step-dot"></span>
+                  <span class="ai-step-txt">Tính điểm bậc thang 2025: 0.1đ &rarr; 1.0đ</span>
+                </div>
+                <div class="ai-scan-step" id="scanStep3">
+                  <span class="ai-step-dot"></span>
+                  <span class="ai-step-txt">Trích xuất lời giải Casio / Thuật toán</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="demoAiResult" class="demo-ai__result" hidden>
+              <div class="demo-score-box">
+                <div>
+                  <span>Điểm câu Đúng / Sai đạt được</span>
+                  <strong id="demoScoreValue">1.00 / 1.0 điểm</strong>
+                </div>
+                <span class="demo-gem-bonus" id="demoGemBonus">+2 Ngọc Tri Thức</span>
+              </div>
+
+              <div class="demo-explain-list" id="demoExplainList"></div>
+
+              <div class="demo-tip-box" id="demoTipBox"></div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------------- -->
+    <!-- ACT VI: TOÁN & TIN THPT EXAM CATALOG (LỚP 12 • LỚP 11 • LỚP 10)     -->
+    <!-- ------------------------------------------------------------------- -->
+    <section id="kho-de" class="catalog-section">
+      <div class="container">
+        <div class="catalog-top reveal">
+          <div>
+            <span class="kicker">Phòng luyện đề Toán &amp; Tin THPT</span>
+            <h2>Chọn khối lớp &amp; mức độ thử&nbsp;sức</h2>
+          </div>
+          <div class="grade-tabs" role="tablist" aria-label="Chọn khối lớp">
+            <button type="button" class="grade-tab is-active" data-grade="lop12">Lớp 12 &amp; Tốt nghiệp</button>
+            <button type="button" class="grade-tab" data-grade="lop11">Lớp 11</button>
+            <button type="button" class="grade-tab" data-grade="lop10">Lớp 10</button>
+          </div>
+        </div>
+
+        <div class="catalog-cards reveal" id="catalogCardsGrid">
+          <!-- Mức độ 1: Cơ Bản -->
+          <article class="p-card c-card--basic tilt-card">
+            <div class="p-card__top">
+              <span class="p-badge" id="exBadge1">Mức Cơ Bản</span>
+              <h3 id="exTitle1">Toán 12: Khảo sát hàm số</h3>
+              <p class="p-desc" id="exMeta1">30 câu • 45 phút rèn chắc nền tảng, nắm trọn 7–8 điểm.</p>
+              <div class="p-price">
+                <strong id="exCost1">3</strong><span>Tia Sáng / đề</span>
+              </div>
+            </div>
+
+            <ul class="p-list" id="exList1">
+              <li>
+                <svg>
+                  <use href="#iconCheck" />
+                </svg>
+                <span>Chuẩn cấu trúc đề Bộ GD&amp;ĐT 2025</span>
+              </li>
+              <li>
+                <svg>
+                  <use href="#iconCheck" />
+                </svg>
+                <span>Đầy đủ 3 dạng thức trắc nghiệm thực chiến</span>
+              </li>
+              <li>
+                <svg>
+                  <use href="#iconCheck" />
+                </svg>
+                <span>Gia Sư AI giải chi tiết &amp; sửa lỗi tức thì</span>
+              </li>
+            </ul>
+
+            <a href="#kho-de" class="p-btn p-btn--outline">
+              Vào làm đề ngay →
+            </a>
+          </article>
+
+          <!-- Mức độ 2: Trung Bình (Featured Brand Cyan) -->
+          <article class="p-card p-card--featured tilt-card">
+            <div class="p-card__top">
+              <span class="p-badge p-badge--cyan" id="exBadge2">Phổ biến • Mức Trung Bình</span>
+              <h3 id="exTitle2">Tin học 12: Thuật toán &amp; CSDL</h3>
+              <p class="p-desc" id="exMeta2">40 câu • 50 phút thực chiến trắc nghiệm Python &amp; SQL.</p>
+              <div class="p-price">
+                <strong id="exCost2">4</strong><span>Tia Sáng / đề</span>
+              </div>
+            </div>
+
+            <ul class="p-list" id="exList2">
+              <li>
+                <svg>
+                  <use href="#iconCheck" />
+                </svg>
+                <span>Bám sát ma trận thi tốt nghiệp THPT 2025</span>
+              </li>
+              <li>
+                <svg>
+                  <use href="#iconCheck" />
+                </svg>
+                <span>Luyện kỹ năng đọc luồng mã và truy vấn CSDL</span>
+              </li>
+              <li>
+                <svg>
+                  <use href="#iconCheck" />
+                </svg>
+                <span>Thưởng nóng <strong>+8 Ngọc Tri Thức</strong> khi đạt &ge; 8.5đ</span>
+              </li>
+            </ul>
+
+            <a href="#kho-de" class="p-btn p-btn--solid">
+              Vào làm đề ngay →
+            </a>
+          </article>
+
+          <!-- Mức độ 3: Nâng Cao (Signature Primary Brand Cyan Gradient) -->
+          <article class="p-card p-card--vip tilt-card">
+            <div class="p-card__top">
+              <span class="p-badge p-badge--dark" id="exBadge3">Mục tiêu 9+ • Vận dụng cao</span>
+              <h3 id="exTitle3">Toán &amp; Tin 12: Vận dụng cao</h3>
+              <p class="p-desc" id="exMeta3">45 câu • 90 phút thử sức đề phân loại ĐGNL &amp; học sinh giỏi.</p>
+              <div class="p-price">
+                <strong id="exCost3">9</strong><span>Tia Sáng / đề</span>
+              </div>
+            </div>
+
+            <ul class="p-list" id="exList3">
+              <li>
+                <svg>
+                  <use href="#iconCheck" />
+                </svg>
+                <span>Chuyên đề Oxyz nâng cao &amp; Tư duy thuật toán</span>
+              </li>
+              <li>
+                <svg>
+                  <use href="#iconCheck" />
+                </svg>
+                <span>AI Hướng dẫn bấm Casio nhanh &amp; tối ưu mã</span>
+              </li>
+              <li>
+                <svg>
+                  <use href="#iconCheck" />
+                </svg>
+                <span>Săn thưởng lớn <strong>+20 Ngọc Tri Thức</strong> khi đạt 8.5+</span>
+              </li>
+            </ul>
+
+            <a href="#kho-de" class="p-btn p-btn--vip">
+              Thử sức câu 9+ ngay →
+            </a>
+          </article>
+        </div>
+
+        <!-- --------------------------------------------------------------- -->
+        <!-- BẢNG VÀNG CAO THỦ TUẦN — PURE BRAND CYAN & WHITE PODIUM         -->
+        <!-- --------------------------------------------------------------- -->
+        <div id="bang-vang" class="champ-arena reveal">
+          <div class="champ-arena__bg" aria-hidden="true"></div>
+
+          <div class="champ-head">
+            <div>
+              <span class="kicker">Đường đua học thuật sôi động mỗi tuần</span>
+              <h3>Bảng Vàng Cao Thủ Tuần</h3>
+            </div>
+
+            <div class="champ-tabs" id="champTabs" role="tablist" aria-label="Lọc bảng vàng theo môn">
+              <button type="button" class="champ-tab is-active" data-board="all">Tổng hợp</button>
+              <button type="button" class="champ-tab" data-board="math">Cao thủ Toán</button>
+              <button type="button" class="champ-tab" data-board="cs">Cao thủ Tin</button>
+            </div>
+          </div>
+
+          <div class="champ-podium champ-podium--impressive" id="champPodium">
+            <!-- Rank #2: Á Quân (Left 3D Glider - Perfectly Centered) -->
+            <article class="glider-flight-podium glider-flight-podium--2">
+              <!-- Avatar Stage with Rank #2 Medal Badge -->
+              <div class="aero-avatar-stage">
+                <div class="aero-avatar podium-avatar podium-avatar--sub" id="chAvatar2">
+                  KL
+                </div>
+                <!-- Clean Circular Rank Medal Badge Under Avatar -->
+                <div class="aero-rank-badge aero-rank-badge--2" aria-label="Hạng 2">2</div>
+              </div>
+
+              <!-- Minimal Student Info: Perfectly Centered on Axis -->
+              <div class="glider-pilot-info">
+                <strong class="pilot-name" id="chName2">Trần Khánh Linh</strong>
+                <span class="pilot-school" id="chSchool2">THPT Lê Quý Đôn</span>
+                <div class="pilot-capsule">
+                  <span class="pilot-score" id="chScore2">9.60đ</span>
+                  <span class="pilot-dot">•</span>
+                  <span class="pilot-gems" id="chGems2">+195 Ngọc</span>
+                  <span class="pilot-streak-hide" id="chStreak2" style="display:none;">12 đề tuần này</span>
+                </div>
+              </div>
+
+              <!-- Impressive 3D Cyan Glider (NO numbers on plane!) -->
+              <div class="aero-3d-glider-wrap" aria-hidden="true">
+                <svg class="aero-3d-glider-svg" viewBox="0 0 300 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="glider3dLight_2" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#FFFFFF" />
+                      <stop offset="60%" stop-color="#F8FAFC" />
+                      <stop offset="100%" stop-color="#E2E8F0" />
+                    </linearGradient>
+
+                    <linearGradient id="glider3dShade_2" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#F1F5F9" />
+                      <stop offset="50%" stop-color="#CBD5E1" />
+                      <stop offset="100%" stop-color="#94A3B8" />
+                    </linearGradient>
+
+                    <linearGradient id="glider3dKeel_2" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stop-color="#64748B" stop-opacity="0.8" />
+                      <stop offset="100%" stop-color="#1E293B" stop-opacity="0.95" />
+                    </linearGradient>
+
+                    <linearGradient id="vorticesGrad_2" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stop-color="#00B8DD" stop-opacity="0.9" />
+                      <stop offset="45%" stop-color="#38BDF8" stop-opacity="0.4" />
+                      <stop offset="100%" stop-color="#00B8DD" stop-opacity="0" />
+                    </linearGradient>
+
+                    <filter id="glider3dShadow_2" x="-30%" y="-20%" width="160%" height="160%">
+                      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="rgba(15, 23, 42, 0.16)" />
+                      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#00B8DD" flood-opacity="0.22" />
+                    </filter>
+
+                    <filter id="edgeGlow_2" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#00B8DD" flood-opacity="0.6" />
+                    </filter>
+                  </defs>
+
+                  <!-- Luminous Twin Wingtip Vortices -->
+                  <g class="glider-vortices" opacity="0.9">
+                    <path d="M 28 155 Q 16 195 55 220 T 110 235" stroke="url(#vorticesGrad_2)" stroke-width="2.5"
+                      stroke-linecap="round" fill="none" opacity="0.8" />
+                    <path d="M 272 155 Q 284 195 245 220 T 190 235" stroke="url(#vorticesGrad_2)" stroke-width="2.5"
+                      stroke-linecap="round" fill="none" opacity="0.8" />
+                    <ellipse cx="150" cy="226" rx="60" ry="10" fill="url(#vorticesGrad_2)" opacity="0.5" />
+                  </g>
+
+                  <!-- 3D Impressive Dihedral Origami Glider (NO numbers on the plane! Perfectly upright & centered) -->
+                  <g filter="url(#glider3dShadow_2)">
+                    <!-- Under-Belly Depth Shadow Crease -->
+                    <polygon points="150,24 30,158 108,174 150,202 192,174 270,158" fill="rgba(15, 23, 42, 0.45)" />
+
+                    <!-- Left Main Swept Wing -->
+                    <polygon points="150,24 24,155 106,170" fill="url(#glider3dLight_2)" stroke="rgba(255,255,255,0.9)"
+                      stroke-width="1.2" stroke-linejoin="round" />
+
+                    <!-- Right Main Swept Wing -->
+                    <polygon points="150,24 194,170 276,155" fill="url(#glider3dShade_2)" stroke="rgba(255,255,255,0.7)"
+                      stroke-width="1.2" stroke-linejoin="round" />
+
+                    <!-- Left Inner Folded Fuselage Facet -->
+                    <polygon points="150,24 106,170 150,196" fill="#F8FAFC" stroke="rgba(15, 23, 42, 0.15)"
+                      stroke-width="1" stroke-linejoin="round" />
+
+                    <!-- Right Inner Folded Fuselage Facet -->
+                    <polygon points="150,24 150,196 194,170" fill="#E2E8F0" stroke="rgba(15, 23, 42, 0.2)"
+                      stroke-width="1" stroke-linejoin="round" />
+
+                    <!-- Center Keel Underbody Fin -->
+                    <polygon points="150,24 150,196 148,206 148,45" fill="url(#glider3dKeel_2)" />
+
+                    <!-- Razor-Sharp Leading Edge Laser Line -->
+                    <line x1="150" y1="24" x2="24" y2="155" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"
+                      filter="url(#edgeGlow_2)" />
+                    <line x1="150" y1="24" x2="276" y2="155" stroke="#38BDF8" stroke-width="1.8" stroke-linecap="round"
+                      stroke-opacity="0.9" />
+
+                    <!-- Center Crease High-Gloss Spine -->
+                    <line x1="150" y1="24" x2="150" y2="196" stroke="#FFFFFF" stroke-width="2.2"
+                      stroke-linecap="round" />
+
+                    <!-- Nose Tip Accent -->
+                    <polygon points="150,24 142,54 150,60 158,54" fill="#00B8DD" />
+                  </g>
+                </svg>
+              </div>
+            </article>
+
+            <!-- Rank #1: Quán Quân (Center Soaring Golden 3D Glider - Elevated High) -->
+            <article class="glider-flight-podium glider-flight-podium--1">
+              <!-- Avatar Stage with Crown & Rank #1 Medal Badge -->
+              <div class="aero-avatar-stage">
+                <div class="aero-rank-crown" aria-hidden="true">
+                  <svg viewBox="0 0 36 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M 4 22 L 3 8 L 11 15 L 18 3 L 25 15 L 33 8 L 32 22 Z" fill="url(#crownGoldRank)"
+                      stroke="#D97706" stroke-width="1.2" stroke-linejoin="round" />
+                    <rect x="3" y="21" width="30" height="3.5" rx="1.75" fill="#B45309" />
+                    <circle cx="18" cy="3" r="2.2" fill="#EF4444" />
+                    <circle cx="3" cy="8" r="1.8" fill="#3B82F6" />
+                    <circle cx="33" cy="8" r="1.8" fill="#3B82F6" />
+                    <defs>
+                      <linearGradient id="crownGoldRank" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#FDE68A" />
+                        <stop offset="100%" stop-color="#F59E0B" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </div>
+                <div class="aero-avatar podium-avatar podium-avatar--lead" id="chAvatar1">
+                  MK
+                </div>
+                <!-- Clean Circular Rank Medal Badge Under Avatar -->
+                <div class="aero-rank-badge aero-rank-badge--1" aria-label="Hạng 1">1</div>
+              </div>
+
+              <!-- Minimal Student Info: Perfectly Centered on Axis -->
+              <div class="glider-pilot-info glider-pilot-info--lead">
+                <strong class="pilot-name pilot-name--lead" id="chName1">Nguyễn Minh Khôi</strong>
+                <span class="pilot-school pilot-school--lead" id="chSchool1">Chuyên KHTN</span>
+                <div class="pilot-capsule pilot-capsule--lead">
+                  <span class="pilot-score" id="chScore1">9.85đ</span>
+                  <span class="pilot-dot">•</span>
+                  <span class="pilot-gems" id="chGems1">+240 Ngọc</span>
+                  <span class="pilot-streak-hide" id="chStreak1" style="display:none;">14 đề tuần này</span>
+                </div>
+              </div>
+
+              <!-- Impressive 3D Golden Glider (NO numbers on plane! Perfectly upright & centered) -->
+              <div class="aero-3d-glider-wrap" aria-hidden="true">
+                <svg class="aero-3d-glider-svg" viewBox="0 0 300 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="glider3dLight_1" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#FFFFFF" />
+                      <stop offset="60%" stop-color="#F8FAFC" />
+                      <stop offset="100%" stop-color="#E2E8F0" />
+                    </linearGradient>
+
+                    <linearGradient id="glider3dShade_1" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#F1F5F9" />
+                      <stop offset="50%" stop-color="#CBD5E1" />
+                      <stop offset="100%" stop-color="#94A3B8" />
+                    </linearGradient>
+
+                    <linearGradient id="glider3dKeel_1" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stop-color="#64748B" stop-opacity="0.8" />
+                      <stop offset="100%" stop-color="#1E293B" stop-opacity="0.95" />
+                    </linearGradient>
+
+                    <linearGradient id="vorticesGrad_1" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.9" />
+                      <stop offset="45%" stop-color="#FEF3C7" stop-opacity="0.4" />
+                      <stop offset="100%" stop-color="#F59E0B" stop-opacity="0" />
+                    </linearGradient>
+
+                    <filter id="glider3dShadow_1" x="-30%" y="-20%" width="160%" height="160%">
+                      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="rgba(15, 23, 42, 0.16)" />
+                      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#F59E0B" flood-opacity="0.22" />
+                    </filter>
+
+                    <filter id="edgeGlow_1" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#F59E0B" flood-opacity="0.6" />
+                    </filter>
+                  </defs>
+
+                  <!-- Luminous Twin Wingtip Vortices -->
+                  <g class="glider-vortices" opacity="0.9">
+                    <path d="M 28 155 Q 16 195 55 220 T 110 235" stroke="url(#vorticesGrad_1)" stroke-width="2.5"
+                      stroke-linecap="round" fill="none" opacity="0.8" />
+                    <path d="M 272 155 Q 284 195 245 220 T 190 235" stroke="url(#vorticesGrad_1)" stroke-width="2.5"
+                      stroke-linecap="round" fill="none" opacity="0.8" />
+                    <ellipse cx="150" cy="226" rx="60" ry="10" fill="url(#vorticesGrad_1)" opacity="0.5" />
+                  </g>
+
+                  <!-- 3D Impressive Dihedral Origami Glider (NO numbers on the plane!) -->
+                  <g filter="url(#glider3dShadow_1)">
+                    <!-- Under-Belly Depth Shadow Crease -->
+                    <polygon points="150,24 30,158 108,174 150,202 192,174 270,158" fill="rgba(15, 23, 42, 0.45)" />
+
+                    <!-- Left Main Swept Wing -->
+                    <polygon points="150,24 24,155 106,170" fill="url(#glider3dLight_1)" stroke="rgba(255,255,255,0.9)"
+                      stroke-width="1.2" stroke-linejoin="round" />
+
+                    <!-- Right Main Swept Wing -->
+                    <polygon points="150,24 194,170 276,155" fill="url(#glider3dShade_1)" stroke="rgba(255,255,255,0.7)"
+                      stroke-width="1.2" stroke-linejoin="round" />
+
+                    <!-- Left Inner Folded Fuselage Facet -->
+                    <polygon points="150,24 106,170 150,196" fill="#F8FAFC" stroke="rgba(15, 23, 42, 0.15)"
+                      stroke-width="1" stroke-linejoin="round" />
+
+                    <!-- Right Inner Folded Fuselage Facet -->
+                    <polygon points="150,24 150,196 194,170" fill="#E2E8F0" stroke="rgba(15, 23, 42, 0.2)"
+                      stroke-width="1" stroke-linejoin="round" />
+
+                    <!-- Center Keel Underbody Fin -->
+                    <polygon points="150,24 150,196 148,206 148,45" fill="url(#glider3dKeel_1)" />
+
+                    <!-- Razor-Sharp Leading Edge Laser Line -->
+                    <line x1="150" y1="24" x2="24" y2="155" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"
+                      filter="url(#edgeGlow_1)" />
+                    <line x1="150" y1="24" x2="276" y2="155" stroke="#FEF3C7" stroke-width="1.8" stroke-linecap="round"
+                      stroke-opacity="0.9" />
+
+                    <!-- Center Crease High-Gloss Spine -->
+                    <line x1="150" y1="24" x2="150" y2="196" stroke="#FFFFFF" stroke-width="2.2"
+                      stroke-linecap="round" />
+
+                    <!-- Nose Tip Accent -->
+                    <polygon points="150,24 142,54 150,60 158,54" fill="#F59E0B" />
+                  </g>
+                </svg>
+              </div>
+            </article>
+
+            <!-- Rank #3: Quý Quân (Right 3D Glider - Perfectly Centered) -->
+            <article class="glider-flight-podium glider-flight-podium--3">
+              <!-- Avatar Stage with Rank #3 Medal Badge -->
+              <div class="aero-avatar-stage">
+                <div class="aero-avatar podium-avatar podium-avatar--muted" id="chAvatar3">
+                  HN
+                </div>
+                <!-- Clean Circular Rank Medal Badge Under Avatar -->
+                <div class="aero-rank-badge aero-rank-badge--3" aria-label="Hạng 3">3</div>
+              </div>
+
+              <!-- Minimal Student Info: Perfectly Centered on Axis -->
+              <div class="glider-pilot-info">
+                <strong class="pilot-name" id="chName3">Lê Hoàng Nam</strong>
+                <span class="pilot-school" id="chSchool3">Phan Châu Trinh</span>
+                <div class="pilot-capsule">
+                  <span class="pilot-score" id="chScore3">9.50đ</span>
+                  <span class="pilot-dot">•</span>
+                  <span class="pilot-gems" id="chGems3">+170 Ngọc</span>
+                  <span class="pilot-streak-hide" id="chStreak3" style="display:none;">11 đề tuần này</span>
+                </div>
+              </div>
+
+              <!-- Impressive 3D Silver Glider (NO numbers on plane! Perfectly upright & centered) -->
+              <div class="aero-3d-glider-wrap" aria-hidden="true">
+                <svg class="aero-3d-glider-svg" viewBox="0 0 300 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="glider3dLight_3" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#FFFFFF" />
+                      <stop offset="60%" stop-color="#F8FAFC" />
+                      <stop offset="100%" stop-color="#E2E8F0" />
+                    </linearGradient>
+
+                    <linearGradient id="glider3dShade_3" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#F1F5F9" />
+                      <stop offset="50%" stop-color="#CBD5E1" />
+                      <stop offset="100%" stop-color="#94A3B8" />
+                    </linearGradient>
+
+                    <linearGradient id="glider3dKeel_3" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stop-color="#64748B" stop-opacity="0.8" />
+                      <stop offset="100%" stop-color="#1E293B" stop-opacity="0.95" />
+                    </linearGradient>
+
+                    <linearGradient id="vorticesGrad_3" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stop-color="#94A3B8" stop-opacity="0.9" />
+                      <stop offset="45%" stop-color="#F1F5F9" stop-opacity="0.4" />
+                      <stop offset="100%" stop-color="#94A3B8" stop-opacity="0" />
+                    </linearGradient>
+
+                    <filter id="glider3dShadow_3" x="-30%" y="-20%" width="160%" height="160%">
+                      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="rgba(15, 23, 42, 0.16)" />
+                      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#94A3B8" flood-opacity="0.22" />
+                    </filter>
+
+                    <filter id="edgeGlow_3" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#94A3B8" flood-opacity="0.6" />
+                    </filter>
+                  </defs>
+
+                  <!-- Luminous Twin Wingtip Vortices -->
+                  <g class="glider-vortices" opacity="0.9">
+                    <path d="M 28 155 Q 16 195 55 220 T 110 235" stroke="url(#vorticesGrad_3)" stroke-width="2.5"
+                      stroke-linecap="round" fill="none" opacity="0.8" />
+                    <path d="M 272 155 Q 284 195 245 220 T 190 235" stroke="url(#vorticesGrad_3)" stroke-width="2.5"
+                      stroke-linecap="round" fill="none" opacity="0.8" />
+                    <ellipse cx="150" cy="226" rx="60" ry="10" fill="url(#vorticesGrad_3)" opacity="0.5" />
+                  </g>
+
+                  <!-- 3D Impressive Dihedral Origami Glider (NO numbers on the plane! Perfectly upright & centered) -->
+                  <g filter="url(#glider3dShadow_3)">
+                    <!-- Under-Belly Depth Shadow Crease -->
+                    <polygon points="150,24 30,158 108,174 150,202 192,174 270,158" fill="rgba(15, 23, 42, 0.45)" />
+
+                    <!-- Left Main Swept Wing -->
+                    <polygon points="150,24 24,155 106,170" fill="url(#glider3dLight_3)" stroke="rgba(255,255,255,0.9)"
+                      stroke-width="1.2" stroke-linejoin="round" />
+
+                    <!-- Right Main Swept Wing -->
+                    <polygon points="150,24 194,170 276,155" fill="url(#glider3dShade_3)" stroke="rgba(255,255,255,0.7)"
+                      stroke-width="1.2" stroke-linejoin="round" />
+
+                    <!-- Left Inner Folded Fuselage Facet -->
+                    <polygon points="150,24 106,170 150,196" fill="#F8FAFC" stroke="rgba(15, 23, 42, 0.15)"
+                      stroke-width="1" stroke-linejoin="round" />
+
+                    <!-- Right Inner Folded Fuselage Facet -->
+                    <polygon points="150,24 150,196 194,170" fill="#E2E8F0" stroke="rgba(15, 23, 42, 0.2)"
+                      stroke-width="1" stroke-linejoin="round" />
+
+                    <!-- Center Keel Underbody Fin -->
+                    <polygon points="150,24 150,196 148,206 148,45" fill="url(#glider3dKeel_3)" />
+
+                    <!-- Razor-Sharp Leading Edge Laser Line -->
+                    <line x1="150" y1="24" x2="24" y2="155" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"
+                      filter="url(#edgeGlow_3)" />
+                    <line x1="150" y1="24" x2="276" y2="155" stroke="#F1F5F9" stroke-width="1.8" stroke-linecap="round"
+                      stroke-opacity="0.9" />
+
+                    <!-- Center Crease High-Gloss Spine -->
+                    <line x1="150" y1="24" x2="150" y2="196" stroke="#FFFFFF" stroke-width="2.2"
+                      stroke-linecap="round" />
+
+                    <!-- Nose Tip Accent -->
+                    <polygon points="150,24 142,54 150,60 158,54" fill="#94A3B8" />
+                  </g>
+                </svg>
+              </div>
+            </article>
+          </div>
+
+          <!-- IN-PAGE LIVE LEADERBOARD (BẢNG XẾP HẠNG ĐẦY ĐỦ TRỰC TIẾP TRÊN TRANG CHỦ) -->
+          <div class="champ-board-expand" id="champBoardExpand">
+            <!-- Student Personal Standing Banner -->
+            <div class="champ-user-banner">
+              <div class="champ-user-left">
+                <div class="champ-user-avatar">HV</div>
+                <div class="champ-user-info">
+                  <div class="champ-user-title">
+                    <strong>Vị trí của bạn tuần này:</strong>
+                    <span class="champ-user-rank-tag">HẠNG #42 TOÀN QUỐC</span>
+                  </div>
+                  <span class="champ-user-sub">Hoàn thành 5 đề tuần này • Điểm TB: <strong>8.75 / 10đ</strong></span>
+                </div>
+              </div>
+              <div class="champ-user-right">
+                <span class="champ-user-target">Cần thêm <strong>+0.75đ</strong> để lọt Top 20</span>
+                <a href="#kho-de" class="champ-user-cta">Luyện đề bứt phá →</a>
+              </div>
+            </div>
+
+            <!-- Top 4 - 10 Ranking Table -->
+            <div class="champ-table-wrap">
+              <table class="champ-table">
+                <thead>
+                  <tr>
+                    <th style="width: 75px;">Hạng</th>
+                    <th>Học viên &amp; Trường THPT</th>
+                    <th style="text-align: center;">Số đề tuần</th>
+                    <th style="text-align: right;">Điểm TB</th>
+                    <th style="text-align: right;">Thưởng Ngọc</th>
+                  </tr>
+                </thead>
+                <tbody id="champTableBody">
+                  <!-- Rendered dynamically by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Bottom Action: Toggle In-Page View -->
+          <div class="champ-foot">
+            <button type="button" class="champ-all-link" id="toggleFullBoardBtn" aria-expanded="true">
+              <span id="toggleBoardLabel">Thu gọn bảng xếp hạng ▲</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- --------------------------------------------------------------- -->
+        <!-- 3-TIER MEMBERSHIP & NGỌC TRI THỨC SHOWCASE (COHESIVE #00B8DD!)  -->
+        <!-- --------------------------------------------------------------- -->
+        <div id="goi-dang-ky" class="pricing-wrap">
+          <div class="pricing-head reveal">
+            <div>
+              <span class="kicker">Đặc quyền Học viên &amp; Ngọc Tri Thức</span>
+              <h2>Nâng cấp năng lượng Tia Sáng &amp; Gia Sư AI&nbsp;24/7</h2>
+            </div>
+            <a href="/pricing" data-route-preview="Trang Gói đăng ký" class="pricing-head__link">
+              So sánh chi tiết các gói →
+            </a>
+          </div>
+
+          <div class="pricing-grid reveal">
+            <!-- Plan 1: Tân Binh (Miễn Phí) -->
+            <article class="p-card">
+              <div class="p-card__top">
+                <span class="p-badge">Khởi động miễn phí</span>
+                <h3>Tân Binh</h3>
+                <p class="p-desc">Làm quen phương pháp luyện đề ma trận &amp; cày Ngọc Tri Thức miễn phí từ bài thi.</p>
+                <div class="p-price">
+                  <strong>Miễn Phí</strong>
+                </div>
+              </div>
+
+              <ul class="p-list">
+                <li>
+                  <svg>
+                    <use href="#iconCheck" />
+                  </svg>
+                  <span><strong>9 Tia Sáng / ngày</strong> để tạo &amp; làm đề (reset 00:00)</span>
+                </li>
+                <li>
+                  <svg>
+                    <use href="#iconCheck" />
+                  </svg>
+                  <span>Thưởng <strong>+2 đến +20 Ngọc Tri Thức</strong> khi đạt &ge; 8.5 điểm</span>
+                </li>
+                <li>
+                  <svg>
+                    <use href="#iconCheck" />
+                  </svg>
+                  <span>Gia Sư AI 24/7 (10 câu/tháng) &amp; Sinh đề ma trận (3 đề/tháng)</span>
+                </li>
+                <li>
+                  <svg>
+                    <use href="#iconCheck" />
+                  </svg>
+                  <span>Xem lời giải chi tiết &amp; Đua top Bảng xếp hạng tuần</span>
+                </li>
+              </ul>
+
+              <button type="button" class="p-btn p-btn--outline" data-open-login>
+                Đăng nhập nhận 9 Tia Sáng →
+              </button>
+            </article>
+
+            <!-- Plan 2: Gói Bứt Phá (50k) — Featured #00B8DD -->
+            <article class="p-card p-card--featured">
+              <div class="p-card__top">
+                <span class="p-badge p-badge--cyan">Phổ biến nhất • Bứt phá 8+</span>
+                <h3>Gói Bứt Phá</h3>
+                <p class="p-desc">Luyện thi Toán – Tin chuyên sâu hàng ngày, bứt tốc vững chắc từ 6–7 lên 8–9 điểm.</p>
+                <div class="p-price">
+                  <strong>50.000đ</strong><span>/ tháng</span>
+                </div>
+              </div>
+
+              <ul class="p-list">
+                <li>
+                  <svg>
+                    <use href="#iconCheck" />
+                  </svg>
+                  <span>Tổng <strong>18 Tia Sáng / ngày</strong> (+9 Tia Sáng cộng thêm mỗi ngày)</span>
+                </li>
+                <li>
+                  <svg>
+                    <use href="#iconCheck" />
+                  </svg>
+                  <span>Tích lũy tự động <strong>+5 Ngọc Tri Thức / ngày</strong> (150 Ngọc/tháng)</span>
+                </li>
+                <li>
+                  <svg>
+                    <use href="#iconCheck" />
+                  </svg>
+                  <span><strong>Không giới hạn</strong> sinh đề Ma trận 2025 &amp; Gia Sư AI 24/7</span>
+                </li>
+                <li>
+                  <svg>
+                    <use href="#iconCheck" />
+                  </svg>
+                  <span>Đổi vật phẩm hấp dẫn trong Schoolify Store &amp; không quảng cáo</span>
+                </li>
+              </ul>
+
+              <a href="/pricing" data-route-preview="Gói Bứt Phá (50k)" class="p-btn p-btn--solid">
+                Nâng cấp Gói Bứt Phá →
+              </a>
+            </article>
+
+            <!-- Plan 3: Gói Thủ Khoa VIP (100k) — Deep Obsidian Luxury -->
+            <article class="p-card p-card--vip">
+              <div class="p-card__top">
+                <span class="p-badge p-badge--dark">Mục tiêu 9+ • Thủ khoa VIP</span>
+                <h3>Gói Thủ Khoa VIP</h3>
+                <p class="p-desc">Chinh phục câu Vận dụng cao, ĐGNL ĐHQG, ĐGTD Bách Khoa &amp; kỳ thi Học sinh giỏi.</p>
+                <div class="p-price">
+                  <strong>100.000đ</strong><span>/ tháng</span>
+                </div>
+              </div>
+
+              <ul class="p-list">
+                <li>
+                  <svg>
+                    <use href="#iconCheck" />
+                  </svg>
+                  <span>Tổng <strong>29 Tia Sáng / ngày</strong> (+20 Tia Sáng thêm — luyện thả ga)</span>
+                </li>
+                <li>
+                  <svg>
+                    <use href="#iconCheck" />
+                  </svg>
+                  <span>Tích lũy tự động <strong>+10 Ngọc Tri Thức / ngày</strong> (300 Ngọc/tháng)</span>
+                </li>
+                <li>
+                  <svg>
+                    <use href="#iconCheck" />
+                  </svg>
+                  <span><strong>Giảm 50% phí Gia Sư AI</strong> + AI Suy Luận Sâu (Casio &amp; Code khó)</span>
+                </li>
+                <li>
+                  <svg>
+                    <use href="#iconCheck" />
+                  </svg>
+                  <span>Mở <strong>Kho Đề VIP Độc Quyền</strong> &amp; đổi quà hiện vật gửi tận nhà</span>
+                </li>
+              </ul>
+
+              <a href="/pricing" data-route-preview="Gói Thủ Khoa VIP (100k)" class="p-btn p-btn--vip">
+                Trở thành Thủ Khoa VIP →
+              </a>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------------- -->
+    <!-- ACT VI: KHO TRI THỨC, BÍ KÍP PHÒNG THI & TIN TỨC KHẢO THÍ (#tin-tuc) -->
+    <!-- ------------------------------------------------------------------- -->
+    <section id="tin-tuc" class="news-section">
+      <div class="container">
+        <div class="news-head reveal">
+          <div>
+            <span class="kicker">Kho tri thức &amp; Khảo thí • Chuẩn Bộ GD&amp;ĐT 2025</span>
+            <h2>Bí kíp phòng thi &amp; Tin tức học thuật</h2>
+          </div>
+          <div class="news-head-right">
+            <!-- Interactive Category Filter Pills -->
+            <div class="news-filters" role="tablist" aria-label="Lọc chuyên đề tin tức">
+              <button type="button" class="news-filter-btn is-active" data-filter="all">Tất cả (3)</button>
+              <button type="button" class="news-filter-btn" data-filter="matran">01 / Ma trận Bộ</button>
+              <button type="button" class="news-filter-btn" data-filter="casio">02 / Bí kíp Casio</button>
+              <button type="button" class="news-filter-btn" data-filter="tin">03 / Thuật toán Tin</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Clean Bento News Grid with Spotlight Effect -->
+        <div class="news-grid reveal">
+          <!-- Card 1: Featured Accent Tile (Ma trận 2025) -->
+          <article class="news-card news-card--featured ck-spotlight" data-cat="matran">
+            <div class="news-card__top">
+              <span class="news-tag news-tag--cyan">01 / MA TRẬN BỘ GD&amp;ĐT</span>
+            </div>
+
+            <!-- Architectural Blueprint Visual Preview -->
+            <div class="news-visual news-visual--matran">
+              <div class="news-visual-bar">
+                <span style="width: 35%; background: var(--brand);" title="Phần I: 12 câu TN (3đ)">12 TN (3đ)</span>
+                <span style="width: 40%; background: #3B82F6;" title="Phần II: 4 câu Đúng/Sai (4đ)">4 Đ/S (4đ)</span>
+                <span style="width: 25%; background: #10B981;" title="Phần III: 6 câu Điền (3đ)">6 Điền (3đ)</span>
+              </div>
+              <div class="news-visual-caption">3 dạng thức 2025 • Phân bổ 90 phút</div>
+            </div>
+
+            <div class="news-card__body">
+              <h3 class="news-card__title">Ma trận đề thi tốt nghiệp THPT 2025</h3>
+              <p class="news-card__desc">Cấu trúc 3 phần: Trắc nghiệm 4 lựa chọn, Đúng/Sai bậc thang và Điền số thực
+                ngắn. Chiến thuật tối ưu 90 phút.</p>
+            </div>
+            <div class="news-card__foot">
+              <span class="news-meta-item">15.10.2025</span>
+              <span class="news-meta-sep">•</span>
+              <span class="news-meta-item">3 phút đọc</span>
+              <span class="news-badge">Tổ Chuyên Môn</span>
+            </div>
+          </article>
+
+          <!-- Card 2: Minimalist Dark Tile (Casio 580) -->
+          <article class="news-card ck-spotlight" data-cat="casio">
+            <div class="news-card__top">
+              <span class="news-tag">02 / BÍ KÍP CASIO 580</span>
+            </div>
+
+            <!-- Architectural Blueprint Visual Preview -->
+            <div class="news-visual news-visual--casio">
+              <div class="news-casio-screen">
+                <span class="news-casio-fn">f(x) = x³ - 3x + 1</span>
+                <span class="news-casio-step">Table [Menu 8] • Step: 0.25</span>
+              </div>
+              <div class="news-visual-caption">Quét mệnh đề Đúng/Sai • Tiết kiệm 60% thời gian</div>
+            </div>
+
+            <div class="news-card__body">
+              <h3 class="news-card__title">Bấm máy Casio 580: Xử lý nhanh Đúng / Sai</h3>
+              <p class="news-card__desc">Tận dụng tính năng Table f(x) và vector Oxyz quét nhanh mệnh đề con, tiết kiệm
+                60% thời gian làm bài thi.</p>
+            </div>
+            <div class="news-card__foot">
+              <span class="news-meta-item">12.10.2025</span>
+              <span class="news-meta-sep">•</span>
+              <span class="news-meta-item">3 phút đọc</span>
+              <span class="news-badge">Gia Sư AI Lab</span>
+            </div>
+          </article>
+
+          <!-- Card 3: Minimalist Tile (Tin học 12) -->
+          <article class="news-card ck-spotlight" data-cat="tin">
+            <div class="news-card__top">
+              <span class="news-tag">03 / THUẬT TOÁN TIN HỌC</span>
+            </div>
+
+            <!-- Architectural Blueprint Visual Preview -->
+            <div class="news-visual news-visual--code">
+              <div class="news-code-snippet">
+                <code>SELECT hs_id, MAX(diem) FROM ket_qua GROUP BY hs_id;</code>
+              </div>
+              <div class="news-visual-caption">SQL CSDL Quan hệ &amp; Độ phức tạp O(n)</div>
+            </div>
+
+            <div class="news-card__body">
+              <h3 class="news-card__title">Chiến thuật câu hỏi SQL &amp; Python 2025</h3>
+              <p class="news-card__desc">Tránh các bẫy thường gặp trong lệnh SELECT, GROUP BY và độ phức tạp thuật toán
+                O(n), tự tin đạt 9–10 môn Tin.</p>
+            </div>
+            <div class="news-card__foot">
+              <span class="news-meta-item">08.10.2025</span>
+              <span class="news-meta-sep">•</span>
+              <span class="news-meta-item">3 phút đọc</span>
+              <span class="news-badge">Đội Tuyển Tin</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------------- -->
+    <!-- ACCORDION FAQ: GIẢI ĐÁP THẮC MẮC CHO HỌC VIÊN MỚI                   -->
+    <!-- ------------------------------------------------------------------- -->
+    <section id="hoi-dap" class="faq-section">
+      <div class="container faq-layout">
+        <div class="faq-intro reveal">
+          <span class="kicker">Câu hỏi thường gặp (FAQ)</span>
+          <h2>Giải đáp rõ ràng mọi cơ chế trên&nbsp;Schoolify</h2>
+          <p>
+            Hiểu nhanh cách vận hành của <strong>Tia Sáng</strong>, <strong>Ngọc Tri Thức</strong>, <strong>Gia Sư AI
+              24/7</strong> và hình thức đăng nhập không mật khẩu trước khi vào phòng thi.
+          </p>
+          <a href="#lien-he" class="faq-support-link">
+            Cần hỗ trợ thêm? Gửi tin nhắn trực tiếp bên dưới →
+          </a>
+        </div>
+
+        <div class="faq-list reveal" id="faqAccordion">
+          <!-- FAQ 1 (Open by default) -->
+          <div class="faq-item is-open">
+            <button type="button" class="faq-trigger" aria-expanded="true">
+              <span>Học sinh được cấp bao nhiêu Tia Sáng mỗi ngày để luyện thi?</span>
+              <i class="faq-icon" aria-hidden="true"></i>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel__inner">
+                <p>
+                  Mọi học viên gói <strong>Tân Binh (Miễn phí)</strong> đều được hệ thống tự động nạp đầy lại <strong>9
+                    Tia Sáng vào đúng 00:00 mỗi ngày</strong> (tương đương 2–3 đề Cơ bản hoặc Trung bình/ngày). Nếu đang
+                  trong giai đoạn nước rút cần cày đề liên tục, bạn có thể nâng cấp <strong>Gói Bứt Phá (18 Tia
+                    Sáng/ngày)</strong> hoặc <strong>Gói Thủ Khoa VIP (29 Tia Sáng/ngày)</strong>.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- FAQ 2 -->
+          <div class="faq-item">
+            <button type="button" class="faq-trigger" aria-expanded="false">
+              <span>Làm thế nào để cày Ngọc Tri Thức miễn phí và Ngọc dùng để làm gì?</span>
+              <i class="faq-icon" aria-hidden="true"></i>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel__inner">
+                <p>
+                  Mỗi khi hoàn thành bài thi Toán hoặc Tin đạt từ <strong>8.5 điểm trở lên</strong>, hệ thống tự động
+                  thưởng nóng từ <strong>+2 đến +20 Ngọc Tri Thức</strong> tùy theo độ khó đề (Cơ bản – Trung bình –
+                  Nâng cao). Ngoài ra, học viên gói Bứt Phá / VIP còn được nhận cố định <strong>+5 đến +10 Ngọc mỗi
+                    ngày</strong>. Bạn dùng Ngọc để đổi vật phẩm học tập, khung Avatar danh hiệu và quà hiện vật trong
+                  <strong>Schoolify Store</strong>.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- FAQ 3 -->
+          <div class="faq-item">
+            <button type="button" class="faq-trigger" aria-expanded="false">
+              <span>Tại sao Schoolify không có nút "Đăng ký" hay tạo mật khẩu?</span>
+              <i class="faq-icon" aria-hidden="true"></i>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel__inner">
+                <p>
+                  Schoolify sử dụng cơ chế <strong>xác thực không mật khẩu (Passwordless)</strong> hiện đại nhằm giúp
+                  học sinh vào luyện đề nhanh nhất và không bao giờ lo quên mật khẩu. Lần đầu tiên bạn bấm đăng nhập
+                  bằng <strong>Tài khoản Google</strong> hoặc nhập <strong>Số điện thoại nhận mã OTP 6 số</strong>, hệ
+                  thống sẽ tự động khởi tạo hồ sơ Học viên và cộng ngay 9 Tia Sáng đầu ngày.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- FAQ 4 -->
+          <div class="faq-item">
+            <button type="button" class="faq-trigger" aria-expanded="false">
+              <span>Đề thi Toán &amp; Tin trên web có chấm đúng thang điểm cấu trúc 2025 không?</span>
+              <i class="faq-icon" aria-hidden="true"></i>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel__inner">
+                <p>
+                  Chính xác 100%. Hệ thống tích hợp trọn bộ <strong>3 dạng trắc nghiệm mới</strong> (<em>1 đáp án, Nhiều
+                    đáp án và Đúng / Sai</em>). Riêng phần câu hỏi chùm <strong>Đúng / Sai 4 ý</strong> được chấm tự
+                  động theo đúng quy tắc bậc thang của Bộ GD&amp;ĐT: đúng 1 ý được <strong>0.1đ</strong>, 2 ý được
+                  <strong>0.25đ</strong>, 3 ý được <strong>0.5đ</strong> và đúng trọn vẹn 4 ý đạt tối đa
+                  <strong>1.0đ</strong>.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- FAQ 5 -->
+          <div class="faq-item">
+            <button type="button" class="faq-trigger" aria-expanded="false">
+              <span>Nâng cấp Gói Bứt Phá hoặc Thủ Khoa VIP thanh toán qua kênh nào?</span>
+              <i class="faq-icon" aria-hidden="true"></i>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel__inner">
+                <p>
+                  Bạn có thể thanh toán nhanh qua <strong>mã quét VietQR chuyển khoản ngân hàng</strong> hoặc ví điện
+                  tử. Ngay khi giao dịch thành công, hệ thống tự động kích hoạt gói, cộng thêm hạn mức Tia Sáng &amp;
+                  Ngọc Tri Thức chỉ sau vài giây mà không cần chờ duyệt thủ công.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------------- -->
+    <!-- FAST CONTACT & ACADEMIC FEEDBACK SECTION (#lien-he)                 -->
+    <!-- ------------------------------------------------------------------- -->
+    <section id="lien-he" class="contact-section">
+      <div class="container contact-layout">
+        <div class="contact-info reveal">
+          <span class="kicker">Kết nối trực tiếp cùng Schoolify</span>
+          <h2>Liên hệ hỗ trợ &amp; Góp ý học&nbsp;thuật</h2>
+          <p class="contact-info__desc">
+            Gặp khó khăn khi nhận mã OTP, cần tư vấn Gói thành viên hoặc báo lỗi đáp án Toán – Tin? Đội ngũ Schoolify
+            luôn sẵn sàng lắng nghe.
+          </p>
+
+          <div class="contact-channels">
+            <a href="mailto:hotro@schoolify.vn" class="channel-card">
+              <strong>Email Hỗ trợ &amp; Học thuật</strong>
+              <span>hotro@schoolify.vn • Phản hồi trong 2 giờ</span>
+            </a>
+
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="channel-card">
+              <strong>Fanpage Schoolify THPT</strong>
+              <span>Trực hỗ trợ nhanh OTP &amp; Gói VIP (08:00 – 22:00)</span>
+            </a>
+
+            <a href="/forum" data-route-preview="Diễn đàn học thuật" class="channel-card">
+              <strong>Diễn đàn Toán &amp; Tin THPT</strong>
+              <span>Hỏi đáp bài khó cùng Gia Sư AI &amp; Cao thủ tuần</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="contact-card reveal">
+          <form id="contactForm" class="contact-form">
+            <div class="contact-topics" id="contactTopics" role="group" aria-label="Chủ đề liên hệ nhanh">
+              <button type="button" class="topic-chip is-active" data-topic="Hỗ trợ OTP / Tài khoản">Hỗ trợ OTP / Tài
+                khoản</button>
+              <button type="button" class="topic-chip" data-topic="Báo lỗi câu Toán – Tin">Báo lỗi câu Toán –
+                Tin</button>
+              <button type="button" class="topic-chip" data-topic="Tư vấn Gói thành viên">Tư vấn Gói thành viên</button>
+            </div>
+
+            <div class="c-field">
+              <label for="contactName">Họ và tên của bạn</label>
+              <input type="text" id="contactName" placeholder="VD: Nguyễn Minh Anh — Lớp 12A1" required />
+            </div>
+
+            <div class="c-field">
+              <label for="contactMethod">Số điện thoại hoặc Email nhận phản hồi</label>
+              <input type="text" id="contactMethod" placeholder="VD: 0912 345 678 hoặc minhanh@gmail.com" required />
+            </div>
+
+            <div class="c-field">
+              <label for="contactMessage">Nội dung cần hỗ trợ / góp ý</label>
+              <textarea id="contactMessage" rows="4"
+                placeholder="Mô tả ngắn gọn vấn đề bạn đang gặp hoặc mã đề Toán/Tin cần kiểm tra..."
+                required></textarea>
+            </div>
+
+            <button type="submit" class="contact-submit-btn" id="contactSubmitBtn">
+              Gửi tin nhắn tới Schoolify →
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------------- -->
+    <!-- ACT VII: MIDNIGHT OBSIDIAN CLOSING CTA                              -->
+    <!-- ------------------------------------------------------------------- -->
+    <section class="closing-cta">
+      <div class="container closing-cta__inner reveal">
+        <h2>Sẵn sàng bứt phá điểm số Toán &amp; Tin&nbsp;THPT?</h2>
+        <p>Đăng nhập nhanh bằng Google hoặc Số điện thoại nhận mã OTP — nhận ngay 9 Tia sáng đầu tiên hôm nay.</p>
+        <div class="closing-cta__actions">
+          <button type="button" class="cta-solid cta-solid--lg magnetic" data-open-login>
+            Đăng nhập nhận 9 Tia Sáng →
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- FOOTER (OFFICIAL LOGO + FULL TEAM ROUTES + SUPPORT CHANNELS!)         -->
+  <!-- ===================================================================== -->
+  <footer class="footer" id="footer-support">
+    <div class="container footer__grid">
+      <div class="footer__brand">
+        <div class="logo-pair">
+          <img src="./images/schoolify-logo.png" onerror="this.onerror=null;this.src='schoolify-logo.png';"
+            alt="Schoolify" class="footer__logo logo-light-only" />
+          <img src="./images/am-ban.png" onerror="this.onerror=null;this.src='am-ban.png';" alt="Schoolify"
+            class="footer__logo logo-dark-only" />
+        </div>
+        <p class="footer__slogan">“Vững Vàng Tri Thức, Dẫn Lối Thành Công”</p>
+        <p>Nền tảng khảo thí &amp; luyện thi ma trận thông minh chuyên sâu Toán &amp; Tin học THPT chuẩn cấu trúc mới.
+        </p>
+        <span class="footer__hours">Hỗ trợ OTP &amp; Học viên: 08:00 – 22:00 hàng ngày</span>
+      </div>
+
+      <div class="footer__col">
+        <strong>Không gian học tập</strong>
+        <a href="#dung-thu">Làm thử câu Đúng/Sai 2025</a>
+        <a href="#kho-de">Phòng luyện thi Toán &amp; Tin</a>
+        <a href="/leaderboard" data-route-preview="Bảng xếp hạng">Bảng xếp hạng tuần</a>
+        <a href="/forum" data-route-preview="Diễn đàn">Diễn đàn học thuật</a>
+        <a href="#goi-dang-ky">Gói đăng ký &amp; Ngọc Tri Thức</a>
+      </div>
+
+      <div class="footer__col">
+        <strong>Hỗ trợ &amp; Liên hệ</strong>
+        <a href="mailto:hotro@schoolify.vn">Email: hotro@schoolify.vn</a>
+        <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">Fanpage: Schoolify THPT</a>
+        <a href="/forum" data-route-preview="Cộng đồng trao đổi">Cộng đồng Ôn thi Toán – Tin</a>
+        <a href="/news" data-route-preview="Tin tức">Tin tức &amp; Bí kíp phòng thi</a>
+        <a href="/about" data-route-preview="Về chúng tôi">Về đội ngũ Schoolify</a>
+      </div>
+
+      <div class="footer__col">
+        <strong>Tiện ích &amp; Lưu trữ</strong>
+        <button type="button" class="footer__link-btn" data-open-login>Đăng nhập Học viên (Google/OTP)</button>
+        <button type="button" class="footer__link-btn" data-toggle-theme id="footerThemeLabel">Đổi giao diện Sáng /
+          Tối</button>
+        <a href="./landing-page-v6/index.html" class="c-cyan font-bold">Bản v6 (CargoKite Continuum) ★</a>
+        <a href="./landing-page-v5/index.html" class="c-cyan">Xem bản lưu v5 →</a>
+        <a href="./landing-page-v4/index.html" class="c-cyan">Xem bản lưu v4 →</a>
+        <a href="./landing-page-v3-maybay/index.html" class="c-cyan">Xem bản lưu v3-maybay →</a>
+        <span>© 2026 Schoolify EdTech</span>
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- ===================================================================== -->
+  <!-- INTERACTIVE FULL LEADERBOARD MODAL (CARGOKITE TELEMETRY SPEC)         -->
+  <!-- ===================================================================== -->
+  <div class="lb-modal" id="leaderboardModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="lb-modal__backdrop" id="leaderboardModalBackdrop"></div>
+    <div class="lb-modal__card">
+      <div class="lb-modal__head">
+        <div class="lb-modal__tag">
+          <span class="lb-live-dot" aria-hidden="true"></span>
+          <span class="lb-modal__kicker">TELEMETRY / BẢNG VÀNG TUẦN NÀY</span>
+        </div>
+        <button type="button" class="lb-modal__close" id="leaderboardModalClose" aria-label="Đóng">✕</button>
+      </div>
+
+      <div class="lb-modal__title-row">
+        <div>
+          <h3>Đấu Trường Học Thuật Toán &amp; Tin THPT</h3>
+          <p>Bảng xếp hạng tự động cập nhật theo điểm trung bình và số lượng đề hoàn thành (reset 00:00 Thứ Hai hàng
+            tuần).</p>
+        </div>
+        <div class="lb-modal__tabs" id="modalBoardTabs" role="tablist">
+          <button type="button" class="lb-tab is-active" data-mboard="all">Toàn quốc</button>
+          <button type="button" class="lb-tab" data-mboard="math">Toán 12</button>
+          <button type="button" class="lb-tab" data-mboard="cs">Tin 12</button>
+        </div>
+      </div>
+
+      <!-- User's Personal Status Card -->
+      <div class="lb-my-rank">
+        <div class="lb-my-rank__left">
+          <div class="lb-my-avatar">HV</div>
+          <div>
+            <strong>Vị trí của bạn: Hạng #42</strong>
+            <span>Đã hoàn thành 5 đề tuần này • Điểm TB: <strong>8.75 / 10đ</strong></span>
+          </div>
+        </div>
+        <div class="lb-my-rank__right">
+          <span class="lb-my-tip">Cần thêm <strong>+0.75đ</strong> để lọt Top 20</span>
+          <a href="#kho-de" class="lb-my-cta" id="modalLuyenDeBtn">Luyện đề bứt phá →</a>
+        </div>
+      </div>
+
+      <!-- Leaderboard Table Container -->
+      <div class="lb-table-wrap">
+        <table class="lb-table">
+          <thead>
+            <tr>
+              <th style="width: 76px;">Hạng</th>
+              <th>Học viên &amp; Trường THPT</th>
+              <th style="text-align: center;">Số đề tuần</th>
+              <th style="text-align: right;">Điểm TB</th>
+              <th style="text-align: right;">Thưởng Ngọc</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboardTableBody">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="lb-modal__foot">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span>Đồng hồ chốt bảng xếp hạng tuần đóng sau: <strong>2 ngày 14 giờ</strong> • Top 3 nhận Huy hiệu Quán Quân
+          &amp; Á Quân Vàng.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Origami Paper-Plane Back-to-Top Floating Button -->
+  <button type="button" class="back-top-btn" id="backToTopBtn" aria-label="Bay nhanh về đầu trang"
+    title="Lên đầu trang">
+    <svg>
+      <use href="#iconPlaneUp" />
+    </svg>
+  </button>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+  <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js" defer></script>
+  <script src="./app.js" defer></script>
+</body>
+
+</html>
