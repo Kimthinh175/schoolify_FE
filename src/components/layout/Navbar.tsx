@@ -26,6 +26,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { AvatarFrame, useActiveAvatarFrame } from '@/components/ui/avatar-frame';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { NotificationBellMenu } from '@/components/layout/NotificationBellMenu';
+import { ChatHeaderButton } from '@/components/layout/ChatHeaderButton';
 import { TiaSangIcon, NgocIcon } from '@/components/ui/point-icons';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth.store';
@@ -710,6 +711,7 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
               canCenterXlNav && 'xl:justify-self-end'
             )}
           >
+            <ChatHeaderButton />
             <NotificationBellMenu />
             <ThemeToggle />
 
@@ -1104,6 +1106,7 @@ export function Navbar({ onOpenMobileSidebar }: { onOpenMobileSidebar?: () => vo
 
           {/* ── Mobile Hamburger & Theme ── */}
           <div className="flex items-center gap-2 md:hidden">
+            <ChatHeaderButton />
             <NotificationBellMenu />
             <ThemeToggle />
             {isAuthenticated && user && (
